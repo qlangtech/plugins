@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.alibaba.datax.common.element.ICol2Index;
 

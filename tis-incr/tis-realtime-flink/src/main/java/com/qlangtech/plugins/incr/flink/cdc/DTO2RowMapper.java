@@ -40,10 +40,6 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
     @Override
     public Row map(DTO dto) throws Exception {
 
-//        File file = new File("full_types_dto.xml");
-//        XmlFile tabStore = new XmlFile(file.getAbsoluteFile(), "test");
-//        tabStore.write(dto, Sets.newHashSet());
-
         Row row = new Row(getKind(dto), cols.size());
         int index = 0;
         Map<String, Object> vals = getVals(dto);
@@ -58,6 +54,7 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
     }
 
     private Map<String, Object> getVals(DTO dto) {
+
         switch (dto.getEventType()) {
             case DELETE:
             case UPDATE_BEFORE:

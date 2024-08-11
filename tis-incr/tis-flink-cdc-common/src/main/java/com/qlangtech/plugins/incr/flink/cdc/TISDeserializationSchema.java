@@ -18,6 +18,9 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.google.common.collect.Maps;
+import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
@@ -30,6 +33,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -50,14 +54,17 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
 
     private final ISourceValConvert rawValConvert;
     private final Function<String, String> physicsTabName2LogicName;
+    private final Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper;
 
-    public TISDeserializationSchema(ISourceValConvert rawValConvert, Function<String, String> physicsTabName2LogicName) {
+    public TISDeserializationSchema(ISourceValConvert rawValConvert, Function<String, String> physicsTabName2LogicName
+            , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
         this.rawValConvert = rawValConvert;
         this.physicsTabName2LogicName = physicsTabName2LogicName;
+        this.contextParamValsGetterMapper = contextParamValsGetterMapper;
     }
 
     public TISDeserializationSchema() {
-        this(new DefaultSourceValConvert(), new DefaultTableNameConvert());
+        this(new DefaultSourceValConvert(), new DefaultTableNameConvert(), Collections.emptyMap());
     }
 
 //    public TISDeserializationSchema(boolean includeSchema) {
@@ -78,7 +85,9 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
             throw new IllegalStateException("topic is illegal:" + record.topic());
         }
         dto.setDbName(topicMatcher.group(1));
-        dto.setTableName(physicsTabName2LogicName.apply(topicMatcher.group(2)));
+        final String physicsTabName = topicMatcher.group(2);
+        dto.setTableName(physicsTabName2LogicName.apply(physicsTabName));
+        dto.setPhysicsTabName(physicsTabName);
 
         if (op != Envelope.Operation.CREATE && op != Envelope.Operation.READ) {
             if (op == Envelope.Operation.DELETE) {
@@ -122,16 +131,29 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
         Struct after = value.getStruct("after");
 
         Map<String, Object> afterVals = new HashMap<>();
+        
+        /**==========================
+         * 设置环境绑定参数值
+         ==========================*/
+        Map<String, Function<RunningContext, Object>> contextParamsGetter
+                = this.contextParamValsGetterMapper.get(dto.getTableName());
+        if (contextParamsGetter != null) {
+            contextParamsGetter.forEach((contextParamName, getter) -> {
+                afterVals.put(contextParamName, getter.apply(new RdbmsRunningContext(dto.getDbName(), dto.getPhysicsTabName())));
+            });
+        }
+
+
         Object afterVal = null;
-        for (Field f : afterSchema.fields()) {
-            afterVal = after.get(f.name());
+        for (Field field : afterSchema.fields()) {
+            afterVal = after.get(field.name());
             if (afterVal == null) {
                 continue;
             }
             try {
-                afterVals.put(f.name(), rawValConvert.convert(dto, f, afterVal));
+                afterVals.put(field.name(), rawValConvert.convert(dto, field, afterVal));
             } catch (Exception e) {
-                throw new RuntimeException("field:" + f.name() + ",afterVal:" + afterVal, e);
+                throw new RuntimeException("field:" + field.name() + ",afterVal:" + afterVal, e);
             }
         }
         dto.setAfter(afterVals);

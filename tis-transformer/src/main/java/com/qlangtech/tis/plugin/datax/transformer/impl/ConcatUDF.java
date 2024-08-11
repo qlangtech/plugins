@@ -73,9 +73,9 @@ public class ConcatUDF extends UDFDefinition {
         return seps;
     }
 
-    enum Separator {
+    public enum Separator {
         Empty(StringUtils.EMPTY), Cut("-"), Underline("_");
-        private final String sign;
+        public final String sign;
 
         Separator(String sign) {
             this.sign = sign;

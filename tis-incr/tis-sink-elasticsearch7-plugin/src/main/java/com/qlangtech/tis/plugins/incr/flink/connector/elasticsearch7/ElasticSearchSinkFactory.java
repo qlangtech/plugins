@@ -47,6 +47,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
@@ -207,7 +208,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
 
-        Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt
+        Optional<SelectedTableTransformerRules> transformerOpt
                 = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), esSchema, tab, sourceFlinkColCreator);
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys

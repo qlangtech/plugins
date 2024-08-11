@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowTransformerMapper;
@@ -209,17 +211,25 @@ public abstract class TableRegisterFlinkSourceHandle
         /**
          添加transformer执行逻辑
          */
+        final IPluginContext namedContext = IPluginContext.namedContext(this.getCollectionName());
         Optional<RecordTransformerRules> transformers
-                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(this.getCollectionName()), tabName));
+                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(namedContext, tabName));
         RecordTransformerRules tRules = null;
         RowTransformerMapper transformerMapper = null;
         List<FlinkCol> cols = null;
         if (transformers.isPresent()) {
             tRules = transformers.get();
-            srcCols = tRules.overwriteCols(srcCols);
-            cols = FlinkCol.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
-            transformerMapper = new RowTransformerMapper(cols, transformers.get());
-            outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
+
+            ITransformerBuildInfo transformerCfg = tRules.createTransformerBuildInfo(namedContext);
+            List<IColMetaGetter> colsWithContextParams
+                    = transformerCfg.overwriteColsWithContextParams(srcCols);
+            transformerMapper = new RowTransformerMapper(
+                    FlinkCol.getAllTabColsMeta(colsWithContextParams
+                            , Objects.requireNonNull(this.flinkColCreator, "flinkColCreator")), transformers.get());
+
+            cols = FlinkCol.getAllTabColsMeta(
+                    transformerCfg.originColsWithContextParams(), Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            outputTypeSchema = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
         } else {
             cols = FlinkCol.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
             outputTypeSchema = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
@@ -239,10 +249,11 @@ public abstract class TableRegisterFlinkSourceHandle
         Objects.requireNonNull(rowStream, "rowStream can not be null");
         rowStream.setParallelism(Objects.requireNonNull(streamFactory, "streamFactory can not be null").getParallelism());
 
-
         if (transformers.isPresent()) {
+            outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
             rowStream = rowStream.map(
-                            Objects.requireNonNull(transformerMapper, "transformerMapper can not be null"), outputTypeSchema.getKey())
+                            Objects.requireNonNull(transformerMapper, "transformerMapper can not be null")
+                            , outputTypeSchema.getKey())
                     .name(tabName + "_transformer")
                     .setParallelism(streamFactory.getParallelism());
         }

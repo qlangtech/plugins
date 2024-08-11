@@ -31,11 +31,16 @@ import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.common.ContextParams.DbNameContextParamValGetter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformer;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.datax.transformer.impl.ConcatUDF;
+import com.qlangtech.tis.plugin.datax.transformer.impl.ConcatUDF.Separator;
 import com.qlangtech.tis.plugin.datax.transformer.impl.CopyValUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.ExistTargetCoumn;
 import com.qlangtech.tis.plugin.datax.transformer.impl.JSONSplitterUDF;
@@ -43,10 +48,11 @@ import com.qlangtech.tis.plugin.datax.transformer.impl.SubStrUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.VirtualTargetColumn;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
+import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.LatestStartupOptions;
 import com.qlangtech.tis.test.TISEasyMock;
@@ -57,7 +63,6 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,8 +78,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.keyBaseId;
 import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.keyCol_text;
 import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.key_json_content;
 import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.key_name_from_json_content;
@@ -163,6 +171,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         cdcTestSuit.startTest(mysqlCDCFactory);
     }
 
+
     /**
      * 在增量消费流程中使用 T(Transformer) 规则
      *
@@ -170,10 +179,17 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
      */
     @Test()
     public void testBinlogConsumeWithRowTransformer() throws Exception {
+
+        final DataxReader dataxReader = createReader(null);
+        DataxReader.dataxReaderGetter = (name) -> {
+            return dataxReader;
+        };
+
         // 测试中使用一个copyVal，和subString 两个控制字段
         RecordTransformerRules.transformerRulesLoader4Test = (tab) -> {
             RecordTransformerRules tRules = new RecordTransformerRules();
 
+            addContactWithContextParamTransformer(tRules);
             addCopyValTransformer(tRules);
             addSubStrTransformer(tRules);
             addJSONSplit(tRules);
@@ -253,6 +269,40 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
         subStr.to = targetColType;
         transformer.setUdf(subStr);
+        tRules.rules.add(transformer);
+    }
+
+    /**
+     * 使用了环境绑定参数的contact算子替换原主键baseId
+     *
+     * @param tRules
+     */
+    private static void addContactWithContextParamTransformer(RecordTransformerRules tRules) {
+        RecordTransformer transformer = new RecordTransformer();
+        ConcatUDF concatUDF = new ConcatUDF();
+        List<TargetColType> from = Lists.newArrayList();
+
+        TargetColType targetColType = new TargetColType();
+        ExistTargetCoumn targetCol = new ExistTargetCoumn();
+        targetCol.name = keyBaseId;
+        targetColType.setTarget(targetCol);
+        targetColType.setType(DataType.createVarChar(32));
+        from.add(targetColType);
+        final TargetColType baseId = targetColType;
+
+
+        targetColType = new TargetColType();
+        VirtualTargetColumn virtualTgtCol = new VirtualTargetColumn();
+        virtualTgtCol.name = "$dbName";
+        targetColType.setTarget(virtualTgtCol);
+        targetColType.setType(DataType.createVarChar(32));
+        from.add(targetColType);
+
+        concatUDF.from = from;
+        concatUDF.to = baseId;
+        concatUDF.separator = Separator.Cut.name();
+
+        transformer.setUdf(concatUDF);
         tRules.rules.add(transformer);
     }
 
@@ -657,5 +707,46 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         cdcTestSuit.startTest(mysqlCDCFactory);
     }
 
+    private DataxReader createReader(String dataXName) {
 
+        DataxReader dataxReader = new DataxReader() {
+
+            @Override
+            public Map<String, ContextParamConfig> getDBContextParams() {
+                ContextParamConfig dbName = new ContextParamConfig("dbName") {
+                    @Override
+                    public DbNameContextParamValGetter valGetter() {
+                        return new DbNameContextParamValGetter();
+                    }
+
+                    @Override
+                    public DataType getDataType() {
+                        return DataType.createVarChar(50);
+                    }
+                };
+                return Collections.singletonMap(dbName.getKeyName(), dbName);
+            }
+
+            @Override
+            public <T extends ISelectedTab> List<T> getSelectedTabs() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String getTemplate() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void startScanDependency() {
+                throw new UnsupportedOperationException();
+            }
+        };
+        return dataxReader;
+    }
 }

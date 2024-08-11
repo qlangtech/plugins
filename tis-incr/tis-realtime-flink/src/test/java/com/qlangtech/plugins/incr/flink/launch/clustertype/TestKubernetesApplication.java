@@ -143,6 +143,6 @@ public class TestKubernetesApplication {
 
         JobManagerAddress jobManagerAddress = k8sApp.getJobManagerAddress();
         Assert.assertNotNull(jobManagerAddress);
-        System.out.println(jobManagerAddress.getURL());
+        System.out.println(jobManagerAddress.getUrl());
     }
 }

@@ -31,17 +31,22 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.flink.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
 import org.apache.flink.cdc.connectors.postgres.source.PostgresSourceBuilder.PostgresIncrementalSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +84,9 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
 
             final IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
 
+            final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
+                    = RecordTransformerRules.contextParamValsGetterMapper(IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
+
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
                         /**
@@ -103,7 +111,7 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
                                             .password(dsFactory.password)
                                             .debeziumProperties(debeziumProperties)
                                             .startupOptions(sourceFactory.getStartupOptions())
-                                            .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator)) // converts SourceRecord to JSON String
+                                            .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper)) // converts SourceRecord to JSON String
                                             .build();
 
 

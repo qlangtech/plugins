@@ -33,6 +33,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.ContextParams.DbNameContextParamValGetter;
+import com.qlangtech.tis.plugin.datax.common.ContextParams.TableNameContextParamValGetter;
 import com.qlangtech.tis.plugin.datax.transformer.InParamer;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -98,11 +100,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     public Map<String, ContextParamConfig> getDBContextParams() {
         //  Map<String, ContextParamConfig> dbContextParams = Maps.newHashMap();
         ContextParamConfig dbName = new ContextParamConfig("dbName") {
-
-
             @Override
-            public Function<RdbmsRunningContext, Object> valGetter() {
-                return (runningContext -> runningContext.getDbName());
+            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+                return new DbNameContextParamValGetter();
             }
 
             @Override
@@ -113,10 +113,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
         ContextParamConfig tableName = new ContextParamConfig("tableName") {
             @Override
-            public Function<RdbmsRunningContext, Object> valGetter() {
-                return (runningContext -> runningContext.getTable());
+            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+                return new TableNameContextParamValGetter();
             }
-
             @Override
             public DataType getDataType() {
                 return DataType.createVarChar(50);

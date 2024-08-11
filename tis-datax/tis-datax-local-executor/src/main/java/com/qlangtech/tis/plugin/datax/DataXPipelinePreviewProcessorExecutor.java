@@ -22,7 +22,6 @@ import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.google.common.collect.Lists;
-
 import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
@@ -47,7 +46,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.slf4j.Logger;

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 
+import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
@@ -35,10 +36,12 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -46,6 +49,7 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 import io.debezium.config.CommonConnectorConfig;
@@ -62,6 +66,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -170,13 +175,21 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
             TableInDB tablesInDB = dsFactory.getTablesInDB();
             IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
                 tabColsMapper.put(tab.getName(), colsMapper);
             }
+
+            Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
+                    = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, rdbmsReader, tabs);
+            //
             TISDeserializationSchema deserializationSchema
-                    = new TISDeserializationSchema(new MySQLSourceDTOColValProcess(tabColsMapper), tablesInDB.getPhysicsTabName2LogicNameConvertor());
+                    = new TISDeserializationSchema(
+                    new MySQLSourceDTOColValProcess(tabColsMapper)
+                    , tablesInDB.getPhysicsTabName2LogicNameConvertor()
+                    , contextParamValsGetterMapper);
 
 
             SourceChannel sourceChannel = new SourceChannel(
@@ -231,7 +244,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     .port(dsFactory.port)
                     .databaseList(databases) // monitor all tables under inventory database
                     .tableList(tbs.toArray(new String[tbs.size()]))
-                   // .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
+                    // .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
                     .username(dsFactory.getUserName())
                     .password(dsFactory.getPassword())
                     .startupOptions(sourceFactory.getStartupOptions())

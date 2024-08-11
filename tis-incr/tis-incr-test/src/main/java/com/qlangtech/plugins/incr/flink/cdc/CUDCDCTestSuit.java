@@ -112,7 +112,7 @@ public abstract class CUDCDCTestSuit {
     public static String key_update_time = "update_time";
     public static String key_json_content = "json_content";
     public static String key_name_from_json_content = "name";
-    static String keyBaseId = "base_id";
+    public static String keyBaseId = "base_id";
     String keyColBlob = "col_blob";
 
     protected List<ColMeta> cols;

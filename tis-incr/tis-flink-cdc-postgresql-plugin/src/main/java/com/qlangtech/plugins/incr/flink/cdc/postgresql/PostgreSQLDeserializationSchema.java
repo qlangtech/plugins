@@ -23,9 +23,12 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import org.apache.kafka.connect.data.Struct;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,8 +36,9 @@ import java.util.List;
  **/
 public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
 
-    public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs, IFlinkColCreator<FlinkCol> flinkColCreator) {
-        super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert());
+    public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs, IFlinkColCreator<FlinkCol> flinkColCreator
+            , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
+        super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert(), contextParamValsGetterMapper);
     }
 
     @Override

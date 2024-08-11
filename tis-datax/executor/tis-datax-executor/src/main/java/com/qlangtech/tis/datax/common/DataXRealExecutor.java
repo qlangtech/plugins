@@ -23,16 +23,12 @@ import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.PreviewRecords;
 import com.alibaba.datax.common.element.QueryCriteria;
-import com.alibaba.datax.common.element.Record;
 import com.alibaba.datax.common.element.ThreadLocalRows;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.CoreConstant;
-import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
-import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.DataxExecutor;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -43,14 +39,12 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +52,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

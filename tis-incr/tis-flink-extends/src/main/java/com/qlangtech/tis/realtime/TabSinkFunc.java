@@ -65,7 +65,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     }
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
-    protected transient final Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformers;
+    protected transient final Optional<SelectedTableTransformerRules> transformers;
 
     public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
             , final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism) {
@@ -78,7 +78,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      */
     public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
             , final List<FlinkCol> sourceColsMeta, final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism
-            , Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt) {
+            , Optional<SelectedTableTransformerRules> transformerOpt) {
         if (CollectionUtils.isEmpty(sinkColsMeta)) {
             throw new IllegalArgumentException("colsMeta can not be empty");
         }

@@ -81,6 +81,13 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-connector-mysql</artifactId>
+            <version>${debezium-connector.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -133,13 +140,6 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-incr-test</artifactId>
         </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.qlangtech.tis</groupId>-->
-        <!--            <artifactId>tis-dag</artifactId>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-
     </dependencies>
 
 

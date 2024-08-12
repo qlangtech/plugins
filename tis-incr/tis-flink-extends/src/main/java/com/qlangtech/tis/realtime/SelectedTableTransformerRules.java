@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -38,6 +39,7 @@ public class SelectedTableTransformerRules {
     private final ISelectedTab tab;
     private final IFlinkColCreator<FlinkCol> sourceFlinkColCreator;
     private final IPluginContext dataXContext;
+    private final ITransformerBuildInfo rules;
 
     public SelectedTableTransformerRules(RecordTransformerRules transformerRules, ISelectedTab tab
             , IFlinkColCreator<FlinkCol> sourceFlinkColCreator, IPluginContext dataXContext) {
@@ -45,14 +47,25 @@ public class SelectedTableTransformerRules {
         this.tab = Objects.requireNonNull(tab, "param tab can not be null");
         this.sourceFlinkColCreator = Objects.requireNonNull(sourceFlinkColCreator, "param sourceFlinkColCreator can not be null");
         this.dataXContext = Objects.requireNonNull(dataXContext, "param dataXContext can not be null");
+        this.rules = transformerRules.createTransformerBuildInfo(dataXContext);
     }
 
+    List<IColMetaGetter> cols;
+
     public List<IColMetaGetter> overwriteColsWithContextParams() {
-        ITransformerBuildInfo rules = transformerRules.createTransformerBuildInfo(dataXContext);
-        List<IColMetaGetter> cols = rules.overwriteColsWithContextParams(this.tab.getCols());
+        if (cols == null) {
+            cols = rules.overwriteColsWithContextParams(this.tab.getCols());
+        }
         return cols;
     }
 
+
+    public List<FlinkCol> originColsWithContextParamsFlinkCol() {
+//        ITransformerBuildInfo transformerBuildInfo = rules;
+//        transformerBuildInfo.overwriteColsWithContextParams(tab.getCols());
+        this.overwriteColsWithContextParams();
+        return FlinkCol.getAllTabColsMeta(this.rules.originColsWithContextParams(), sourceFlinkColCreator);
+    }
 
     public RecordTransformerRules getTransformerRules() {
         return this.transformerRules;

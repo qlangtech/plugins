@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.Record;
 import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.TargetColumn;
@@ -25,6 +27,8 @@ import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.collections.CollectionUtils;
+import org.easymock.EasyMock;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +40,8 @@ import java.util.stream.Collectors;
  **/
 public class TestDataMaskingUDF extends BasicUDFDefinitionTest<DataMaskingUDF> {
     static final String addedField = "maskingUserName";
+    static final String userName = "userName";
+
     @Override
     protected Class<DataMaskingUDF> getPluginClass() {
         return DataMaskingUDF.class;
@@ -43,23 +49,43 @@ public class TestDataMaskingUDF extends BasicUDFDefinitionTest<DataMaskingUDF> {
 
     @Override
     protected DataMaskingUDF createTransformerUDF() {
+        return createDataMaskingUDF(1, 2);
+    }
+
+    private static DataMaskingUDF createDataMaskingUDF(int startIndex, int length) {
         DataMaskingUDF maskingUDF = new DataMaskingUDF();
-        maskingUDF.from = "userName";
+        maskingUDF.from = userName;
         TargetColType toCol = new TargetColType();
         VirtualTargetColumn target = new VirtualTargetColumn();
-        target.name =addedField;
+        target.name = addedField;
         toCol.setTarget(target);
         toCol.setType(DataType.createVarChar(50));
         maskingUDF.to = toCol;// "maskingUserName";
-        maskingUDF.start = 1;
-        maskingUDF.length = 2;
+        maskingUDF.start = startIndex;
+        maskingUDF.length = length;
         maskingUDF.replaceChar = "*";
         return maskingUDF;
     }
 
+    @Test
     @Override
     public void testEvaluate() {
+        DataMaskingUDF transformerUDF = this.createTransformerUDF();
+        DataMaskingUDF transformerUDFInfinit = this.createDataMaskingUDF(1,999999);
+        Record record = mock("record", Record.class);
 
+        EasyMock.expect(record.getString(userName)).andReturn("baisuibaisui").times(2);
+        record.setString(addedField, "b**suibaisui");
+        EasyMock.expectLastCall().times(1);
+
+        record.setString(addedField, "b***********");
+        EasyMock.expectLastCall().times(1);
+        this.replay();
+
+        transformerUDF.evaluate(record);
+        transformerUDFInfinit.evaluate(record);
+
+        this.verifyAll();
     }
 
     @Override

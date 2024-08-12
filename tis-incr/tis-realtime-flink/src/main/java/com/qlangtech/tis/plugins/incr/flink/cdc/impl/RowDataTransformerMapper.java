@@ -19,25 +19,30 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
+import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import org.apache.flink.table.data.RowData;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-06-20 17:09
  **/
 public class RowDataTransformerMapper extends ReocrdTransformerMapper<RowData> {
-    public RowDataTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
-        super(cols, transformerRules);
+    private final List<FlinkCol> originColsWithContextParamsFlinkCol;
+
+    public RowDataTransformerMapper(SelectedTableTransformerRules triple) {
+        super(FlinkCol.getAllTabColsMeta(triple.overwriteColsWithContextParams() //rule.overwriteCols(table.getCols())
+                , Objects.requireNonNull(triple.getSourceFlinkColCreator(), "flinkColCreator")), triple.getTransformerRules());
+        this.originColsWithContextParamsFlinkCol = triple.originColsWithContextParamsFlinkCol();
     }
 
 
     @Override
     protected AbstractTransformerRecord<RowData> createDelegate(RowData row) {
-        return new TransformerRowData(row, this.cols);
+        return new TransformerRowData(row, this.cols, this.originColsWithContextParamsFlinkCol);
     }
 }

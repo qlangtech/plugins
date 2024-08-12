@@ -79,12 +79,14 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import com.qlangtech.tis.util.HeteroEnum;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
@@ -219,12 +221,23 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
         MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator();
-        List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+        //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+
+        //  Optional<SelectedTableTransformerRules> transformerRules = ;
+
+//        if(transformerRules.isPresent()){
+//            SelectedTableTransformerRules transformer = transformerRules.get();
+//
+//            transformer.overwriteColsWithContextParams();
+//        }
 
         return new RowDataSinkFunc(tabName
                 , sinkFunc.getSinkFunction()
                 , sinkFunc.primaryKeys
-                , sourceColsMeta
+                , IPluginContext.namedContext(dataxProcessor.identityValue())
+                , tab
+                , sourceFlinkColCreator
+                // , sourceColsMeta
                 , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
                 , this.parallelism, RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), tabName, tab, sourceFlinkColCreator));

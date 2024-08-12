@@ -31,6 +31,7 @@ import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.types.RowKind;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,15 +39,17 @@ import java.util.List;
  **/
 public class TransformerRowData extends AbstractTransformerRecord<RowData> implements RowData {
     protected Object[] rewriteVals;
-    protected List<FlinkCol> cols;
+    protected List<FlinkCol> rewriteCols;
+    protected List<FlinkCol> originColsWithContextParamsFlinkCol;
 
-    public TransformerRowData(RowData row, List<FlinkCol> cols) {
+    public TransformerRowData(RowData row, List<FlinkCol> rewriteCols, List<FlinkCol> originColsWithContextParamsFlinkCol) {
         super(row);
         if (!(row instanceof GenericRowData)) {
             throw new IllegalArgumentException("param row must be type of " + GenericRowData.class);
         }
-        this.cols = cols;
-        int newSize = cols.size();
+        this.originColsWithContextParamsFlinkCol = originColsWithContextParamsFlinkCol;
+        this.rewriteCols = rewriteCols;
+        int newSize = rewriteCols.size();
         this.rewriteVals = new Object[newSize];
     }
 
@@ -58,19 +61,20 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
     @Override
     public void setColumn(String field, Object val) {
         Integer pos = getPos(field);
-        FlinkCol flinkCol = cols.get(pos);
+        FlinkCol flinkCol = rewriteCols.get(pos);
         rewriteVals[pos] = (val == null ? NULL : flinkCol.rowDataProcess.apply(val));
     }
 
     @Override
     public Object getColumn(String field) {
         Integer pos = getPos(field);
-        FlinkCol flinkCol = cols.get(pos);
+        FlinkCol flinkCol = rewriteCols.get(pos);
         if (rewriteVals[pos] != null) {
             Object overWrite = rewriteVals[pos];
             return overWrite == NULL ? null : flinkCol.getRowDataVal(this);
         }
-        return getColVal(flinkCol);
+
+        return getColVal(originColsWithContextParamsFlinkCol.get(pos));
     }
 
     @Override
@@ -101,7 +105,8 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
     }
 
     private Object getColVal(FlinkCol flinkCol) {
-        return flinkCol.getRowDataVal(this.row);
+        return Objects.requireNonNull(flinkCol, "param flinkCol can not be null")
+                .getRowDataVal(this.row);
     }
 
 

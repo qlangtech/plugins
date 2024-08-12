@@ -63,6 +63,7 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -282,16 +283,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         ConcatUDF concatUDF = new ConcatUDF();
         List<TargetColType> from = Lists.newArrayList();
 
+
+        from.add(createBaseId(true));
+
+
         TargetColType targetColType = new TargetColType();
-        ExistTargetCoumn targetCol = new ExistTargetCoumn();
-        targetCol.name = keyBaseId;
-        targetColType.setTarget(targetCol);
-        targetColType.setType(DataType.createVarChar(32));
-        from.add(targetColType);
-        final TargetColType baseId = targetColType;
-
-
-        targetColType = new TargetColType();
         VirtualTargetColumn virtualTgtCol = new VirtualTargetColumn();
         virtualTgtCol.name = "$dbName";
         targetColType.setTarget(virtualTgtCol);
@@ -299,11 +295,20 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         from.add(targetColType);
 
         concatUDF.from = from;
-        concatUDF.to = baseId;
+        concatUDF.to = createBaseId(false);
         concatUDF.separator = Separator.Cut.name();
 
         transformer.setUdf(concatUDF);
         tRules.rules.add(transformer);
+    }
+
+    private static TargetColType createBaseId(boolean from) {
+        TargetColType targetColType = new TargetColType();
+        ExistTargetCoumn targetCol = new ExistTargetCoumn();
+        targetCol.name = keyBaseId;
+        targetColType.setTarget(targetCol);
+        targetColType.setType(from ? DataType.getType(JDBCTypes.BIGINT) : DataType.createVarChar(32));
+        return targetColType;
     }
 
     private static void addCopyValTransformer(RecordTransformerRules tRules) {

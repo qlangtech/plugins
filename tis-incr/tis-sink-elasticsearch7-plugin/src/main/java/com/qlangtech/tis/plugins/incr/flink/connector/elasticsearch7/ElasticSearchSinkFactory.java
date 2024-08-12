@@ -205,14 +205,17 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 return null;
             }
         });
-        final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+       // final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
 
         Optional<SelectedTableTransformerRules> transformerOpt
                 = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), esSchema, tab, sourceFlinkColCreator);
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys
-                        , sourceColsMeta
+                        , IPluginContext.namedContext(dataxProcessor.identityValue())
+                        , tab
+                        , sourceFlinkColCreator
+                        //, sourceColsMeta
                         , sinkColsMeta
                         , true, DEFAULT_PARALLELISM, transformerOpt));
     }

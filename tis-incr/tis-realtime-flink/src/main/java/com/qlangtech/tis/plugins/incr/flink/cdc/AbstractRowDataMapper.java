@@ -333,7 +333,8 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             if (o instanceof Number) {
                 return ((Number) o).shortValue();
             }
-            throw new IllegalStateException("val:" + o + ",type:" + o.getClass().getName());
+            return Short.parseShort(String.valueOf(o));
+           // throw new IllegalStateException("val:" + o + ",type:" + o.getClass().getName());
         }
     }
 

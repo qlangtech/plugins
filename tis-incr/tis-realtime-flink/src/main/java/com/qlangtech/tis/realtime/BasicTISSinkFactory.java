@@ -31,10 +31,15 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.table.types.utils.TypeConversions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,10 +169,14 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
             if (transformers.isPresent()) {
                 SelectedTableTransformerRules triple = transformers.get();
-                // RecordTransformerRules rule = triple.getTransformerRules();
-//                List<IColMetaGetter> cols = triple.overwriteColsWithContextParams();
-//                triple.originColsWithContextParamsFlinkCol();
-                return result.map(new RowDataTransformerMapper(triple))
+                LogicalType[] fieldDataTypes
+                        = triple.transformerColsWithContextParamsFlinkCol()
+                        .stream().map((colmeta) -> colmeta.type.getLogicalType()).toArray(LogicalType[]::new);
+                RowType rowType = RowType.of(fieldDataTypes);
+                TypeInformation<RowData> outputType
+                        = (TypeInformation<RowData>) TypeConversions.fromDataTypeToLegacyInfo(TypeConversions.fromLogicalToDataType(rowType));
+
+                return result.map(new RowDataTransformerMapper(triple), outputType)
                         .name(tab.getFrom() + "_transformer").setParallelism(this.sinkTaskParallelism);
             } else {
                 return result;

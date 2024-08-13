@@ -59,6 +59,10 @@ public class SelectedTableTransformerRules {
         return cols;
     }
 
+    public List<FlinkCol> transformerColsWithContextParamsFlinkCol() {
+        this.overwriteColsWithContextParams();
+        return FlinkCol.getAllTabColsMeta(rules.tranformerColsWithoutContextParams(), sourceFlinkColCreator);
+    }
 
     public List<FlinkCol> originColsWithContextParamsFlinkCol() {
 //        ITransformerBuildInfo transformerBuildInfo = rules;

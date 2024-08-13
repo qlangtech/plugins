@@ -23,7 +23,6 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
@@ -36,7 +35,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.table.types.utils.TypeConversions;
@@ -45,7 +43,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -170,7 +167,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             if (transformers.isPresent()) {
                 SelectedTableTransformerRules triple = transformers.get();
                 LogicalType[] fieldDataTypes
-                        = triple.transformerColsWithContextParamsFlinkCol()
+                        = triple.transformerColsWithoutContextParamsFlinkCol()
                         .stream().map((colmeta) -> colmeta.type.getLogicalType()).toArray(LogicalType[]::new);
                 RowType rowType = RowType.of(fieldDataTypes);
                 TypeInformation<RowData> outputType

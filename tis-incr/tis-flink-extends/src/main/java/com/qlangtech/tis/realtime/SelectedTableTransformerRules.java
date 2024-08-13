@@ -25,7 +25,6 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -59,7 +58,7 @@ public class SelectedTableTransformerRules {
         return cols;
     }
 
-    public List<FlinkCol> transformerColsWithContextParamsFlinkCol() {
+    public List<FlinkCol> transformerColsWithoutContextParamsFlinkCol() {
         this.overwriteColsWithContextParams();
         return FlinkCol.getAllTabColsMeta(rules.tranformerColsWithoutContextParams(), sourceFlinkColCreator);
     }

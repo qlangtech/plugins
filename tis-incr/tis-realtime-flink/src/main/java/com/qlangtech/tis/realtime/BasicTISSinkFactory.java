@@ -35,6 +35,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.table.types.utils.TypeConversions;
@@ -166,14 +167,19 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
             if (transformers.isPresent()) {
                 SelectedTableTransformerRules triple = transformers.get();
+                List<FlinkCol> transformerColsWithoutContextParamsFlinkCol = triple.transformerColsWithoutContextParamsFlinkCol();
                 LogicalType[] fieldDataTypes
-                        = triple.transformerColsWithoutContextParamsFlinkCol()
+                        = transformerColsWithoutContextParamsFlinkCol
                         .stream().map((colmeta) -> colmeta.type.getLogicalType()).toArray(LogicalType[]::new);
-                RowType rowType = RowType.of(fieldDataTypes);
-                TypeInformation<RowData> outputType
-                        = (TypeInformation<RowData>) TypeConversions.fromDataTypeToLegacyInfo(TypeConversions.fromLogicalToDataType(rowType));
 
-                return result.map(new RowDataTransformerMapper(triple), outputType)
+                String[] colNames = transformerColsWithoutContextParamsFlinkCol
+                        .stream().map((colmeta) -> colmeta.name).toArray(String[]::new);
+                TypeInformation<RowData> outputType = InternalTypeInfo.of(RowType.of(fieldDataTypes, colNames));
+                // = (TypeInformation<RowData>) TypeConversions.fromDataTypeToLegacyInfo(TypeConversions.fromLogicalToDataType(rowType));
+
+                logger.info("transformerColsWithoutContextParamsFlinkCol size:{},colNames:{}"
+                        , transformerColsWithoutContextParamsFlinkCol.size(), String.join(",", colNames));
+                return result.map(new RowDataTransformerMapper(triple, transformerColsWithoutContextParamsFlinkCol.size()), outputType)
                         .name(tab.getFrom() + "_transformer").setParallelism(this.sinkTaskParallelism);
             } else {
                 return result;

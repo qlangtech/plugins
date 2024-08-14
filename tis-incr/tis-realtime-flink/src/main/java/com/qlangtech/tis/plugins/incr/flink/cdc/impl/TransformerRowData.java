@@ -41,16 +41,21 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
     protected Object[] rewriteVals;
     protected List<FlinkCol> rewriteCols;
     protected List<FlinkCol> originColsWithContextParamsFlinkCol;
+    private final int delegateArity;
 
-    public TransformerRowData(RowData row, List<FlinkCol> rewriteCols, List<FlinkCol> originColsWithContextParamsFlinkCol) {
+    public TransformerRowData(RowData row, List<FlinkCol> rewriteCols, List<FlinkCol> originColsWithContextParamsFlinkCol, int delegateArity) {
         super(row);
         if (!(row instanceof GenericRowData)) {
             throw new IllegalArgumentException("param row must be type of " + GenericRowData.class);
         }
+        this.delegateArity = delegateArity;
         this.originColsWithContextParamsFlinkCol = originColsWithContextParamsFlinkCol;
         this.rewriteCols = rewriteCols;
         int newSize = rewriteCols.size();
         this.rewriteVals = new Object[newSize];
+        if (this.delegateArity > newSize) {
+            throw new IllegalStateException("delegateArbitary:" + this.delegateArity + " > newSize:" + newSize + " is not allowed");
+        }
     }
 
     @Override
@@ -88,11 +93,11 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
 
     @Override
     public RowData getDelegate() {
-        final int rewriteValsLength = this.rewriteVals.length;
+        // final int rewriteValsLength = this.delegateArbitary;
         GenericRowData old = (GenericRowData) this.row;
-        GenericRowData rowData = new GenericRowData(this.row.getRowKind(), rewriteValsLength);
+        GenericRowData rowData = new GenericRowData(this.row.getRowKind(), this.delegateArity);
         Object rewriteVal = null;
-        for (int i = 0; i < rewriteValsLength; i++) {
+        for (int i = 0; i < this.delegateArity; i++) {
             if ((rewriteVal = rewriteVals[i]) != null && rewriteVal != NULL) {
                 rowData.setField(i, rewriteVal);
             } else {

@@ -33,16 +33,18 @@ import java.util.Objects;
  **/
 public class RowDataTransformerMapper extends ReocrdTransformerMapper<RowData> {
     private final List<FlinkCol> originColsWithContextParamsFlinkCol;
+    private final int delegateArity;
 
-    public RowDataTransformerMapper(SelectedTableTransformerRules triple) {
+    public RowDataTransformerMapper(SelectedTableTransformerRules triple, int delegateArity) {
         super(FlinkCol.getAllTabColsMeta(triple.overwriteColsWithContextParams() //rule.overwriteCols(table.getCols())
                 , Objects.requireNonNull(triple.getSourceFlinkColCreator(), "flinkColCreator")), triple.getTransformerRules());
         this.originColsWithContextParamsFlinkCol = triple.originColsWithContextParamsFlinkCol();
+        this.delegateArity = delegateArity;
     }
 
 
     @Override
     protected AbstractTransformerRecord<RowData> createDelegate(RowData row) {
-        return new TransformerRowData(row, this.cols, this.originColsWithContextParamsFlinkCol);
+        return new TransformerRowData(row, this.cols, this.originColsWithContextParamsFlinkCol, this.delegateArity);
     }
 }

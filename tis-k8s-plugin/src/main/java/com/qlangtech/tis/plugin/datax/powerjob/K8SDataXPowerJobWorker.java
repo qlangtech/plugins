@@ -8,6 +8,7 @@ import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
+import com.qlangtech.tis.datax.SPIWrokerMemorySpec;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;

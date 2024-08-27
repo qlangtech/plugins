@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/8
  */
-public class PowerJobExecContext implements IExecChainContext {
+public class SPIExecContext implements IExecChainContext {
 
     private Integer workflowId;
     private ExecutePhaseRange executePhaseRange;

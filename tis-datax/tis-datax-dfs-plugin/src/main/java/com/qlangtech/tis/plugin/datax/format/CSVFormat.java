@@ -78,6 +78,7 @@ public class CSVFormat extends BasicPainFormat {
 
             if (MapUtils.isNotEmpty(csvCfg)) {
                 try {
+
                     BeanUtils.populate(csvWriter, csvCfg);
                 } catch (Exception e) {
                     throw new RuntimeException(e);

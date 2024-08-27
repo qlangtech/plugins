@@ -37,13 +37,13 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-09 18:40
  **/
-public class CloneDataSourceFactory extends DataSourceFactoryManipulate implements AfterPluginSaved, IdentityName {
+public class CloneDataSourceFactory extends DataSourceFactoryManipulate implements  IdentityName {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
     @Override
-    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+    public void manipuldateProcess(IPluginContext pluginContext, Optional<Context> context) {
         if (StringUtils.isEmpty(this.name)) {
             throw new IllegalArgumentException("property name can not be null");
         }

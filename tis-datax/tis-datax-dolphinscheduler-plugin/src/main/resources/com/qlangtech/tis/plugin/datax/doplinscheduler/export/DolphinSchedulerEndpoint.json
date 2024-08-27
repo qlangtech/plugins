@@ -1,0 +1,8 @@
+{
+  "serverPath": {
+     "placeholder": "http://192.168.28.201:12345/dolphinscheduler"
+  },
+  "serverToken": {
+    "placeholder": "f02d2883118664579ea32a659b2c9652"
+  }
+}

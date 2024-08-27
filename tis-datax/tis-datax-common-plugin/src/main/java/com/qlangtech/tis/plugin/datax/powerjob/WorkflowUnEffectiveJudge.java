@@ -2,9 +2,10 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.plugin.datax.IWorkflowNode;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import tech.powerjob.common.model.PEWorkflowDAG;
+
 
 import java.util.List;
 import java.util.Map;
@@ -17,20 +18,20 @@ import java.util.Optional;
 public class WorkflowUnEffectiveJudge {
     private boolean unEffective;
 
-    private final List<PEWorkflowDAG.Node> deletedWfNodes = Lists.newArrayList();
-    private final Map<String /**tableName*/, PEWorkflowDAG.Node> existWfNodes = Maps.newHashMap();
-    private PEWorkflowDAG.Node startInitNode;
+    private final List<IWorkflowNode> deletedWfNodes = Lists.newArrayList();
+    private final Map<String /**tableName*/, IWorkflowNode> existWfNodes = Maps.newHashMap();
+    private IWorkflowNode startInitNode;
 
     public WorkflowUnEffectiveJudge() {
         this(false);
     }
 
-    public void addDeletedWfNode(PEWorkflowDAG.Node node) {
+    public void addDeletedWfNode(IWorkflowNode node) {
         deletedWfNodes.add(node);
         this.setUnEffective();
     }
 
-    public List<PEWorkflowDAG.Node> getDeletedWfNodes() {
+    public List<IWorkflowNode> getDeletedWfNodes() {
         return deletedWfNodes;
     }
 
@@ -40,17 +41,17 @@ public class WorkflowUnEffectiveJudge {
      * @param tabTriggers
      * @param node
      */
-    public void addExistWfNode(SelectedTabTriggers tabTriggers, PEWorkflowDAG.Node node) {
+    public void addExistWfNode(SelectedTabTriggers tabTriggers, IWorkflowNode node) {
         String tableName = tabTriggers.getTabName();
         existWfNodes.put(tableName, node);
         //   this.setUnEffective();
     }
 
-    public void addExistWfNode(ISqlTask.SqlTaskCfg sqlTsk, PEWorkflowDAG.Node node) {
+    public void addExistWfNode(ISqlTask.SqlTaskCfg sqlTsk, IWorkflowNode node) {
         existWfNodes.put(sqlTsk.getExportName(), node);
     }
 
-    public Optional<PEWorkflowDAG.Node> getExistWfNode(String tableName) {
+    public Optional<IWorkflowNode> getExistWfNode(String tableName) {
         return Optional.ofNullable(existWfNodes.get(tableName));
         //return existWfNodes.entrySet();
     }
@@ -68,11 +69,12 @@ public class WorkflowUnEffectiveJudge {
         return this.unEffective;
     }
 
-    public void setStatInitNode(PEWorkflowDAG.Node node) {
+    public void setStatInitNode(//PEWorkflowDAG.Node
+                                        IWorkflowNode node ) {
         this.startInitNode = node;
     }
 
-    public Optional<PEWorkflowDAG.Node> getStartInitNode() {
+    public Optional<IWorkflowNode> getStartInitNode() {
         return Optional.ofNullable(startInitNode);
     }
 }

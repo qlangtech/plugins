@@ -41,7 +41,11 @@
         </dependency>
 
 
-
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!--        <dependency>-->
         <!--            <groupId>com.alibaba.datax</groupId>-->
@@ -74,11 +78,6 @@
         <!--            <artifactId>tis-solrj-client</artifactId>-->
         <!--            <scope>test</scope>-->
         <!--        </dependency>-->
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-hadoop-rpc</artifactId>
-            <scope>test</scope>
-        </dependency>
 
     </dependencies>
 

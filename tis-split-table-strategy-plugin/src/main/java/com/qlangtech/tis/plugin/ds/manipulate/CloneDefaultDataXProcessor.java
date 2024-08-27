@@ -20,10 +20,8 @@ package com.qlangtech.tis.plugin.ds.manipulate;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.StoreResourceType;
@@ -33,10 +31,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler.BizLogic;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.IPluginItemsProcessor;
-import com.qlangtech.tis.util.IPluginWithStore;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -44,13 +40,13 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-10 21:04
  **/
-public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate implements AfterPluginSaved, IdentityName {
+public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate implements  IdentityName {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
     @Override
-    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+    public void manipuldateProcess(IPluginContext pluginContext, Optional<Context> context) {
         if (StringUtils.isEmpty(this.name)) {
             throw new IllegalArgumentException("property name can not be null");
         }

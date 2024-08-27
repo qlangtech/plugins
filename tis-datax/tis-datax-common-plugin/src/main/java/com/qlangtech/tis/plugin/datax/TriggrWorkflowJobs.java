@@ -1,7 +1,26 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.manage.common.Config;
@@ -24,6 +43,8 @@ import java.util.concurrent.BlockingQueue;
 public class TriggrWorkflowJobs {
 
     private static final String KEY_WORKFLOW_INSTANCE_ID = "workflow_instance_id";
+    private static final String KEY_WORKFLOW_BUILD_HISTORY_FACTORY = "workflow_build_factory";
+
     private static final String KEY_TIS_TASK_ID = "tis_task_id";
     private static final String KEY_EXEC_STATUS = "exec_result";
     private final BlockingQueue<WorkFlowBuildHistoryPayload> triggrWorkflowJobs = new ArrayBlockingQueue<>(200);
@@ -51,7 +72,16 @@ public class TriggrWorkflowJobs {
             while (lineIt.hasNext()) {
 
                 info = JSONObject.parseObject(lineIt.nextLine());
-                submitLog = new WorkFlowBuildHistoryPayload.SubmitLog(info.getLong(KEY_WORKFLOW_INSTANCE_ID), info.getInteger(KEY_TIS_TASK_ID));
+                String workflowBuildHistoryFactory = info.getString(KEY_WORKFLOW_BUILD_HISTORY_FACTORY);
+                Class<?> clazz = TIS.get().getPluginManager().uberClassLoader.loadClass(workflowBuildHistoryFactory);
+                if (clazz == null) {
+                    throw new IllegalStateException("workflow build historyFactory:" + workflowBuildHistoryFactory + " can not find relevant class instance");
+                }
+                submitLog = new WorkFlowBuildHistoryPayload.SubmitLog(
+                        info.getLong(KEY_WORKFLOW_INSTANCE_ID)
+                        , info.getInteger(KEY_TIS_TASK_ID)
+                        , (WorkFlowBuildHistoryPayloadFactory) clazz.newInstance());
+
                 execResult = info.getInteger(KEY_EXEC_STATUS);
                 if (execResult != null) {
                     submitLog.setExecResult(ExecResult.parse(execResult));
@@ -83,8 +113,9 @@ public class TriggrWorkflowJobs {
 
     private void appendLog(WorkFlowBuildHistoryPayload workFlowBuildHistoryPayload, Optional<ExecResult> execResult) {
         JSONObject wfHistory = new JSONObject();
-        wfHistory.put(KEY_WORKFLOW_INSTANCE_ID, workFlowBuildHistoryPayload.getPowerJobWorkflowInstanceId());
+        wfHistory.put(KEY_WORKFLOW_INSTANCE_ID, workFlowBuildHistoryPayload.getSPIWorkflowInstanceId());
         wfHistory.put(KEY_TIS_TASK_ID, workFlowBuildHistoryPayload.getTisTaskId());
+        wfHistory.put(KEY_WORKFLOW_BUILD_HISTORY_FACTORY, workFlowBuildHistoryPayload.getFactory().getName());
 
 
         execResult.ifPresent((er) -> {

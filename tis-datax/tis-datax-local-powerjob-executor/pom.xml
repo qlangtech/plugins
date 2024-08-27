@@ -35,6 +35,8 @@
     </properties>
     <dependencies>
 
+
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-powerjob-common-plugin</artifactId>

@@ -29,15 +29,15 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.biz.dal.pojo.AppType;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
+import com.qlangtech.tis.manage.common.AppAndRuntime;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryManipulate;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
-import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +45,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -171,6 +172,14 @@ public class DefaultDataxProcessor extends DataxProcessor {
         @Override
         public Class<DefaultDataXProcessorManipulate> getManipulateExtendPoint() {
             return DefaultDataXProcessorManipulate.class;
+        }
+
+        @Override
+        public Optional<IPluginStore<DefaultDataXProcessorManipulate>> getManipulateStore() {
+
+            AppAndRuntime appAndRuntime = AppAndRuntime.getAppAndRuntime();
+            String appName = Objects.requireNonNull(appAndRuntime, "appAndRuntime can not be null").getAppName();
+            return Optional.of(DefaultDataXProcessorManipulate.loadPlugins(null, DefaultDataXProcessorManipulate.class, appName).getValue());
         }
     }
 

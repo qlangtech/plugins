@@ -6,6 +6,7 @@ import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.exec.DefaultExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.web.start.TisAppLaunch;
@@ -33,7 +34,7 @@ public class SplitTabSync {
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
             DataXJobRunEnvironmentParamsSetter runEnvironmentParamsSetter =
                     (DataXJobRunEnvironmentParamsSetter) dataXJobSubmit;
-            DataxPrePostConsumer prePostConsumer = TISTableDumpProcessor.createPrePostConsumer();// new
+            DataxPrePostConsumer prePostConsumer = BasicTISTableDumpProcessor.createPrePostConsumer();// new
             // DataxPrePostConsumer();
             runEnvironmentParamsSetter.setClasspath(prePostConsumer.getClasspath());
             runEnvironmentParamsSetter.setWorkingDirectory(prePostConsumer.getWorkingDirectory());
@@ -50,12 +51,13 @@ public class SplitTabSync {
 
     private static DataXJobSubmit getDataXJobSubmit(DefaultExecContext execChainContext) {
         DataXJobSubmit.InstanceType instanceType = TisAppLaunch.isTestMock() ? DataXJobSubmit.InstanceType.EMBEDDED :
-                DataXJobSubmit.InstanceType.LOCAL;//  DataXJobSubmit
+                DataXJobSubmit.InstanceType.LOCAL;
 
         Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(execChainContext.isDryRun(),
                 instanceType);
         if (!dataXJobSubmit.isPresent()) {
-            throw new IllegalStateException("dataXJobSubmit must be present");
+            throw new IllegalStateException("dataXJobSubmit must be present ,instanceType:"
+                    + instanceType + ",isDryRun:" + execChainContext.isDryRun());
         }
         return dataXJobSubmit.get();
     }

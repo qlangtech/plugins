@@ -45,7 +45,7 @@ public class ManipuldateUtils {
     public static IPluginItemsProcessor cloneInstance(IPluginContext pluginContext, Context context, String newIdentityName
             , Consumer<IUploadPluginMeta> pluginMetaConsumer
             , Consumer<String> originIdentityIdConsumer) {
-        Objects.requireNonNull(context, "param content can not be null");
+       // Objects.requireNonNull(contextb, "param content can not be null");
         JSONObject postContent = Objects.requireNonNull(pluginContext, "pluginContext can not be null").getJSONPostContent();
         JSONObject manipulateTarget = postContent.getJSONObject(IUploadPluginMeta.KEY_JSON_MANIPULATE_TARGET);
         final String keyManipulatePluginMeta = "manipulatePluginMeta";

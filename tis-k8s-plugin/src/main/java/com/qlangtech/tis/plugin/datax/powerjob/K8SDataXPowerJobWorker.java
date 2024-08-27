@@ -178,7 +178,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
 
                     List<String> command = Lists.newArrayList("sh", "-c"
                             , "chmod +x wait-for-it.sh && ./wait-for-it.sh " + powerJobServerHostReplacement
-                                    + " --strict -- java " + replicasSpec.toJavaMemorySpec(Optional.of(PowerJobWrokerMemorySpec.residentMemoryProportion()))
+                                    + " --strict -- java " + replicasSpec.toJavaMemorySpec(Optional.of(SPIWrokerMemorySpec.residentMemoryProportion()))
                                     + " " + DataXJobRunEnvironmentParamsSetter.createSysPramsSuppiler().serialize()
                                     + " -jar /powerjob-worker-samples.jar $PARAMS");
                     logger.info("exec powerjob worker command:" + String.join(" ", command));

@@ -1,0 +1,33 @@
+{
+  "dsEndpoint": {
+    "label": "endpoint",
+    "help": "dolphinscheduler中对应的连接端配置",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "ds-endpoint"
+        }
+      ]
+    }
+  },
+  "processName": {
+    "label": "工作流名称",
+    "help": "对应的dolphinscheduler中工作流名称，确保同一项目下工作流名称唯一，不能重复"
+  },
+  "processDescription": {
+    "label": "描述",
+    "help": "同步到dolphinscheduler的工作流名称描述"
+  },
+  "projectCode": {
+    "placeholder": "117442916207136",
+    "help": "dolphinscheduler中对应的项目编码"
+  },
+  "targetTables": {
+    "label": "目标表",
+    "viewtype": "idlist",
+    "enum": "com.qlangtech.tis.datax.impl.DataXCfgGenerator.GenerateCfgs.getTabsCandidate():uncache_true",
+    "help": "请选择需要同步到DolphinScheduler的表"
+  }
+}

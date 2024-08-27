@@ -138,7 +138,7 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         ExecutePhaseRange executePhaseRange = new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN);
 
         wf.setGitPath(JsonUtil.toString(
-                PowerWorkflowPayload.createPayload(powerjobWorkflowId, executePhaseRange, new JSONObject())));
+                BasicWorkflowPayload.createPayload(powerjobWorkflowId, executePhaseRange, new JSONObject())));
 
         List<WorkFlow> workFlows = Lists.newArrayList(wf);
 

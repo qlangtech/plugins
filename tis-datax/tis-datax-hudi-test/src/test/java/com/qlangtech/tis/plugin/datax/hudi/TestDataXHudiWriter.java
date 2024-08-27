@@ -25,6 +25,8 @@ import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DBDataXChildTask;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -201,11 +203,11 @@ public class TestDataXHudiWriter {
         File dataxCfgDir = caseFolder.newFolder("dataxCfgDir");
         //  EasyMock.expect(processor.getDataxCfgDir(null)).andReturn(dataxCfgDir);
 
-        DataXCfgGenerator.GenerateCfgs genCfgs = new DataXCfgGenerator.GenerateCfgs(dataxCfgDir);
+        DataXCfgGenerator.GenerateCfgs genCfgs = new DataXCfgGenerator.GenerateCfgs(null, dataxCfgDir);
         genCfgs.setGenTime(1);
         genCfgs.setGroupedChildTask(
                 Collections.singletonMap(tableFullTypes
-                        , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, "dbId", tableFullTypes + "_0"))));
+                        , Lists.newArrayList(new DBDataXChildTask(jdbcUrl, "dbId", tableFullTypes + "_0"))));
         genCfgs.write2GenFile(dataxCfgDir);
 
 
@@ -305,10 +307,10 @@ public class TestDataXHudiWriter {
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
-            DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs(dataXCfgDir);
+            DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs(null, dataXCfgDir);
             genCfg.setGenTime(HudiWriter.timestamp);
             genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
-                    , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, "dbId", WriterTemplate.TAB_customer_order_relation + "_0"))));
+                    , Lists.newArrayList(new DBDataXChildTask(jdbcUrl, "dbId", WriterTemplate.TAB_customer_order_relation + "_0"))));
             genCfg.write2GenFile(dataXCfgDir);
 
             //   EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);

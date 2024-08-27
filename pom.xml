@@ -64,6 +64,7 @@
         <module>tis-powerjob-common-plugin</module>
         <module>tis-datax/tis-datax-local-embedded-executor</module>
         <module>tis-transformer</module>
+        <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->

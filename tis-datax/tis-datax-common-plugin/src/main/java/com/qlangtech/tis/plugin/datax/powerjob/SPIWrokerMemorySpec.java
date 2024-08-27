@@ -16,32 +16,27 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.datax.powerjob;
-
-import tech.powerjob.worker.core.processor.TaskContext;
-import tech.powerjob.worker.core.processor.sdk.MapProcessor;
+package com.qlangtech.tis.plugin.datax.powerjob;
 
 /**
- * powerjob 的process 分为三个阶段 准备（prepare），分子任务（Mapper），归并（Reduce）
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-04-12 13:14
+ * @create: 2024-04-13 14:57
  **/
-public enum ExecPhase {
-    Prepare, Mapper, Reduce;
+public class SPIWrokerMemorySpec {
+    private SPIWrokerMemorySpec() {
 
-    public static ExecPhase parse(MapProcessor processor, TaskContext context) {
+    }
 
+    /**
+     * powerjob worker 宿主进程占用内存比例
+     *
+     * @return
+     */
+    public static int residentMemoryProportion() {
+        return 45;
+    }
 
-        if (processor.isRootTask()) {
-            return Prepare;
-        }
-
-        Object subTask = context.getSubTask();
-        if (subTask != null && subTask instanceof SplitTabSync) {
-            return Mapper;
-        }
-
-        throw new IllegalStateException("illegal status");
+    public static int dataXExecutorMemoryProportion() {
+        return 100 - residentMemoryProportion();
     }
 }

@@ -232,14 +232,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     protected void fillTableInDB(TableInDB tabs) {
 
-        this.visitAllConnection((conn) -> {
+        this.visitFirstConnection((conn) -> {
             refectTableInDB(tabs, conn);
         });
-
-
-//        this.visitFirstConnection((conn) -> {
-//            refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
-//        });
     }
 
     protected TableInDB createTableInDB() {

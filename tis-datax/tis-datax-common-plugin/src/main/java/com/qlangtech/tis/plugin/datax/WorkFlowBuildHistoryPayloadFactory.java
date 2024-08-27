@@ -16,27 +16,14 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.powerjob;
+package com.qlangtech.tis.plugin.datax;
+
+import com.qlangtech.tis.dao.ICommonDAOContext;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-04-13 14:57
+ * @create: 2024-08-21 13:25
  **/
-public class PowerJobWrokerMemorySpec {
-    private PowerJobWrokerMemorySpec() {
-
-    }
-
-    /**
-     * powerjob worker 宿主进程占用内存比例
-     *
-     * @return
-     */
-    public static int residentMemoryProportion() {
-        return 45;
-    }
-
-    public static int dataXExecutorMemoryProportion() {
-        return 100 - residentMemoryProportion();
-    }
+public interface WorkFlowBuildHistoryPayloadFactory {
+    WorkFlowBuildHistoryPayload create(Integer tisTaskId, ICommonDAOContext daoContext);
 }

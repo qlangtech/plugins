@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.doplinscheduler.history;
 
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayloadFactory;
 
@@ -28,7 +29,7 @@ import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayloadFactory;
  **/
 public class DSWorkFlowBuildHistoryPayloadFactory implements WorkFlowBuildHistoryPayloadFactory {
     @Override
-    public WorkFlowBuildHistoryPayload create(Integer tisTaskId, ICommonDAOContext daoContext) {
-        return new DSWorkFlowBuildHistoryPayload(tisTaskId, daoContext);
+    public WorkFlowBuildHistoryPayload create(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
+        return new DSWorkFlowBuildHistoryPayload(dataxProcessor, tisTaskId, daoContext);
     }
 }

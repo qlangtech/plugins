@@ -1,8 +1,27 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
@@ -12,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -23,10 +43,12 @@ public abstract class WorkFlowBuildHistoryPayload {
     private final ICommonDAOContext daoContext;
     // private final WorkflowInfoDTO wfInfo;
     private Long spiWorkflowInstanceId;
+    public IDataxProcessor dataxProcessor;
 
-    public WorkFlowBuildHistoryPayload(Integer tisTaskId, ICommonDAOContext daoContext) {
+    public WorkFlowBuildHistoryPayload(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
         this.tisTaskId = Objects.requireNonNull(tisTaskId, "param tisTaskId can not be null");
         this.daoContext = Objects.requireNonNull(daoContext, "daoContent can not be null");
+        this.dataxProcessor = dataxProcessor;// Objects.requireNonNull(, "dataxProcessor can not be null");
         // this.wfInfo = Objects.requireNonNull(wfInfo, "wfInfo can not be null");
     }
 
@@ -79,27 +101,29 @@ public abstract class WorkFlowBuildHistoryPayload {
     public abstract <T extends WorkFlowBuildHistoryPayloadFactory> Class<T> getFactory();
 
     static class SubmitLog {
-        public final Long powerjobWorkflowInstanceId;
+        public final Long spiWorkflowInstanceId;
         private final Integer tisTaskId;
         private final WorkFlowBuildHistoryPayloadFactory workFlowBuildHistoryPayloadFactory;
-
+        private final Supplier<IDataxProcessor> dataxProcessor;
         private ExecResult execResult;
 
-        public SubmitLog(Long powerjobWorkflowInstanceId, Integer tisTaskId
+        public SubmitLog(Supplier<IDataxProcessor> dataxProcessor, Long spiWorkflowInstanceId, Integer tisTaskId
                 , WorkFlowBuildHistoryPayloadFactory workFlowBuildHistoryPayloadFactory) {
-            this.powerjobWorkflowInstanceId = Objects.requireNonNull(powerjobWorkflowInstanceId, "powerjobWorkflowInstanceId can not be null");
+            this.spiWorkflowInstanceId = Objects.requireNonNull(spiWorkflowInstanceId, "powerjobWorkflowInstanceId can not be null");
             this.tisTaskId = Objects.requireNonNull(tisTaskId, "tisTaskId can not be null");
+            this.dataxProcessor = dataxProcessor;
             this.workFlowBuildHistoryPayloadFactory
                     = Objects.requireNonNull(workFlowBuildHistoryPayloadFactory, "workFlowBuildHistoryPayloadFactory can not be null");
         }
 
         public ExecResult getExecResult() {
-            return execResult;
+            return this.execResult;
         }
 
         public WorkFlowBuildHistoryPayload restore(ICommonDAOContext daoContext) {
-            WorkFlowBuildHistoryPayload history = workFlowBuildHistoryPayloadFactory.create(this.tisTaskId, daoContext);// new WorkFlowBuildHistoryPayload(this.tisTaskId, daoContext);
-            history.spiWorkflowInstanceId = (this.powerjobWorkflowInstanceId);
+            WorkFlowBuildHistoryPayload history
+                    = workFlowBuildHistoryPayloadFactory.create(this.dataxProcessor.get(), this.tisTaskId, daoContext);
+            history.spiWorkflowInstanceId = (this.spiWorkflowInstanceId);
             return history;
         }
 

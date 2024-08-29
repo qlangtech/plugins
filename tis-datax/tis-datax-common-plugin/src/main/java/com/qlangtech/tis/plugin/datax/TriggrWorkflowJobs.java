@@ -23,8 +23,12 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -32,6 +36,7 @@ import org.apache.commons.io.LineIterator;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -63,7 +68,6 @@ public class TriggrWorkflowJobs {
         Map<Long /**powerjobWorkflowInstanceId*/, WorkFlowBuildHistoryPayload.SubmitLog> submitLogs = Maps.newHashMap();
         if (submitWorkflowJobs.exists()) {
             LineIterator lineIt = FileUtils.lineIterator(submitWorkflowJobs, TisUTF8.getName());
-            JSONObject info = null;
 
 
             WorkFlowBuildHistoryPayload.SubmitLog submitLog = null;
@@ -71,13 +75,19 @@ public class TriggrWorkflowJobs {
             Integer execResult = null;
             while (lineIt.hasNext()) {
 
-                info = JSONObject.parseObject(lineIt.nextLine());
+                JSONObject info = JSONObject.parseObject(lineIt.nextLine());
                 String workflowBuildHistoryFactory = info.getString(KEY_WORKFLOW_BUILD_HISTORY_FACTORY);
                 Class<?> clazz = TIS.get().getPluginManager().uberClassLoader.loadClass(workflowBuildHistoryFactory);
                 if (clazz == null) {
                     throw new IllegalStateException("workflow build historyFactory:" + workflowBuildHistoryFactory + " can not find relevant class instance");
                 }
+
                 submitLog = new WorkFlowBuildHistoryPayload.SubmitLog(
+                        () -> {
+                            return DataxProcessor.load(null
+                                    , StoreResourceType.parse(info.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE))
+                                    , info.getString(IFullBuildContext.KEY_APP_NAME));
+                        },
                         info.getLong(KEY_WORKFLOW_INSTANCE_ID)
                         , info.getInteger(KEY_TIS_TASK_ID)
                         , (WorkFlowBuildHistoryPayloadFactory) clazz.newInstance());
@@ -86,8 +96,10 @@ public class TriggrWorkflowJobs {
                 if (execResult != null) {
                     submitLog.setExecResult(ExecResult.parse(execResult));
                 }
-                if ((preSubmitLog = submitLogs.get(submitLog.powerjobWorkflowInstanceId)) != null) {
+                if ((preSubmitLog = submitLogs.get(submitLog.spiWorkflowInstanceId)) != null) {
                     preSubmitLog.overwrite(submitLog);
+                } else {
+                    submitLogs.put(submitLog.spiWorkflowInstanceId, submitLog);
                 }
             }
         }
@@ -113,11 +125,14 @@ public class TriggrWorkflowJobs {
 
     private void appendLog(WorkFlowBuildHistoryPayload workFlowBuildHistoryPayload, Optional<ExecResult> execResult) {
         JSONObject wfHistory = new JSONObject();
+        IDataxProcessor dataxProcessor = Objects.requireNonNull(workFlowBuildHistoryPayload.dataxProcessor, "dataxProcessor can not be null");
         wfHistory.put(KEY_WORKFLOW_INSTANCE_ID, workFlowBuildHistoryPayload.getSPIWorkflowInstanceId());
         wfHistory.put(KEY_TIS_TASK_ID, workFlowBuildHistoryPayload.getTisTaskId());
         wfHistory.put(KEY_WORKFLOW_BUILD_HISTORY_FACTORY, workFlowBuildHistoryPayload.getFactory().getName());
+        wfHistory.put(StoreResourceType.KEY_STORE_RESOURCE_TYPE, dataxProcessor.getResType().getType());
+        wfHistory.put(IFullBuildContext.KEY_APP_NAME, dataxProcessor.identityValue());
 
-
+        // DataxProcessor.load()
         execResult.ifPresent((er) -> {
             wfHistory.put(KEY_EXEC_STATUS, er.getValue());
         });

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl;
 
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayloadFactory;
@@ -30,7 +31,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerjobWorkFlowBuildHistoryPaylo
  **/
 public class PowerjobWorkFlowBuildHistoryPayloadFactory implements WorkFlowBuildHistoryPayloadFactory {
     @Override
-    public WorkFlowBuildHistoryPayload create(Integer tisTaskId, ICommonDAOContext daoContext) {
-        return new PowerjobWorkFlowBuildHistoryPayload(tisTaskId, daoContext, DistributedPowerJobDataXJobSubmit.getTISPowerJob());
+    public WorkFlowBuildHistoryPayload create(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
+        return new PowerjobWorkFlowBuildHistoryPayload(dataxProcessor, tisTaskId, daoContext, DistributedPowerJobDataXJobSubmit.getTISPowerJob());
     }
 }

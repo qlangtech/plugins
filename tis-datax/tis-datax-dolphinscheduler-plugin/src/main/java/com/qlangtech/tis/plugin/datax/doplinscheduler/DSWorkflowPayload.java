@@ -193,7 +193,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId) {
-        DSWorkFlowBuildHistoryPayload buildHistoryPayload = new DSWorkFlowBuildHistoryPayload(tisTaskId, this.commonDAOContext);
+        DSWorkFlowBuildHistoryPayload buildHistoryPayload = new DSWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, this.commonDAOContext);
         return buildHistoryPayload;
     }
 

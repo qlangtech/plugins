@@ -94,7 +94,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
         TISPowerJobClient tisPowerJob = getTISPowerJob();
         WorkFlowBuildHistoryPayload buildHistoryPayload
-                = new PowerjobWorkFlowBuildHistoryPayload(buildHistory.getTaskId(), getCommonDAOContext(module), tisPowerJob);
+                = new PowerjobWorkFlowBuildHistoryPayload(null, buildHistory.getTaskId(), getCommonDAOContext(module), tisPowerJob);
 
         result(tisPowerJob.stopWorkflowInstance(buildHistoryPayload.getSPIWorkflowInstanceId()));
         buildHistoryPayload.updateFinalStatus(ExecResult.CANCEL);

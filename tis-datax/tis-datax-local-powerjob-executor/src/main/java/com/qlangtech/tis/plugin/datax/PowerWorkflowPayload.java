@@ -366,7 +366,7 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
 
     @Override
     protected WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId) {
-        return new PowerjobWorkFlowBuildHistoryPayload(tisTaskId, this.commonDAOContext, this.getTISPowerJob());
+        return new PowerjobWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, this.commonDAOContext, this.getTISPowerJob());
     }
 
 

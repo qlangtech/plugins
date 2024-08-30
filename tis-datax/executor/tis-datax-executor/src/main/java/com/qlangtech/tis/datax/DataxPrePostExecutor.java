@@ -123,16 +123,16 @@ public class DataxPrePostExecutor {
 
                 try {
                     if (statusRpc != null) {
-                        StatusRpcClientFactory.AssembleSvcCompsite svc =
-                                (StatusRpcClientFactory.AssembleSvcCompsite) statusRpc.get();
+//                        StatusRpcClientFactory.AssembleSvcCompsite svc =
+//                                (StatusRpcClientFactory.AssembleSvcCompsite) statusRpc.get();
                         if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
                             JoinPhaseStatus.JoinTaskStatus joinStatus = new JoinPhaseStatus.JoinTaskStatus(jobName);
                             joinStatus.setFaild(true);
                             joinStatus.setComplete(true);
                             joinStatus.setStart();
-                            svc.reportJoinStatus(jobId, joinStatus);
+                            statusRpc.reportJoinStatus(jobId, joinStatus);
                         } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
-                            svc.reportDumpJobStatus(true, true, false, jobId, jobName, -1, -1);
+                            statusRpc.reportDumpJobStatus(true, true, false, jobId, jobName, -1, -1);
                         } else {
                             throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
                         }

@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
+import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.web.start.TisAppLaunch;
@@ -96,8 +97,8 @@ public class BasicTISTableDumpProcessor {
 //        }
 
 
-        RpcServiceReference statusRpc = getRpcServiceReference();
-        StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
+        RpcServiceReference svc = getRpcServiceReference();
+        // StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
 
         DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
@@ -180,8 +181,8 @@ public class BasicTISTableDumpProcessor {
                 if (prevTaskId == null) {
                     return null;
                 }
-                AssembleSvcCompsite svc = getRpcServiceReference().get();
-                return svc.statReceiveSvc.loadPhaseStatusFromLatest(prevTaskId);
+                //AssembleSvcCompsite svc = getRpcServiceReference().get();
+                return getRpcServiceReference().loadPhaseStatusFromLatest(prevTaskId);
             }));
 
         }, snapshotConsumer);
@@ -248,13 +249,13 @@ public class BasicTISTableDumpProcessor {
 
     public void processSync(ITaskExecutorContext context, ExecPhase execPhase) throws Exception {
 
-        RpcServiceReference statusRpc = getRpcServiceReference();
+        RpcServiceReference svc = getRpcServiceReference();
         /**
          * 同步远端resource 资源
          */
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
 
-        StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
+        //  StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
 
         final DefaultExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
                 "execChainContext can " + "not be null");
@@ -330,7 +331,7 @@ public class BasicTISTableDumpProcessor {
     }
 
     protected void executeSplitTabSync(ITaskExecutorContext context, RpcServiceReference statusRpc
-            , AssembleSvcCompsite svc, DefaultExecContext execChainContext, SplitTabSync tabSync) {
+            , RpcServiceReference svc, DefaultExecContext execChainContext, SplitTabSync tabSync) {
         try {
 
             tabSync.execSync(execChainContext, statusRpc);
@@ -410,10 +411,10 @@ public class BasicTISTableDumpProcessor {
         };
     }
 
-    private static void reportError(Exception e, DefaultExecContext execChainContext, StatusRpcClientFactory.AssembleSvcCompsite svc) {
+    private static void reportError(Exception e, DefaultExecContext execChainContext, RpcServiceReference svc) {
 
         Throwable rootCause = ExceptionUtils.getRootCause(e);
-        svc.appendLog(LoggingEvent.Level.ERROR, execChainContext.getTaskId(), Optional.empty(),
+        svc.appendLog(LogLevel.ERROR, execChainContext.getTaskId(), Optional.empty(),
                 rootCause != null ? ExceptionUtils.getStackTrace(rootCause) : ExceptionUtils.getStackTrace(e));
     }
 

@@ -82,9 +82,9 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
 
             BasicWorkflowPayload<WF_INSTANCE> payload = createWorkflowPayload(module, topology);
             //   PowerJobClient powerJobClient = getTISPowerJob();
-            RpcServiceReference statusRpc = getStatusRpc();
-            StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
-            return payload.triggerWorkflow( powerJobWorkflowInstanceIdOpt, feedback);
+          //  RpcServiceReference statusRpc = getStatusRpc();
+          //  StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
+            return payload.triggerWorkflow( powerJobWorkflowInstanceIdOpt, getStatusRpc());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -106,12 +106,12 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
             throw new IllegalArgumentException("appName " + appName + " can not be empty");
         }
 
-        RpcServiceReference statusRpc = getStatusRpc();
-        StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
+       // RpcServiceReference statusRpc = getStatusRpc();
+      //  StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
 
         //  PowerWorkflowPayload
         BasicWorkflowPayload<WF_INSTANCE> appPayload = createApplicationPayload(module, appName);
-        return appPayload.triggerWorkflow( workflowInstanceIdOpt, feedback);
+        return appPayload.triggerWorkflow( workflowInstanceIdOpt,  getStatusRpc());
     }
 
     protected abstract BasicWorkflowPayload<WF_INSTANCE> createWorkflowPayload(IControlMsgHandler module, SqlDataFlowTopology topology);

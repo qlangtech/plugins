@@ -1,6 +1,7 @@
 package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
+import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 
 /**
@@ -13,7 +14,7 @@ public class RpcUtils {
     }
 
     public static void setJoinStatus(Integer taskId, boolean complete, boolean faild,
-                                     StatusRpcClientFactory.AssembleSvcCompsite svc, String taskName) {
+                                     RpcServiceReference svc, String taskName) {
         JoinPhaseStatus.JoinTaskStatus joinStatus = new JoinPhaseStatus.JoinTaskStatus(taskName);
         joinStatus.setComplete(complete);
         joinStatus.setFaild(faild);

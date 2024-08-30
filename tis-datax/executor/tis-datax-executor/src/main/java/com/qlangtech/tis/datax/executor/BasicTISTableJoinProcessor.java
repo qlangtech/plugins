@@ -35,6 +35,7 @@ import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
@@ -78,8 +79,8 @@ public class BasicTISTableJoinProcessor {
 
 
     protected void process(ITaskExecutorContext context) throws Exception {
-        RpcServiceReference rpcRef = createRpcServiceReference();
-        StatusRpcClientFactory.AssembleSvcCompsite feedback = rpcRef.get();
+        RpcServiceReference feedback = createRpcServiceReference();
+       // StatusRpcClientFactory.AssembleSvcCompsite feedback = rpcRef.get();
         SqlTaskNodeMeta sqlTask =
                 SqlTaskNodeMeta.deserializeTaskNode(ISqlTask.toCfg((context.getJobParams())));
         DefaultExecContext execContext = createDftExecContent(context);
@@ -98,14 +99,14 @@ public class BasicTISTableJoinProcessor {
             BasicTISTableDumpProcessor.addSuccessPartition(context, execContext, sqlTask.getExportName());
 
         } catch (StatusRuntimeException e) {
-            rpcRef.reConnect();
+           // rpcRef.reConnect();
             throw e;
         } catch (Exception e) {
             Throwable rootCause = ExceptionUtils.getRootCause(e);
 
             RpcUtils.setJoinStatus(execContext.getTaskId(), true, true, feedback, sqlTask.getExportName());
 
-            feedback.appendLog(LoggingEvent.Level.ERROR, execContext.getTaskId(), Optional.empty(),
+            feedback.appendLog(LogLevel.ERROR, execContext.getTaskId(), Optional.empty(),
                     rootCause != null ? ExceptionUtils.getStackTrace(rootCause) : ExceptionUtils.getStackTrace(e));
             throw new RuntimeException(e);
         }

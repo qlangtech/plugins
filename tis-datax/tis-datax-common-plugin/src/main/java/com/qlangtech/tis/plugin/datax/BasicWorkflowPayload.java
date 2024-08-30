@@ -180,7 +180,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
      * @return
      */
     public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
-            , StatusRpcClientFactory.AssembleSvcCompsite feedback) {
+            , RpcServiceReference feedback) {
         //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
         WorkflowSPIInitializer<BasicWorkflowInstance> workflowInitializer = new WorkflowSPIInitializer(this);

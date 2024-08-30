@@ -70,7 +70,7 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         CenterResource.setNotFetchFromCenterRepository();
         DSWorkflowPayload dsWorkflowPayload = createTriggerDsWorkflowPayload();
         Optional<Long> spiWorkflowInstanceIdOpt = Optional.of(dsWorkflowId); // Optional.empty();
-        PowerjobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.MOCK_PRC);
+        PowerjobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.statusRpc);
         Assert.assertNotNull("triggerBuildResult can not be null", triggerBuildResult);
 
         verifyAll();

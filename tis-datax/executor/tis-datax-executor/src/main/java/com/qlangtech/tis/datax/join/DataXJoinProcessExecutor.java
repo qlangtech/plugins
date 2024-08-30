@@ -137,7 +137,7 @@ public class DataXJoinProcessExecutor {
             logger.info("start join process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
             SqlTaskNodeMeta sqlTask = SqlTaskNodeMeta.deserializeTaskNode(sqlCfg);
 
-            executeJoin(statusRpc.get(), execContext, sqlTask);
+            executeJoin(statusRpc, execContext, sqlTask);
             logger.info("exit the process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
             System.exit(0);
         } catch (Exception e) {
@@ -184,7 +184,7 @@ public class DataXJoinProcessExecutor {
 
     }
 
-    public static void executeJoin(StatusRpcClientFactory.AssembleSvcCompsite feedback,
+    public static void executeJoin(RpcServiceReference feedback,
                                    DefaultExecContext execContext, SqlTaskNodeMeta sqlTask) {
         RpcUtils.setJoinStatus(execContext.getTaskId(), false, false, feedback, sqlTask.getExportName());
         IDataxProcessor dataxProc = execContext.getProcessor();

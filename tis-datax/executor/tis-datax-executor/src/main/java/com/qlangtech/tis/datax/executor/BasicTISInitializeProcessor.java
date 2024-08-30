@@ -27,6 +27,7 @@ import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent.Level;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -69,8 +70,8 @@ public class BasicTISInitializeProcessor {
 
 
             Pair<Boolean, JSONObject> instanceParams = BasicTISTableDumpProcessor.getInstanceParams(context);
-            RpcServiceReference rpcSvcRef = getRpcServiceReference();
-            StatusRpcClientFactory.AssembleSvcCompsite svc = rpcSvcRef.get();
+            RpcServiceReference svc = getRpcServiceReference();
+         //   StatusRpcClientFactory.AssembleSvcCompsite svc = rpcSvcRef.get();
             if (!instanceParams.getLeft()) {
                 // 说明是定时任务触发
                 context.infoLog("trigger by crontab,now shall create taskId");
@@ -97,7 +98,7 @@ public class BasicTISInitializeProcessor {
                  *TriggerNewTask
                  =======================================================================*/
                 PowerjobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
-                svc.appendLog(Level.INFO, triggerResult.getTaskid(), Optional.empty(), "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));
+                svc.appendLog(LogLevel.INFO, triggerResult.getTaskid(), Optional.empty(), "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));
 
                 //  WorkflowContext wfContext = context.getWorkflowContext();
                 context.infoLog("create task context,taskId:{},name:{}", triggerResult.getTaskid(), initNodeCfg.getDataXName());
@@ -113,7 +114,7 @@ public class BasicTISInitializeProcessor {
             } else {
                 // trigger by mannual 手动触发
                 Integer taskId = parseTaskId(instanceParams.getRight());
-                svc.appendLog(Level.INFO, taskId, Optional.empty()
+                svc.appendLog(LogLevel.INFO, taskId, Optional.empty()
                         , "start to execute data synchronize pipeline:" + JsonUtil.toString(instanceParams, false));
             }
         } finally {

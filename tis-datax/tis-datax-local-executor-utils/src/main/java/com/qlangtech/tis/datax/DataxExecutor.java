@@ -226,7 +226,7 @@ public class DataxExecutor {
                 while (true) {
                     status.setUpdateTime(System.currentTimeMillis());
                     MasterJob masterJob =
-                            ((AssembleSvcCompsite) statusRpc.get()).reportStatus(status);
+                            (statusRpc).reportStatus(status);
                     if (masterJob != null && masterJob.isStop()) {
                         logger.info("datax job:{},taskid:{} has received an CANCEL signal", jobInfo, jobId);
                         dataxExecutor.reportDataXJobStatus(true, jobId, jobInfo);
@@ -367,10 +367,10 @@ public class DataxExecutor {
 
     public void reportDataXJobStatus(boolean faild, boolean complete, boolean waiting, Integer taskId,
                                      DataXJobInfo jobName) {
-        StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
+       // StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
         int readed = (int) allReadApproximately[0];
         boolean success = (complete && !faild);
-        svc.reportDumpJobStatus(faild, complete, waiting, taskId, jobName.jobFileName, readed, (success ? readed :
+        this.statusRpc.reportDumpJobStatus(faild, complete, waiting, taskId, jobName.jobFileName, readed, (success ? readed :
                 this.allRowsApproximately));
     }
 

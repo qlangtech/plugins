@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.manage.common.ConfigFileContext.HTTPMethod;
 import com.qlangtech.tis.manage.common.ConfigFileContext.Header;
 import com.qlangtech.tis.manage.common.ConfigFileContext.StreamErrorProcess;
 import com.qlangtech.tis.manage.common.ConfigFileContext.StreamProcess;
@@ -31,6 +32,9 @@ import com.qlangtech.tis.plugin.datax.IWorkflowNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,21 +51,26 @@ import java.util.stream.Collectors;
  * @create: 2024-08-24 10:24
  **/
 public class DolphinSchedulerURLBuilder {
+    private static final Logger logger = LoggerFactory.getLogger(DolphinSchedulerURLBuilder.class);
     private static final String SLASH = "/";
     private final DolphinSchedulerEndpoint endpoint;
     private final StringBuffer url;
     private final List<PostParam> queryParams = Lists.newArrayList();
 
     public DolphinSchedulerURLBuilder(DolphinSchedulerEndpoint endpoint) {
-        this.endpoint = endpoint;
+        this.endpoint = Objects.requireNonNull(endpoint);
         boolean endWithSlash = StringUtils.endsWith(this.endpoint.serverPath, SLASH);
+        if (StringUtils.isEmpty(this.endpoint.serverPath)) {
+            throw new IllegalArgumentException("endpoint.serverPath can not be empty");
+        }
         this.url = new StringBuffer(endWithSlash ? StringUtils.removeEnd(this.endpoint.serverPath, SLASH) : this.endpoint.serverPath);
 
     }
 
     public DolphinSchedulerURLBuilder appendSubPath(Object... subpath) {
+        int index = 0;
         for (Object path : subpath) {
-            url.append(SLASH).append(path);
+            url.append(SLASH).append(Objects.requireNonNull(path, "index " + (index++) + " of subpath can not be null"));
         }
         return this;
     }
@@ -77,8 +86,10 @@ public class DolphinSchedulerURLBuilder {
     private URL build() {
         try {
             if (CollectionUtils.isNotEmpty(this.queryParams)) {
-                this.url.append("?").append(this.queryParams.stream().map((param) -> param.getKey() + "=" + param.getValue()).collect(Collectors.joining("&")));
+                this.url.append("?").append(this.queryParams.stream()
+                        .map((param) -> param.getKey() + "=" + param.getValue()).collect(Collectors.joining("&")));
             }
+            // logger.info("apply request URL:{}", this.url.toString());
             return new URL(this.url.toString());
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
@@ -90,7 +101,8 @@ public class DolphinSchedulerURLBuilder {
     }
 
     public DolphinSchedulerResponse applyGet(Optional<StreamErrorProcess> streamErrorProcess) {
-        return HttpUtils.get(this.build(), new StreamProcess<DolphinSchedulerResponse>() {
+        final URL applyURL = this.build();
+        return HttpUtils.get(applyURL, new StreamProcess<DolphinSchedulerResponse>() {
             @Override
             public List<Header> getHeaders() {
                 return endpoint.appendToken(super.getHeaders());
@@ -107,14 +119,9 @@ public class DolphinSchedulerURLBuilder {
             }
 
             @Override
-            public DolphinSchedulerResponse p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {
-                JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
-                boolean success = result.getBooleanValue("success");
-                int code = result.getIntValue("code");
-                JSONObject data = result.getJSONObject("data");
-                String msg = result.getString("msg");
-
-                return new DolphinSchedulerResponse(code, msg, data, success);
+            public DolphinSchedulerResponse p(int status
+                    , InputStream stream, Map<String, List<String>> headerFields) throws IOException {
+                return parseDolphinSchedulerResponse(applyURL, stream);
 //                if (!) {
 //                    msgHandler.addFieldError(context, FIELD_PROCESS_NAME, result.getString("msg"));
 //                    return null;
@@ -125,17 +132,75 @@ public class DolphinSchedulerURLBuilder {
         });
     }
 
+    private static DolphinSchedulerResponse parseDolphinSchedulerResponse(URL applyURL, InputStream stream) throws IOException {
+        JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
+        boolean success = result.getBooleanValue("success");
+        int code = result.getIntValue("code");
+        JSONObject data = result.getJSONObject("data");
+        String msg = result.getString("msg");
+
+        return new DolphinSchedulerResponse(applyURL, code, msg, data, success);
+    }
+
+    public DolphinSchedulerResponse applyPut(List<PostParam> params, Optional<StreamErrorProcess> streamErrorProcess) {
+        final URL applyUrl = this.build();
+        return applyRequest(params, streamErrorProcess, applyUrl, HTTPMethod.PUT);
+    }
+
+    public DolphinSchedulerResponse applyPost(List<PostParam> params, Optional<StreamErrorProcess> streamErrorProcess) {
+        final URL applyUrl = this.build();
+        HTTPMethod httpMethod = HTTPMethod.POST;
+        return applyRequest(params, streamErrorProcess, applyUrl, httpMethod);
+    }
+
+    private DolphinSchedulerResponse applyRequest(List<PostParam> params
+            , Optional<StreamErrorProcess> streamErrorProcess, URL applyUrl, HTTPMethod httpMethod) {
+        return HttpUtils.process(applyUrl, params, new PostFormStreamProcess<DolphinSchedulerResponse>() {
+            @Override
+            public List<Header> getHeaders() {
+                return endpoint.appendToken(super.getHeaders());
+            }
+
+            @Override
+            public void error(int status, InputStream errstream, IOException e) throws Exception {
+                // streamProcess.error(status, errstream, e);
+                if (streamErrorProcess.isPresent()) {
+                    streamErrorProcess.get().error(status, errstream, e);
+                } else {
+                    super.error(status, errstream, e);
+                }
+            }
+
+            @Override
+            public DolphinSchedulerResponse p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {
+                return parseDolphinSchedulerResponse(applyUrl, stream);
+                //  return streamProcess.p(status, stream, headerFields);
+            }
+        }, httpMethod);
+    }
+
     public static class DolphinSchedulerResponse {
         private final int code;
         private final String message;
         private final JSONObject data;
         private final boolean success;
+        private final URL applyURL;
 
-        public DolphinSchedulerResponse(int code, String message, JSONObject data, boolean success) {
+        public DolphinSchedulerResponse(URL applyURL, int code, String message, JSONObject data, boolean success) {
             this.code = code;
             this.message = message;
             this.data = data;
             this.success = success;
+            this.applyURL = applyURL;
+        }
+
+        public String errorDescribe() {
+            return " error message:"
+                    + this.getMessage() + ",code:" + this.getCode() + ",apply url:" + this.getApplyURL();
+        }
+
+        public URL getApplyURL() {
+            return this.applyURL;
         }
 
         public int getCode() {
@@ -154,25 +219,5 @@ public class DolphinSchedulerURLBuilder {
             return this.success;
         }
     }
-
-    public <T> T applyPost(List<PostParam> params, StreamProcess<T> streamProcess) {
-        return HttpUtils.post(this.build(), params, new PostFormStreamProcess<T>() {
-            @Override
-            public List<Header> getHeaders() {
-                return endpoint.appendToken(super.getHeaders());
-            }
-
-            @Override
-            public void error(int status, InputStream errstream, IOException e) throws Exception {
-                streamProcess.error(status, errstream, e);
-            }
-
-            @Override
-            public T p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {
-                return streamProcess.p(status, stream, headerFields);
-            }
-        });
-    }
-
 
 }

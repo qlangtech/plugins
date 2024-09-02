@@ -88,7 +88,7 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
                 , "load export ds scheduler instance size:" + pair.getKey().size() + ",appName:" + appName)
                 , dataxProcessor, commonDAOContext, submit) {
             @Override
-            public void innerCreatePowerjobWorkflow(Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>
+            public void innerCreatePowerjobWorkflow(boolean updateProcess, Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>
                     , Map<String, ISqlTask>>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt) {
                 /**
                  * 由DS端发起的触发流程不应该包括创建DAG workflow配置的流程，应该实现由TIS端同步配置插件创建

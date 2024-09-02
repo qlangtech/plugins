@@ -7,10 +7,7 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
-import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
-import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,30 +54,17 @@ public class TISGrpcAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     @Override
     protected void append(ILoggingEvent eventObject) {
-//        if(DataxExecutor.statusRpc == null){
-//
-//        }
         RpcServiceReference rpcService = AssembleSvcCompsite.statusRpc;
         if (rpcService == null) {
             addError("have not initialize rpcService", new Exception());
             return;
         }
-        // StatusRpcClientFactory.AssembleSvcCompsite svc = rpcService.unwrap();
         try {
             String body = layout != null ? layout.doLayout(eventObject) : eventObject.getFormattedMessage();
             Map<String, String> headers = createHeaders();
 
             headers.putAll(extractHeaders(eventObject));
-            //  LoggingEvent.Builder eventBuilder = LoggingEvent.newBuilder();
             Level level = eventObject.getLevel();
-
-//            eventBuilder.putAllHeaders(headers);
-//            eventBuilder.setBody(body);
-//            eventBuilder.setLevel();
-
-
-            // LogLevel level = convertLevel(level), Integer taskId, Optional<String> appName, String message
-
             rpcService.append(headers, convertLevel(level), body);
         } catch (Exception e) {
             addError(e.getLocalizedMessage(), e);

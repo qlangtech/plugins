@@ -32,6 +32,7 @@ import com.qlangtech.tis.manage.common.ConfigFileContext.StreamProcess;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
 import com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.BasicWorkflowInstance;
@@ -39,6 +40,7 @@ import com.qlangtech.tis.plugin.datax.BasicWorkflowPayload;
 import com.qlangtech.tis.plugin.datax.IWorkflowNode;
 import com.qlangtech.tis.plugin.datax.SPIExecContext;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
+import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.history.DSWorkFlowBuildHistoryPayload;
@@ -50,8 +52,11 @@ import com.qlangtech.tis.sql.parser.meta.NodeType;
 import com.qlangtech.tis.sql.parser.meta.NodeType.NodeTypeParseException;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -69,9 +74,9 @@ import static com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit.K
  **/
 public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> {
 
-//    private static final long projectCdoe = 117442916207136l;
+    //    private static final long projectCdoe = 117442916207136l;
 //    private static final String dsToken = "f02d2883118664579ea32a659b2c9652";
-
+    private static final Logger logger = LoggerFactory.getLogger(DSWorkflowPayload.class);
 
     private static final String KEY_TASK_RESPONSE_DATA = "data";
     private static final String KEY_TASK_RESPONSE_SUCCESS = "success";
@@ -118,19 +123,29 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     }
 
     @Override
-    public void innerCreatePowerjobWorkflow(
-            Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>>> selectedTabTriggers
+    public void innerCreatePowerjobWorkflow(boolean updateProcess,
+                                            Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>>> selectedTabTriggers
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt) {
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> pair = selectedTabTriggers.orElseGet(() -> createWfNodes());
-        WorkflowUnEffectiveJudge unEffectiveJudge = unEffectiveOpt.orElseGet(() -> new WorkflowUnEffectiveJudge());
+        //  WorkflowUnEffectiveJudge unEffectiveJudge = unEffectiveOpt.orElseGet(() -> new WorkflowUnEffectiveJudge());
         try {
-            this.innerSaveJob(this.dataxProcessor, pair.getKey(), unEffectiveJudge);
+            this.innerSaveJob(updateProcess, this.dataxProcessor, pair.getKey());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-//    @Override
+    @Override
+    protected boolean acceptTable(ISelectedTab selectedTab) {
+        for (IdentityName tab : this.exportCfg.targetTables) {
+            if (StringUtils.equals(tab.identityValue(), selectedTab.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //    @Override
 //    protected DSWorkflowInstance loadWorkflowSPI() {
 //        // ExecutePhaseRange executePhaseRange, String appName, Long spiWorkflowId
 //        return new DSWorkflowInstance(, this.dataxProcessor.identityValue(), this);
@@ -204,9 +219,9 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
 
     private void innerSaveJob(
+            boolean updateProcess,
             IDataxProcessor dataxProcessor
-            , Map<ISelectedTab, SelectedTabTriggers> createWfNodesResult
-            , WorkflowUnEffectiveJudge unEffectiveJudge) throws Exception {
+            , Map<ISelectedTab, SelectedTabTriggers> createWfNodesResult) throws Exception {
 
         // https://github.com/apache/dolphinscheduler/blob/dev/dolphinscheduler-api/src/test/java/org/apache/dolphinscheduler/api/controller/ProcessDefinitionControllerTest.java#L100
 //        String relationJson =
@@ -228,7 +243,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         // CodeGenerateUtils codeGen = CodeGenerateUtils.genCode();
 
         int y_coordinate = 200;
-        final int y_coordinate_step = 30;
+        final int y_coordinate_step = 50;
 
         final long startTaskId = CodeGenerateUtils.genCode();
         JSONObject startNode = this.createTaskDefinitionJSON(startTaskId
@@ -320,20 +335,21 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         String taskDefinition = JsonUtil.toString(definitionArray);
         //System.out.println(taskDefinition);
         params.add(new PostParam("taskDefinitionJson", taskDefinition));
+        DolphinSchedulerURLBuilder dsURLBuilder = this.exportCfg.processDefinition();
+        DolphinSchedulerResponse response = null;
+        if (updateProcess) {
+            DSWorkflowInstance wfInstance = this.loadWorkflowSPI(true);
+            response = dsURLBuilder.appendSubPath(wfInstance.getSPIWorkflowId()).applyPut(params, Optional.empty());
+        } else {
+            response = dsURLBuilder.applyPost(params, Optional.empty());
+        }
 
+        if (!response.isSuccess()) {
+            throw new IllegalStateException("processDefinition faild:" + response.errorDescribe());
+        }
 
-        Long dsWorkflowId = this.exportCfg.processDefinition().applyPost(params, new StreamProcess<Long>() {
-
-            @Override
-            public Long p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {
-                JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
-                if (result.getBooleanValue(KEY_TASK_RESPONSE_SUCCESS)) {
-                    JSONObject data = result.getJSONObject(KEY_TASK_RESPONSE_DATA);
-                    return data.getLong(KEY_TASK_DEFINITION_CODE);
-                }
-                throw TisException.create("faild reason:" + result.getString("msg"));
-            }
-        });
+        logger.info("success apply url:{}", response.getApplyURL());
+        final Long dsWorkflowId = response.getData().getLong(KEY_TASK_DEFINITION_CODE);
 
         this.setSPIWorkflowId(dsWorkflowId
                 , new ExecutePhaseRange(FullbuildPhase.FullDump, containPostTrigger ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));

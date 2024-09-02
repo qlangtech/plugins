@@ -370,8 +370,9 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
     }
 
 
+    @Override
     public void innerCreatePowerjobWorkflow(
-
+            boolean updateProcess,
             Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>>> selectedTabTriggers //
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt) {
         RpcServiceReference statusRpc = StatusRpcClientFactory.getMockStub();

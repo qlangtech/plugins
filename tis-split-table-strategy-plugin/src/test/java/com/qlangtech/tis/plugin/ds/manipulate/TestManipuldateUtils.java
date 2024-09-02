@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.ds.manipulate;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.impl.PropValRewrite;
 import com.qlangtech.tis.runtime.module.misc.IPostContent;
 import com.qlangtech.tis.test.TISEasyMock;
@@ -36,7 +35,6 @@ import org.easymock.IExpectationSetters;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -81,8 +79,8 @@ public class TestManipuldateUtils implements TISEasyMock {
         };
 
         replay();
-        IPluginItemsProcessor itemsProcessor
-                = ManipuldateUtils.cloneInstance(pluginContext, context, newIdentityName, pluginMetaConsumer, originIdentityIdConsumer);
+        ManipulateItemsProcessor itemsProcessor
+                = ManipuldateUtils.instance(pluginContext, context, newIdentityName, pluginMetaConsumer, originIdentityIdConsumer);
         Assert.assertNull("because newIdentityName is duplicate, result itemsProcessor shall be null", itemsProcessor);
 
         verifyAll();

@@ -82,6 +82,10 @@ public abstract class WorkFlowBuildHistoryPayload {
         this.spiWorkflowInstanceId = workflowInstanceId;
     }
 
+    /**
+     *
+     * @return
+     */
     public abstract ExecResult processExecHistoryRecord();
 
 

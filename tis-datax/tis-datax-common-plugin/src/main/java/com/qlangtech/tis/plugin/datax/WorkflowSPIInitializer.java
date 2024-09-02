@@ -45,33 +45,34 @@ public class WorkflowSPIInitializer<WF_INSTANCE extends BasicWorkflowInstance> {
     }
 
     public WF_INSTANCE initialize() {
-        return this.initialize(false);
+        return this.initialize(false, false);
     }
 
     /**
-     * @param forceInitialize
+     * @param forceInitialize 强制执行初始化操作
+     * @param updateProcess   是否执行更新操作
      * @return
      */
-    public WF_INSTANCE initialize(boolean forceInitialize) {
-        WF_INSTANCE powerJobWorkflowId = workflowSPIContext.loadWorkflowSPI();// this.loadWorkflowSPI(false);
+    public WF_INSTANCE initialize(boolean forceInitialize, boolean updateProcess) {
+        WF_INSTANCE spiWorkflowId = workflowSPIContext.loadWorkflowSPI();// this.loadWorkflowSPI(false);
 
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> selectedTabTriggers = null;
         WorkflowUnEffectiveJudge unEffectiveJudge = null;
-        if (forceInitialize || powerJobWorkflowId == null || powerJobWorkflowId.isDisabled()
+        if (forceInitialize || spiWorkflowId == null || spiWorkflowId.isDisabled()
 //                || /**是否已经失效*/(unEffectiveJudge = powerJobWorkflowId.isUnEffective(
 //                getTISPowerJob(), selectedTabTriggers = createWfNodes())).isUnEffective()
         ) {
 //            if () {
-            if (powerJobWorkflowId != null) {
+            if (spiWorkflowId != null) {
                 /**是否已经失效*/
-                (unEffectiveJudge = powerJobWorkflowId.isUnEffective(selectedTabTriggers = workflowSPIContext.createWfNodes())).isUnEffective();
+                (unEffectiveJudge = spiWorkflowId.isUnEffective(selectedTabTriggers = workflowSPIContext.createWfNodes())).isUnEffective();
             }
             // 如果之前还没有打开分布式调度，现在打开了，powerjob workflow还没有创建，现在创建
-            workflowSPIContext.innerCreatePowerjobWorkflow(Optional.ofNullable(selectedTabTriggers), Optional.ofNullable(unEffectiveJudge));
-            powerJobWorkflowId = workflowSPIContext.loadWorkflowSPI();
+            workflowSPIContext.innerCreatePowerjobWorkflow(updateProcess, Optional.ofNullable(selectedTabTriggers), Optional.ofNullable(unEffectiveJudge));
+            spiWorkflowId = workflowSPIContext.loadWorkflowSPI();
             //}
 
         }
-        return powerJobWorkflowId;
+        return spiWorkflowId;
     }
 }

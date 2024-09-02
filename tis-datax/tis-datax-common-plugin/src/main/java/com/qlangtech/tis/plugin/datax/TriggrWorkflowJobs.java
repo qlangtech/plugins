@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.Function;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -52,18 +53,29 @@ public class TriggrWorkflowJobs {
 
     private static final String KEY_TIS_TASK_ID = "tis_task_id";
     private static final String KEY_EXEC_STATUS = "exec_result";
-    private final BlockingQueue<WorkFlowBuildHistoryPayload> triggrWorkflowJobs = new ArrayBlockingQueue<>(200);
+    final BlockingQueue<WorkFlowBuildHistoryPayload> triggrWorkflowJobs = new ArrayBlockingQueue<>(200);
     private final File submitWorkflowJobs;
 
     private TriggrWorkflowJobs(File submitWorkflowJobs) throws Exception {
         this.submitWorkflowJobs = submitWorkflowJobs;
     }
 
-
     public static TriggrWorkflowJobs create(ICommonDAOContext daoContext) throws Exception {
+        return create(daoContext, (workflowBuildHistoryFactory) -> {
+            try {
+                Class<?> clazz = TIS.get().getPluginManager().uberClassLoader.loadClass(workflowBuildHistoryFactory);
+                return clazz;
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
+    public static TriggrWorkflowJobs create(ICommonDAOContext daoContext, Function<String, Class<?>> workflowBuildHistoryFactoryLoader) throws Exception {
 
         WorkFlowBuildHistoryPayload history = null;
-        File submitWorkflowJobs = new File(Config.getMetaCfgDir(), "submit-workflow-jobs.json");
+        File submitWorkflowJobs = createSubmitWorkflowJobsFile();
         TriggrWorkflowJobs triggrWorkflowJobs = new TriggrWorkflowJobs(submitWorkflowJobs);
         Map<Long /**powerjobWorkflowInstanceId*/, WorkFlowBuildHistoryPayload.SubmitLog> submitLogs = Maps.newHashMap();
         if (submitWorkflowJobs.exists()) {
@@ -77,7 +89,7 @@ public class TriggrWorkflowJobs {
 
                 JSONObject info = JSONObject.parseObject(lineIt.nextLine());
                 String workflowBuildHistoryFactory = info.getString(KEY_WORKFLOW_BUILD_HISTORY_FACTORY);
-                Class<?> clazz = TIS.get().getPluginManager().uberClassLoader.loadClass(workflowBuildHistoryFactory);
+                Class<?> clazz = workflowBuildHistoryFactoryLoader.apply(workflowBuildHistoryFactory);
                 if (clazz == null) {
                     throw new IllegalStateException("workflow build historyFactory:" + workflowBuildHistoryFactory + " can not find relevant class instance");
                 }
@@ -116,12 +128,21 @@ public class TriggrWorkflowJobs {
         return triggrWorkflowJobs;
     }
 
+
+    public static final String FILE_NAME_SUBMIT_WORKFLOW_JOBS = "submit-workflow-jobs.json";
+
+    public static File createSubmitWorkflowJobsFile() {
+        File submitWorkflowJobs = new File(Config.getMetaCfgDir(), FILE_NAME_SUBMIT_WORKFLOW_JOBS);
+        return submitWorkflowJobs;
+    }
+
     public void offer(WorkFlowBuildHistoryPayload workFlowBuildHistoryPayload) {
         if (triggrWorkflowJobs.offer(workFlowBuildHistoryPayload)) {
             //  return new File(Config.getMetaCfgDir(), "df-logs/" + taskid + "/" + phase.getName());
             appendLog(workFlowBuildHistoryPayload, Optional.empty());
         }
     }
+
 
     private void appendLog(WorkFlowBuildHistoryPayload workFlowBuildHistoryPayload, Optional<ExecResult> execResult) {
         JSONObject wfHistory = new JSONObject();

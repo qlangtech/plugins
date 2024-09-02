@@ -35,6 +35,7 @@ import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
@@ -271,7 +272,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
 
     @Override
-    public DataXJobSubmit.IDataXJobContext createJobContext(final IJoinTaskContext parentContext) {
+    public DataXJobSubmit.IDataXJobContext createJobContext(final IExecChainContext parentContext) {
         return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 

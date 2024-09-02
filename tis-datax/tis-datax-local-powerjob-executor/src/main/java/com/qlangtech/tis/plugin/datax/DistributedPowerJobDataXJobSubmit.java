@@ -206,7 +206,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
                 this, module, dataxProcessor.identityValue());
 
-        appPayload.innerCreatePowerjobWorkflow(Optional.empty(), Optional.empty());
+        appPayload.innerCreatePowerjobWorkflow(false, Optional.empty(), Optional.empty());
     }
 
     /**
@@ -219,7 +219,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
 
         PowerWorkflowPayload payload = PowerWorkflowPayload.createTISWorkflowPayload(this, module, topology);
 
-        payload.innerCreatePowerjobWorkflow(
+        payload.innerCreatePowerjobWorkflow(false,
                 Optional.empty() //
                 , Optional.empty() //
         );

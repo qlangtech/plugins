@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
@@ -118,7 +119,7 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
 
 
     @Override
-    public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
+    public IDataXJobContext createJobContext(IExecChainContext parentContext) {
         return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 

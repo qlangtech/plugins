@@ -19,22 +19,21 @@
 package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.TIS;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor.ParseDescribable;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
-import com.qlangtech.tis.plugin.KeyedPluginStore;
-import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -44,10 +43,10 @@ import com.qlangtech.tis.plugin.datax.doplinscheduler.DSWorkflowInstance;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.DSWorkflowPayload;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.DolphinschedulerDistributedSPIDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
+import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipuldateUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.IPluginItemsProcessor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -55,6 +54,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -75,9 +75,24 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.integer})
     public String projectCode;
 
+    @FormField(ordinal = 4, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.url, Validator.require})
+    public String tisHTTPHost;
 
-    @FormField(ordinal = 5, type = FormFieldType.TEXTAREA, validate = {})
+    public static String dftTISHTTPHost() {
+        return Config.getTISConsoleHttpHost();
+    }
+
+    @FormField(ordinal = 5, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.hostWithoutPort, Validator.require})
+    public String tisAddress;
+
+
+    public static String dftTISAddress() {
+        return Config.getTisHost();
+    }
+
+    @FormField(ordinal = 6, advance = true, type = FormFieldType.TEXTAREA, validate = {})
     public String processDescription;
+
 
     @FormField(ordinal = 200, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<IdentityName> targetTables = Lists.newArrayList();
@@ -95,7 +110,8 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
      * @return
      */
     public DolphinSchedulerURLBuilder processDefinition() {
-        return getDSEndpoint().createSchedulerURLBuilder().appendSubPath("projects", this.projectCode, "process-definition");
+        return getDSEndpoint().createSchedulerURLBuilder()
+                .appendSubPath("projects", Objects.requireNonNull(this.projectCode, "projectCode can not be null"), "process-definition");
 //        boolean endWithSlash = StringUtils.endsWith(getDSEndpoint().serverPath, "/");
 //        StringBuffer url = new StringBuffer(getDSEndpoint().serverPath);
 //        if (!endWithSlash) {
@@ -124,8 +140,8 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         /**
          * 校验
          */
-        IPluginItemsProcessor itemsProcessor
-                = ManipuldateUtils.cloneInstance(pluginContext, context.get(), this.identityValue()
+        ManipulateItemsProcessor itemsProcessor
+                = ManipuldateUtils.instance(pluginContext, context.get(), this.identityValue()
                 , (meta) -> {
                 }, (oldIdentityId) -> {
                     originId[0] = oldIdentityId;
@@ -140,32 +156,117 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>>
                 pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext, ExportTISPipelineToDolphinscheduler.class, originId[0]);
 
+        if (!itemsProcessor.isUpdateProcess()) {
+            // 添加操作
+            if (pair.getLeft().size() > 0) {
+                for (ExportTISPipelineToDolphinscheduler i : pair.getLeft()) {
+                    pluginContext.addErrorMessage(context.get(), "实例'" + i.processName + "'已经配置，不能再创建新实例");
+                }
+                //  throw TisException.create("实例已经配置不能重复创建");
+                return;
+            }
+            /**===============================
+             * 添加项目参数
+             ===============================*/
+            addProjectParameters();
+        }
+
         // IPluginStore<DefaultDataXProcessorManipulate> pluginStore = getPluginStore(pluginContext, originId[0]);
         // 查看是否已经有保存的实例
         //  List<ExportTISPipelineToDolphinscheduler> export2DSCfgs = pair.getLeft();
 
-        if (pair.getLeft().size() > 0) {
-            for (ExportTISPipelineToDolphinscheduler i : pair.getLeft()) {
-                pluginContext.addErrorMessage(context.get(), "实例'" + i.processName + "'已经配置，不能再创建新实例");
-            }
-            //  throw TisException.create("实例已经配置不能重复创建");
-            return;
-        }
 
         IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, originId[0]);
         DSWorkflowPayload workflowPayload = new DSWorkflowPayload(this, dataxProcessor
                 , BasicDistributedSPIDataXJobSubmit.getCommonDAOContext(pluginContext), new DolphinschedulerDistributedSPIDataXJobSubmit());
         WorkflowSPIInitializer<DSWorkflowInstance> workflowSPIInitializer = new WorkflowSPIInitializer<>(workflowPayload);
         /**
-         *1. 将配置同步到DS
+         * 1. 将配置同步到DS
          */
-        DSWorkflowInstance wfInstance = workflowSPIInitializer.initialize(true);
+        DSWorkflowInstance wfInstance = workflowSPIInitializer.initialize(true, itemsProcessor.isUpdateProcess());
 
 
         /**
          *2. 并且将实例持久化在app管道下，当DS端触发会调用 DolphinschedulerDistributedSPIDataXJobSubmit.createPayload()方法获取DS端的WorkflowDAG拓扑视图
          */
         pair.getRight().setPlugins(pluginContext, context, Collections.singletonList(new ParseDescribable(this)));
+    }
+
+    void addProjectParameters() {
+        DolphinSchedulerEndpoint endpoint = this.getDSEndpoint();
+        DolphinSchedulerResponse response = endpoint.createSchedulerURLBuilder()
+                .appendSubPath("projects", this.projectCode, "project-parameter")
+                .appendQueryParam("pageNo", 1)
+                .appendQueryParam("pageSize", 100)
+                .applyGet();
+        if (!response.isSuccess()) {
+            throw new IllegalStateException(response.errorDescribe());
+        }
+
+        /**
+         * <pre> example
+         *     {
+         * 	"totalList": [{
+         * 		"modifyUser": "admin",
+         * 		"code": 117443106776544,
+         * 		"projectCode": 117442916207136,
+         * 		"createTime": "2024-08-20 10:28:54",
+         * 		"updateTime": "2024-08-30 18:49:27",
+         * 		"createUser": "admin",
+         * 		"id": 1,
+         * 		"paramName": "tisHost",
+         * 		"userId": 1,
+         * 		"operator": 1,
+         * 		"paramValue": "192.168.28.107"
+         *        }],
+         * 	"total": 1,
+         * 	"totalPage": 1,
+         * 	"pageNo": 0,
+         * 	"pageSize": 100,
+         * 	"currentPage": 1
+         * }
+         * </pre>
+         */
+        JSONObject data = response.getData();
+        JSONArray totals = data.getJSONArray("totalList");
+        Set<String> paramNames = Sets.newHashSet();
+        for (Object o : totals) {
+            JSONObject sysCfg = (JSONObject) o;
+            paramNames.add(sysCfg.getString("paramName"));
+        }
+
+        if (!paramNames.contains(Config.KEY_TIS_HTTP_Host)) {
+            createProjectParam(endpoint, Config.KEY_TIS_HTTP_Host, this.tisHTTPHost);
+        }
+
+        if (!paramNames.contains(Config.KEY_TIS_ADDRESS)) {
+            createProjectParam(endpoint, Config.KEY_TIS_ADDRESS, this.tisAddress);
+        }
+
+    }
+
+    /**
+     * 创建系统参数
+     *
+     * @param endpoint
+     * @param keyName
+     * @param value
+     */
+    private void createProjectParam(DolphinSchedulerEndpoint endpoint, String keyName, String value) {
+        if (StringUtils.isEmpty(value) || StringUtils.isEmpty(keyName)) {
+            throw new IllegalArgumentException("key:" + keyName + " val:" + value + " neither of them can be empty");
+        }
+        List<PostParam> params = Lists.newArrayList();
+        params.add(new PostParam("projectParameterName", keyName));
+        params.add(new PostParam("projectParameterValue", value));
+        DolphinSchedulerResponse response = Objects.requireNonNull(endpoint, "endpoint can not be null")
+                .createSchedulerURLBuilder()
+                .appendSubPath("projects", this.projectCode, "project-parameter")
+                .applyPost(params, Optional.empty());
+        if (!response.isSuccess()) {
+            throw new IllegalStateException("create system param,key:" + keyName + ",value:" + value
+                    + response.errorDescribe());
+        }
     }
 
 //    private static IPluginStore<DefaultDataXProcessorManipulate> getPluginStore(
@@ -194,26 +295,60 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
+            ManipulateItemsProcessor itemsProcessor
+                    = ManipuldateUtils.instance((IPluginContext) msgHandler, context, IdentityName.PLUGIN_IDENTITY_NAME
+                    , (meta) -> {
+                    }, (oldIdentityId) -> {
+                    });
             ExportTISPipelineToDolphinscheduler export = postFormVals.newInstance();
-            //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/%E6%B5%81%E7%A8%8B%E5%AE%9A%E4%B9%89%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C/verifyProcessDefinitionName
-            DolphinSchedulerResponse response = export.processDefinition()
-                    .appendSubPath("verify-name")
-                    .appendQueryParam("name", export.processName).applyGet();
-
-            if (!response.isSuccess()) {
-                Status status = Status.findStatusBy(response.getCode());
-                switch (status) {
-                    case PROCESS_DEFINITION_NAME_EXIST:
-                        msgHandler.addFieldError(context, FIELD_PROCESS_NAME, response.getMessage());
-                        break;
-                    case PROJECT_NOT_EXIST:
-                        msgHandler.addFieldError(context, FIELD_PROJECT_CODE, response.getMessage());
-                        break;
-                    default:
-                        throw new IllegalStateException("illegal status:" + status);
+            if (itemsProcessor.isUpdateProcess()) {
+                /********************************************************
+                 * 更新流程，需要确保definitionName已经存在
+                 ********************************************************/
+                DolphinSchedulerResponse response = export.processDefinition()
+                        .appendSubPath("query-by-name")
+                        .appendQueryParam("name", export.processName).applyGet();
+                if (!response.isSuccess()) {
+                    Status status = Status.findStatusBy(response.getCode());
+                    switch (status) {
+                        case PROCESS_DEFINE_NOT_EXIST: {
+                            msgHandler.addFieldError(context, FIELD_PROCESS_NAME, response.getMessage());
+                            break;
+                        }
+                        default:
+                            throw new IllegalStateException("illegal status:" + response.errorDescribe());
+                    }
+                    return false;
                 }
-                return false;
+                JSONObject data = response.getData();
+                String releaseState = data.getJSONObject("processDefinition").getString("releaseState");
+                if (!"OFFLINE".equalsIgnoreCase(releaseState)) {
+                    msgHandler.addFieldError(context, FIELD_PROCESS_NAME, "DS中对应工作流实例需要是‘下线’状态");
+                    return false;
+                }
+            } else {
+                //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/%E6%B5%81%E7%A8%8B%E5%AE%9A%E4%B9%89%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C/verifyProcessDefinitionName
+                DolphinSchedulerResponse response = export.processDefinition()
+                        .appendSubPath("verify-name")
+                        .appendQueryParam("name", export.processName).applyGet();
+
+                if (!response.isSuccess()) {
+                    Status status = Status.findStatusBy(response.getCode());
+                    switch (status) {
+                        case PROCESS_DEFINITION_NAME_EXIST:
+                            msgHandler.addFieldError(context, FIELD_PROCESS_NAME, response.getMessage());
+                            break;
+                        case PROJECT_NOT_EXIST:
+                            msgHandler.addFieldError(context, FIELD_PROJECT_CODE, response.getMessage());
+                            break;
+                        default:
+                            throw new IllegalStateException("illegal status:" + response.errorDescribe());
+                    }
+                    return false;
+                }
             }
+
+
 //            new StreamProcess<Void>() {
 //                @Override
 //                public Void p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {

@@ -84,7 +84,7 @@ public class BasicTISTableDumpProcessor {
     }
 
 
-    protected void processPostTask(ITaskExecutorContext context) {
+    public void processPostTask(ITaskExecutorContext context) {
 //        final OmsLogger omsLogger = context.getOmsLogger();
 //        if (CollectionUtils.isEmpty(taskResults)) {
 //            return new ProcessResult(false, "taskResults is empty,terminate");
@@ -186,6 +186,9 @@ public class BasicTISTableDumpProcessor {
             }));
 
         }, snapshotConsumer);
+
+        execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
+
         execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
         if (triggerCfg.getResType() == StoreResourceType.DataFlow) {
             execContext.setWorkflowName(triggerCfg.getDataXName());

@@ -22,7 +22,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -30,7 +29,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler.BizLogic;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.IPluginItemsProcessor;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
@@ -54,8 +52,8 @@ public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate 
         /**
          * 校验
          */
-        IPluginItemsProcessor itemsProcessor
-                = ManipuldateUtils.cloneInstance(pluginContext, context.get(), this.name
+        ManipulateItemsProcessor itemsProcessor
+                = ManipuldateUtils.instance(pluginContext, context.get(), this.name
                 , (meta) -> {
                 }, (oldIdentityId) -> {
                     originId[0] = oldIdentityId;

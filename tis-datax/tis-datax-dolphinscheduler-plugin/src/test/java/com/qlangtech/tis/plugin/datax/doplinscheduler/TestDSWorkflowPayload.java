@@ -31,6 +31,7 @@ import com.qlangtech.tis.manage.common.CreateNewTaskResult;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.datax.SPIExecContext;
 import com.qlangtech.tis.plugin.datax.WorkflowSPIInitializer;
+import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerEndpoint;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
 import com.qlangtech.tis.realtime.yarn.rpc.SynResTarget;
 import com.qlangtech.tis.test.TISEasyMock;
@@ -38,6 +39,7 @@ import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
 import java.util.Optional;
@@ -50,7 +52,7 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 
     private static final String appName = "mysql";
 
-    private static final long dsWorkflowId = 117631790563520l;
+    private static final long dsWorkflowId = 118072866846144l;
 
     private static final String exceptAppPayloadContent = "{\n" +
             "\t\"workflow_id\":" + dsWorkflowId + ",\n" +
@@ -60,21 +62,56 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
             "\t]\n" +
             "}";
 
+    private static DolphinSchedulerEndpoint dsEndpoint;
+
+    static {
+        dsEndpoint = new DolphinSchedulerEndpoint();
+        dsEndpoint.serverPath = "http://192.168.28.201:12345/dolphinscheduler";
+        dsEndpoint.serverToken = "f02d2883118664579ea32a659b2c9652";
+        dsEndpoint.name = "test";
+    }
+
+
     @Override
     public void setUp() throws Exception {
         super.setUp();
         clearMocks();
     }
 
-    public void testTriggerWorkflow() {
+//    public void testScheduler() throws Exception {
+//        ExecutorService scheduledExecutorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
+//            @Override
+//            public Thread newThread(Runnable r) {
+//                Thread t = new Thread(r);
+//                t.setUncaughtExceptionHandler((thread, exception) -> {
+//                    System.out.println("================================");
+//                    exception.printStackTrace();
+//                    //  logger.error(exception.getMessage(), exception);
+//                });
+//                return t;
+//            }
+//        });
+//
+//        scheduledExecutorService.execute(() -> {
+//            throw new IllegalArgumentException("xxxxxxxxxxxxx");
+//        });
+//
+//
+//
+//        Thread.sleep(990000);
+//    }
+
+
+    public void testTriggerWorkflow() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
         DSWorkflowPayload dsWorkflowPayload = createTriggerDsWorkflowPayload();
         Optional<Long> spiWorkflowInstanceIdOpt = Optional.of(dsWorkflowId); // Optional.empty();
         PowerjobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.statusRpc);
         Assert.assertNotNull("triggerBuildResult can not be null", triggerBuildResult);
-
+        Thread.sleep(900000);
         verifyAll();
     }
+
 
     public void testInitializeDoplinSchedulerProcessor() {
 
@@ -162,9 +199,20 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 //                .updateByExampleSelective(matchPropExpectAppFullBuildCronTime(), EasyMock.anyObject(ApplicationCriteria.class))).andReturn(1);
 
         replay();
-        ExportTISPipelineToDolphinscheduler exportCfg = null;
+        ExportTISPipelineToDolphinscheduler exportCfg = createExportTISPipelineToDolphinscheduler();
         return new DSWorkflowPayload(exportCfg, dataxProcessor, commonDAOContext, submit);
 
+    }
+
+    public static @NotNull ExportTISPipelineToDolphinscheduler createExportTISPipelineToDolphinscheduler() {
+        ExportTISPipelineToDolphinscheduler exportCfg = new ExportTISPipelineToDolphinscheduler() {
+            @Override
+            public DolphinSchedulerEndpoint getDSEndpoint() {
+                return TestDSWorkflowPayload.dsEndpoint;
+            }
+        };
+        exportCfg.projectCode = String.valueOf(117442916207136l);
+        return exportCfg;
     }
 
     private static SynResTarget matchSynResTarget(SynResTarget expect) {

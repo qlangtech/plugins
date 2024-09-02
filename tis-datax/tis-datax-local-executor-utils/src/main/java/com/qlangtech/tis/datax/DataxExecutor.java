@@ -1,23 +1,27 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.datax;
 
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.statistics.PerfTrace;
@@ -42,6 +46,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.job.common.JobCommon;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.DagTaskUtils;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
@@ -129,6 +134,38 @@ public class DataxExecutor {
 //    }
 
     /**
+     * 当使用dolphinscheduler运行数据同步任务希望在本地记录一份完整的dataX执行日志，而不是都要通过grpc的方式传输到assemble节点查看
+     *
+     * @param filePath
+     */
+    private static void initSpecialLocalLoggerFileAppender(String filePath) {
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        // 创建一个指定文件路径的fileAppender
+        FileAppender<ILoggingEvent> localFileAppender = new FileAppender<>();
+        localFileAppender.setContext(loggerContext);
+        localFileAppender.setName("localFile");
+        localFileAppender.setFile(filePath);
+        localFileAppender.setPrudent(true);
+        localFileAppender.setAppend(true);
+        localFileAppender.setImmediateFlush(true);
+
+        // 创建一个PatternLayoutEncoder
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(loggerContext);
+        //   %-5level %logger{36}-%msg%n
+        encoder.setPattern("%-5level %logger{36}-%msg%n");
+        encoder.start();
+
+        // 将Encoder添加到Appender中
+        localFileAppender.setEncoder(encoder);
+        localFileAppender.start();
+        // 获取根logger
+        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+        rootLogger.addAppender(localFileAppender);
+    }
+
+    /**
      * @param args
      * @see //DataxPrePostConsumer
      * @see //DataXJobSingleProcessorExecutor
@@ -151,6 +188,11 @@ public class DataxExecutor {
         final int taskSerializeNum = Integer.parseInt(args[7]);
 
         final long execEpochMilli = Long.parseLong(args[8]);
+
+        String localLoggerFilePath = null;
+        if (StringUtils.isNotEmpty(localLoggerFilePath = System.getProperty(Config.EXEC_LOCAL_LOGGER_FILE_PATH))) {
+            initSpecialLocalLoggerFileAppender(localLoggerFilePath);
+        }
 
         // 任务每次执行会生成一个时间戳
         // final String execTimeStamp = args[6];
@@ -182,7 +224,7 @@ public class DataxExecutor {
             // 如果是分布式执行状态，需要通过RPC的方式来监听监工是否执行了客户端终止操作
             Object thread = monitorDistributeCommand(jobId, jobInfo, dataXName, statusRpc, dataxExecutor);
             Objects.requireNonNull(thread);
-           // DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobInfo);
+            // DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobInfo);
         }
 
         try {
@@ -367,7 +409,7 @@ public class DataxExecutor {
 
     public void reportDataXJobStatus(boolean faild, boolean complete, boolean waiting, Integer taskId,
                                      DataXJobInfo jobName) {
-       // StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
+        // StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
         int readed = (int) allReadApproximately[0];
         boolean success = (complete && !faild);
         this.statusRpc.reportDumpJobStatus(faild, complete, waiting, taskId, jobName.jobFileName, readed, (success ? readed :
@@ -487,10 +529,12 @@ public class DataxExecutor {
         public String getTISDataXName() {
             return this.dataXName.getTISDataXName();
         }
+
         @Override
         public String getDataXName() {
             return this.dataXName.getTISDataXName();
         }
+
         @Override
         protected StandAloneJobContainerCommunicator createContainerCommunicator(Configuration configuration) {
             return new StandAloneJobContainerCommunicator(configuration) {

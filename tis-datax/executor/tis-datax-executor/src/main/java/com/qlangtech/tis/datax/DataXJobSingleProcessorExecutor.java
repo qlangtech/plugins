@@ -79,7 +79,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
         jobSubmitParams.execParallelTask(dataxName, () -> {
             // 在VM中控制进入可用区执行的实例数量
             {
-                //exec(msg);
+
                 CommandLine cmdLine = new CommandLine("java");
                 cmdLine.addArgument("-D" + Config.KEY_DATA_DIR + "=" + Config.getDataDir().getAbsolutePath());
                 cmdLine.addArgument("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=" + this.useRuntimePropEnvProps());
@@ -87,6 +87,10 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 cmdLine.addArgument("-D" + Config.KEY_RUNTIME + "=daily");
                 cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
                 cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
+                File localLoggerPath = null;
+                if ((localLoggerPath = msg.getSpecifiedLocalLoggerPath()) != null) {
+                    cmdLine.addArgument("-D" + Config.EXEC_LOCAL_LOGGER_FILE_PATH + "=" + localLoggerPath.getAbsolutePath());
+                }
                 for (String sysParam : this.getExtraJavaSystemPrams()) {
                     cmdLine.addArgument(sysParam, false);
                 }

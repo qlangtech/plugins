@@ -20,12 +20,16 @@ package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
+import com.qlangtech.tis.datax.ISpecifiedLocalLogger;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-18 17:57
  **/
-public interface ITaskExecutorContext {
+public interface ITaskExecutorContext extends ISpecifiedLocalLogger {
+
+
+
     /**
      * DAG 上下游之间传递参数
      *

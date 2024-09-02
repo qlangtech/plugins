@@ -74,6 +74,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -165,8 +166,13 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
 //    public abstract TriggerBuildResult triggerWorkflow(ICommonDAOContext daoContext, Optional<Long> workflowInstanceIdOpt
 //            , StatusRpcClientFactory.AssembleSvcCompsite feedback);
 
+    /**
+     * @param updateProcess       是否执行更新流程
+     * @param selectedTabTriggers
+     * @param unEffectiveOpt
+     */
     public abstract void innerCreatePowerjobWorkflow(
-            Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>>> selectedTabTriggers //
+            boolean updateProcess, Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>>> selectedTabTriggers //
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt);
 
 
@@ -273,17 +279,25 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
                         WorkFlowBuildHistoryPayload p;
                         int allWfJobsCount = checkWf.size();
                         int removed = 0;
+                        aa:
                         while (it.hasNext()) {
                             p = it.next();
-                            if ((execResult = p.processExecHistoryRecord()) != null) {
-                                // 说明结束了
+                            try {
+                                if ((execResult = p.processExecHistoryRecord()) != null) {
+                                    // 说明结束了
+                                    it.remove();
+                                    removed++;
+                                    // 正常结束？ 还是失败导致？
+                                    if (execResult != ExecResult.SUCCESS) {
+
+                                    }
+                                    triggrWorkflowJobs.taskFinal(p, execResult);
+                                }
+                            } catch (Throwable e) {
                                 it.remove();
                                 removed++;
-                                // 正常结束？ 还是失败导致？
-                                if (execResult != ExecResult.SUCCESS) {
-
-                                }
-                                triggrWorkflowJobs.taskFinal(p, execResult);
+                                logger.error(e.getMessage(), e);
+                                continue aa;
                             }
                         }
                         logger.info("start to wait next time to check job status,to terminate status count:{},allWfJobsCount:{}", removed, allWfJobsCount);
@@ -293,6 +307,9 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
                             throw new RuntimeException(e);
                         }
                     }
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                    throw e;
                 } finally {
                     checkWorkflowJobsLock.unlock();
                 }
@@ -312,7 +329,23 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
             if (scheduledExecutorService == null || triggrWorkflowJobs == null) {
                 synchronized (BasicWorkflowPayload.class) {
                     if (scheduledExecutorService == null) {
-                        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+                        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                            @Override
+                            public Thread newThread(Runnable r) {
+                                Thread t = new Thread(r);
+                                /**
+                                 * 在 ScheduledExecutorService 中使用 execute 方法提交的任务如果抛出了未检查异常（unchecked exception）
+                                 * ，如 IllegalArgumentException，那么这个异常会被 ScheduledExecutorService 自动捕捉
+                                 * ，并且不会传递到你为线程设置的 UncaughtExceptionHandler 中。
+                                 * 所以，以下设置setUncaughtExceptionHandler就没有意义了
+                                 */
+//                                t.setUncaughtExceptionHandler((thread, exception) -> {
+//                                    System.out.println("================================");
+//                                    logger.error(exception.getMessage(), exception);
+//                                });
+                                return t;
+                            }
+                        });
                     }
 
                     if (triggrWorkflowJobs == null) {
@@ -325,6 +358,10 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         }
     }
 
+    /**
+     * @see #triggerWorkflow 使用
+     * @see #initializeService 创建
+     */
     private transient static ScheduledExecutorService scheduledExecutorService;
     private transient static final ReentrantLock checkWorkflowJobsLock = new ReentrantLock();
     private transient static TriggrWorkflowJobs triggrWorkflowJobs;
@@ -351,6 +388,10 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
                 = dataxProcessor.getDataxCfgFileNames(null, partialTrigger);
         for (IDataxReader reader : dataxProcessor.getReaders(null)) {
             for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
+
+                if (!acceptTable(selectedTab)) {
+                    continue;
+                }
 
                 /**
                  * FIXME 先去掉，原因如上
@@ -384,6 +425,10 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         }
 
         return Pair.of(selectedTabTriggers, Collections.emptyMap());
+    }
+
+    protected boolean acceptTable(ISelectedTab selectedTab) {
+        return true;
     }
 
     protected final JSONObject createInstanceParams(Integer tisTaskId) {

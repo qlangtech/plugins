@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXJobSubmit.IDataXJobContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -40,7 +41,7 @@ public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
 
 
-    static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
+    static IRemoteTaskTrigger getRemoteJobTrigger(IDataXJobContext jobContext
             , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor
     ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();

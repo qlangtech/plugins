@@ -64,7 +64,7 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
                 .appendSubPath("projects", this.exportDSCfg.projectCode, process, spiWorkflowInstanceId).applyGet();
 
         if (!response.isSuccess()) {
-            throw new IllegalStateException(process + " is faild, error message:" + response.getMessage() + ",code:" + response.getCode());
+            throw new IllegalStateException(process + " is faild," + response.errorDescribe());
         }
         ExecResult execResult = null;
         JSONObject data = response.getData();
@@ -88,7 +88,7 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
             this.updateFinalStatus(execResult);
             return execResult;
         }
-        
+
         return null;
     }
 

@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.ds.manipulate;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -28,7 +27,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryManipulate;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.IPluginItemsProcessor;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
@@ -47,7 +45,7 @@ public class CloneDataSourceFactory extends DataSourceFactoryManipulate implemen
         if (StringUtils.isEmpty(this.name)) {
             throw new IllegalArgumentException("property name can not be null");
         }
-        IPluginItemsProcessor itemsProcessor = ManipuldateUtils.cloneInstance(pluginContext, context.get(), this.name, (meta) -> {
+        ManipulateItemsProcessor itemsProcessor = ManipuldateUtils.instance(pluginContext, context.get(), this.name, (meta) -> {
             meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.FALSE.toString());
             meta.putExtraParams(DBIdentity.KEY_DB_NAME, this.name);
         }, (oldIdentity) -> {

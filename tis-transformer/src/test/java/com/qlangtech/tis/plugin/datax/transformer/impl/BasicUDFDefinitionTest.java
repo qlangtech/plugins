@@ -25,7 +25,6 @@ import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
-import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;

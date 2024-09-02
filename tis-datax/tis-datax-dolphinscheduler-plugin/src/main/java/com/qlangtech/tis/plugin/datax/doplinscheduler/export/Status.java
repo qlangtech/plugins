@@ -24,7 +24,11 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
  * @see .//dolphinscheduler-api/src/main/java/org/apache/dolphinscheduler/api/enums/Status.java
  **/
 public enum Status {
-    PROJECT_NOT_EXIST(10190, "This project was not found. Please refresh page.", "该项目不存在,请刷新页面"), PROCESS_DEFINITION_NAME_EXIST(10168, "process definition name {0} already exists", "工作流定义名称[{0}]已存在");
+    PROJECT_NOT_EXIST(10190, "This project was not found. Please refresh page.", "该项目不存在,请刷新页面")
+    , PROCESS_DEFINITION_NAME_EXIST(10168, "process definition name {0} already exists", "工作流定义名称[{0}]已存在")
+    ,PROCESS_DEFINE_NOT_EXIST(50003, "process definition {0} does not exist", "工作流定义[{0}]不存在")
+    ,PROCESS_DEFINE_NOT_RELEASE(50004, "process definition {0} process version {1} not online",
+                                       "工作流定义[{0}] 工作流版本[{1}]不是上线状态");
     private final int code;
     private final String enMsg;
     private final String zhMsg;

@@ -22,6 +22,7 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
@@ -59,7 +60,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         //IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
         // EasyMock.expect(dataxProcessor.getDataxCfgDir()).andReturn();
 
-        IJoinTaskContext taskContext = EasyMock.createMock("joinTaskContext", IJoinTaskContext.class);
+        IExecChainContext taskContext = EasyMock.createMock("taskContext", IExecChainContext.class);
         ISelectedTab selectTab = EasyMock.createMock("selectTab", ISelectedTab.class);
 
         // EasyMock.expect(taskContext.getIndexName()).andReturn(DATAX_NAME);
@@ -69,7 +70,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
 
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
         ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
-        RpcServiceReference svcRef = new RpcServiceReference(ref, () -> {
+        RpcServiceReference svcRef = new RpcServiceReference(ref, StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC, () -> {
         });
 
         Optional<DataXJobSubmit> jobSubmit = DataXJobSubmit.getDataXJobSubmit(false, DataXJobSubmit.InstanceType.DISTRIBUTE);

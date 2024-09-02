@@ -41,13 +41,13 @@ import java.util.function.Consumer;
 public class ManipuldateUtils {
 
 
-
-    public static IPluginItemsProcessor cloneInstance(IPluginContext pluginContext, Context context, String newIdentityName
+    public static ManipulateItemsProcessor instance(IPluginContext pluginContext, Context context, String newIdentityName
             , Consumer<IUploadPluginMeta> pluginMetaConsumer
             , Consumer<String> originIdentityIdConsumer) {
-       // Objects.requireNonNull(contextb, "param content can not be null");
+        // Objects.requireNonNull(contextb, "param content can not be null");
         JSONObject postContent = Objects.requireNonNull(pluginContext, "pluginContext can not be null").getJSONPostContent();
         JSONObject manipulateTarget = postContent.getJSONObject(IUploadPluginMeta.KEY_JSON_MANIPULATE_TARGET);
+        boolean updateProcess = postContent.getBooleanValue(IUploadPluginMeta.KEY_JSON_MANIPULATE_BOOL_UPDATE_PROCESS);
         final String keyManipulatePluginMeta = "manipulatePluginMeta";
         String pluginType = postContent.getString(keyManipulatePluginMeta);
         if (StringUtils.isEmpty(pluginType)) {
@@ -61,7 +61,7 @@ public class ManipuldateUtils {
             throw new IllegalStateException("pluginMeta can not be empty");
         }
         for (IUploadPluginMeta meta : pluginMeta) {
-            meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.FALSE.toString());
+            meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.toString(updateProcess));
             pluginMetaConsumer.accept(meta);
 
             JSONArray itemsArray = new JSONArray();
@@ -85,7 +85,7 @@ public class ManipuldateUtils {
             }
             IPluginItemsProcessor itemsProcessor = pluginItems.getRight();
             //
-            return itemsProcessor;
+            return new ManipulateItemsProcessor(itemsProcessor, updateProcess);
         }
 
         throw new IllegalStateException("can not reach here");

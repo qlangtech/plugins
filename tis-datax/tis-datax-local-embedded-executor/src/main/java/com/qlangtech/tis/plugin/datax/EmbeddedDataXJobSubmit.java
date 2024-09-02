@@ -44,6 +44,7 @@ import com.qlangtech.tis.datax.TISJarLoader;
 import com.qlangtech.tis.datax.common.WriterPluginMeta;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.HttpUtils;
@@ -191,7 +192,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
+    public IDataXJobContext createJobContext(IExecChainContext parentContext) {
         return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 }

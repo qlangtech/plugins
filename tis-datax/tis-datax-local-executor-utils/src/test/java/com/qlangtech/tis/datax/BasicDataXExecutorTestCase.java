@@ -50,7 +50,7 @@ public abstract class BasicDataXExecutorTestCase extends TISTestCase implements 
         PluginStubUtils.setTISField();
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
         ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
-        statusRpc = new RpcServiceReference(ref, () -> {
+        statusRpc = new RpcServiceReference(ref, StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC, () -> {
         });
         AssembleSvcCompsite.statusRpc = statusRpc;
         executor = createExecutor();

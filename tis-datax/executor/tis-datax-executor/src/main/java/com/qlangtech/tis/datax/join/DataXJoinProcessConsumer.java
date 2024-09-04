@@ -5,6 +5,7 @@ import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
+import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
@@ -151,7 +152,7 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
 
     @Override
     protected File getWorkingDirectory() {
-        return DataxPrePostConsumer.getDataXExecutorDir();
+        return IDataXTaskRelevant.getDataXExecutorDir();
     }
 
     @Override

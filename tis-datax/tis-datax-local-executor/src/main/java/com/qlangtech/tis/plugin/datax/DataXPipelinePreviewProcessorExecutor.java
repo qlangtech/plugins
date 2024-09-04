@@ -252,7 +252,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
 
     @Override
     protected File getWorkingDirectory() {
-        return DataxPrePostConsumer.getDataXExecutorDir();
+        return IDataXTaskRelevant.getDataXExecutorDir();
     }
 
     @Override

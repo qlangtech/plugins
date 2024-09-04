@@ -12,13 +12,10 @@
       ]
     }
   },
-  "tisHTTPHost": {
-    "help": "dolphinscheduler中会通过此地址作为REST API请求的根路径，向TIS发送数据数据管道的配置及插件资源请求，请务必取保dolphinscheduler端对此地址可用",
-    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftTISHTTPHost()"
-  },
-  "tisAddress": {
-    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftTISAddress()",
-    "help": "dolphinscheduler中会通过此地址访问TIS提供的日志收集服务，TIS可收集dolphinscheduler端数据管道的执行日志。请务必取保dolphinscheduler端对此地址可用"
+  "callback": {
+    "label": "TIS端回调",
+    "dftVal": "Default",
+    "help": "对应的dolphinscheduler中工作流执行过程中需要回调TIS，设置相应参数"
   },
   "processName": {
     "label": "工作流名称",
@@ -37,5 +34,19 @@
     "viewtype": "idlist",
     "enum": "com.qlangtech.tis.datax.impl.DataXCfgGenerator.GenerateCfgs.getTabsCandidate():uncache_true",
     "help": "请选择需要同步到DolphinScheduler的表"
+  },
+  "createHistory": {
+    "help": "dolphinscheduler执过程中，是否在TIS端生成执行历史记录？",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
   }
 }

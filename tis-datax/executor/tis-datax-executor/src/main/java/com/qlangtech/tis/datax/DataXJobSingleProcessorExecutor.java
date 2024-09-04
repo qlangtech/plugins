@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -112,6 +111,9 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 executor.setWatchdog(watchdog);
                 String command = Arrays.stream(cmdLine.toStrings()).collect(Collectors.joining(" "));
                 logger.info("command:{}", command);
+                if (DataxUtils.localDataXCommandConsumer != null) {
+                    DataxUtils.localDataXCommandConsumer.accept(command);
+                }
                 executor.execute(cmdLine, resultHandler);
 
                 runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());

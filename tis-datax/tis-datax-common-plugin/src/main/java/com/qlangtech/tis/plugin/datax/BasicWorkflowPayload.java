@@ -157,14 +157,6 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         return payload == null ? new JSONObject() : payload;
     }
 
-//    /**
-//     * @param daoContext
-//     * @param workflowInstanceIdOpt TIS 中触发历史taskId
-//     * @param feedback
-//     * @return
-//     */
-//    public abstract TriggerBuildResult triggerWorkflow(ICommonDAOContext daoContext, Optional<Long> workflowInstanceIdOpt
-//            , StatusRpcClientFactory.AssembleSvcCompsite feedback);
 
     /**
      * @param updateProcess       是否执行更新流程
@@ -185,7 +177,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
      * @param feedback
      * @return
      */
-    public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
+    public  PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
             , RpcServiceReference feedback) {
         //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 

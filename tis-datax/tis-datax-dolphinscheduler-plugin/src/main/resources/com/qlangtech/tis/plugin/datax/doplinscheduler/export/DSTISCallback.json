@@ -1,0 +1,10 @@
+{
+  "tisHTTPHost": {
+    "help": "dolphinscheduler中会通过此地址作为REST API请求的根路径，向TIS发送数据数据管道的配置及插件资源请求，请务必取保dolphinscheduler端对此地址可用",
+    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.DSTISCallback.dftTISHTTPHost()"
+  },
+  "tisAddress": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.DSTISCallback.dftTISAddress()",
+    "help": "dolphinscheduler中会通过此地址访问TIS提供的日志收集服务，TIS可收集dolphinscheduler端数据管道的执行日志。请务必取保dolphinscheduler端对此地址可用"
+  }
+}

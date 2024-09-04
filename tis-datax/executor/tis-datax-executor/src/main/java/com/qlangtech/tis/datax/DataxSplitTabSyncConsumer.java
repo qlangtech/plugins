@@ -47,6 +47,14 @@ public abstract class DataxSplitTabSyncConsumer extends DataXJobSingleProcessorE
                 "getZkClient can not be " + "null"), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
     }
 
+    /**
+     * @see com.qlangtech.tis.datax.DataxExecutor#main(String[])
+     * @param msg
+     * @param taskId
+     * @param jobName
+     * @param dataxName
+     * @param cmdLine
+     */
     @Override
     protected void addMainClassParams(CuratorDataXTaskMessage msg, Integer taskId, String jobName, String dataxName,
                                       CommandLine cmdLine) {
@@ -72,6 +80,7 @@ public abstract class DataxSplitTabSyncConsumer extends DataXJobSingleProcessorE
 
         cmdLine.addArgument(String.valueOf(msg.getTaskSerializeNum()));
         cmdLine.addArgument(String.valueOf(msg.getExecEpochMilli()));
+        cmdLine.addArgument(String.valueOf(msg.isDisableGrpcRemoteServerConnect()));
         //  cmdLine.addArgument(msg.)
     }
 }

@@ -154,7 +154,7 @@ public class DataxExecutor {
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(loggerContext);
         //   %-5level %logger{36}-%msg%n
-        encoder.setPattern("%-5level %logger{36}-%msg%n");
+        encoder.setPattern("%d{MM-dd HH:mm:ss} %-5level %logger{36}-%msg%n");
         encoder.start();
 
         // 将Encoder添加到Appender中
@@ -165,6 +165,8 @@ public class DataxExecutor {
         rootLogger.addAppender(localFileAppender);
     }
 
+    private static final int ASSERT_PARAM_LENGTH = 10;
+
     /**
      * @param args
      * @see //DataxPrePostConsumer
@@ -172,9 +174,8 @@ public class DataxExecutor {
      * 入口开始执行
      */
     public static void main(String[] args) throws Exception {
-        if (args.length != 9) {
-            throw new IllegalArgumentException("args length must be 9,but now is " + args.length);
-        }
+        assertParamsLength(args);
+
         Integer jobId = Integer.parseInt(args[0]);
         DataXJobInfo jobInfo = DataXJobInfo.parse(args[1]);
         String dataXName = args[2];
@@ -188,6 +189,11 @@ public class DataxExecutor {
         final int taskSerializeNum = Integer.parseInt(args[7]);
 
         final long execEpochMilli = Long.parseLong(args[8]);
+        boolean isDisableGrpcRemoteServerConnect;
+        if (isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[9])) {
+            ITISCoordinator.disableRemoteServer();
+        }
+        logger.info("isDisableGrpcRemoteServerConnect:{}", isDisableGrpcRemoteServerConnect);
 
         String localLoggerFilePath = null;
         if (StringUtils.isNotEmpty(localLoggerFilePath = System.getProperty(Config.EXEC_LOCAL_LOGGER_FILE_PATH))) {
@@ -250,6 +256,12 @@ public class DataxExecutor {
         }
         logger.info("dataX:" + dataXName + ",taskid:" + jobId + " finished");
         System.exit(0);
+    }
+
+    private static void assertParamsLength(String[] args) {
+        if (args.length != ASSERT_PARAM_LENGTH) {
+            throw new IllegalArgumentException("args length must be " + ASSERT_PARAM_LENGTH + ",but now is " + args.length);
+        }
     }
 
     private static Thread monitorDistributeCommand(Integer jobId, DataXJobInfo jobInfo, String dataXName,

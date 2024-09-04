@@ -75,22 +75,37 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.integer})
     public String projectCode;
 
-    @FormField(ordinal = 4, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.url, Validator.require})
-    public String tisHTTPHost;
-
-    public static String dftTISHTTPHost() {
-        return Config.getTISConsoleHttpHost();
-    }
-
-    @FormField(ordinal = 5, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.hostWithoutPort, Validator.require})
-    public String tisAddress;
+    /**
+     * 设置TIS回调参数集
+     */
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public DSTISCallback callback;
 
 
-    public static String dftTISAddress() {
-        return Config.getTisHost();
-    }
 
-    @FormField(ordinal = 6, advance = true, type = FormFieldType.TEXTAREA, validate = {})
+//    @FormField(ordinal = 4, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.url, Validator.require})
+//    public String tisHTTPHost;
+//
+//    public static String dftTISHTTPHost() {
+//        return Config.getTISConsoleHttpHost();
+//    }
+//
+//    @FormField(ordinal = 5, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.hostWithoutPort, Validator.require})
+//    public String tisAddress;
+//
+//
+//    public static String dftTISAddress() {
+//        return Config.getTisHost();
+//    }
+
+    /**
+     * 是否在TIS端生成执行历史记录
+     */
+    @FormField(ordinal = 7, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean createHistory;
+
+
+    @FormField(ordinal = 8, advance = true, type = FormFieldType.TEXTAREA, validate = {})
     public String processDescription;
 
 
@@ -235,12 +250,14 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
             paramNames.add(sysCfg.getString("paramName"));
         }
 
+        DSTISCallback tisCallbackParams = Objects.requireNonNull(this.callback, "callback can not be null");
+
         if (!paramNames.contains(Config.KEY_TIS_HTTP_Host)) {
-            createProjectParam(endpoint, Config.KEY_TIS_HTTP_Host, this.tisHTTPHost);
+            createProjectParam(endpoint, Config.KEY_TIS_HTTP_Host, tisCallbackParams.tisHTTPHost);
         }
 
         if (!paramNames.contains(Config.KEY_TIS_ADDRESS)) {
-            createProjectParam(endpoint, Config.KEY_TIS_ADDRESS, this.tisAddress);
+            createProjectParam(endpoint, Config.KEY_TIS_ADDRESS, tisCallbackParams.tisAddress);
         }
 
     }

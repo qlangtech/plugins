@@ -145,18 +145,11 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
     }
 
     public File getWorkingDirectory() {
-        return getDataXExecutorDir();
+        return IDataXTaskRelevant.getDataXExecutorDir();
     }
 
-    public static File getDataXExecutorDir() {
-        File workDir = new File("/opt/tis/tis-datax-executor");
-        if (!workDir.exists()) {
-            throw new IllegalStateException("workDir is not exist:" + workDir.getAbsolutePath());
-        }
-        return workDir;
-    }
 
-    public static final String DEFAULT_CLASSPATH = "./lib/*:./tis-datax-executor.jar:./conf/";
+    public static final String DEFAULT_CLASSPATH = "./lib/*:./" + IDataXTaskRelevant.KEY_TIS_DATAX_EXECUTOR + ".jar:./conf/";
 
     public String getClasspath() {
         return DEFAULT_CLASSPATH;

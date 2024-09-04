@@ -22,6 +22,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
+import com.qlangtech.tis.cloud.ICoordinator;
+import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -51,6 +53,7 @@ import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.meta.NodeType;
 import com.qlangtech.tis.sql.parser.meta.NodeType.NodeTypeParseException;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -110,6 +113,21 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     @Override
     protected DSWorkflowInstance createWorkflowInstance(Long spiWorkflowId, ExecutePhaseRange execRange) {
         return new DSWorkflowInstance(this.exportCfg, execRange, this.dataxProcessor.identityValue(), spiWorkflowId);
+    }
+
+    @Override
+    public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt, RpcServiceReference feedback) {
+
+        if (exportCfg.createHistory) {
+            return super.triggerWorkflow(workflowInstanceIdOpt, feedback);
+        } else {
+            // 不需要在TIS端生成执行历史记录
+            int tisTaskId = 999;
+            JSONObject instanceParams = createInstanceParams(tisTaskId);
+            PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
+            buildResult.taskid = tisTaskId;
+            return buildResult;
+        }
     }
 
     @Override
@@ -261,6 +279,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
                         , createParam(JobParams.KEY_JAVA_MEMORY_SPEC, ParamType.VARCHAR)
                         , createParam(JobParams.KEY_PREVIOUS_TASK_ID, ParamType.INTEGER)));
         JSONObject initNode = createInitNodeJson();
+        this.setDisableGrpcRemoteServerConnect(initNode);
         //
         taskParams.put(KEY_TASK_SOURCE_LOCATION_ARN, JsonUtil.toString(initNode));
         taskParams.put(KEY_TASK_DESTINATION_LOCATION_ARN, NodeType.START.getType());
@@ -279,8 +298,8 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             //======================================
             tabTriggers = entry.getValue();
             selectedTab = entry.getKey();
-            mrParams = tabTriggers.createMRParams();
-
+            mrParams = new JSONObject(tabTriggers.createMRParams());
+            this.setDisableGrpcRemoteServerConnect(mrParams);
             if (tabTriggers.getPostTrigger() != null) {
                 containPostTrigger = true;
             }
@@ -296,8 +315,8 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
             JSONObject taskDefinitionJson = createTaskDefinitionJSON(
                     taskCode
-                    , dataxProcessor.identityValue() + "@" + selectedTab.getName()
-                    , "execute pipeline of " + dataxProcessor.identityValue() + "@" + selectedTab.getName());
+                    , selectedTab.getName() + "@" + dataxProcessor.identityValue()
+                    , "execute pipeline of " + selectedTab.getName() + "@" + dataxProcessor.identityValue());
 //            JsonUtil.loadJSON(DolphinschedulerExport.class, "tpl/task-definition-sync-tpl.json");
 //            taskDefinitionJson.put(KEY_TASK_DEFINITION_CODE, taskCode);
 //            taskDefinitionJson.put(KEY_TASK_DEFINITION_NAME, dataxProcessor.identityValue() + "@" + selectedTab.getName());
@@ -353,6 +372,10 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
         this.setSPIWorkflowId(dsWorkflowId
                 , new ExecutePhaseRange(FullbuildPhase.FullDump, containPostTrigger ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));
+    }
+
+    private void setDisableGrpcRemoteServerConnect(JSONObject initNode) {
+        initNode.put(ICoordinator.KEY_DISABLE_GRPC_REMOTE_SERVER_CONNECT, !this.exportCfg.createHistory);
     }
 
 

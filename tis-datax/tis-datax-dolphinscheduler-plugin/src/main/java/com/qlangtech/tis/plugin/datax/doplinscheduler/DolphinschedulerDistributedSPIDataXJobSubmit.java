@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
+import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
@@ -37,6 +38,7 @@ import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta.SqlDataFlowTopology;
+import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -59,6 +61,11 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
     @Override
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
         throw TisException.create("Dolphinscheduler DAG job cancel is not supported");
+    }
+
+    @Override
+    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName, Optional<Long> workflowInstanceIdOpt) {
+        return super.triggerJob(module, context, appName, workflowInstanceIdOpt);
     }
 
     @Override

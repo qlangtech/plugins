@@ -30,8 +30,10 @@ public class TestExportTISPipelineToDolphinscheduler extends TestCase {
     public void testAddProjectParameters() {
         ExportTISPipelineToDolphinscheduler export2DS
                 = TestDSWorkflowPayload.createExportTISPipelineToDolphinscheduler();
-        export2DS.tisAddress = "192.168.28.201";
-        export2DS.tisHTTPHost = "http://192.168.28.201:8080";
+
+        export2DS.callback = new DSTISCallback();
+        export2DS.callback.tisAddress = "192.168.28.201";
+        export2DS.callback.tisHTTPHost = "http://192.168.28.201:8080";
         export2DS.addProjectParameters();
     }
 }

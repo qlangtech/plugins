@@ -188,6 +188,7 @@ public class BasicTISTableDumpProcessor {
         }, snapshotConsumer);
 
         execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
+        execContext.setDisableGrpcRemoteServerConnect(context.isDisableGrpcRemoteServerConnect());
 
         execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
         if (triggerCfg.getResType() == StoreResourceType.DataFlow) {

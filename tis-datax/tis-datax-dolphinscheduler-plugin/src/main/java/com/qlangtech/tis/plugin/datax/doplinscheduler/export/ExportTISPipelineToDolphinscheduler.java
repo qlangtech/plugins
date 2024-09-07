@@ -25,10 +25,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
+import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor.ParseDescribable;
+import com.qlangtech.tis.extension.IDescribableManipulate.IManipulateStorable;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.AppAndRuntime;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -64,9 +67,10 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
 
     private static final String FIELD_DS_ENDPOINT = "dsEndpoint";
     private static final String FIELD_PROCESS_NAME = "processName";
-    private static final String FIELD_PROJECT_CODE = "projectCode";
+    public static final String FIELD_PROJECT_CODE = "projectCode";
 
-    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+
+    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
     public String processName;
 
     @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
@@ -74,50 +78,37 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
 
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.integer})
     public String projectCode;
-
-    /**
-     * 设置TIS回调参数集
-     */
-    @FormField(ordinal = 5, validate = {Validator.require})
-    public DSTISCallback callback;
-
-
-
-//    @FormField(ordinal = 4, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.url, Validator.require})
-//    public String tisHTTPHost;
-//
-//    public static String dftTISHTTPHost() {
-//        return Config.getTISConsoleHttpHost();
-//    }
-//
-//    @FormField(ordinal = 5, advance = false, type = FormFieldType.INPUTTEXT, validate = {Validator.hostWithoutPort, Validator.require})
-//    public String tisAddress;
-//
-//
-//    public static String dftTISAddress() {
-//        return Config.getTisHost();
-//    }
-
     /**
      * 是否在TIS端生成执行历史记录
      */
-    @FormField(ordinal = 7, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean createHistory;
+    /**
+     * 设置TIS回调参数集
+     */
+    @FormField(ordinal = 6, validate = {Validator.require})
+    public DSTISCallback callback;
+
+    public static final String dftProcessName() {
+        AppAndRuntime appAndRuntime = Objects.requireNonNull(AppAndRuntime.getAppAndRuntime(), "appAndRuntime can not be null");
+        return appAndRuntime.getAppName() + "_pipeline_from_tis";
+    }
 
 
-    @FormField(ordinal = 8, advance = true, type = FormFieldType.TEXTAREA, validate = {})
+    /**
+     * 目标表选择
+     */
+    @FormField(ordinal = 200, validate = {Validator.require})
+    public DSTargetTables target;
+
+    @FormField(ordinal = 201, advance = true, type = FormFieldType.INPUTTEXT, validate = {Validator.none_blank, Validator.absolute_path})
+    public String deployDir;
+    @FormField(ordinal = 202, advance = true, type = FormFieldType.TEXTAREA, validate = {})
     public String processDescription;
 
+    @FormField(ordinal = 203, advance = true, validate = {Validator.require})
+    public DSTaskGroup taskGroup;
 
-    @FormField(ordinal = 200, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
-    public List<IdentityName> targetTables = Lists.newArrayList();
-
-//    public List<Header> appendToken(List<Header> originHeaders) {
-//        List<Header> headers = Lists.newArrayList(originHeaders);
-//        headers.add(new Header("token", getDSEndpoint().serverToken));
-//        headers.add(new Header("Accept", "application/json"));
-//        return headers;
-//    }
 
     /**
      * 117442916207136
@@ -151,17 +142,15 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
     @Override
     public void manipuldateProcess(IPluginContext pluginContext, Optional<Context> context) {
         // 将TIS的数据同步通道配置同步到DS中
-        String[] originId = new String[1];
+        // String[] originId = new String[1];
         /**
          * 校验
          */
         ManipulateItemsProcessor itemsProcessor
-                = ManipuldateUtils.instance(pluginContext, context.get(), this.identityValue()
+                = ManipuldateUtils.instance(pluginContext, context.get(), null
                 , (meta) -> {
-                }, (oldIdentityId) -> {
-                    originId[0] = oldIdentityId;
                 });
-        if (StringUtils.isEmpty(originId[0])) {
+        if (StringUtils.isEmpty(itemsProcessor.getOriginIdentityId())) {
             throw new IllegalStateException("originId can not be null");
         }
         if (itemsProcessor == null) {
@@ -169,7 +158,17 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         }
 
         Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>>
-                pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext, ExportTISPipelineToDolphinscheduler.class, originId[0]);
+                pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext, ExportTISPipelineToDolphinscheduler.class, itemsProcessor.getOriginIdentityId());
+
+        /**
+         * 是否需要删除
+         */
+        if (itemsProcessor.isDeleteProcess()) {
+            // 只删除TIS本地端配置，dolphinscheduler端不进行任何操作
+            pair.getRight().setPlugins(pluginContext, context, Collections.emptyList());
+            return;
+        }
+
 
         if (!itemsProcessor.isUpdateProcess()) {
             // 添加操作
@@ -180,18 +179,24 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
                 //  throw TisException.create("实例已经配置不能重复创建");
                 return;
             }
-            /**===============================
-             * 添加项目参数
-             ===============================*/
-            addProjectParameters();
         }
+
+        /**===============================
+         * 添加项目参数
+         ===============================*/
+        addProjectParameters();
+
+//        /**===============================
+//         * 为执行任务添加task工作组
+//         ===============================*/
+//        TaskGroup taskGroup = taskGroup.addTaskGroup(this);
 
         // IPluginStore<DefaultDataXProcessorManipulate> pluginStore = getPluginStore(pluginContext, originId[0]);
         // 查看是否已经有保存的实例
         //  List<ExportTISPipelineToDolphinscheduler> export2DSCfgs = pair.getLeft();
 
 
-        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, originId[0]);
+        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, itemsProcessor.getOriginIdentityId());
         DSWorkflowPayload workflowPayload = new DSWorkflowPayload(this, dataxProcessor
                 , BasicDistributedSPIDataXJobSubmit.getCommonDAOContext(pluginContext), new DolphinschedulerDistributedSPIDataXJobSubmit());
         WorkflowSPIInitializer<DSWorkflowInstance> workflowSPIInitializer = new WorkflowSPIInitializer<>(workflowPayload);
@@ -207,12 +212,14 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         pair.getRight().setPlugins(pluginContext, context, Collections.singletonList(new ParseDescribable(this)));
     }
 
+
     void addProjectParameters() {
         DolphinSchedulerEndpoint endpoint = this.getDSEndpoint();
         DolphinSchedulerResponse response = endpoint.createSchedulerURLBuilder()
                 .appendSubPath("projects", this.projectCode, "project-parameter")
-                .appendQueryParam("pageNo", 1)
-                .appendQueryParam("pageSize", 100)
+                .appendPageParam()
+//                .appendQueryParam(DolphinSchedulerURLBuilder.FIELD_PAGE_NO, 1)
+//                .appendQueryParam(DolphinSchedulerURLBuilder.FIELD_PAGE_SIZE, 100)
                 .applyGet();
         if (!response.isSuccess()) {
             throw new IllegalStateException(response.errorDescribe());
@@ -260,6 +267,12 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
             createProjectParam(endpoint, Config.KEY_TIS_ADDRESS, tisCallbackParams.tisAddress);
         }
 
+        if (StringUtils.isNotEmpty(this.deployDir)) {
+            if (!paramNames.contains(IDataXTaskRelevant.KEY_TIS_DATAX_WORK_DIR)) {
+                createProjectParam(endpoint, IDataXTaskRelevant.KEY_TIS_DATAX_WORK_DIR, this.deployDir);
+            }
+        }
+
     }
 
     /**
@@ -298,7 +311,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
 
     @TISExtension
     public static class DefaultDesc extends DefaultDataXProcessorManipulate.BasicDesc
-            implements IEndTypeGetter, FormFieldType.IMultiSelectValidator {
+            implements IEndTypeGetter, IManipulateStorable {
         public DefaultDesc() {
             super();
             this.registerSelectOptions(FIELD_DS_ENDPOINT, () -> ParamsConfig.getItems(DolphinSchedulerEndpoint.DISPLAY_NAME));
@@ -310,14 +323,27 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         }
 
         @Override
+        public boolean isManipulateStorable() {
+            return true;
+        }
+
+        @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             ManipulateItemsProcessor itemsProcessor
-                    = ManipuldateUtils.instance((IPluginContext) msgHandler, context, IdentityName.PLUGIN_IDENTITY_NAME
+                    = ManipuldateUtils.instance((IPluginContext) msgHandler, context, null
                     , (meta) -> {
-                    }, (oldIdentityId) -> {
                     });
             ExportTISPipelineToDolphinscheduler export = postFormVals.newInstance();
+
+            if (itemsProcessor == null) {
+                return false;
+            }
+
+            if (itemsProcessor.isDeleteProcess()) {
+                return true;
+            }
+
             if (itemsProcessor.isUpdateProcess()) {
                 /********************************************************
                  * 更新流程，需要确保definitionName已经存在
@@ -344,6 +370,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
                     return false;
                 }
             } else {
+                // 新增要校验名字不冲突
                 //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/%E6%B5%81%E7%A8%8B%E5%AE%9A%E4%B9%89%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C/verifyProcessDefinitionName
                 DolphinSchedulerResponse response = export.processDefinition()
                         .appendSubPath("verify-name")

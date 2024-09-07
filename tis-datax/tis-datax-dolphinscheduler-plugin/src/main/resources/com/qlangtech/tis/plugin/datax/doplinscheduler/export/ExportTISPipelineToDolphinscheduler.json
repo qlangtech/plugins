@@ -12,6 +12,16 @@
       ]
     }
   },
+  "taskGroup": {
+    "label": "资源组",
+    "help": "对应dolphinScheduler中任务组概念，用以来控制工作流中的job并发数目，可以有效防止由于大量同步任务并发执行导致业务数据库过载",
+    "dftVal": "Default"
+  },
+  "deployDir": {
+    "label": "部署目录",
+    "placeholder": "/opt/misc/apache-dolphinscheduler-3.2.2-bin/standalone-server",
+    "help": "TIS数据管道任务执行会在dolphinscheduler所在节点机器部署TIS运行所依赖的工程包，默认自动部署在dolphinscheduler $HOME目录"
+  },
   "callback": {
     "label": "TIS端回调",
     "dftVal": "Default",
@@ -19,7 +29,8 @@
   },
   "processName": {
     "label": "工作流名称",
-    "help": "对应的dolphinscheduler中工作流名称，确保同一项目下工作流名称唯一，不能重复"
+    "help": "对应的dolphinscheduler中工作流名称，确保同一项目下工作流名称唯一，不能重复",
+    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftProcessName()"
   },
   "processDescription": {
     "label": "描述",
@@ -29,11 +40,10 @@
     "placeholder": "117442916207136",
     "help": "dolphinscheduler中对应的项目编码"
   },
-  "targetTables": {
-    "label": "目标表",
-    "viewtype": "idlist",
-    "enum": "com.qlangtech.tis.datax.impl.DataXCfgGenerator.GenerateCfgs.getTabsCandidate():uncache_true",
-    "help": "请选择需要同步到DolphinScheduler的表"
+  "target": {
+    "label": "目标",
+    "help": "请选择需要同步到DolphinScheduler的表",
+    "dftVal": "Unlimited"
   },
   "createHistory": {
     "help": "dolphinscheduler执过程中，是否在TIS端生成执行历史记录？",

@@ -213,7 +213,7 @@ public abstract class TableRegisterFlinkSourceHandle
          */
         final IPluginContext namedContext = IPluginContext.namedContext(this.getCollectionName());
         Optional<RecordTransformerRules> transformers
-                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(namedContext, tabName));
+                = (RecordTransformerRules.loadTransformerRules(namedContext, tabName));
         RecordTransformerRules tRules = null;
         RowTransformerMapper transformerMapper = null;
         List<FlinkCol> cols = null;

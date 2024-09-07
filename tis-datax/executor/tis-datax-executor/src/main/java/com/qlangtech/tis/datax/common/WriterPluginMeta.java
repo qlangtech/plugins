@@ -68,7 +68,7 @@ public class WriterPluginMeta {
         DataXCfgGenerator dataXCfgGenerator = new DataXCfgGenerator(pluginCtx, dataXName, dataxProcessor) {
             @Override
             protected String getTemplateContent(IDataxReaderContext readerContext
-                    , IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
+                    , IDataxReader reader, IDataxWriter writer, Optional<RecordTransformerRules> transformerRules) {
                 return reader.getTemplate();
             }
 

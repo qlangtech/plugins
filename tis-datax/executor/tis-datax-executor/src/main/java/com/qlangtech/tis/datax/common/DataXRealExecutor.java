@@ -115,7 +115,7 @@ public class DataXRealExecutor {
 
             Optional<IDataxProcessor.TableMap> tableMap = this.dataXCfgGenerator.buildTabMapper(this.getDataxReader(), readerContext);
 
-            RecordTransformerRules transformerRules
+            Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(pluginCtx, readerContext.getSourceEntityName());
 
             Configuration readerCfg
@@ -151,12 +151,8 @@ public class DataXRealExecutor {
 
             rows.setQuery(queryCriteria);
 
-            // TISJarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager(), LocalDataXJobSubmit.class.getClassLoader());
-
-            Optional<Pair<String, List<String>>> transformer = Optional.empty();
-            if (transformerRules != null) {
-                transformer = Optional.of(Pair.of(tableName, transformerRules.relevantColKeys()));
-            }
+            Optional<Pair<String, List<String>>> transformer
+                    = transformerRules.map((trule) -> Pair.of(tableName, trule.relevantColKeys()));
 
             this.startPipeline(readerCfg, transformer, (jobContainer) -> {
                 jobContainer.setAttr(ThreadLocalRows.class, rows);

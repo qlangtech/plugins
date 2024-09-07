@@ -1,0 +1,8 @@
+{
+  "targetTables": {
+    "label": "目标表",
+    "viewtype": "idlist",
+    "enum": "com.qlangtech.tis.datax.impl.DataXCfgGenerator.GenerateCfgs.getTabsCandidate():uncache_true",
+    "help": "请选择需要同步到DolphinScheduler的表"
+  }
+}

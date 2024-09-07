@@ -42,12 +42,12 @@ public class ManipuldateUtils {
 
 
     public static ManipulateItemsProcessor instance(IPluginContext pluginContext, Context context, String newIdentityName
-            , Consumer<IUploadPluginMeta> pluginMetaConsumer
-            , Consumer<String> originIdentityIdConsumer) {
+            , Consumer<IUploadPluginMeta> pluginMetaConsumer) {
         // Objects.requireNonNull(contextb, "param content can not be null");
         JSONObject postContent = Objects.requireNonNull(pluginContext, "pluginContext can not be null").getJSONPostContent();
         JSONObject manipulateTarget = postContent.getJSONObject(IUploadPluginMeta.KEY_JSON_MANIPULATE_TARGET);
         boolean updateProcess = postContent.getBooleanValue(IUploadPluginMeta.KEY_JSON_MANIPULATE_BOOL_UPDATE_PROCESS);
+        final boolean deleteProcess = postContent.getBooleanValue(IUploadPluginMeta.KEY_JSON_MANIPULATE_BOOL_DELETE_PROCESS);
         final String keyManipulatePluginMeta = "manipulatePluginMeta";
         String pluginType = postContent.getString(keyManipulatePluginMeta);
         if (StringUtils.isEmpty(pluginType)) {
@@ -61,7 +61,12 @@ public class ManipuldateUtils {
             throw new IllegalStateException("pluginMeta can not be empty");
         }
         for (IUploadPluginMeta meta : pluginMeta) {
-            meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.toString(updateProcess));
+            String[] originId = new String[1];
+            Consumer<String> originIdentityIdConsumer = (originIdentityId) -> {
+                originId[0] = originIdentityId;
+            };
+            // 控制是否重名的业务逻辑校验，update=true则不需要校验
+            meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.toString(StringUtils.isEmpty(newIdentityName) || updateProcess));
             pluginMetaConsumer.accept(meta);
 
             JSONArray itemsArray = new JSONArray();
@@ -73,7 +78,7 @@ public class ManipuldateUtils {
                     originIdentityIdConsumer.accept((String) val);
                 }
                 // 将原先的主键覆盖掉
-                return ptype.isIdentity() ? newIdentityName : val;
+                return (ptype.isIdentity() && StringUtils.isNotEmpty(newIdentityName)) ? newIdentityName : val;
             }));
 
             if (context.hasErrors()) {
@@ -84,8 +89,7 @@ public class ManipuldateUtils {
                 throw new IllegalStateException("pluginItems parse faild");
             }
             IPluginItemsProcessor itemsProcessor = pluginItems.getRight();
-            //
-            return new ManipulateItemsProcessor(itemsProcessor, updateProcess);
+            return new ManipulateItemsProcessor(originId[0], itemsProcessor, updateProcess, deleteProcess);
         }
 
         throw new IllegalStateException("can not reach here");

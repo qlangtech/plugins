@@ -128,7 +128,9 @@ public abstract class BasicTemplate {
             }
         }) {
             @Override
-            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
+            protected String getTemplateContent(
+                    IDataxReaderContext readerContext, IDataxReader reader
+                    , IDataxWriter writer, Optional< RecordTransformerRules> transformerRules) {
                 return vmTplContent;
             }
         };

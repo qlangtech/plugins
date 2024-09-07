@@ -1,0 +1,10 @@
+{
+  "groupName": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.DSTaskGroup.dftGroupName()",
+    "help": "对应dolphinscheduler中资源组名称"
+  },
+  "parallelism": {
+    "dftVal": 5,
+    "help": "资源组中最大可调用资源数量，可用来控制最大并发执行数"
+  }
+}

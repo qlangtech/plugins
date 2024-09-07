@@ -27,18 +27,30 @@ import com.qlangtech.tis.util.IPluginItemsProcessor;
  **/
 public class ManipulateItemsProcessor {
     private final IPluginItemsProcessor itemsProcessor;
+    private final  String  originIdentityId;
     /**
      * 是否是更新还是添加操作
      */
     private final boolean updateProcess;
+    private final boolean deleteProcess;
 
     public boolean isUpdateProcess() {
         return updateProcess;
     }
 
-    public ManipulateItemsProcessor(IPluginItemsProcessor itemsProcessor, boolean updateProcess) {
+    public boolean isDeleteProcess() {
+        return deleteProcess;
+    }
+
+    public ManipulateItemsProcessor(String  originIdentityId ,IPluginItemsProcessor itemsProcessor, boolean updateProcess, boolean deleteProcess) {
         this.itemsProcessor = itemsProcessor;
         this.updateProcess = updateProcess;
+        this.deleteProcess = deleteProcess;
+        this.originIdentityId = originIdentityId;
+    }
+
+    public String getOriginIdentityId() {
+        return originIdentityId;
     }
 
     public void save(Context context) {

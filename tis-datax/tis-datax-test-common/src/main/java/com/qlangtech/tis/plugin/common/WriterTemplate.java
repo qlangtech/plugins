@@ -169,13 +169,10 @@ public class WriterTemplate {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
             @Override
-            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
+            protected String getTemplateContent(IDataxReaderContext readerContext
+                    , IDataxReader reader, IDataxWriter writer, Optional<RecordTransformerRules> transformerRules) {
                 return dataXWriter.getTemplate();
             }
-            //            @Override
-//            public String getTemplateContent() {
-//                return dataXWriter.getTemplate();
-//            }
         };
 
         return dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));

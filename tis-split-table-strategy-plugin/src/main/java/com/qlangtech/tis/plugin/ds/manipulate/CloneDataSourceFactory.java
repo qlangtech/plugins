@@ -48,8 +48,6 @@ public class CloneDataSourceFactory extends DataSourceFactoryManipulate implemen
         ManipulateItemsProcessor itemsProcessor = ManipuldateUtils.instance(pluginContext, context.get(), this.name, (meta) -> {
             meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.FALSE.toString());
             meta.putExtraParams(DBIdentity.KEY_DB_NAME, this.name);
-        }, (oldIdentity) -> {
-
         });
         itemsProcessor.save(context.get());
     }

@@ -28,12 +28,27 @@ import junit.framework.TestCase;
 public class TestExportTISPipelineToDolphinscheduler extends TestCase {
 
     public void testAddProjectParameters() {
+        ExportTISPipelineToDolphinscheduler export2DS = createExportTISPipelineToDolphinscheduler();
+        export2DS.addProjectParameters();
+    }
+
+
+    public void testAddTaskGroup() {
+        ExportTISPipelineToDolphinscheduler export2DS = createExportTISPipelineToDolphinscheduler();
+        DSTaskGroup tskGroup = new DSTaskGroup();
+        tskGroup.groupName ="test-tis-datax-job-group-3";
+        tskGroup.parallelism = 2;
+        export2DS.taskGroup = tskGroup;
+        export2DS.taskGroup.addTaskGroup(export2DS);
+    }
+
+    private static ExportTISPipelineToDolphinscheduler createExportTISPipelineToDolphinscheduler() {
         ExportTISPipelineToDolphinscheduler export2DS
                 = TestDSWorkflowPayload.createExportTISPipelineToDolphinscheduler();
 
         export2DS.callback = new DSTISCallback();
         export2DS.callback.tisAddress = "192.168.28.201";
         export2DS.callback.tisHTTPHost = "http://192.168.28.201:8080";
-        export2DS.addProjectParameters();
+        return export2DS;
     }
 }

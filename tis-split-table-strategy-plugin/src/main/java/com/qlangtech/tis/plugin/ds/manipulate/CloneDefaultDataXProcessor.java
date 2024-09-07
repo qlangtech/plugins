@@ -38,7 +38,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-10 21:04
  **/
-public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate implements  IdentityName {
+public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate implements IdentityName {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
@@ -48,29 +48,27 @@ public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate 
         if (StringUtils.isEmpty(this.name)) {
             throw new IllegalArgumentException("property name can not be null");
         }
-        String[] originId = new String[1];
+        //String[] originId = new String[1];
         /**
          * 校验
          */
         ManipulateItemsProcessor itemsProcessor
                 = ManipuldateUtils.instance(pluginContext, context.get(), this.name
                 , (meta) -> {
-                }, (oldIdentityId) -> {
-                    originId[0] = oldIdentityId;
                 });
-        if (StringUtils.isEmpty(originId[0])) {
-            throw new IllegalStateException("originId can not be null");
-        }
         if (itemsProcessor == null) {
             return;
+        }
+        if (StringUtils.isEmpty(itemsProcessor.getOriginIdentityId())) {
+            throw new IllegalStateException("originId can not be null");
         }
 
         /**
          * 先拷贝所有文件，与下面一步执行前后顺序不能颠倒
          */
         //IPluginWithStore storePlugins = itemsProcessor.getStorePlugins();
-        DataxProcessor copyFromPipeline = (DataxProcessor) DataxProcessor.load(null, originId[0]);
-        Objects.requireNonNull(copyFromPipeline, "name:" + originId[0] + " relevant pipeline can not be null");
+        DataxProcessor copyFromPipeline = (DataxProcessor) DataxProcessor.load(null, itemsProcessor.getOriginIdentityId());
+        Objects.requireNonNull(copyFromPipeline, "name:" + itemsProcessor.getOriginIdentityId() + " relevant pipeline can not be null");
         copyFromPipeline.copy(this.name);
 //        List<IAppSource> pipelines = storePlugins.listPlugins();
 //        for (IAppSource pipeline : pipelines) {

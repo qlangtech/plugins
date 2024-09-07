@@ -48,7 +48,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 /**
  * @author: baisui 百岁
@@ -58,7 +57,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
     public static final String KEY_FIELD_NAME = "globalCfg";
 
-    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
     public String name;
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
@@ -141,8 +140,6 @@ public class DefaultDataxProcessor extends DataxProcessor {
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<IAppSource> implements IDescribableManipulate<DefaultDataXProcessorManipulate> {
 
-        private static final Pattern PATTERN_START_WITH_NUMBER = Pattern.compile("^\\d.{0,}");
-
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IDataxGlobalCfg.KEY_DISPLAY_NAME));
@@ -150,10 +147,10 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
-            if (PATTERN_START_WITH_NUMBER.matcher(value).matches()) {
-                msgHandler.addFieldError(context, fieldName, "不能以数字开头");
-                return false;
-            }
+//            if (PATTERN_START_WITH_NUMBER.matcher(value).matches()) {
+//                msgHandler.addFieldError(context, fieldName, "不能以数字开头");
+//                return false;
+//            }
 
             UploadPluginMeta pluginMeta = (UploadPluginMeta) context.get(UploadPluginMeta.KEY_PLUGIN_META);
             Objects.requireNonNull(pluginMeta, "pluginMeta can not be null");
@@ -179,6 +176,9 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
             AppAndRuntime appAndRuntime = AppAndRuntime.getAppAndRuntime();
             String appName = Objects.requireNonNull(appAndRuntime, "appAndRuntime can not be null").getAppName();
+            if (StringUtils.isEmpty(appName)) {
+                return Optional.empty();
+            }
             return Optional.of(DefaultDataXProcessorManipulate.loadPlugins(null, DefaultDataXProcessorManipulate.class, appName).getValue());
         }
     }

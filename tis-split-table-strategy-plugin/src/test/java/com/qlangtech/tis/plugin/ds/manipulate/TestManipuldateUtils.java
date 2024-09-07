@@ -75,12 +75,11 @@ public class TestManipuldateUtils implements TISEasyMock {
         String newIdentityName = "test";
         Consumer<IUploadPluginMeta> pluginMetaConsumer = (mt) -> {
         };
-        Consumer<String> originIdentityIdConsumer = (id) -> {
-        };
+
 
         replay();
         ManipulateItemsProcessor itemsProcessor
-                = ManipuldateUtils.instance(pluginContext, context, newIdentityName, pluginMetaConsumer, originIdentityIdConsumer);
+                = ManipuldateUtils.instance(pluginContext, context, newIdentityName, pluginMetaConsumer);
         Assert.assertNull("because newIdentityName is duplicate, result itemsProcessor shall be null", itemsProcessor);
 
         verifyAll();

@@ -95,29 +95,21 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         public static Optional<SelectedTableTransformerRules>
         createTransformerRules(String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
             final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
-            RecordTransformerRules transformerRules = RecordTransformerRules.loadTransformerRules(dataXContext, tabAlias.getFrom());
+            Optional<RecordTransformerRules> transformerRules = RecordTransformerRules.loadTransformerRules(dataXContext, tabAlias.getFrom());
+
             Optional<SelectedTableTransformerRules> transformerOpt
-                    = (transformerRules != null)
-                    ? Optional.of(new SelectedTableTransformerRules(transformerRules, tab, sourceFlinkColCreator, dataXContext))
-                    : Optional.empty();
+                    = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));
             return transformerOpt;
         }
-        //  private final IFlinkColCreator<FlinkCol> flinkColCreator;
 
-//        public RowDataSinkFunc(TableAlias tab
-//                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
-//                , boolean supportUpset, int sinkTaskParallelism) {
-//            this(tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism, Optional.empty());
-//        }
+
 
         private static List<FlinkCol> createSourceCols(IPluginContext pluginContext
                 , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator, Optional<SelectedTableTransformerRules> transformerOpt) {
             List<FlinkCol> sourceColsMeta = null;
             if (transformerOpt.isPresent()) {
                 SelectedTableTransformerRules rules = transformerOpt.get();
-//                ITransformerBuildInfo transformerBuildInfo = rules.getTransformerRules().createTransformerBuildInfo(pluginContext);
-//                transformerBuildInfo.overwriteColsWithContextParams(tab.getCols());
-                sourceColsMeta = rules.originColsWithContextParamsFlinkCol(); // FlinkCol.getAllTabColsMeta(transformerBuildInfo.originColsWithContextParams(), sourceFlinkColCreator);
+                sourceColsMeta = rules.originColsWithContextParamsFlinkCol();
             } else {
                 sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
             }

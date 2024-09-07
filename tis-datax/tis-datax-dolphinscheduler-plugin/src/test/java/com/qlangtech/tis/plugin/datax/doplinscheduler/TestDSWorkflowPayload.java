@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.doplinscheduler;
 
+import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
@@ -76,6 +77,7 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
     public void setUp() throws Exception {
         super.setUp();
         clearMocks();
+
     }
 
 //    public void testScheduler() throws Exception {
@@ -100,7 +102,10 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 //
 //        Thread.sleep(990000);
 //    }
-
+//
+//    public void testXXX(){
+//        System.out.println( (new JSONArray()).toJSONString());
+//    }
 
     public void testTriggerWorkflow() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();

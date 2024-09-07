@@ -30,9 +30,7 @@ import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.manage.common.ConfigFileContext.StreamProcess;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
@@ -42,6 +40,7 @@ import com.qlangtech.tis.plugin.datax.BasicWorkflowPayload;
 import com.qlangtech.tis.plugin.datax.IWorkflowNode;
 import com.qlangtech.tis.plugin.datax.SPIExecContext;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
+import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DSTaskGroup.TaskGroup;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
@@ -54,19 +53,17 @@ import com.qlangtech.tis.sql.parser.meta.NodeType;
 import com.qlangtech.tis.sql.parser.meta.NodeType.NodeTypeParseException;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit.KEY_START_INITIALIZE_SUFFIX;
 
@@ -90,6 +87,11 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     private static final String KEY_TASK_PARAMS = "taskParams";
     private static final String kEY_TASK_LOCAL_PARAMS = "localParams";
     private static final String KEY_TASK_DESCRIPTION = "description";
+
+    //           "taskGroupId": 1,
+//                   "taskGroupPriority": 0,
+    private static final String KEY_TASK_GROUP_ID = "taskGroupId";
+    private static final String KEY_TASK_GROUP_PRIORITY = "taskGroupPriority";
     private static final String KEY_TASK_SOURCE_LOCATION_ARN = "sourceLocationArn";
     private static final String KEY_TASK_DESTINATION_LOCATION_ARN = "destinationLocationArn";
 
@@ -104,6 +106,8 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     private final SPIWorkflowPayloadApplicationStore applicationStore;
     private final ExportTISPipelineToDolphinscheduler exportCfg;
 
+    private final AtomicInteger baseTisTaskIdWithLocalExecutor = new AtomicInteger(99999);
+
     public DSWorkflowPayload(ExportTISPipelineToDolphinscheduler exportCfg, IDataxProcessor dataxProcessor, ICommonDAOContext commonDAOContext, BasicDistributedSPIDataXJobSubmit submit) {
         super(dataxProcessor, commonDAOContext, submit);
         this.applicationStore = new SPIWorkflowPayloadApplicationStore(dataxProcessor.identityValue(), commonDAOContext);
@@ -115,6 +119,12 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         return new DSWorkflowInstance(this.exportCfg, execRange, this.dataxProcessor.identityValue(), spiWorkflowId);
     }
 
+    /**
+     * 为了避免
+     *
+     * @see com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer 中执行 synchronizTpisAndConfs方法processTaskIds由于
+     * taskid不变导致停止本地文件更新本地配置，所以需要让 baseTisTaskIdWithLocalExecutor 参数每次来都往上递增
+     */
     @Override
     public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt, RpcServiceReference feedback) {
 
@@ -122,11 +132,14 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             return super.triggerWorkflow(workflowInstanceIdOpt, feedback);
         } else {
             // 不需要在TIS端生成执行历史记录
-            int tisTaskId = 999;
-            JSONObject instanceParams = createInstanceParams(tisTaskId);
-            PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
-            buildResult.taskid = tisTaskId;
-            return buildResult;
+            synchronized (baseTisTaskIdWithLocalExecutor) {
+                baseTisTaskIdWithLocalExecutor.incrementAndGet();
+                JSONObject instanceParams = createInstanceParams(baseTisTaskIdWithLocalExecutor.get());
+                PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
+                buildResult.taskid = baseTisTaskIdWithLocalExecutor.get();
+                return buildResult;
+            }
+
         }
     }
 
@@ -146,8 +159,13 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt) {
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> pair = selectedTabTriggers.orElseGet(() -> createWfNodes());
         //  WorkflowUnEffectiveJudge unEffectiveJudge = unEffectiveOpt.orElseGet(() -> new WorkflowUnEffectiveJudge());
+        /**===============================
+         * 为执行任务添加task工作组
+         ===============================*/
+        TaskGroup taskGroup = Objects.requireNonNull(
+                exportCfg.taskGroup, "exportCfg.taskGroup can not be null").addTaskGroup(exportCfg);
         try {
-            this.innerSaveJob(updateProcess, this.dataxProcessor, pair.getKey());
+            this.innerSaveJob(taskGroup, updateProcess, this.dataxProcessor, pair.getKey());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -155,7 +173,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected boolean acceptTable(ISelectedTab selectedTab) {
-        for (IdentityName tab : this.exportCfg.targetTables) {
+        for (IdentityName tab : this.exportCfg.target.targetTables) {
             if (StringUtils.equals(tab.identityValue(), selectedTab.getName())) {
                 return true;
             }
@@ -237,6 +255,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
 
     private void innerSaveJob(
+            TaskGroup taskGroup,
             boolean updateProcess,
             IDataxProcessor dataxProcessor
             , Map<ISelectedTab, SelectedTabTriggers> createWfNodesResult) throws Exception {
@@ -264,7 +283,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         final int y_coordinate_step = 50;
 
         final long startTaskId = CodeGenerateUtils.genCode();
-        JSONObject startNode = this.createTaskDefinitionJSON(startTaskId
+        JSONObject startNode = this.createTaskDefinitionJSON(taskGroup, startTaskId
                 , "start " + dataxProcessor.identityValue()
                 , "start pipeline of " + dataxProcessor.identityValue());
         taskParams = new JSONObject();
@@ -313,7 +332,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 //            jobIdMaintainer.addJob(selectedTab, wfNode.getJobId());
             //======================================
 
-            JSONObject taskDefinitionJson = createTaskDefinitionJSON(
+            JSONObject taskDefinitionJson = createTaskDefinitionJSON(taskGroup,
                     taskCode
                     , selectedTab.getName() + "@" + dataxProcessor.identityValue()
                     , "execute pipeline of " + selectedTab.getName() + "@" + dataxProcessor.identityValue());
@@ -324,10 +343,24 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
             taskParams = new JSONObject();
             //  taskParams.put(kEY_TASK_LOCAL_PARAMS, Lists.newArrayList(createParam(JobParams.KEY_TASK_ID, true)));
-            //
+            /**
+             * 需要设置一个空值，不然会报以下异常
+             * <pre>
+             *     [ERROR] 2024-09-06 11:03:42.659 +0800 - Task execute failed, due to meet an exception
+             * java.lang.NullPointerException: null
+             * 	at org.apache.dolphinscheduler.server.worker.utils.TaskFilesTransferUtils.getFileLocalParams(TaskFilesTransferUtils.java:216)
+             * 	at org.apache.dolphinscheduler.server.worker.utils.TaskFilesTransferUtils.downloadUpstreamFiles(TaskFilesTransferUtils.java:142)
+             * 	at org.apache.dolphinscheduler.server.worker.runner.WorkerTaskExecutor.beforeExecute(WorkerTaskExecutor.java:231)
+             * 	at org.apache.dolphinscheduler.server.worker.runner.WorkerTaskExecutor.run(WorkerTaskExecutor.java:164)
+             * 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+             * 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+             * 	at java.lang.Thread.run(Thread.java:748)
+             * </pre>
+             */
+            taskParams.put(kEY_TASK_LOCAL_PARAMS, new JSONArray());
             taskParams.put(KEY_TASK_SOURCE_LOCATION_ARN, JsonUtil.toString(mrParams));
             taskParams.put(KEY_TASK_DESTINATION_LOCATION_ARN, NodeType.DUMP.getType());
-            taskParams.put(KEY_TASK_DEFINITION_NAME, dataxProcessor.identityValue() + "@" + selectedTab.getName());
+            taskParams.put(KEY_TASK_DEFINITION_NAME, selectedTab.getName() + "@" + dataxProcessor.identityValue());
             taskDefinitionJson.put(KEY_TASK_PARAMS, taskParams);
 
 
@@ -497,11 +530,14 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         return inParam;
     }
 
-    private JSONObject createTaskDefinitionJSON(long taskCode, String name, String description) {
+    private JSONObject createTaskDefinitionJSON(TaskGroup taskGroup, long taskCode, String name, String description) {
         JSONObject taskDefinitionJson = JsonUtil.loadJSON(DSWorkflowPayload.class, "tpl/task-definition-sync-tpl.json");
         taskDefinitionJson.put(KEY_TASK_DEFINITION_CODE, taskCode);
         taskDefinitionJson.put(KEY_TASK_DEFINITION_NAME, name);
         taskDefinitionJson.put(KEY_TASK_DESCRIPTION, description);
+
+        taskDefinitionJson.put(KEY_TASK_GROUP_ID, taskGroup.getTaskGroupId());
+        taskDefinitionJson.put(KEY_TASK_GROUP_PRIORITY, 0);
         return taskDefinitionJson;
     }
 

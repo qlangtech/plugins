@@ -1,6 +1,6 @@
 package com.qlangtech.tis.datax.powerjob;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.exec.DefaultExecContext;
@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -22,7 +23,8 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
     // TIS-Console中传输过来的资源快找
     private PluginAndCfgsSnapshot pluginAndCfgsSnapshot;
     private static final Logger logger = LoggerFactory.getLogger(CfgsSnapshotConsumer.class);
-    private static final Set<Integer> processTaskIds = Sets.newConcurrentHashSet();
+    private static final ConcurrentMap<Integer, Long> processTaskIds = Maps.newConcurrentMap();
+    private static final long processTaskIdsExpirTime = TimeUnit.MINUTES.toMillis(2);
     private boolean successSync = false;
 
     @Override
@@ -31,60 +33,67 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
                 + "null");
     }
 
-//    /**
-//     * 经过同步之后逻辑之后会返回 CfgsSnapshot
-//     *
-//     * @return
-//     */
-//    public PluginAndCfgsSnapshot getCfgsSnapshotWhenSuccessSync() {
-//        return successSync ? pluginAndCfgsSnapshot : null;
-//    }
 
     public void synchronizTpisAndConfs(DefaultExecContext execContext, PluginAndCfgSnapshotLocalCache snapshotLocalCache) {
         try {
             synchronized (processTaskIds) {
-                if (processTaskIds.add(execContext.getTaskId())) {
-                    try {
-                        logger.info("taskId:{},resName:{} execute plugin and config synchronize to local"
-                                , execContext.getTaskId(), execContext.identityValue());
-                        TargetResName resName = null;
-                        switch (execContext.getResType()) {
-                            case DataApp:
-                                resName = new TargetResName(execContext.getIndexName());
-                                break;
-                            case DataFlow:
-                                resName = new TargetResName(execContext.getWorkflowName());
-                                break;
-                            default:
-                                throw new IllegalStateException("illegal type:" + execContext.getResType());
-                        }
-                        PluginAndCfgsSnapshot localSnapshot =
-                                PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(execContext.getResType(), resName
-                                        , Collections.emptySet());
+                final long current = System.currentTimeMillis();
 
-                        snapshotLocalCache.processLocalCache(new TargetResName(execContext.identityValue()), (cacheSnaphsot) -> {
-                            try {
+                processTaskIds.compute(execContext.getTaskId(), (tskId, oldVal) -> {
 
-                                Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be null") //
-                                        .synchronizTpisAndConfs(localSnapshot, cacheSnaphsot);
-                                TIS.permitInitialize = true;
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
+                    if (oldVal == null || (current - oldVal) > processTaskIdsExpirTime) {
+                        try {
+                            logger.info("taskId:{},resName:{} execute plugin and config synchronize to local"
+                                    , execContext.getTaskId(), execContext.identityValue());
+                            TargetResName resName = null;
+                            switch (execContext.getResType()) {
+                                case DataApp:
+                                    resName = new TargetResName(execContext.getIndexName());
+                                    break;
+                                case DataFlow:
+                                    resName = new TargetResName(execContext.getWorkflowName());
+                                    break;
+                                default:
+                                    throw new IllegalStateException("illegal type:" + execContext.getResType());
                             }
-                            return pluginAndCfgsSnapshot;
-                        });
+                            PluginAndCfgsSnapshot localSnapshot =
+                                    PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(execContext.getResType(), resName
+                                            , Collections.emptySet());
 
-                        successSync = true;
+                            snapshotLocalCache.processLocalCache(new TargetResName(execContext.identityValue()), (cacheSnaphsot) -> {
+                                try {
 
-                    } finally {
-                        if (!successSync) {
-                            processTaskIds.remove(execContext.getTaskId());
+                                    Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be null") //
+                                            .synchronizTpisAndConfs(localSnapshot, cacheSnaphsot);
+                                    TIS.permitInitialize = true;
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                                return pluginAndCfgsSnapshot;
+                            });
+
+                            successSync = true;
+
+                        } finally {
+                            if (!successSync) {
+                                processTaskIds.remove(execContext.getTaskId());
+                            }
                         }
+                        return current;
+                    } else {
+                        logger.info("taskId:{},resName:{} SKIP plugin and config synchronize to local"
+                                , execContext.getTaskId(), execContext.getIndexName());
+                        return oldVal;
                     }
-                } else {
-                    logger.info("taskId:{},resName:{} SKIP plugin and config synchronize to local"
-                            , execContext.getTaskId(), execContext.getIndexName());
-                }
+
+
+                });
+
+//                if (processTaskIds.add(execContext.getTaskId())) {
+//
+//                } else {
+//
+//                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -51,6 +51,8 @@ import java.util.stream.Collectors;
  * @create: 2024-08-24 10:24
  **/
 public class DolphinSchedulerURLBuilder {
+    private static final String FIELD_PAGE_NO = "pageNo";
+    private static final String FIELD_PAGE_SIZE = "pageSize";
     private static final Logger logger = LoggerFactory.getLogger(DolphinSchedulerURLBuilder.class);
     private static final String SLASH = "/";
     private final DolphinSchedulerEndpoint endpoint;
@@ -65,6 +67,12 @@ public class DolphinSchedulerURLBuilder {
         }
         this.url = new StringBuffer(endWithSlash ? StringUtils.removeEnd(this.endpoint.serverPath, SLASH) : this.endpoint.serverPath);
 
+    }
+
+    public DolphinSchedulerURLBuilder appendPageParam() {
+        return this
+                .appendQueryParam(FIELD_PAGE_NO, 1)
+                .appendQueryParam(FIELD_PAGE_SIZE, 100);
     }
 
     public DolphinSchedulerURLBuilder appendSubPath(Object... subpath) {

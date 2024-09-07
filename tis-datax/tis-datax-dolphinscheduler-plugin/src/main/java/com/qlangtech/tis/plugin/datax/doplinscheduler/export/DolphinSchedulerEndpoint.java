@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
@@ -27,21 +26,17 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.ConfigFileContext.Header;
 import com.qlangtech.tis.manage.common.ConfigFileContext.StreamErrorProcess;
-import com.qlangtech.tis.manage.common.ConfigFileContext.StreamProcess;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -82,7 +77,8 @@ public class DolphinSchedulerEndpoint extends ParamsConfig {
     private void tryConnect(IControlMsgHandler msgHandler, Context context) {
         //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/Worker%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86/queryAllWorkerGroupsPaging
         DolphinSchedulerResponse response = createSchedulerURLBuilder().appendSubPath("worker-groups")
-                .appendQueryParam("pageNo", 1).appendQueryParam("pageSize", 10)
+               // .appendQueryParam(FIELD_PAGE_NO, 1).appendQueryParam(FIELD_PAGE_SIZE, 100)
+                .appendPageParam()
                 .applyGet(Optional.of(new StreamErrorProcess() {
                     @Override
                     public void error(int status, InputStream errstream, IOException e) throws Exception {

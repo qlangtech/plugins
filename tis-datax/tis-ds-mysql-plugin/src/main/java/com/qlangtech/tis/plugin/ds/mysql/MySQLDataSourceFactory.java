@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.lang.TisException;
@@ -39,6 +40,7 @@ import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
@@ -512,7 +514,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
 
         @Override
-        protected void validateConnection(JDBCConnection c) throws TisException {
+        protected boolean validateConnection(JDBCConnection c, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
+
+
             String mysqlVer = null;
             try (Statement statement = c.createStatement()) {
                 try (ResultSet result = statement.executeQuery("SELECT version()")) {
@@ -530,6 +534,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+            return true;
         }
 
         protected abstract boolean validateMySQLVer(String mysqlVer);

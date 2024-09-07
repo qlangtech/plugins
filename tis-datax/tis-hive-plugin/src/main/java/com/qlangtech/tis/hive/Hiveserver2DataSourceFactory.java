@@ -216,7 +216,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
 
         @Override
-        protected void validateConnection(JDBCConnection c) throws TisException {
+        protected boolean validateConnection(JDBCConnection c, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
             Connection conn = c.getConnection();
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet result = statement.executeQuery("select 1")) {
@@ -230,6 +230,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+            return true;
         }
 
         @Override

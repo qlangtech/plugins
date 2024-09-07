@@ -1,7 +1,9 @@
 package com.qlangtech.tis.plugin.datax.dameng.ds;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
@@ -17,6 +19,7 @@ import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import dm.jdbc.driver.DmdbType;
 import org.apache.commons.lang.StringUtils;
@@ -511,6 +514,19 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         @Override
         protected String getDataSourceName() {
             return DataXDaMengReader.DATAX_NAME;
+        }
+
+        @Override
+        protected boolean validateConnection(JDBCConnection conn, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
+            final String schema = conn.getSchema();
+            DaMengDataSourceFactory damengSource = (DaMengDataSourceFactory) dsFactory;
+            if (!StringUtils.equals(schema, damengSource.dbName)
+                    && StringUtils.equalsIgnoreCase(schema, damengSource.dbName)) {
+                // 说明大小写不一致
+                msgHandler.addFieldError(context, KEY_FIELD_DB_NAME, "与数据库实际名称大小写不一致，实际值为：" + schema);
+                return false;
+            }
+            return true;
         }
 
         @Override

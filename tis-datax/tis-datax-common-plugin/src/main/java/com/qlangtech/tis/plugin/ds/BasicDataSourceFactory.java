@@ -65,7 +65,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable, IDBAuthorizeTokenGetter {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
-
+    public static final String KEY_FIELD_DB_NAME = "dbName";
     // 数据库名称
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
@@ -384,15 +384,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
                     try (Statement statement = connection.getConnection().createStatement()) {
                         final List<String> statements
                                 = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
-                                .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                                .map(
-                                        x -> {
-                                            final Matcher m =
-                                                    COMMENT_PATTERN.matcher(x);
-                                            return m.matches() ? m.group(1) : x;
-                                        })
-                                .collect(Collectors.joining("\n"))
-                                .split(";"))
+                                        .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                        .map(
+                                                x -> {
+                                                    final Matcher m =
+                                                            COMMENT_PATTERN.matcher(x);
+                                                    return m.matches() ? m.group(1) : x;
+                                                })
+                                        .collect(Collectors.joining("\n"))
+                                        .split(";"))
                                 .collect(Collectors.toList());
                         for (String stmt : statements) {
                             statement.execute(stmt);

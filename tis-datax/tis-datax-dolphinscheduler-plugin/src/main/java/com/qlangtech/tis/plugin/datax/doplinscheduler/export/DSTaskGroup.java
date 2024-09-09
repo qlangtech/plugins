@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.AppAndRuntime;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -125,6 +126,9 @@ public class DSTaskGroup implements Describable<DSTaskGroup> {
         } else {
             // 开始更新
             // 如果groupSize相同则不需要更新了
+            if (Long.parseLong(exportTISPipelineToDolphinscheduler.projectCode) != tskGroup.projectCode) {
+                throw TisException.create("exist same groupName,but the projectCode:" + tskGroup.projectCode + " is not equal the value you input in the form");
+            }
             if (tskGroup.groupSize != parallelism) {
                 params.add(new PostParam("id", tskGroup.id));
                 tskGroup = this.processTISTaskGroup(endpoint, "update", params);
@@ -157,20 +161,23 @@ public class DSTaskGroup implements Describable<DSTaskGroup> {
         private final String name;
         private final Integer id;
         private final Integer groupSize;
+        private final long projectCode;
 
         private static TaskGroup parse(JSONObject taskGroup) {
             String taskGroupName = taskGroup.getString("name");
-            return new TaskGroup(taskGroupName, taskGroup.getInteger("id"), taskGroup.getInteger("groupSize"));
+            long projectCode = taskGroup.getLongValue("projectCode");
+            return new TaskGroup(taskGroupName, taskGroup.getInteger("id"), taskGroup.getInteger("groupSize"), projectCode);
         }
 
         public Integer getTaskGroupId() {
             return this.id;
         }
 
-        public TaskGroup(String name, Integer id, Integer groupSize) {
+        public TaskGroup(String name, Integer id, Integer groupSize, long projectCode) {
             this.name = name;
             this.id = id;
             this.groupSize = groupSize;
+            this.projectCode = projectCode;
         }
     }
 

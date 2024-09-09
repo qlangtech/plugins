@@ -71,9 +71,14 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<UDFDefinition> {
+    public static class DefaultDescriptor extends UDFDefinition.BasicUDFDesc {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Clone;
         }
 
         @Override

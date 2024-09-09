@@ -106,7 +106,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     private final SPIWorkflowPayloadApplicationStore applicationStore;
     private final ExportTISPipelineToDolphinscheduler exportCfg;
 
-    private final AtomicInteger baseTisTaskIdWithLocalExecutor = new AtomicInteger(99999);
+    private final static AtomicInteger baseTisTaskIdWithLocalExecutor = new AtomicInteger(99999);
 
     public DSWorkflowPayload(ExportTISPipelineToDolphinscheduler exportCfg, IDataxProcessor dataxProcessor, ICommonDAOContext commonDAOContext, BasicDistributedSPIDataXJobSubmit submit) {
         super(dataxProcessor, commonDAOContext, submit);

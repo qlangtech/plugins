@@ -118,9 +118,14 @@ public class ConcatUDF extends UDFDefinition {
     }
 
     @TISExtension
-    public static final class DefaultDescriptor extends Descriptor<UDFDefinition> {
+    public static final class DefaultDescriptor extends UDFDefinition.BasicUDFDesc {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Concat;
         }
 
         @Override

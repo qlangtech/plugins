@@ -74,6 +74,11 @@ public class DataMaskingUDF extends SubStrUDF {
             super();
         }
 
+        @Override
+        public EndType getEndType() {
+            return EndType.Mask;
+        }
+
         public boolean validateReplaceChar(
                 IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
             int length = StringUtils.length(val);

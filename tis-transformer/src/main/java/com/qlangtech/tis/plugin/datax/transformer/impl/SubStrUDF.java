@@ -64,6 +64,11 @@ public class SubStrUDF extends CopyValUDF {
             super();
         }
 
+        @Override
+        public EndType getEndType() {
+            return EndType.SubString;
+        }
+
         public boolean validateStart(
                 IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
 

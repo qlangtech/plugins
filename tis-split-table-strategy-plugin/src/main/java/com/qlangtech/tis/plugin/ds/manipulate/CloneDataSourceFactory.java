@@ -35,7 +35,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-09 18:40
  **/
-public class CloneDataSourceFactory extends DataSourceFactoryManipulate implements  IdentityName {
+public class CloneDataSourceFactory extends DataSourceFactoryManipulate implements IdentityName {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
@@ -61,6 +61,11 @@ public class CloneDataSourceFactory extends DataSourceFactoryManipulate implemen
     public static class DefaultDesc extends BasicDesc {
         public DefaultDesc() {
             super();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Clone;
         }
 
         @Override

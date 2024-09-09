@@ -102,6 +102,11 @@ public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate 
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.Clone;
+        }
+
+        @Override
         public String getDisplayName() {
             return "Clone";
         }

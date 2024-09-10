@@ -193,7 +193,7 @@ public class FlinkTaskNodeController {
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
 
-        //factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
+        factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
     }
 
 

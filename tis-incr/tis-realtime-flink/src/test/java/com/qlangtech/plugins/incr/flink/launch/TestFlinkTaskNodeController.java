@@ -18,6 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
+import com.qlangtech.plugins.incr.flink.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.plugins.incr.flink.launch.clustertype.Standalone;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -27,7 +29,9 @@ import com.qlangtech.tis.util.RobustReflectionConverter;
 import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.util.Set;
 
@@ -48,18 +52,35 @@ public class TestFlinkTaskNodeController {
         TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory("mysql_mysql");
 
         Assert.assertNotNull(incrSinkFactory);
-       RobustReflectionConverter2.PluginMetas pluginMetas = RobustReflectionConverter2.usedPluginInfo.get();
+        RobustReflectionConverter2.PluginMetas pluginMetas = RobustReflectionConverter2.usedPluginInfo.get();
         Assert.assertTrue(pluginMetas.getMetas().size() > 0);
     }
 
+    @ClassRule(order = 100)
+    public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
+    /**
+     * 测试重新启动
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testRelaunch() throws Exception {
+        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.parallelism = 1;
+        Standalone standaloneType = new Standalone();
+        standaloneType.flinkCluster = "flink_201";
+        streamFactory.cluster = standaloneType;
+        String appName = "mysql";
+        streamFactory.relaunch(new TargetResName(appName), "file:/opt/data/savepoint/savepoint_20240910121820391/savepoint-e6ccfc-39b00aff0272");
+    }
 
     @Test
     public void testDeploy() throws Exception {
 
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
-       // streamFactory.flinkCluster = "my-first-flink-cluster";
+        // streamFactory.flinkCluster = "my-first-flink-cluster";
         streamFactory.parallelism = 1;
-       // FlinkTaskNodeController taskNodeController = new FlinkTaskNodeController(streamFactory);
+        // FlinkTaskNodeController taskNodeController = new FlinkTaskNodeController(streamFactory);
 
         TargetResName collection = new TargetResName("hudi");
         ReplicasSpec replicasSpec = new ReplicasSpec();

@@ -97,7 +97,9 @@
             <id>cdh</id>
             <properties>
                 <spark2.version>3.2.1</spark2.version>
-                <hadoop-version>3.0.0-cdh6.3.2</hadoop-version>
+
+                <hadoop3-version>3.0.0-cdh6.3.2</hadoop3-version>
+                <hadoop-version>${hadoop3-version}</hadoop-version>
                 <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop3.2</spark.dist.dir.name>
                 <!--                <hudi.version>0.12.2</hudi.version>-->
                 <!--                <hive.version>3.1.3</hive.version>-->

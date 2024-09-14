@@ -48,7 +48,11 @@ public class RowVals<T extends Callable<Object>> {
 
     public Integer getInt(String key) {
         try {
-            return (Integer) vals.get(key).call();
+            Object val = vals.get(key).call();
+            if (val instanceof Short) {
+                val = ((Short) val).intValue();
+            }
+            return (Integer) val;
         } catch (Exception e) {
             throw new RuntimeException("key:" + key, e);
         }
@@ -64,7 +68,11 @@ public class RowVals<T extends Callable<Object>> {
 
     public BigDecimal getBigDecimal(String key) {
         try {
-            return (BigDecimal) vals.get(key).call();
+            Object val = vals.get(key).call();
+            if (val instanceof Long) {
+                val = new BigDecimal((Long) val);
+            }
+            return (BigDecimal) val;
         } catch (Exception e) {
             throw new RuntimeException("key:" + key, e);
         }

@@ -71,10 +71,4 @@ public class TestStubSinkFactory extends TISSinkFactory implements IStreamTableM
         return createdSinkFunc;
     }
 
-//        public CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator<FlinkCol> flinkColCreator) {
-//
-//            CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createdSinkFunc = new CreatedSinkFunction<>();
-//
-//            return createdSinkFunc;
-//        }
 }

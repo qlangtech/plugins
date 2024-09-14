@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -105,7 +107,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = IDataxProcessor.TabCols.create( dsFactory, tm, transformerRules);
+            context.cols = IDataxProcessor.TabCols.create(dsFactory, tm, transformerRules);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;
@@ -118,6 +120,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         throw new RuntimeException("dbName:" + dbName + " relevant DS is empty");
     }
 
+
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 
@@ -125,6 +128,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
+
         try {
             if (threadBingDataXReader instanceof DataxMySQLReader //
                     // 没有使用别名
@@ -132,6 +136,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                     && !transformers.isPresent()) {
                 DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+
                 dsFactory.visitFirstConnection((c) -> {
                     Connection conn = c.getConnection();
                     DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
@@ -146,7 +151,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                                     throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
                                             "exec" + " show create table script");
                                 }
-                                String ddl = resultSet.getString(2);
+                                final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
+                                        , dsFactory.getEscapedEntity(tableMapper.getTo()));
                                 script.append(ddl);
                             }
                         }

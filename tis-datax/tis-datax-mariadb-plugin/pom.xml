@@ -20,55 +20,32 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>tis-plugin-parent</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
         <version>${revision}</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tis-testcontainer-mysql</artifactId>
+    <artifactId>tis-datax-mariadb-plugin</artifactId>
+    <packaging>tpi</packaging>
+
+    <properties>
+    </properties>
 
     <dependencies>
-
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>mysql</artifactId>
-            <version>${testcontainers.version}</version>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-ds-mysql-plugin</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>mariadb</artifactId>
-            <version>${testcontainers.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
-    <build>
-
-
-
-    </build>
-
 
 </project>

@@ -1,0 +1,14 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MariaDB\")",
+    "creator": {
+      "plugin": [
+        {
+          "hetero": "datasource",
+          "extraParam": "type_detailed,update_false,disableBizStore_true",
+          "descName": "MariaDB"
+        }
+      ]
+    }
+  }
+}

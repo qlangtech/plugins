@@ -67,6 +67,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -107,7 +108,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     }
 
     @Override
-    protected MySqlContainer getMysqlContainer() {
+    protected JdbcDatabaseContainer getMysqlContainer() {
         return MySqlContainer.MYSQL5_CONTAINER;
     }
 
@@ -118,7 +119,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
      */
     @Test()
     public void testBaseTableWithSplit() throws Exception {
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
 
         // final String tabName = "base";
@@ -128,7 +129,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams, Optional.of("_01")) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName, useSplitTabStrategy);
+                return (BasicDataSourceFactory) ((MySqlContainer) getMysqlContainer()).createMySqlDataSourceFactory(dataxName, useSplitTabStrategy);
             }
 
             @Override
@@ -149,14 +150,14 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     @Test()
     public void testBinlogConsume() throws Exception {
 
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
 
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) ((MySqlContainer) getMysqlContainer()).createMySqlDataSourceFactory(dataxName);
 
             }
 
@@ -200,7 +201,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
         streamFactory.parallelism = 1;
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
         mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
 
@@ -208,7 +209,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) ((MySqlContainer) getMysqlContainer()).createMySqlDataSourceFactory(dataxName);
 
             }
 
@@ -332,8 +333,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
     @Test()
     public void testFullTypesConsume() throws Exception {
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.parallelism = 1;
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
+        mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
         // final String tabName = "base";
         CDCTestSuitParams suitParams = tabParamMap.get(fullTypes);
         Assert.assertNotNull(suitParams);
@@ -441,23 +445,26 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
+                sourceHandle.setStreamFactory(streamFactory);
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
                 return sourceHandle;
             }
 
-//            @Override
-//            protected String getColEscape() {
-//                return "`";
-//            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
 
+    protected FlinkCDCMySQLSourceFactory createCDCFactory() {
+        return new FlinkCDCMySQLSourceFactory();
+    }
+
 
     @Test
     public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
         //  final String tabName = "base";
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);// new CDCTestSuitParams(tabName);
@@ -492,7 +499,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
      */
     @Test
     public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
         // final String tabName = "instancedetail";
 

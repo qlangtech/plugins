@@ -186,6 +186,9 @@ public class ColMeta {
             @Override
             public Void smallIntType(DataType dataType) {
                 Object val = r.getObj(getName());
+                if (val instanceof Byte) {
+                    val = ((Byte) val).shortValue();
+                }
                 try {
                     statement.setShort(statementIndex, (Short) val);
                 } catch (Exception e) {

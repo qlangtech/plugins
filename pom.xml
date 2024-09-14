@@ -66,6 +66,7 @@
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
 
+
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
     </modules>
@@ -197,12 +198,17 @@
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>
         <testcontainers.version>1.17.3</testcontainers.version>
         <powerjob.version>4.3.6</powerjob.version>
+        <mariadb-java-client.version>3.4.1</mariadb-java-client.version>
     </properties>
 
 
     <dependencyManagement>
         <dependencies>
-
+            <dependency>
+                <groupId>org.mariadb.jdbc</groupId>
+                <artifactId>mariadb-java-client</artifactId>
+                <version>${mariadb-java-client.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.aliyun.oss</groupId>
                 <artifactId>aliyun-sdk-oss</artifactId>

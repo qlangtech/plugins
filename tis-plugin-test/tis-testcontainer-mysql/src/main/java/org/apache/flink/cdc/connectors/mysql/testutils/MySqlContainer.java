@@ -23,8 +23,10 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.realtime.utils.NetUtils;
+import org.apache.flink.cdc.connectors.IDataSourceFactoryCreator;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +44,7 @@ import java.util.stream.Stream;
  * overriding mysql conf file, i.e. my.cnf.
  */
 @SuppressWarnings("rawtypes")
-public class MySqlContainer extends JdbcDatabaseContainer {
+public class MySqlContainer extends JdbcDatabaseContainer implements IDataSourceFactoryCreator {
 
     //protected static final int DEFAULT_PARALLELISM = 4;
 
@@ -113,30 +115,33 @@ public class MySqlContainer extends JdbcDatabaseContainer {
 
     DataSourceFactory ds;
 
-    public DataSourceFactory createMySqlDataSourceFactory(
-            TargetResName dataxName) {
-        return this.createMySqlDataSourceFactory(dataxName, true);
-    }
+//    public DataSourceFactory createMySqlDataSourceFactory(
+//            TargetResName dataxName) {
+//        return this.createMySqlDataSourceFactory(dataxName, true);
+//    }
+
+    public static final String TOKEN_MySQLV8DataSourceFactory ="MySQLV8DataSourceFactory";
 
     /**
      * @param dataxName
      * @param splitTabStrategy 开启分表策略
      * @return
      */
+    @Override
     public DataSourceFactory createMySqlDataSourceFactory(
             TargetResName dataxName, boolean splitTabStrategy) {
         if (this.ds != null) {
             return this.ds;
         }
-        return this.ds = getBasicDataSourceFactory(dataxName, this.imageTag, this, splitTabStrategy);
+        return this.ds = getBasicDataSourceFactory(dataxName, TIS.get().getDescriptor(imageTag.equals(DEFAULT_TAG) ? "MySQLV5DataSourceFactory" : TOKEN_MySQLV8DataSourceFactory), this, splitTabStrategy);
     }
 
-    public static DataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, String imageTag, JdbcDatabaseContainer container, boolean splitTabStrategy) {
+    public static DataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, Descriptor dataSourceFactoryDesc, JdbcDatabaseContainer container, boolean splitTabStrategy) {
         LOG.info("Starting containers...");
         Startables.deepStart(Stream.of(container)).join();
         LOG.info("Containers are started.");
 
-        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor(imageTag.equals(DEFAULT_TAG) ? "MySQLV5DataSourceFactory" : "MySQLV8DataSourceFactory");
+        Descriptor mySqlV5DataSourceFactory = dataSourceFactoryDesc;// TIS.get().getDescriptor(imageTag.equals(DEFAULT_TAG) ? "MySQLV5DataSourceFactory" : "MySQLV8DataSourceFactory");
         Assert.assertNotNull("desc of mySqlV5DataSourceFactory can not be null", mySqlV5DataSourceFactory);
 
         Descriptor.FormData formData = new Descriptor.FormData();

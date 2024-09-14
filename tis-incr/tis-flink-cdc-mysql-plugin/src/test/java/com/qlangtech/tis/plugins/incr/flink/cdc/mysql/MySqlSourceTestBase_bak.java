@@ -19,7 +19,7 @@
 //package com.qlangtech.plugins.incr.flink.cdc.mysql;
 //
 //import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
-//import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
+//import com.qlangtech.tis.plugin.test.TISLoggerConsumer;
 //import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 //import org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer;
 //import org.apache.flink.test.util.AbstractTestBase;

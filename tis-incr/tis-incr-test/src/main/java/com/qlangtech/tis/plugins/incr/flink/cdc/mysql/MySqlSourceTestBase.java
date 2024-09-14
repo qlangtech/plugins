@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 import com.google.common.collect.ImmutableMap;
 import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
@@ -39,6 +40,8 @@ import org.testcontainers.lifecycle.Startables;
 
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer.TOKEN_MySQLV8DataSourceFactory;
 
 /**
  * Basic class for testing {@link MySqlSource}.
@@ -64,7 +67,7 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
         if (container instanceof MySqlContainer) {
             return this.dsFactory = (BasicDataSourceFactory) ((MySqlContainer) container).createMySqlDataSourceFactory(dataxName);
         } else {
-            this.dsFactory = (BasicDataSourceFactory) MySqlContainer.getBasicDataSourceFactory(dataxName, MySQL8.VERSION_8, container, false);
+            this.dsFactory = (BasicDataSourceFactory) MySqlContainer.getBasicDataSourceFactory(dataxName, TIS.get().getDescriptor(TOKEN_MySQLV8DataSourceFactory), container, false);
             this.dsFactory.initializeDB(StringUtils.substring(MySqlContainer.INITIAL_DB_SQL, 1));
             return dsFactory;
         }

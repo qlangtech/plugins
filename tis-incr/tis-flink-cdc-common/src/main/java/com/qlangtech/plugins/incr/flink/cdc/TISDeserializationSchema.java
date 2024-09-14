@@ -98,17 +98,6 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
                 this.extractBeforeRow(dto, value, valueSchema);
                 this.extractAfterRow(dto, value, valueSchema);
 
-//                StringBuffer log = new StringBuffer();
-//                Object v = null;
-//                for (Map.Entry<String, Object> e : dto.getAfter().entrySet()) {
-//                    v = e.getValue();
-//                    if (v == null) {
-//                        continue;
-//                    }
-//                    log.append(e.getKey()).append(":").append(v.getClass().getName()).append("||");
-//                }
-//                logger.info(log.toString());
-                //  }
                 // TODO: 需要判断这条记录是否要处理
                 dto.setEventType(DTO.EventType.UPDATE_BEFORE);
                 out.collect(dto);
@@ -170,7 +159,11 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
             if (beforeVal == null) {
                 continue;
             }
-            beforeVals.put(f.name(), rawValConvert.convert(dto, f, beforeVal));
+            try {
+                beforeVals.put(f.name(), rawValConvert.convert(dto, f, beforeVal));
+            } catch (Exception e) {
+                throw new RuntimeException("field:" + f.name() + ",beforeVal:" + beforeVal, e);
+            }
         }
         dto.setBefore(beforeVals);
     }

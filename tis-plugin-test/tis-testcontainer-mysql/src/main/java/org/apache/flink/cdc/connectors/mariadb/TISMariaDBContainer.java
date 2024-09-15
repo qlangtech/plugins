@@ -92,8 +92,8 @@ public class TISMariaDBContainer extends MariaDBContainer<TISMariaDBContainer> i
                         .withConfigurationOverride(myConf)
                         .withSetupSQL(sqlClasspath)
                         .withDatabaseName("flink-test")
-//                        .withUsername("flinkuser")
-//                        .withPassword("flinkpw")
+                        .withUsername("flinkuser")
+//                       .withPassword(null)
                         .withLogConsumer(new TISLoggerConsumer(LOG));
         ;
 

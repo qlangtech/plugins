@@ -12,7 +12,7 @@
 -- KIND, either express or implied.  See the License for the
 -- specific language governing permissions and limitations
 -- under the License.
-
+GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT, LOCK TABLES  ON *.* TO 'flinkuser'@'%';
 -- ----------------------------------------------------------------------------------------------------------------
 -- DATABASE:  column_type_test
 -- ----------------------------------------------------------------------------------------------------------------

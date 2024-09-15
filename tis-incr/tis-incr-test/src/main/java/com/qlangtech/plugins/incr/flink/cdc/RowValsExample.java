@@ -76,6 +76,9 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
 
                 @Override
                 public String getAssertActual(Object val) {
+                    if (val instanceof Boolean) {
+                        return ((Boolean) val) ? "1" : "0";
+                    }
                     return String.valueOf(val);
                 }
             };

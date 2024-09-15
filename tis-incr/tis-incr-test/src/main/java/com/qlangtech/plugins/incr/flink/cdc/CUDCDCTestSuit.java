@@ -382,6 +382,7 @@ public abstract class CUDCDCTestSuit {
         try (PreparedStatement statement = conn.prepareStatement(insertBase)) {
 
             for (ColMeta col : this.cols) {
+
                 col.setTestVal(statement, r);
             }
             Assert.assertEquals(1, executePreparedStatement(conn, statement));
@@ -398,7 +399,7 @@ public abstract class CUDCDCTestSuit {
                 "values(" +
                 cols.stream().map((col) -> {
                     RowValsExample.RowVal v = r.vals.getV(col.getName());
-                    if (v.sqlParamDecorator != null) {
+                    if (v != null && v.sqlParamDecorator != null) {
                         return v.sqlParamDecorator.get();
                     }
                     return "?";

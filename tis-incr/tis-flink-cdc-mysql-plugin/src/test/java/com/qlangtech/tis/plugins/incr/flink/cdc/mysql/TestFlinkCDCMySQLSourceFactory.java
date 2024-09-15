@@ -57,6 +57,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.LatestStartupOptions;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.utils.IntegerUtils;
+import org.apache.flink.cdc.connectors.IDataSourceFactoryCreator;
 import org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -344,7 +345,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) ((IDataSourceFactoryCreator) getMysqlContainer()).createMySqlDataSourceFactory(dataxName);
             }
 
             @Override

@@ -54,6 +54,15 @@ public class ColMeta {
 
     public void setTestVal(PreparedStatement statement, TestRow r) {
 
+        try {
+            if (r.vals.getV(getName()) == null) {
+                statement.setNull(statementIndex, getType().getType());
+                return;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(toString(), e);
+        }
+
         meta.type.accept(new DataType.TypeVisitor<Void>() {
             @Override
             public Void bigInt(DataType type) {
@@ -113,6 +122,8 @@ public class ColMeta {
                     byte[] byteVal = null;
                     if (val instanceof ByteArrayInputStream) {
                         byteVal = IOUtils.toByteArray((ByteArrayInputStream) val);
+                    } else if (val instanceof Boolean) {
+                        byteVal = new byte[]{(byte) (((Boolean) val) ? 1 : 0)};
                     } else {
                         byteVal = (byte[]) val;
                     }

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import org.apache.flink.types.RowKind;
 
 import java.io.InputStream;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -106,7 +108,11 @@ public class TestRow extends BasicRow {
     @Override
     public Object getSerializeVal(String key) {
         try {
-            return vals.getV(key).getExpect();
+            RowVal getter = vals.getV(key);
+            if (getter == null) {
+                return null;
+            }
+            return getter.getExpect();
         } catch (Exception e) {
             throw new RuntimeException("key:" + key, e);
         }

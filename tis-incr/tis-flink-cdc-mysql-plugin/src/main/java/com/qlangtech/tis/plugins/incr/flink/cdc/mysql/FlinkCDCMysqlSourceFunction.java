@@ -106,7 +106,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     }
 
 
-    static class MySQLCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisitor {
+    public static class MySQLCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisitor {
         public MySQLCDCTypeVisitor(IColMetaGetter meta, int colIndex) {
             super(meta, colIndex);
         }

@@ -22,6 +22,7 @@ import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.data.binary.BinaryStringData;
 import org.apache.flink.table.utils.DateTimeUtils;
 
 import javax.annotation.Nullable;
@@ -65,6 +66,14 @@ public class RowFieldGetterFactory {
 
         @Override
         protected Object getObject(GenericRowData rowData) {
+            Object val = rowData.getField(colIndex);
+            if (val instanceof BinaryStringData) {
+                return ((BinaryStringData) val).toBytes();
+            }
+            if (val instanceof Boolean) {
+                return new byte[]{(byte) (((Boolean) val) ? 1 : 0)};
+            }
+
             return rowData.getBinary(colIndex);
         }
     }
@@ -153,7 +162,13 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
-            return rowData.getDecimal(colIndex, -1, -1);
+
+            Object val = rowData.getField(colIndex);
+            if (val instanceof Number) {
+                return DecimalData.fromUnscaledLong(((Number) val).longValue(), 15, 0);
+            }
+
+            return (DecimalData) val;// rowData.getDecimal(colIndex, -1, -1);
         }
     }
 
@@ -201,6 +216,10 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
+            Object val = rowData.getField(colIndex);
+            if (val instanceof Boolean) {
+                return (byte) (((Boolean) val) ? 1 : 0);
+            }
             return rowData.getByte(colIndex);
         }
     }
@@ -224,6 +243,10 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
+            Object val = rowData.getField(colIndex);
+            if (val instanceof Number) {
+                return ((Number) val).intValue();
+            }
             return rowData.getInt(colIndex);
         }
     }

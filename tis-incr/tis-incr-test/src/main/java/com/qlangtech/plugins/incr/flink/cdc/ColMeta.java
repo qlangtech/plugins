@@ -127,7 +127,13 @@ public class ColMeta {
                     } else {
                         byteVal = (byte[]) val;
                     }
-                    statement.setBytes(statementIndex, byteVal);
+
+                    if ("boolean".equalsIgnoreCase(type.typeName)) {
+                        statement.setByte(statementIndex, byteVal[0]);
+                    } else {
+                        statement.setBytes(statementIndex, byteVal);
+                    }
+
                 } catch (Exception e) {
                     throw new RuntimeException("colName:" + getName(), e);
                 }

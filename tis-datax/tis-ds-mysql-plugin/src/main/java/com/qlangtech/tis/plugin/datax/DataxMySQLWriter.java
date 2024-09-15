@@ -35,15 +35,18 @@ import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -132,44 +135,56 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         try {
             if (threadBingDataXReader instanceof DataxMySQLReader //
                     // 没有使用别名
-                    && tableMapper.hasNotUseAlias() //
+                    // && tableMapper.hasNotUseAlias() //
                     && !transformers.isPresent()) {
                 DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+                List<ColumnMetaData> tableColsMeta = mySQLReader.getTableMetadata(EntityName.parse(tableMapper.getFrom()));
+                ISelectedTab selectedTab = mySQLReader.getSelectedTab(tableMapper.getFrom());
 
-                dsFactory.visitFirstConnection((c) -> {
-                    Connection conn = c.getConnection();
-                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
-                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
-                    Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
-                    if (physicsTabNames.isPresent()) {
-                        try (Statement statement = conn.createStatement()) {
-                            // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
-                            try (ResultSet resultSet =
-                                         statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
-                                if (!resultSet.next()) {
-                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
-                                            "exec" + " show create table script");
+                if (StringUtils.equalsIgnoreCase(
+                        selectedTab.getCols().stream().map((col) -> col.getName()).collect(Collectors.joining())
+                        , tableColsMeta.stream().map((col) -> col.getName()).collect(Collectors.joining()))) {
+                    // 确保没有导出列
+                    dsFactory.visitFirstConnection((c) -> {
+                        Connection conn = c.getConnection();
+                        DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
+                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+                        Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
+                        if (physicsTabNames.isPresent()) {
+                            try (Statement statement = conn.createStatement()) {
+                                // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
+                                try (ResultSet resultSet =
+                                             statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
+                                    if (!resultSet.next()) {
+                                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
+                                                "exec" + " show create table script");
+                                    }
+                                    final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
+                                            , dsFactory.getEscapedEntity(tableMapper.getTo()));
+                                    script.append(ddl);
                                 }
-                                final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
-                                        , dsFactory.getEscapedEntity(tableMapper.getTo()));
-                                script.append(ddl);
                             }
+                        } else {
+                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
+                                    "physicsTabs" + " in datasource:" + dsFactory.identityValue());
                         }
-                    } else {
-                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
-                                "physicsTabs" + " in datasource:" + dsFactory.identityValue());
-                    }
 
-                });
-                return new CreateTableSqlBuilder.CreateDDL(script, null) {
-                    @Override
-                    public String getSelectAllScript() {
-                        //return super.getSelectAllScript();
-                        throw new UnsupportedOperationException();
-                    }
-                };
+                    });
+                    return new CreateTableSqlBuilder.CreateDDL(script, null) {
+                        @Override
+                        public String getSelectAllScript() {
+                            //return super.getSelectAllScript();
+                            throw new UnsupportedOperationException();
+                        }
+                    };
+
+                }
+
+
             }
+        } catch (TableNotFoundException e) {
+            throw new RuntimeException(e);
         } catch (RuntimeException e) {
             if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
                 throw e;

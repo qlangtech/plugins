@@ -18,36 +18,16 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.maria;
 
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMySQLSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMysqlSourceFunction.MySQLCDCTypeVisitor;
 
 /**
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-09-14 12:13
+ * @create: 2024-09-15 16:32
  **/
-public class FlinkCDCMariaDBSourceFactory extends FlinkCDCMySQLSourceFactory {
-
-    @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
-        final IFlinkColCreator flinkColCreator = (meta, colIndex) -> {
-            return meta.getType().accept(new MariaDBCDCTypeVisitor(meta, colIndex));
-        };
-        return flinkColCreator;
-    }
-
-
-    @TISExtension()
-    public static class MariaDBSourceFactoryDescriptor extends DefaultDescriptor {
-        public MariaDBSourceFactoryDescriptor() {
-            super();
-        }
-
-        @Override
-        public EndType getEndType() {
-            return EndType.MariaDB;
-        }
+public class MariaDBCDCTypeVisitor extends MySQLCDCTypeVisitor {
+    public MariaDBCDCTypeVisitor(IColMetaGetter meta, int colIndex) {
+        super(meta, colIndex);
     }
 }

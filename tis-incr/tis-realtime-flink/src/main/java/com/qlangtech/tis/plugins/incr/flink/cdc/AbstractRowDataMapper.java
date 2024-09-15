@@ -51,6 +51,7 @@ import org.apache.flink.table.utils.DateTimeUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -248,8 +249,10 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol boolType(DataType dataType) {
-            FlinkCol fcol = new FlinkCol(meta, dataType, DataTypes.BOOLEAN()
-                    , new FlinkCol.BoolProcess()
+            FlinkCol fcol = new FlinkCol(meta
+                    , dataType //
+                    , DataTypes.BOOLEAN() //
+                    , new FlinkCol.BoolProcess() //
                     , new RowFieldGetterFactory.BoolGetter(meta.getName(), colIndex));
             return fcol.setSourceDTOColValProcess(new BiFunction() {
                 @Override
@@ -334,7 +337,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return ((Number) o).shortValue();
             }
             return Short.parseShort(String.valueOf(o));
-           // throw new IllegalStateException("val:" + o + ",type:" + o.getClass().getName());
+            // throw new IllegalStateException("val:" + o + ",type:" + o.getClass().getName());
         }
     }
 
@@ -443,9 +446,20 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         public Object apply(Object o) {
             if (o instanceof java.nio.ByteBuffer) {
                 return o;
+            } else if (o instanceof java.lang.Short) {
+                return shortToByteArray((java.lang.Short) o);
             }
-
             return java.nio.ByteBuffer.wrap((byte[]) o);
+        }
+
+        private static ByteBuffer shortToByteArray(short number) {
+            //  byte[] byteArray = new byte[2];
+            ByteBuffer buffer = ByteBuffer.allocate(2);
+            buffer.putShort(number);
+            buffer.flip();
+            return buffer;
+//            buffer.get(byteArray);
+//            return byteArray;
         }
     }
 

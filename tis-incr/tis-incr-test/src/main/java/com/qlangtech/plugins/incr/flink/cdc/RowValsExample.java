@@ -23,9 +23,11 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.flink.table.utils.DateTimeUtils;
+import org.assertj.core.util.Arrays;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
@@ -79,8 +81,26 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
                     if (val instanceof Boolean) {
                         return ((Boolean) val) ? "1" : "0";
                     }
+                    if (Arrays.isArray(val)) {
+//                        ByteBuffer buffer = ByteBuffer.wrap((byte[]) val);
+//                        buffer.flip();
+                        return String.valueOf(bytesToShort((byte[]) val, true));
+                    }
                     return String.valueOf(val);
                 }
+
+                private short bytesToShort(byte[] bytes, boolean bigEndian) {
+                    if (bytes.length != 2) {
+                        throw new IllegalArgumentException();
+                    }
+
+                    if (bigEndian) {
+                        return (short) (((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF));
+                    } else {
+                        return (short) (((bytes[1] & 0xFF) << 8) | (bytes[0] & 0xFF));
+                    }
+                }
+
             };
         }
 

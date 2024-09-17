@@ -145,7 +145,7 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
     }
 
     public File getWorkingDirectory() {
-        return IDataXTaskRelevant.getDataXExecutorDir();
+        return DataXJobInfo.getDataXExecutorDir();
     }
 
 

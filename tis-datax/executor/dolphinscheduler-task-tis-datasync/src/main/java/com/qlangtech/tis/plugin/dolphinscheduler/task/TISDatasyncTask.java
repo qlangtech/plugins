@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.dolphinscheduler.task;
 
 import com.qlangtech.tis.cloud.ITISCoordinator;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.executor.BasicTISInitializeProcessor;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
@@ -85,11 +86,11 @@ public class TISDatasyncTask extends AbstractRemoteTask {
                     FileUtils.deleteQuietly(initialingToken);
                 }
             }
-            IDataXTaskRelevant.dataXExecutorDir
+            DataXJobInfo.dataXExecutorDir
                     .set(new File(dsHome, IDataXTaskRelevant.KEY_TIS_DATAX_EXECUTOR));
             // System.setProperty(KEY_JAVA_RUNTIME_PROP_ENV_PROPS,String.valueOf(true));
             Config.setDataDir((new File(dsHome, "data")).getAbsolutePath());
-            logger.info("set dataXExecutorDir:{}", IDataXTaskRelevant.dataXExecutorDir.get().getAbsolutePath());
+            logger.info("set dataXExecutorDir:{}", DataXJobInfo.dataXExecutorDir.get().getAbsolutePath());
             logger.info("set dataDir:{}", Config.getDataDir().getAbsolutePath());
         } catch (Exception e) {
             ErrMsg errMsg = TisException.getErrMsg(e);

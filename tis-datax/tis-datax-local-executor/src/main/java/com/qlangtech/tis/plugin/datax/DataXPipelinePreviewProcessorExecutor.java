@@ -22,6 +22,7 @@ import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
@@ -252,7 +253,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
 
     @Override
     protected File getWorkingDirectory() {
-        return IDataXTaskRelevant.getDataXExecutorDir();
+        return DataXJobInfo.getDataXExecutorDir();
     }
 
     @Override

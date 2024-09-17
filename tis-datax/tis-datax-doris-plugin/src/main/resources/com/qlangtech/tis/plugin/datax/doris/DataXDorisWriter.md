@@ -19,8 +19,8 @@ Doris 支持三种数据模型：
 1. Aggregate
 2. Unique
 3. Duplicate
-
-[数据模型详细](https://doris.apache.org/zh-CN/docs/data-table/data-model/)
+   
+[数据模型详细](https://doris.apache.org/docs/table-design/data-model/overview)
 
 
 

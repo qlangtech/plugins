@@ -1,6 +1,7 @@
 package com.qlangtech.tis.datax.join;
 
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
@@ -152,7 +153,7 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
 
     @Override
     protected File getWorkingDirectory() {
-        return IDataXTaskRelevant.getDataXExecutorDir();
+        return DataXJobInfo.getDataXExecutorDir();
     }
 
     @Override

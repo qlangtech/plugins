@@ -253,7 +253,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
                 File tisHomeDir = Config.getTisHome();
                 File assebleDir = new File(tisHomeDir, TisSubModule.TIS_ASSEMBLE.moduleName);
                 File localExecutorLibDir = new File(Config.getLibDir(), "plugins/" + IFlinkCluster.PLUGIN_TIS_DATAX_LOCAL_EXECOTOR + "/WEB-INF/lib");
-                File webStartDir = new File(tisHomeDir, TisSubModule.WEB_START.moduleName + "/lib");
+                File webStartDir = new File(tisHomeDir, TisSubModule.WEB_START.moduleName);
+
                 if (!localExecutorLibDir.exists()) {
                     throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());
                 }
@@ -264,7 +265,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
                     throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getAbsolutePath());
                 }
                 this.classpath = assebleDir.getPath() + "/lib/*:" + localExecutorLibDir.getPath()
-                        + "/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
+                        + "/*:" + webStartDir.getPath() + "/conf:" + new File(webStartDir, "/lib/*").getPath();
             }
         }
         return this.classpath;

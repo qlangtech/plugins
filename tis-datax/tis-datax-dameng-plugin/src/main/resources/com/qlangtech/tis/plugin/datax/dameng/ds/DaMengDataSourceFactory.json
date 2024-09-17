@@ -4,5 +4,14 @@
   },
   "splitTableStrategy": {
     "label": "分表识别"
+  },
+  "userName": {
+    "placeholder": "SYSDBA"
+  },
+  "port": {
+    "dftVal": 5236
+  },
+  "dbName": {
+    "placeholder": "TIS"
   }
 }

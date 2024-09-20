@@ -18,13 +18,12 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 
-import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDbs;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDBs;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
@@ -222,7 +221,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         }
 
         @Override
-        public List<ReaderSource> create(String dbHost, HostDbs dbs, Set<String> tbs, Properties debeziumProperties) {
+        public List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties) {
 
             DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
 
@@ -255,7 +254,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             return createReaderSources(dbHost, dbs, sourceFunc);
         }
 
-        protected List<ReaderSource> createReaderSources(String dbHost, HostDbs dbs, MySqlSource<DTO> sourceFunc) {
+        protected List<ReaderSource> createReaderSources(String dbHost, HostDBs dbs, MySqlSource<DTO> sourceFunc) {
             return Collections.singletonList(ReaderSource.createDTOSource(
                             dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
                             , sourceFunc

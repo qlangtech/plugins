@@ -62,6 +62,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 针对MySQL作为数据源实现
@@ -267,7 +268,13 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
             @Override
             public IDataSourceDumper next() {
-                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
+                int idx;
+                final String jdbcUrl = jdbcUrls.get(idx = index.getAndIncrement());
+                if (StringUtils.isEmpty(jdbcUrl)) {
+                    throw new IllegalStateException("jdbcUrl can not be empty,jdbcUrls.size:" + length
+                            + ",applyIdx:" + idx + ",jdbcUrls:"
+                            + jdbcUrls.stream().map((url) -> "[" + url + "]").collect(Collectors.joining(",")));
+                }
                 return new MySqlDataSourceDumper(jdbcUrl, table);
             }
         };
@@ -275,6 +282,11 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         return new DataDumpers(length, dsIt);
     }
 
+    @Override
+    protected String getNodeDesc() {
+        return Objects.requireNonNull(
+                this.splitTableStrategy, "splitTableStrategy can not be null").getNodeDesc();
+    }
 
     public String getUserName() {
         return this.userName;

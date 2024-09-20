@@ -19,10 +19,12 @@
 package com.qlangtech.tis.plugin.ds.split;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
@@ -30,11 +32,13 @@ import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -45,9 +49,19 @@ import java.util.regex.Pattern;
  **/
 public class DefaultSplitTableStrategy extends SplitTableStrategy {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSplitTableStrategy.class);
+    /**
+     * 节点描述
+     */
+    @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public String nodeDesc;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
     public String tabPattern;
+
+    @Override
+    public String getNodeDesc() {
+        return this.nodeDesc;
+    }
 
     @Override
     public boolean isSplittable() {
@@ -119,6 +133,17 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
 
     @TISExtension
     public static class DefatDesc extends Descriptor<SplitTableStrategy> {
+
+        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            Map<String, List<String>> dbname = DBConfigParser.parseDBEnum("dbname", value);
+            if (MapUtils.isEmpty(dbname)) {
+                msgHandler.addFieldError(context, fieldName, "请确认格式是否正确");
+                return false;
+            }
+
+            return true;
+        }
 
         public boolean validateTabPattern(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 

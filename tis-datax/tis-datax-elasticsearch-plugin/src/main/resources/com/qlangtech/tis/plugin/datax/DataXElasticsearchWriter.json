@@ -35,7 +35,7 @@
   },
   "trySize": {
     "help": "失败后重试的次数",
-    "dftVal": 30
+    "dftVal": 1
   },
   "timeout": {
     "help": "客户端超时时间",

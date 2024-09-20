@@ -85,7 +85,7 @@ public class DefaultDataXPreviewRocrdsImpl extends DataXRecordsPreviewImplBase {
 
 
         PreviewRecords records
-                = previewRocrds.pipeSynchronize.previewRecords("base", queryCriteria);
+                = previewRocrds.pipeSynchronize.previewRecords("orderdetail", queryCriteria);
         records.getPageRows().forEach((r) -> {
            // System.out.println(r.getColumn("order_id"));
             System.out.println(r);

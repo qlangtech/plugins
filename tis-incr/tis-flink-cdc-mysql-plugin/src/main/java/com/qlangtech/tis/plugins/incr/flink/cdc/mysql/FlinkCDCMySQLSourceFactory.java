@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDbs;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDBs;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
@@ -172,7 +172,7 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
                         tabs,
                         new MySQLReaderSourceCreator((BasicDataSourceFactory) dsFactory, sourceFactory) {
                             @Override
-                            protected List<ReaderSource> createReaderSources(String dbHost, HostDbs dbs, MySqlSource<DTO> sourceFunc) {
+                            protected List<ReaderSource> createReaderSources(String dbHost, HostDBs dbs, MySqlSource<DTO> sourceFunc) {
                                 if (count.getAndIncrement() > 0) {
                                     return null;
                                 }

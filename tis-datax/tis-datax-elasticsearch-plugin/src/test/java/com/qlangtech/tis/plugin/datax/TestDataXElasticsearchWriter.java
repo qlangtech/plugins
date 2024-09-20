@@ -18,14 +18,18 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.DataConvertUtils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -50,6 +54,26 @@ import java.util.Optional;
  * @create: 2021-05-08 11:35
  **/
 public class TestDataXElasticsearchWriter extends BasicTest {
+
+    public void testInitialIndex() {
+        final DataXElasticsearchWriter esWriter = new DataXElasticsearchWriter() {
+            @Override
+            public ElasticEndpoint getToken() {
+                ElasticEndpoint endpoint = new ElasticEndpoint();
+                endpoint.name = "elastic";
+                endpoint.endpoint = "http://192.168.28.201:9200";
+                endpoint.authToken = new NoneToken();
+                return endpoint;
+            }
+        };
+        esWriter.index = "orderdetail";
+        IDataxProcessor dataxProcessor = DataxProcessor.load(null, "mysql_elastic2");
+        DataConvertUtils.esMappingConsumer = (mapping) -> {
+            System.out.println(mapping);
+        };
+        esWriter.initialIndex(dataxProcessor);
+    }
+
 
     public void testDescriptorsJSONGenerate() {
 

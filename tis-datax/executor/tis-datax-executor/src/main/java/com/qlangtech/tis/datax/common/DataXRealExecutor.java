@@ -108,7 +108,8 @@ public class DataXRealExecutor {
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not be null");
         }
-        IGroupChildTaskIterator subTasks = this.getDataxReader().getSubTasks((tab) -> StringUtils.equals(tab.getName(), tableName));
+        final IDataxReader dataXReader = this.getDataxReader();
+        IGroupChildTaskIterator subTasks = dataXReader.getSubTasks((tab) -> StringUtils.equals(tab.getName(), tableName));
         IPluginContext pluginCtx = IPluginContext.namedContext(this.dataXName);
         while (subTasks.hasNext()) {
             IDataxReaderContext readerContext = subTasks.next();
@@ -120,34 +121,33 @@ public class DataXRealExecutor {
 
             Configuration readerCfg
                     = Configuration.from(this.dataXCfgGenerator.generateDataxConfig(readerContext
-                    , this.dataxProcessor.getWriter(pluginCtx), this.getDataxReader(), transformerRules, tableMap));
+                    , this.dataxProcessor.getWriter(pluginCtx), dataXReader, transformerRules, tableMap));
 
             ThreadLocalRows rows = new ThreadLocalRows();
-            ISelectedTab tab = null;
-            if (tableMap.isPresent()) {
-                TableMap tabMapper = tableMap.get();
-                tab = tabMapper.getSourceTab();
-                List<String> primaryKeys = tab.getPrimaryKeys();
-                List<OffsetColVal> offsetPointer = queryCriteria.getPagerOffsetCursor();
-                boolean firstPage = CollectionUtils.isEmpty(offsetPointer);
-                DataXResultPreviewOrderByCols orderByCols = new DataXResultPreviewOrderByCols(firstPage);
+            final ISelectedTab tab = Objects.requireNonNull(dataXReader.getSelectedTab(tableName)
+                    , "tableName:" + tableName + " relevant " + ISelectedTab.class.getSimpleName() + " can not be null");
+//            if (tableMap.isPresent()) {
+            //TableMap tabMapper = tableMap.get();
+            // tab = tabMapper.getSourceTab();
+            List<String> primaryKeys = tab.getPrimaryKeys();
+            List<OffsetColVal> offsetPointer = queryCriteria.getPagerOffsetCursor();
+            boolean firstPage = CollectionUtils.isEmpty(offsetPointer);
+            DataXResultPreviewOrderByCols orderByCols = new DataXResultPreviewOrderByCols(firstPage);
 
-                if (firstPage) {
-                    for (String pk : primaryKeys) {
-                        orderByCols.addOffsetColVal(new OffsetColVal(pk, null, null));
-                    }
-                } else {
-//                    Map<String, DataType> typeMap
-//                            = tab.getCols().stream().collect(Collectors.toMap((col) -> col.getName(), (col) -> col.getType()));
-                    // for (String pk : primaryKeys) {
-                    for (OffsetColVal val : offsetPointer) {
-                        orderByCols.addOffsetColVal(val);
-                    }
-                    //   orderByCols.addOffsetColVal(new OffsetColVal(pk, offsetPointer.get(pk), isNumericJdbcType(typeMap, pk)));
-                    // }
+            if (firstPage) {
+                if (CollectionUtils.isEmpty(primaryKeys)) {
+                    throw new IllegalStateException("primaryKeys can not be empty，tab:" + tab.getName());
                 }
-                rows.setPagerOffsetPointCols(orderByCols);
+                for (String pk : primaryKeys) {
+                    orderByCols.addOffsetColVal(new OffsetColVal(pk, null, null));
+                }
+            } else {
+                for (OffsetColVal val : offsetPointer) {
+                    orderByCols.addOffsetColVal(val);
+                }
             }
+            rows.setPagerOffsetPointCols(orderByCols);
+            // }
 
             rows.setQuery(queryCriteria);
 

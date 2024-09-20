@@ -49,7 +49,6 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     private final List<SelectedTab> tabs;
     final int selectedTabsSize;
     AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-    //  private TableColsMeta tabColsMap;
     private final FilterUnexistCol filterUnexistCol;
     private final BasicDataXRdbmsReader rdbmsReader;
 
@@ -64,8 +63,6 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
         this.tabs = tabs;
         this.selectedTabsSize = tabs.size();
         this.filterUnexistCol = filterUnexistCol;
-        //  this.tabColsMap = tabColsMap;
-        // this.filterUnexistCol = this.filterUnexistCol;
     }
 
     @Override

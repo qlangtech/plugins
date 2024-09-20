@@ -17,6 +17,7 @@
  */
 
 import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.TestSourceChannel;
 import com.qlangtech.plugins.incr.flink.common.TestFlinkCluster;
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkIncrJobStatus;
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkTaskNodeController;
@@ -37,6 +38,6 @@ import org.junit.runners.Suite;
         TestFlinkIncrJobStatus.class
         , TestFlinkTaskNodeController.class
         , TestFlinkClient.class
-        , TestCheckpointFactory.class,TestFlinkCol.class})
+        , TestCheckpointFactory.class,TestFlinkCol.class, TestSourceChannel.class})
 public class TestAll {
 }

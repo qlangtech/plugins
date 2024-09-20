@@ -91,39 +91,51 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         }, tabs, sourceFunctionCreator);
     }
 
-    public static class HostDbs {
-        final List<String> dbs;
+    static class HostDB {
         final String jdbcUrl;
+        final String dbName;
 
-        public HostDbs(String jdbcUrl) {
-            if (StringUtils.isEmpty(jdbcUrl)) {
-                throw new IllegalArgumentException("param jdbcUrl can not be null");
-            }
+        public HostDB(String jdbcUrl, String dbName) {
+            this.jdbcUrl = Objects.requireNonNull(jdbcUrl, "jdbcUrl");
+            this.dbName = Objects.requireNonNull(dbName, "dbName");
+        }
+    }
+
+    public static class HostDBs {
+        final List<HostDB> dbs;
+        // final String jdbcUrl;
+        private final String host;
+
+        public HostDBs(String host) {
+            this.host = host;
+//            if (StringUtils.isEmpty(jdbcUrl)) {
+//                throw new IllegalArgumentException("param jdbcUrl can not be null");
+//            }
             this.dbs = Lists.newArrayList();
-            this.jdbcUrl = jdbcUrl;
+            //   this.jdbcUrl = jdbcUrl;
         }
 
         public Stream<String> getDbStream() {
-            return this.dbs.stream();
+            return this.dbs.stream().map((db) -> db.dbName);
         }
 
         public String[] getDataBases() {
-            return this.dbs.toArray(new String[this.dbs.size()]);
+            return getDbStream().toArray(String[]::new);//.toArray(new String[this.dbs.size()]);
         }
 
         public String joinDataBases(String delimiter) {
-            return this.dbs.stream().collect(Collectors.joining(delimiter));
+            return this.getDbStream().collect(Collectors.joining(delimiter));
         }
 
-        public void addDB(String dbName) {
-            dbs.add(dbName);
+        public void addDB(String jdbcUrl, String dbName) {
+            this.dbs.add(new HostDB(jdbcUrl, dbName));
         }
 
         public Set<String> mapPhysicsTabs(Map<String, List<ISelectedTab>> db2tabs
                 , Function<DBTable, Stream<String>> tabnameCreator) {
             Set<String> tbs = this.dbs.stream().flatMap(
-                    (dbName) -> db2tabs.get(dbName).stream().flatMap((tab) -> {
-                        return tabnameCreator.apply(new DBTable(jdbcUrl, dbName, tab));
+                    (db) -> db2tabs.get(db.dbName).stream().flatMap((tab) -> {
+                        return tabnameCreator.apply(new DBTable(db.jdbcUrl, db.dbName, tab));
                     })).collect(Collectors.toSet());
             return tbs;
         }
@@ -137,15 +149,15 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
             List<ReaderSource> sourceFuncs = Lists.newArrayList();
-            Map<String, HostDbs> ip2dbs = Maps.newHashMap();
+            Map<String, HostDBs> ip2dbs = Maps.newHashMap();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
             dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
-                HostDbs dbs = ip2dbs.get(ip);
+                HostDBs dbs = ip2dbs.get(ip);
                 if (dbs == null) {
-                    dbs = new HostDbs(jdbcUrl);
+                    dbs = new HostDBs(ip);
                     ip2dbs.put(ip, dbs);
                 }
-                dbs.addDB(dbName);
+                dbs.addDB(jdbcUrl, dbName);
                 if (db2tabs.get(dbName) == null) {
                     db2tabs.put(dbName, tabs);
                 }
@@ -153,7 +165,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             });
 
             List<ReaderSource> oneHostSources = null;
-            for (Map.Entry<String /**ip*/, HostDbs/**dbs*/> entry : ip2dbs.entrySet()) {
+            for (Map.Entry<String /**ip*/, HostDBs /**dbs*/> entry : ip2dbs.entrySet()) {
 
 
                 Set<String> tbs = entry.getValue().mapPhysicsTabs(db2tabs, tabnameCreator);
@@ -162,7 +174,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
                 debeziumProperties.put("snapshot.locking.mode", "none");// do not use lock
 
                 String dbHost = entry.getKey();
-                HostDbs dbs = entry.getValue();
+                HostDBs dbs = entry.getValue();
                 oneHostSources = sourceFunctionCreator.create(dbHost, dbs, tbs, debeziumProperties);
                 if (oneHostSources != null) {
                     sourceFuncs.addAll(oneHostSources);
@@ -193,7 +205,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public interface ReaderSourceCreator {
-        List<ReaderSource> create(String dbHost, HostDbs dbs, Set<String> tbs, Properties debeziumProperties);
+        List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties);
     }
 
     @Override

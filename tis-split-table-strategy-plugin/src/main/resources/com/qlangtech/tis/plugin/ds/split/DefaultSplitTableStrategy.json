@@ -2,5 +2,10 @@
   "tabPattern": {
     "label": "分表识别",
     "placeholder": "com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy.tabPatternPlaceholder()"
+  },
+  "nodeDesc": {
+    "label": "分库节点",
+    "rows": 3,
+    "placeholder": "127.0.0.1[00-31],127.0.0.2[32-63],127.0.0.3,127.0.0.4[9],baisui.com[0-9]"
   }
 }

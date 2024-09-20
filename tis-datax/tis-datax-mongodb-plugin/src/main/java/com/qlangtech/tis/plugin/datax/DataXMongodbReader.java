@@ -100,8 +100,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
     public static final String DATAX_NAME = "MongoDB";
     public static final String TYPE_ARRAY = "array";
-    public static final Set<String> acceptTypes = Sets.newHashSet("int", "long", "double", "string", TYPE_ARRAY,
-            "date", "boolean", "bytes");
+    public static final String TYPE_INT = "int";
+    public static final Set<String> acceptTypes
+            = Sets.newHashSet(TYPE_INT, "long", "double", "string", TYPE_ARRAY, "date", "boolean", "bytes");
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 

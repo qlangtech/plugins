@@ -24,9 +24,12 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.mongo.MongoWriterSelectedTab;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +55,28 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
         this.selectedTab = (MongoWriterSelectedTab) tableMapMapper.getSourceTab();
         this.transformerRules = transformerRules;
     }
+
+    private final static DefaultTypeVisitor<String> fixType = new DefaultTypeVisitor<String>() {
+        @Override
+        public String intType(DataType type) {
+            return DataXMongodbReader.TYPE_INT;
+        }
+
+        @Override
+        public String tinyIntType(DataType dataType) {
+            return this.intType(dataType);
+        }
+
+        @Override
+        public String smallIntType(DataType dataType) {
+            return this.intType(dataType);
+        }
+
+        @Override
+        public String bitType(DataType type) {
+            return this.intType(type);
+        }
+    };
 
     /**
      * 取得默认的列内容
@@ -79,12 +104,12 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
             cols.forEach((col) -> {
                 JSONObject field = new JSONObject();
                 field.put("name", col.getName());
-                field.put("type", col.getType().getCollapse().getLiteria());
+                String finalType = col.getType().accept(fixType);
+                field.put("type", StringUtils.defaultIfBlank(finalType, col.getType().getCollapse().getLiteria()));
                 fields.add(field);
             });
 
-            //                break;
-            //            }
+
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
             return "[]";

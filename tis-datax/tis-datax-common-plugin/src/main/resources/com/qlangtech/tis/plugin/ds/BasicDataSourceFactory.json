@@ -32,9 +32,8 @@
     "placeholder": "a=123&b=456"
   },
   "nodeDesc": {
-    "label": "节点描述",
-    "helpUrl": "http://tis.pub/docs/guide/datasource/multi-ds-rule",
-    "rows": 5,
-    "placeholder": "127.0.0.1[00-31],127.0.0.2[32-63],127.0.0.3,127.0.0.4[9],baisui.com[0-9]"
+    "label": "host",
+    "placeholder": "192.168.28.200",
+    "help": "服务器节点连接地址，可以为IP或者域名"
   }
 }

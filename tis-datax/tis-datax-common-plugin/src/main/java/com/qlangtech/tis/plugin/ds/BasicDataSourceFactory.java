@@ -66,6 +66,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
     public static final String KEY_FIELD_DB_NAME = "dbName";
+    /**
+     * 节点描述
+     */
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.hostWithoutPort})
+    public String nodeDesc;
     // 数据库名称
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
@@ -75,11 +80,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
-    /**
-     * 节点描述
-     */
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String nodeDesc;
+
 
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public int port;
@@ -232,7 +233,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     protected void fillTableInDB(TableInDB tabs) {
 
-        this.visitFirstConnection((conn) -> {
+        this.visitAllConnection((conn) -> {
             refectTableInDB(tabs, conn);
         });
     }
@@ -337,16 +338,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
             return TISZeppelinClient.createJdbcNotebook(dsFactory);
         }
 
-        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
-            Map<String, List<String>> dbname = DBConfigParser.parseDBEnum("dbname", value);
-            if (MapUtils.isEmpty(dbname)) {
-                msgHandler.addFieldError(context, fieldName, "请确认格式是否正确");
-                return false;
-            }
-
-            return true;
-        }
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 

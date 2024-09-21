@@ -58,6 +58,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * https://nightlies.apache.org/flink/flink-cdc-docs-release-3.2/docs/connectors/flink-sources/mysql-cdc/
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:15
  **/
@@ -72,7 +73,6 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     public String timeZone;
 
     public static String dftZoneId() {
-        //  return ZoneId.systemDefault().getId();
         return BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId();
     }
 
@@ -101,16 +101,6 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
 
     StartupOptions getStartupOptions() {
         return startupOptions.getOptionsType();
-//        switch (startupOptions) {
-//            case "latest":
-//                return StartupOptions.latest();
-//            case "earliest":
-//                return StartupOptions.earliest();
-//            case "initial":
-//                return StartupOptions.initial();
-//            default:
-//                throw new IllegalStateException("illegal startupOptions:" + startupOptions);
-//        }
     }
 
     @Override

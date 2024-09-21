@@ -149,7 +149,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                     dsFactory.visitFirstConnection((c) -> {
                         Connection conn = c.getConnection();
                         DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
-                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()), false);
                         Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
                         if (physicsTabNames.isPresent()) {
                             try (Statement statement = conn.createStatement()) {

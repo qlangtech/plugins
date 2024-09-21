@@ -77,14 +77,13 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
         return getSourceFunction(dsFactory, (tab) -> {
             TableInDB tabsInDB = dsFactory.getTablesInDB();
-            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()));
+            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
             Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
-            List<String> physicsTabNames = null;
-            if (targetTableNames.isPresent()) {
-                physicsTabNames = Lists.newArrayList(targetTableNames.get());
-            } else {
-                physicsTabNames = Collections.singletonList(tab.getTabName());
-            }
+
+            List<String> physicsTabNames = targetTableNames
+                    .map((tabNames) -> Lists.newArrayList(tabNames))
+                    .orElseGet(() -> Lists.newArrayList(tab.getTabName()));
+
             return physicsTabNames.stream().map((t) -> {
                 return schemaSupport.map((schema) -> schema.getDBSchema()).orElse(tab.dbNanme) + "." + t;
             });

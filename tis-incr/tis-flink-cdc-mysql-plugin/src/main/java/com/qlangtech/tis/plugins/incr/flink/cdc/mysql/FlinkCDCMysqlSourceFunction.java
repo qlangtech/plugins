@@ -57,6 +57,8 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -68,6 +70,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 /**
+ * https://nightlies.apache.org/flink/flink-cdc-docs-release-3.2/docs/connectors/flink-sources/mysql-cdc/
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:17
  **/
@@ -209,6 +213,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         private final BasicDataSourceFactory dsFactory;
         private final FlinkCDCMySQLSourceFactory sourceFactory;
         private final TISDeserializationSchema deserializationSchema;
+        private static final Logger logger = LoggerFactory.getLogger(MySQLReaderSourceCreator.class);
 
         public MySQLReaderSourceCreator(BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory) {
             this(dsFactory, sourceFactory, new TISDeserializationSchema());
@@ -237,6 +242,8 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             if (StringUtils.isEmpty(sourceFactory.timeZone)) {
                 throw new IllegalStateException("timezone can not be null");
             }
+
+            logger.info("monitor db:{} databaseList:{},tableList:{}", dbHost, databases, tbs);
             MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()
                     .hostname(dbHost)
                     .serverTimeZone(sourceFactory.timeZone)

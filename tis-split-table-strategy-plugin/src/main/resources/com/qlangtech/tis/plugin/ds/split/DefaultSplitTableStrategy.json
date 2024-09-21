@@ -7,5 +7,19 @@
     "label": "分库节点",
     "rows": 3,
     "placeholder": "127.0.0.1[00-31],127.0.0.2[32-63],127.0.0.3,127.0.0.4[9],baisui.com[0-9]"
+  },
+  "prefixWildcardStyle": {
+    "label": "增量前缀匹配",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
   }
 }

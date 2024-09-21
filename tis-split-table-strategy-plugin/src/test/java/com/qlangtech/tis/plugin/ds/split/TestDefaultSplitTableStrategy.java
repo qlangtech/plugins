@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.collections.CollectionUtils;
@@ -43,6 +44,11 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
     private final String sourceTableName = "base";
 
     private static final List<String> splitTabsBase = Lists.newArrayList("base_01", "base", "base_02");
+
+    private final String sourceTableCodeBind = "db_code_bind_log_2024";
+    private static final List<String> splitTabsDBCodeBindLog
+            = Lists.newArrayList("db_code_bind_log_2024_5", "db_code_bind_log_2024_6"
+            , "db_code_bind_log_2024_7", "db_code_bind_log_2024_8", "db_code_bind_log_2024_9");
     private static final List<String> splitTabs;
 
     static {
@@ -64,12 +70,46 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
         }
 
         DataXJobInfo baseJobInfo
-                = tableInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXCfgFileName, sourceTableName));
+                = tableInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXCfgFileName, sourceTableName), false);
         Optional<String[]> targetTableNames = baseJobInfo.getTargetTableNames();
 
         Assert.assertTrue(targetTableNames.isPresent());
         String[] baseTabs = targetTableNames.get();
         Assert.assertEquals(String.join(",", baseTabs), 3, baseTabs.length);
+    }
+
+    @Test
+    public void testTabAggreWithUserSetPattern() {
+        DBIdentity dbId = DBIdentity.parseId("order2");
+        final String dataXCfgFileName = "base_0.json";
+        DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
+        splitTableStrategy.tabPattern = "(db_code_bind_log_2024)_(\\d+)";
+        TableInDB tableInDB = splitTableStrategy.createTableInDB(dbId);
+
+        for (String tab : splitTabs) {
+            tableInDB.add(DataXJobSubmit.TableDataXEntity.TEST_JDBC_URL, tab);
+        }
+
+        for (String tab : splitTabsDBCodeBindLog) {
+            tableInDB.add(DataXJobSubmit.TableDataXEntity.TEST_JDBC_URL, tab);
+        }
+
+        DataXJobInfo jobInfo
+                = tableInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXCfgFileName, sourceTableCodeBind), false);
+        Assert.assertNotNull(jobInfo);
+        Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
+
+        Assert.assertTrue(targetTableNames.isPresent());
+        String[] codeBindTabs = targetTableNames.get();
+        Assert.assertEquals(String.join(",", codeBindTabs), splitTabsDBCodeBindLog.size(), codeBindTabs.length);
+
+        jobInfo
+                = tableInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXCfgFileName, sourceTableName), false);
+        Assert.assertNotNull(jobInfo);
+        targetTableNames = jobInfo.getTargetTableNames();
+        Assert.assertTrue(targetTableNames.isPresent());
+        Assert.assertEquals(1, targetTableNames.get().length);
+        Assert.assertEquals(sourceTableName, String.join(",", targetTableNames.get()));
     }
 
     @Test
@@ -81,13 +121,13 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
         DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
         DataSourceFactory dsFactory = mock("dsFactory", DataSourceFactory.class);
 
-        DefaultSplitTableStrategy.SplitableTableInDB tabsInDB
-                = new DefaultSplitTableStrategy.SplitableTableInDB(dsFactory, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
+        SplitableTableInDB tabsInDB
+                = new SplitableTableInDB(dsFactory, SplitTableStrategy.PATTERN_PHYSICS_TABLE, false);
 
         for (String base : splitTabsBase) {
             tabsInDB.add(jdbcUrl, base);
         }
-      //  dsFactory.refresh();
+        //  dsFactory.refresh();
         EasyMock.expect(dsFactory.getTablesInDB()).andReturn(tabsInDB);
 
 

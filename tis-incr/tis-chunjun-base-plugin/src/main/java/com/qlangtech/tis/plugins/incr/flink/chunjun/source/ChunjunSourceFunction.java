@@ -100,7 +100,7 @@ public abstract class ChunjunSourceFunction
             Optional<String[]> targetPhysicsNames = null;
             List<String> physicsNames = null;
             for (ISelectedTab tab : tabs) {
-                dataXJobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, jdbcUrl, tab.getName()));
+                dataXJobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, jdbcUrl, tab.getName()), false);
                 targetPhysicsNames = dataXJobInfo.getTargetTableNames();
                 if (targetPhysicsNames.isPresent()) {
                     physicsNames = Lists.newArrayList(targetPhysicsNames.get());

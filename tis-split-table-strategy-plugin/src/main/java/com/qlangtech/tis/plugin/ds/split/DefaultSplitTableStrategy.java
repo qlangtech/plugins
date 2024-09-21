@@ -28,6 +28,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB.SplitableDB;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -58,6 +61,12 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
     public String tabPattern;
 
+    /**
+     * prefixWildcardStyle 使用前缀匹配的样式，在flink-cdc表前缀通配匹配的场景中使用
+     */
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean prefixWildcardStyle;
+
     @Override
     public String getNodeDesc() {
         return this.nodeDesc;
@@ -70,7 +79,9 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
 
     @Override
     public TableInDB createTableInDB(DBIdentity id) {
-        return new SplitableTableInDB(id, getTabPattern());
+        return new SplitableTableInDB(id
+                , getTabPattern()
+                , Objects.requireNonNull(this.prefixWildcardStyle, "prefixWildcardStyle can not be null"));
     }
 
     public static String tabPatternPlaceholder() {
@@ -99,7 +110,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         SplitableDB physics = tabsMapper.tabs.get(sourceTableName);
         if (physics != null) {
 
-            List<String> ptabs = physics.getTabsInDB(jdbcUrl);
+            List<String> ptabs = physics.getTabsInDB(jdbcUrl, false);
             if (CollectionUtils.isEmpty(ptabs)) {
                 throw new IllegalStateException("jdbcUrl:" + jdbcUrl + "\n,logicTable:"
                         + sourceTableName + "\n,dsFactory:" + dsFactory.identityValue()
@@ -146,15 +157,15 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         }
 
         public boolean validateTabPattern(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-
+            Pattern pattern = null;
             try {
-                Pattern.compile(value);
+                pattern = Pattern.compile(value);
+
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
                 msgHandler.addFieldError(context, fieldName, e.getMessage());
                 return false;
             }
-
             return true;
         }
 

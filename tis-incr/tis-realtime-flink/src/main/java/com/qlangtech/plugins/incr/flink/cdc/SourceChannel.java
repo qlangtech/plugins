@@ -26,6 +26,8 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DBConfig.DBTable;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
@@ -90,55 +92,47 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         }, tabs, sourceFunctionCreator);
     }
 
-    static class HostDB {
-        final String jdbcUrl;
-        final String dbName;
 
-        public HostDB(String jdbcUrl, String dbName) {
-            this.jdbcUrl = Objects.requireNonNull(jdbcUrl, "jdbcUrl");
-            this.dbName = Objects.requireNonNull(dbName, "dbName");
-        }
-    }
 
-    public static class HostDBs {
-        final List<HostDB> dbs;
-        // final String jdbcUrl;
-        private final String host;
-
-        public HostDBs(String host) {
-            this.host = host;
-//            if (StringUtils.isEmpty(jdbcUrl)) {
-//                throw new IllegalArgumentException("param jdbcUrl can not be null");
-//            }
-            this.dbs = Lists.newArrayList();
-            //   this.jdbcUrl = jdbcUrl;
-        }
-
-        public Stream<String> getDbStream() {
-            return this.dbs.stream().map((db) -> db.dbName);
-        }
-
-        public String[] getDataBases() {
-            return getDbStream().toArray(String[]::new);//.toArray(new String[this.dbs.size()]);
-        }
-
-        public String joinDataBases(String delimiter) {
-            return this.getDbStream().collect(Collectors.joining(delimiter));
-        }
-
-        public void addDB(String jdbcUrl, String dbName) {
-            this.dbs.add(new HostDB(jdbcUrl, dbName));
-        }
-
-        public Set<String> mapPhysicsTabs(Map<String, List<ISelectedTab>> db2tabs
-                , Function<DBTable, Stream<String>> tabnameCreator) {
-            Set<String> tbs = this.dbs.stream().flatMap(
-                    (db) -> db2tabs.get(db.dbName).stream().flatMap((tab) -> {
-                        return tabnameCreator.apply(new DBTable(db.jdbcUrl, db.dbName, tab));
-                    })).collect(Collectors.toSet());
-            return tbs;
-        }
-    }
+//    public static class HostDBs {
+//        final List<HostDB> dbs;
+//        // final String jdbcUrl;
+//        private final String host;
+//
+//        public HostDBs(String host) {
+//            this.host = host;
+////            if (StringUtils.isEmpty(jdbcUrl)) {
+////                throw new IllegalArgumentException("param jdbcUrl can not be null");
+////            }
+//            this.dbs = Lists.newArrayList();
+//            //   this.jdbcUrl = jdbcUrl;
+//        }
+//
+//        public Stream<String> getDbStream() {
+//            return this.dbs.stream().map((db) -> db.dbName);
+//        }
+//
+//        public String[] getDataBases() {
+//            return getDbStream().toArray(String[]::new);//.toArray(new String[this.dbs.size()]);
+//        }
+//
+//        public String joinDataBases(String delimiter) {
+//            return this.getDbStream().collect(Collectors.joining(delimiter));
+//        }
+//
+//        public void addDB(String jdbcUrl, String dbName) {
+//            this.dbs.add(new HostDB(jdbcUrl, dbName));
+//        }
+//
+//        public Set<String> mapPhysicsTabs(Map<String, List<ISelectedTab>> db2tabs
+//                , Function<DBTable, Stream<String>> tabnameCreator) {
+//            Set<String> tbs = this.dbs.stream().flatMap(
+//                    (db) -> db2tabs.get(db.dbName).stream().flatMap((tab) -> {
+//                        return tabnameCreator.apply(new DBTable(db.jdbcUrl, db.dbName, tab));
+//                    })).collect(Collectors.toSet());
+//            return tbs;
+//        }
+//    }
 
     //https://ververica.github.io/flink-cdc-connectors/master/
     private static List<ReaderSource> getSourceFunction(
@@ -148,15 +142,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
             List<ReaderSource> sourceFuncs = Lists.newArrayList();
-            Map<String, HostDBs> ip2dbs = Maps.newHashMap();
+            Map<String, HostDBs> ip2dbs = dbConfig.getHostDBsMapper();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
             dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
-                HostDBs dbs = ip2dbs.get(ip);
-                if (dbs == null) {
-                    dbs = new HostDBs(ip);
-                    ip2dbs.put(ip, dbs);
-                }
-                dbs.addDB(jdbcUrl, dbName);
                 if (db2tabs.get(dbName) == null) {
                     db2tabs.put(dbName, tabs);
                 }
@@ -187,21 +175,21 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         }
     }
 
-    public static class DBTable {
-        public final String dbNanme;
-        public final String jdbcUrl;
-        private final ISelectedTab tab;
-
-        public DBTable(String jdbcUrl, String dbNanme, ISelectedTab tab) {
-            this.jdbcUrl = jdbcUrl;
-            this.dbNanme = dbNanme;
-            this.tab = tab;
-        }
-
-        public String getTabName() {
-            return tab.getName();
-        }
-    }
+//    public static class DBTable {
+//        public final String dbNanme;
+//        public final String jdbcUrl;
+//        private final ISelectedTab tab;
+//
+//        public DBTable(String jdbcUrl, String dbNanme, ISelectedTab tab) {
+//            this.jdbcUrl = jdbcUrl;
+//            this.dbNanme = dbNanme;
+//            this.tab = tab;
+//        }
+//
+//        public String getTabName() {
+//            return tab.getName();
+//        }
+//    }
 
     public interface ReaderSourceCreator {
         List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties);

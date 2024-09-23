@@ -19,13 +19,16 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Sets;
-import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDBs;
+
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Assert;
@@ -35,21 +38,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-09-20 16:20
  **/
-public class TestSourceChannel  {
+public class TestSourceChannel {
 
     @Test
     public void testGetSourceFunction() {
 
         DataSourceFactory dsFactory = TIS.getDataBasePlugin(PostedDSProp.parse("order2"));
+        final String logicTabNameOrderDetail = "orderdetail";
         SelectedTab tab = new SelectedTab();
-        tab.name = "orderdetail";
+        tab.name = logicTabNameOrderDetail;
+        final String splitTab1 = "orderdetail_02";
         List<ISelectedTab> tabs = Collections.singletonList(tab);
-        Set<String> expectTbs = Sets.newHashSet("order2.orderdetail_02", "order2.orderdetail_01", "order1.orderdetail");
+        Set<String> expectTbs = Sets.newHashSet("order2." + splitTab1, "order2.orderdetail_01", "order1.orderdetail");
         Set<String> actualSplitTabs = Sets.newHashSet();
         ReaderSourceCreator sourceFunctionCreator = new ReaderSourceCreator() {
             @Override
@@ -63,5 +69,17 @@ public class TestSourceChannel  {
 
         Assert.assertTrue("expect:" + String.join(",", expectTbs) + "\nactual:" + String.join(",", actualSplitTabs)
                 , CollectionUtils.isEqualCollection(expectTbs, actualSplitTabs));
+
+
+        TableInDB tableInDB = dsFactory.getTablesInDB();
+        Assert.assertNotNull("tableInDB can not be null", tableInDB);
+        Assert.assertTrue(tableInDB instanceof SplitableTableInDB);
+        SplitableTableInDB splitableTableInDB = (SplitableTableInDB) tableInDB;
+
+        Function<String, String> physicsTabName2LogicNameConvertor = splitableTableInDB.getPhysicsTabName2LogicNameConvertor();
+        Assert.assertNotNull(physicsTabName2LogicNameConvertor);
+
+        String logicTabName = physicsTabName2LogicNameConvertor.apply(splitTab1);
+        Assert.assertEquals(logicTabNameOrderDetail, logicTabName);
     }
 }

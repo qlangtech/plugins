@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDBs;
+
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;

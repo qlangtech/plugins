@@ -16,6 +16,7 @@ import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -37,7 +38,7 @@ import static org.junit.Assert.assertTrue;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/9/15
  */
-public class TestDataXDaMengReader   {
+public class TestDataXDaMengReader {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     public static final String userName = "SYSDBA";
@@ -54,13 +55,13 @@ public class TestDataXDaMengReader   {
         datasource.splitTableStrategy = new NoneSplitTableStrategy();
         datasource.name = "dameng_ds";
 
-        SplitTableStrategy.SplitableTableInDB tabsInDB
-                = new SplitTableStrategy.SplitableTableInDB(datasource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
+        SplitableTableInDB tabsInDB
+                = new SplitableTableInDB(datasource, SplitTableStrategy.PATTERN_PHYSICS_TABLE, false);
         tabsInDB.add(TestDataXDaMengWriter.damengJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataXDaMengWriter.damengJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
         datasource.fillTableInDB(tabsInDB);
         EasyMock.expect(datasource.createTableInDB()).andReturn(tabsInDB).times(1);
-       // EasyMock.expect(datasource.getTablesInDB()).andReturn(tabsInDB).times(1);
+        // EasyMock.expect(datasource.getTablesInDB()).andReturn(tabsInDB).times(1);
 
         EasyMock.expect(datasource.getPassword()).andReturn(password).anyTimes();
         EasyMock.expect(datasource.getUserName()).andReturn(userName).anyTimes();
@@ -98,7 +99,7 @@ public class TestDataXDaMengReader   {
         damengReader.template = DataXDaMengReader.getDftTemplate();
 
 
-        final List<SelectedTab> selectedTabs =  TestSelectedTabs.createSelectedTabs(1);
+        final List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1);
 
         damengReader.setSelectedTabs(selectedTabs);
         //校验证列和 where条件都设置的情况

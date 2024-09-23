@@ -19,18 +19,26 @@
 package com.qlangtech.tis.plugin.ds.split;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DBConfig.DBTable;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
 import com.qlangtech.tis.plugin.ds.SplitableTableInDB.SplitableDB;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
@@ -39,10 +47,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * 默认分表策略
@@ -58,8 +72,11 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String nodeDesc;
 
-    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
     public String tabPattern;
+
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String testTab;
 
     /**
      * prefixWildcardStyle 使用前缀匹配的样式，在flink-cdc表前缀通配匹配的场景中使用
@@ -145,6 +162,53 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     @TISExtension
     public static class DefatDesc extends Descriptor<SplitTableStrategy> {
 
+        @Override
+        public boolean secondVerify(IControlMsgHandler msgHandler
+                , Context context, PostFormVals postFormVals, PostFormVals parentPostFormVals) {
+            try {
+                DefaultSplitTableStrategy splitTableStrategy = postFormVals.newInstance();
+                if (StringUtils.isEmpty(splitTableStrategy.testTab)) {
+                    throw new IllegalStateException("field testTab can not empty");
+                }
+
+                DataSourceFactory dataSource = parentPostFormVals.newInstance();
+               // dataSource.refresh();
+                DBConfig dbConfig = dataSource.getDbConfig();
+                Map<String /*host*/, HostDBs> hostDBs = dbConfig.getHostDBsMapper();
+
+                Function<DBTable, Stream<String>> tabnameCreator = (tab) -> {
+
+                    TableInDB tabsInDB = dataSource.getTablesInDB();
+                    DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(
+                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()), false);
+                    Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
+
+                    List<String> physicsTabNames = targetTableNames
+                            .map((tabNames) -> Lists.newArrayList(tabNames))
+                            .orElseGet(() -> Lists.newArrayList());
+                    return physicsTabNames.stream();
+
+                };
+
+                for (Map.Entry<String /**ip*/, HostDBs /**dbs*/> entry : hostDBs.entrySet()) {
+
+                    entry.getValue().getDbStream().forEach((dbName) -> {
+                        Set<String> tbs = entry.getValue().mapPhysicsTabs(
+                                Collections.singletonMap(dbName, Collections.singletonList(new DefaultTab(splitTableStrategy.testTab)))
+                                , tabnameCreator, false);
+                        // 通过逻辑表取得在 jdbcurl-> database-> physicsTabs 下的物理表
+                        msgHandler.addActionMessage(context, "host:" + entry.getKey() + ",db:" + dbName + ",matched tabs:" + String.join(",", tbs));
+                    });
+
+                }
+
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return true;
+        }
+
         public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
             Map<String, List<String>> dbname = DBConfigParser.parseDBEnum("dbname", value);
@@ -166,6 +230,21 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
                 msgHandler.addFieldError(context, fieldName, e.getMessage());
                 return false;
             }
+
+            Matcher matcher = SplitableTableInDB.firstLogicTabNamePattern.matcher(pattern.pattern());
+            int found = 0;
+            while (matcher.find()) {
+                found++;
+            }
+            if (found < 1) {
+                msgHandler.addFieldError(context, fieldName, "正则式中没有发现识别逻辑表的组，请将代表逻辑表的部分用括号括起来");
+                return false;
+            }
+            if (found > 2) {
+                msgHandler.addFieldError(context, fieldName, "正则式中不能出现两个以上的识别组（用括号括起来的部分）");
+                return false;
+            }
+
             return true;
         }
 

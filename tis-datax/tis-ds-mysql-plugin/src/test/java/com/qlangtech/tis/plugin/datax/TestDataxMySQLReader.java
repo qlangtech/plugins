@@ -182,7 +182,7 @@ public class TestDataxMySQLReader extends BasicTest {
     }
 
     @Test
-    public void testDescGenerate(){
+    public void testDescGenerate() {
         PluginDesc.testDescGenerate(DataxMySQLReader.class, "mysql-datax-reader-descriptor.json");
     }
 
@@ -320,8 +320,8 @@ public class TestDataxMySQLReader extends BasicTest {
         MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
         mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
 
-        SplitTableStrategy.SplitableTableInDB tabsInDB
-                = new SplitTableStrategy.SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
+        SplitableTableInDB tabsInDB
+                = new SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE, false);
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
 

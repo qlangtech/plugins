@@ -23,7 +23,7 @@ import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDBs;
+
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
@@ -37,6 +37,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -99,7 +100,13 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
 
         @Override
         public Object convert(DTO dto, Field field, Object val) {
-            BiFunction process = tabColsMapper.get(dto.getTableName()).getSourceDTOColValProcess(field.name());
+            FlinkColMapper colMapper = tabColsMapper.get(dto.getTableName());
+            if (colMapper == null) {
+                throw new IllegalStateException("tableName:" + dto.getTableName()
+                        + " relevant colMapper can not be null, exist cols:"
+                        + String.join(",", tabColsMapper.keySet()));
+            }
+            BiFunction process = colMapper.getSourceDTOColValProcess(field.name());
             if (process == null) {
                 // 说明用户在选在表的列时候，没有选择该列，所以就不用处理了
                 return null;

@@ -49,12 +49,11 @@ import java.util.regex.Pattern;
 public class TISDeserializationSchema implements DebeziumDeserializationSchema<DTO> {
     private static final Pattern PATTERN_TOPIC = Pattern.compile(".+\\.(.+)\\.(.+)");
     private static final long serialVersionUID = 1L;
-    //private static final JsonConverter CONVERTER = new JsonConverter();
     private static final Logger logger = LoggerFactory.getLogger(TISDeserializationSchema.class);
 
     private final ISourceValConvert rawValConvert;
     private final Function<String, String> physicsTabName2LogicName;
-    private final Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper;
+    private final Map<String /**tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper;
 
     public TISDeserializationSchema(ISourceValConvert rawValConvert, Function<String, String> physicsTabName2LogicName
             , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {

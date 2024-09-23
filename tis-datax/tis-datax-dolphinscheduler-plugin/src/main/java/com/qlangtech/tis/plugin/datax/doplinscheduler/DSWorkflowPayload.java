@@ -23,9 +23,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ICoordinator;
+import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
@@ -117,6 +119,16 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     @Override
     protected DSWorkflowInstance createWorkflowInstance(Long spiWorkflowId, ExecutePhaseRange execRange) {
         return new DSWorkflowInstance(this.exportCfg, execRange, this.dataxProcessor.identityValue(), spiWorkflowId);
+    }
+
+    @Override
+    protected ReplicasSpec getResourceSeplicasSpec() {
+        return ReplicasSpec.createDftPowerjobServerReplicasSpec();
+    }
+
+    @Override
+    protected DataXJobWorker getSPIJobWorker() {
+        throw new UnsupportedOperationException("DolphinScheduler is get JobWorker is not support");
     }
 
     /**

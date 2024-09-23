@@ -50,7 +50,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     /**
      * 分表策略
      */
-    @FormField(ordinal = 12, validate = {Validator.require})
+    @FormField(ordinal = 1, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
 
     //https://blog.csdn.net/Shadow_Light/article/details/100749537
@@ -59,6 +59,11 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     public TableInDB createTableInDB() {
         return Objects.requireNonNull(this.splitTableStrategy, "DaMeng DataSourceFactory:" + this.identityValue() + " "
                 + "relevant prop splitTableStrategy can not be null").createTableInDB(this);
+    }
+
+    @Override
+    protected String getNodeDesc() {
+        return Objects.requireNonNull(splitTableStrategy, "splitTableStrategy can not be null").getNodeDesc();
     }
 
     @Override

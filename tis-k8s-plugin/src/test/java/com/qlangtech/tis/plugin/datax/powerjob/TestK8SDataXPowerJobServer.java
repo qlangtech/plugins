@@ -91,7 +91,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
                 = NamespacedEventCallCriteria.createResVersion(
                 "b398cf1f-b5bb-4452-8dc7-7f67bda0fd2a", "powerjob-server", resourceVersion);
 
-        ReplicasSpec replicasSpec = K8SUtils.createDftReplicasSpec();
+        ReplicasSpec replicasSpec = ReplicasSpec.createDftReplicasSpec();
         WaitReplicaControllerLaunch controllerLaunch = powerJobServer.waitPowerjobPods(image, resVersion, replicasSpec);
 
         Assert.assertTrue(controllerLaunch.getRelevantPods().size() > 0);
@@ -151,7 +151,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
 
             K8SDataXPowerJobServer powerJobServer = createPowerJobServer(portExport);
 
-            powerJobServer.setReplicasSpec(K8SUtils.createDftReplicasSpec());
+            powerJobServer.setReplicasSpec(ReplicasSpec.createDftReplicasSpec());
 
             powerJobServer.launchPowerjobServer();
         } catch (ApiException e) {
@@ -195,7 +195,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         powerJobWorker.k8sImage = TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
 
 
-        ReplicasSpec replicasSpec = K8SUtils.createDftReplicasSpec();
+        ReplicasSpec replicasSpec = ReplicasSpec.createDftReplicasSpec();
         powerJobWorker.setReplicasSpec(replicasSpec);
 
 
@@ -212,7 +212,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         };
         EmbeddedPowerjobCoreDataSource coreDataSource = new EmbeddedPowerjobCoreDataSource();
 
-        powerJobServer.setReplicasSpec(K8SUtils.createDftPowerjobServerReplicasSpec());
+        powerJobServer.setReplicasSpec(ReplicasSpec.createDftPowerjobServerReplicasSpec());
         powerJobServer.serverPortExport = portExport;// 7700;
 
         PowerJobOMS oms = new PowerJobOMS();

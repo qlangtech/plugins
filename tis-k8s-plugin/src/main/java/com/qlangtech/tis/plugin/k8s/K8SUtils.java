@@ -371,25 +371,25 @@ public class K8SUtils {
 //        throw new IllegalStateException("uid:" + uid.val + " can not find relevant replicaController");
     }
 
-    public static ReplicasSpec createDftReplicasSpec() {
-        ReplicasSpec mysqlRcSpec = new ReplicasSpec();
-        mysqlRcSpec.setReplicaCount(1);
-        mysqlRcSpec.setMemoryLimit(Specification.parse("800M"));
-        mysqlRcSpec.setMemoryRequest(Specification.parse("800M"));
-        mysqlRcSpec.setCpuRequest(Specification.parse("250m"));
-        mysqlRcSpec.setCpuLimit(Specification.parse("250m"));
-        return mysqlRcSpec;
-    }
-
-    public static ReplicasSpec createDftPowerjobServerReplicasSpec() {
-        ReplicasSpec mysqlRcSpec = new ReplicasSpec();
-        mysqlRcSpec.setReplicaCount(1);
-        mysqlRcSpec.setMemoryLimit(Specification.parse("900M"));
-        mysqlRcSpec.setMemoryRequest(Specification.parse("800M"));
-        mysqlRcSpec.setCpuRequest(Specification.parse("350m"));
-        mysqlRcSpec.setCpuLimit(Specification.parse("500m"));
-        return mysqlRcSpec;
-    }
+//    public static ReplicasSpec createDftReplicasSpec() {
+//        ReplicasSpec mysqlRcSpec = new ReplicasSpec();
+//        mysqlRcSpec.setReplicaCount(1);
+//        mysqlRcSpec.setMemoryLimit(Specification.parse("800M"));
+//        mysqlRcSpec.setMemoryRequest(Specification.parse("800M"));
+//        mysqlRcSpec.setCpuRequest(Specification.parse("250m"));
+//        mysqlRcSpec.setCpuLimit(Specification.parse("250m"));
+//        return mysqlRcSpec;
+//    }
+//
+//    public static ReplicasSpec createDftPowerjobServerReplicasSpec() {
+//        ReplicasSpec mysqlRcSpec = new ReplicasSpec();
+//        mysqlRcSpec.setReplicaCount(1);
+//        mysqlRcSpec.setMemoryLimit(Specification.parse("900M"));
+//        mysqlRcSpec.setMemoryRequest(Specification.parse("800M"));
+//        mysqlRcSpec.setCpuRequest(Specification.parse("350m"));
+//        mysqlRcSpec.setCpuLimit(Specification.parse("500m"));
+//        return mysqlRcSpec;
+//    }
 
     public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
             , K8SRCResNameWithFieldSelector targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api apiClient, NamespacedEventCallCriteria resVer)  //

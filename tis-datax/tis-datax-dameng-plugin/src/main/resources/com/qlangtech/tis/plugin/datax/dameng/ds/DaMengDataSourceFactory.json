@@ -13,5 +13,8 @@
   },
   "dbName": {
     "placeholder": "TIS"
+  },
+  "nodeDesc": {
+    "disable": true
   }
 }

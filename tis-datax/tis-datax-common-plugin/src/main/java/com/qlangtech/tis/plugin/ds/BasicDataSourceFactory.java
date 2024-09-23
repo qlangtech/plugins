@@ -72,6 +72,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
      */
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.hostWithoutPort})
     public String nodeDesc;
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public int port;
     // 数据库名称
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
@@ -82,9 +84,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
 
-
-    @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
-    public int port;
     /**
      * 数据库编码
      */

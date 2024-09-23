@@ -24,6 +24,7 @@ import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColV
 import com.alibaba.datax.common.element.PreviewRecords;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.datax.common.element.ThreadLocalRows;
+import com.alibaba.datax.common.statistics.PerfTrace;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.CoreConstant;
@@ -176,7 +177,7 @@ public class DataXRealExecutor {
      */
     public void startPipeline(Configuration readerCfg, Optional<Pair<String, List<String>>> transformer, Consumer<JobContainer> jobContainerSetter) {
         Objects.requireNonNull(readerCfg);
-
+        PerfTrace.getInstance(false, -1111, -1111, 0, false);
         Configuration allConf = IOUtils.loadResourceFromClasspath(DataxExecutor.class //
                 , "core.json", true, (input) -> {
                     Configuration cfg = Configuration.from(input);

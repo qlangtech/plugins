@@ -177,7 +177,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
      * @param feedback
      * @return
      */
-    public  PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
+    public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
             , RpcServiceReference feedback) {
         //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
@@ -427,12 +427,15 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         try {
             JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
 
-            DataXJobWorker worker = getSPIJobWorker();
-            if (worker != null) {
-                ReplicasSpec replicasSpec = worker.getReplicasSpec();
-                instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
-                        , replicasSpec.toJavaMemorySpec(Optional.of(SPIWrokerMemorySpec.dataXExecutorMemoryProportion())));
-            }
+            ReplicasSpec replicasSpec = getResourceSeplicasSpec();
+
+            // DataXJobWorker worker = getSPIJobWorker();
+            // if (worker != null) {
+            //  ReplicasSpec replicasSpec = worker.getReplicasSpec();
+            instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
+                    , Objects.requireNonNull(replicasSpec, "replicasSpec can not be null")
+                            .toJavaMemorySpec(Optional.of(SPIWrokerMemorySpec.dataXExecutorMemoryProportion())));
+            //}
 
             WorkFlowBuildHistory latestSuccessWorkflowHistory = this.commonDAOContext.getLatestSuccessWorkflowHistory(dataxProcessor.getResTarget());
 
@@ -445,6 +448,14 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected ReplicasSpec getResourceSeplicasSpec() {
+        DataXJobWorker worker = getSPIJobWorker();
+        if (worker != null) {
+            return worker.getReplicasSpec();
+        }
+        return ReplicasSpec.createDftPowerjobServerReplicasSpec();
     }
 
     protected DataXJobWorker getSPIJobWorker() {

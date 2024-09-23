@@ -84,7 +84,7 @@ public class DSTaskContext implements ITaskExecutorContext {
     @Override
     public void appendData2WfContext(String key, Object value) {
         this.dagWorkflowParams.put(key
-                , String.valueOf(Objects.requireNonNull(value, "value can not be null")));
+                , String.valueOf(Objects.requireNonNull(value, "key:" + key + " relevant value can not be null")));
     }
 
     @Override

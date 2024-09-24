@@ -148,11 +148,13 @@ public class TestLocalDataXJobSubmit extends TestCase {
         jobSubmit.setWorkingDirectory(new File("."));
         jobSubmit.setClasspath("target/classes:target/test-classes");
 
-        AtomicReference<ITISRpcService> ref = new AtomicReference<>();
-        ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
-        RpcServiceReference statusRpc = new RpcServiceReference(ref, () -> {
-        });
+//        AtomicReference<ITISRpcService> ref = new AtomicReference<>();
+//        ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
+//        RpcServiceReference statusRpc = new RpcServiceReference(ref, () -> {
+//        });
 
+        ITISCoordinator.disableRemoteServer();
+        RpcServiceReference statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
         DataXJobSubmit.IDataXJobContext dataXJobContext = EasyMock.createMock("dataXJobContext", DataXJobSubmit.IDataXJobContext.class);
 
 

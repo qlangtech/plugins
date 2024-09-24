@@ -72,8 +72,7 @@ public class DataGridWriter extends Writer {
         @Override
         public void startWrite(RecordReceiver lineReceiver) {
             ThreadLocalRows localRows = this.containerContext.getAttr(ThreadLocalRows.class);
-            //   List<Record> gridRows = Record.threadLocalRows.get();
-            // List<Column> row = null;
+
             final QueryCriteria queryCriteria = localRows.getQuery();
             Record record = null;
             int readCount = 0;

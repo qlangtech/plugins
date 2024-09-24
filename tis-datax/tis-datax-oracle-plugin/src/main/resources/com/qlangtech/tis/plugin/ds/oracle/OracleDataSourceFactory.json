@@ -1,13 +1,13 @@
 {
   "connEntity": {
-    "label": "连接方式"
+    "label": "连接方式",
+    "dftVal": "SID"
   },
   "dbName": {
     "label": "SID",
     "dftVal": "xe",
     "disable": true
   },
-
   "asServiceName": {
     "label": "以服务名",
     "dftVal": true,

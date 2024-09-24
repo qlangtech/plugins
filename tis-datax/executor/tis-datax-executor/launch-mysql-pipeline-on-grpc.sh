@@ -22,4 +22,4 @@ java -Ddata.dir=/opt/data/tis -Denv_props=true -Dlog.dir=/opt/logs/tis -Druntime
   -Dlogback.configurationFile=logback-datax.xml -DexecTimeStamp=0 \
   -classpath ./lib/*:./tis-datax-executor.jar:./conf/ \
   -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=50002 \
-  com.qlangtech.tis.plugin.datax.DataXPipelinePreviewMain mysql 51509
+  com.qlangtech.tis.plugin.datax.DataXPipelinePreviewMain dameng_mysql 51509

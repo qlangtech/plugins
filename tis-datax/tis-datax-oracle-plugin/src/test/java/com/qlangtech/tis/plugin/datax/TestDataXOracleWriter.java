@@ -50,6 +50,13 @@ import java.util.Optional;
  * @create: 2021-05-08 11:35
  **/
 public class TestDataXOracleWriter {
+
+    @Test
+    public void testSub() {
+        String sub = "INSERT INTO \\\"orderdetail\\\" (\\\"order_id\\\",\\\"global_code\\\",\\\"simple_code\\\",\\\"seat_code\\\",\\\"code\\\",\\\"curr_date\\\",\\\"totalpay_id\\\",\\\"seat_id\\\",\\\"people_count\\\",\\\"open_time\\\",\\\"status\\\",\\\"memo\\\",\\\"inner_code\\\",\\\"menutime_id\\\",\\\"worker_id\\\",\\\"end_time\\\",\\\"feeplan_id\\\",\\\"op_user_id\\\",\\\"order_from\\\",\\\"order_kind\\\",\\\"area_id\\\",\\\"name\\\",\\\"mobile\\\",\\\"tel\\\",\\\"is_autocommit\\\",\\\"send_time\\\",\\\"address\\\",\\\"paymode\\\",\\\"outfee\\\",\\\"sender_id\\\",\\\"customerregister_id\\\",\\\"waitingorder_id\\\",\\\"send_status\\\",\\\"audit_status\\\",\\\"is_hide\\\",\\\"entity_id\\\",\\\"is_valid\\\",\\\"create_time\\\",\\\"op_time\\\",\\\"last_ver\\\",\\\"load_time\\\",\\\"modify_time\\\",\\\"is_limittime\\\",\\\"scan_url\\\",\\\"seat_mark\\\",\\\"reservetime_id\\\",\\\"is_wait\\\",\\\"is_print\\\",\\\"book_id\\\",\\\"reserve_id\\\",\\\"orign_id\\\",\\\"reserve_status\\\",\\\"ext\\\",\\\"new_added_col\\\") VALUES(:1 ,:2 ,:3 ,:4 ,:5 ,:6 ,:7 ,:8 ,:9 ,:10 ,:11 ,:12 ,:13 ,:14 ,:15 ,:16 ,:17 ,:18 ,:19 ,:20 ,:21 ,:22 ,:23 ,:24 ,:25 ,:26 ,:27 ,:28 ,:29 ,:30 ,:31 ,:32 ,:33 ,:34 ,:35 ,:36 ,:37 ,:38 ,:39 ,:40 ,:41 ,:42 ,:43 ,:44 ,:45 ,:46 ,:47 ,:48 ,:49 ,:50 ,:51 ,:52 ,:53 ,:54 ), OriginalSql = INSERT INTO \\\"orderdetail\\\" (\\\"order_id\\\",\\\"global_code\\\",\\\"simple_code\\\",\\\"seat_code\\\",\\\"code\\\",\\\"curr_date\\\",\\\"totalpay_id\\\",\\\"seat_id\\\",\\\"people_count\\\",\\\"open_time\\\",\\\"status\\\",\\\"memo\\\",\\\"inner_code\\\",\\\"menutime_id\\\",\\\"worker_id\\\",\\\"end_time\\\",\\\"feeplan_id\\\",\\\"op_user_id\\\",\\\"order_from\\\",\\\"order_kind\\\",\\\"area_id\\\",\\\"name\\\",\\\"mobile\\\",\\\"tel\\\",\\\"is_autocommit\\\",\\\"send_time\\\",\\\"address\\\",\\\"paymode\\\",\\\"outfee\\\",\\\"sender_id\\\",\\\"customerregister_id\\\",\\\"waitingorder_id\\\",\\\"send_status\\\",\\\"audit_status\\\",\\\"is_hide\\\",\\\"entity_id\\\",\\\"is_valid\\\",\\\"create_time\\\",\\\"op_time\\\",\\\"last_ver\\\",\\\"load_time\\\",\\\"modify_time\\\",\\\"is_limittime\\\",\\\"scan_url\\\",\\\"seat_mark\\\",\\\"reservetime_id\\\",\\\"is_wait\\\",\\\"is_print\\\",\\\"book_id\\\",\\\"reserve_id\\\",\\\"orign_id\\\",\\\"reserve_status\\\",\\\"ext\\\",\\\"new_added_col\\\") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)".substring(889);
+        System.out.println(sub);
+    }
+
     @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXOracleWriter.getDftTemplate();
@@ -136,19 +143,19 @@ public class TestDataXOracleWriter {
         HdfsColMeta cmeta = null;
         // String colName, Boolean nullable, Boolean pk, DataType dataType
         cmeta = new HdfsColMeta("customerregister_id", false
-                , true,  DataType.createVarChar( 150));
+                , true, DataType.createVarChar(150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("waitingorder_id", false, true
-                ,  DataType.createVarChar( 150));
+                , DataType.createVarChar(150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("kind"
-                , true, false,  DataType.getType(JDBCTypes.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("create_time"
-                , true, false,  DataType.getType(JDBCTypes.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("last_ver"
@@ -156,7 +163,7 @@ public class TestDataXOracleWriter {
         colMetas.add(cmeta);
 
         IDataxProcessor.TableMap tabMap = IDataxProcessor.TableMap.create(targetTableName, colMetas);
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap);
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap, Optional.empty());
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");
@@ -178,7 +185,7 @@ public class TestDataXOracleWriter {
             OracleDSFactoryContainer.oracleDS.getDbConfig().vistDbURL(false, (a, b, url) -> {
                 jdbcUrl[0] = url;
             });
-            DataXCfgJson wjson = DataXCfgJson.path(TestDataXOracleWriter.class,"oracle_writer_real_dump.json");
+            DataXCfgJson wjson = DataXCfgJson.path(TestDataXOracleWriter.class, "oracle_writer_real_dump.json");
             wjson.addCfgSetter((cfg) -> {
                 cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
                 return cfg;

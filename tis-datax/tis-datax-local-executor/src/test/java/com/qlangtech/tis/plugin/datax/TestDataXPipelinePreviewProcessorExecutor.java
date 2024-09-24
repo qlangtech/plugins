@@ -18,10 +18,14 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import junit.framework.TestCase;
 import org.junit.Assert;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,5 +48,31 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
         queryCriteria.setPageSize(pageSize);
         PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "base", queryCriteria);
         Assert.assertNotNull(previewRowsData);
+    }
+
+    public void testPreviewRowsDataForDameng() {
+
+        final String dataXName = "dameng_mysql";
+
+        DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(51509);
+        PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName, 999999);
+        previewExecutor.setCommitTracker(expireTracker);
+        //String identityVal = null;
+        boolean next = true;
+      //  boolean needHeader = true;
+        int pageSize = 20;
+        // QueryCriteria queryCriteria = new QueryCriteria();
+
+        JSONObject jsonPostContent = JSONObject.parseObject("{\"nextPage\":true,\"offsetPointer\":[{\"val\":\"000012184fb5165f014fb51722460038\",\"numeric\":false,\"key\":\"pay_id\"}]}");
+        QueryCriteria queryCriteria = QueryCriteria.createCriteria(pageSize, jsonPostContent);
+
+//        List<OffsetColVal> pagerOffsetCursor = OffsetColVal.deserializePreviewCursor(jsonPostContent.get);
+//        queryCriteria.setPagerOffsetCursor(pagerOffsetCursor);
+//        queryCriteria.setNextPakge(next);
+//        queryCriteria.setPageSize(pageSize);
+        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "TIS.payinfo", queryCriteria);
+        Assert.assertNotNull(previewRowsData);
+
+
     }
 }

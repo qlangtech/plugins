@@ -73,7 +73,7 @@ import java.util.stream.Collectors;
 public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory implements IFacadeDataSource {
 
     protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
-
+    protected static final String JDBC_PARAM_AUTO_RECONNECT = "autoReconnect=true";
     /**
      * 分表策略
      */
@@ -236,7 +236,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         try {
             StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName +
-                    "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
+                    "?" + JDBC_PARAM_AUTO_RECONNECT + "&useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }

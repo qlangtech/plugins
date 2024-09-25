@@ -22,14 +22,15 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
@@ -41,7 +42,10 @@ import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -99,20 +103,67 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
-    protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
+    protected static class DorisColWrapper extends ColWrapper {
+        protected DorisType dorisType;
+        private final BasicCreateTableSqlBuilder sqlBuilder;
+
+        public DorisColWrapper(IColMetaGetter meta, BasicCreateTableSqlBuilder sqlBuilder) {
+            super(meta);
+            this.sqlBuilder = sqlBuilder;
+            this.dorisType = convertType(meta);
+        }
+
+        @Override
+        public final String getMapperType() {
+            return dorisType.token;
+        }
+
+        @Override
+        protected final void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+            if (sqlBuilder.isPK(this.meta.getName())) {
+                ddlScript.append(" NOT NULL");
+            }
+        }
+
+        protected DorisType convertType(IColMetaGetter col) {
+            DataType type = col.getType();
+            return type.accept(Objects.requireNonNull(sqlBuilder).columnTokenRecognise);
+        }
+    }
+
+    protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder<DorisColWrapper> {
         private final ISelectedTab dorisTab;
-        private final List<String> primaryKeys;
+        private final List<DorisColWrapper> primaryKeys;
         private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
+        private static final Comparator<DorisColWrapper> pkSortCompare = new Comparator<DorisColWrapper>() {
+            @Override
+            public int compare(DorisColWrapper col1, DorisColWrapper col2) {
+                DorisType type1 = col1.dorisType;
+                DorisType type2 = col2.dorisType;
+                return (type1.dateType ? 1 : 0) - (type2.dateType ? 1 : 0);
+            }
+        };
 
         public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper
                 , DataSourceMeta dsMeta
                 , DataType.TypeVisitor<DorisType> columnTokenRecognise
                 , Optional<RecordTransformerRules> transformers) {
             super(tableMapper, dsMeta, transformers);
+            this.columnTokenRecognise = columnTokenRecognise;
             // (DorisSelectedTab)
             this.dorisTab = tableMapper.getSourceTab();
-            this.primaryKeys = this.dorisTab.getPrimaryKeys();
-            this.columnTokenRecognise = columnTokenRecognise;
+            this.primaryKeys = Lists.newArrayList();
+            for (String pk : this.dorisTab.getPrimaryKeys()) {
+                for (IColMetaGetter c : this.getCols()) {
+                    if (pk.equalsIgnoreCase(c.getName())) {
+                        // result.add(createColWrapper(c));
+                        this.primaryKeys.add(createColWrapper(c));
+                    }
+                }
+            }
+            this.primaryKeys.sort(pkSortCompare);
+
+
         }
 
         @Override
@@ -120,22 +171,22 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         }
 
+        public boolean isPK(String colName) {
+            return this.pks.contains(colName);
+        }
+
         protected abstract String getUniqueKeyToken();
 
-
         @Override
-        protected List<ColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
+        protected List<DorisColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
+            //return super.preProcessCols(pks, cols);
+
             // 将主键排在最前面
-            List<ColWrapper> result = Lists.newArrayList();
-            for (String pk : primaryKeys) {
-                for (IColMetaGetter c : cols) {
-                    if (pk.equalsIgnoreCase(c.getName())) {
-                        result.add(createColWrapper(c));
-                    }
-                }
-            }
-//                    Lists.newArrayList(cols.stream().filter((c) -> primaryKeys.contains(c.getName())).map((c) -> createColWrapper(c)).collect(Collectors.toList()));
-            cols.stream().filter((c) -> !primaryKeys.contains(c.getName())).forEach((c) -> {
+            List<DorisColWrapper> result = Lists.newArrayList();
+            result.addAll(primaryKeys);
+
+
+            cols.stream().filter((c) -> !this.pks.contains(c.getName())).forEach((c) -> {
                 result.add(createColWrapper(c));
             });
             return result;
@@ -143,13 +194,15 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         @Override
         protected void appendTabMeta(List<String> pks) {
+
+
             script.append(" ENGINE=olap").append("\n");
             if (pks.size() > 0) {
-                script.append(getUniqueKeyToken() + "(").append(pks.stream().map((pk) -> wrapWithEscape(pk)).collect(Collectors.joining(","))).append(")\n");
+                script.append(getUniqueKeyToken() + "(").append(primaryKeys.stream().map((pk) -> wrapWithEscape(pk.getName())).collect(Collectors.joining(","))).append(")\n");
             }
             script.append("DISTRIBUTED BY HASH(");
             if (pks.size() > 0) {
-                script.append(pks.stream().map((pk) -> wrapWithEscape(pk)).collect(Collectors.joining(",")));
+                script.append(primaryKeys.stream().map((pk) -> wrapWithEscape(pk.getName())).collect(Collectors.joining(",")));
             } else {
                 List<IColMetaGetter> cols = this.getCols();
                 Optional<IColMetaGetter> firstCol = cols.stream().findFirst();
@@ -172,40 +225,27 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        protected ColWrapper createColWrapper(IColMetaGetter c) {
-            return new ColWrapper(c) {
-                @Override
-                public String getMapperType() {
-                    return convertType(this.meta).token;
-                }
-
-                @Override
-                protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-//                    if (this.meta.isPk()) {
-//                        ddlScript.append(" NOT NULL");
-//                    }
-
-                    if (primaryKeys.contains(this.meta.getName())) {
-                        ddlScript.append(" NOT NULL");
-                    }
-                }
-            };
+        protected DorisColWrapper createColWrapper(IColMetaGetter c) {
+            return new DorisColWrapper(c, this);
         }
 
-        protected DorisType convertType(IColMetaGetter col) {
-            DataType type = col.getType();
-            return type.accept(columnTokenRecognise);
-        }
+
     }
 
 
     public static class DorisType implements Serializable {
         public final DataType type;
         final String token;
+        public final boolean dateType;
 
         public DorisType(DataType type, String token) {
+            this(type, false, token);
+        }
+
+        public DorisType(DataType type, boolean dateType, String token) {
             this.type = type;
             this.token = token;
+            this.dateType = dateType;
         }
     }
 

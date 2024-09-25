@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
@@ -101,7 +102,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 }
             };
             CreateTableSqlBuilder flinkTableDdlBuilder
-                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta, Optional.empty()) {
+                    = new CreateTableSqlBuilder<ColWrapper>(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta, Optional.empty()) {
                 @Override
                 protected ColWrapper createColWrapper(IColMetaGetter c) {
                     return new ColWrapper(c) {

@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
@@ -203,7 +204,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
+                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
 
             @Override
             protected CreateTableName getCreateTableName() {

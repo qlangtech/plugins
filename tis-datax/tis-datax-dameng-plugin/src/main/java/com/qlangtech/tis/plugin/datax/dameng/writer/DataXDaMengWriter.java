@@ -7,6 +7,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
@@ -151,7 +152,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
 
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (CollectionUtils.isEmpty(pks)) {

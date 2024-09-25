@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -197,7 +198,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
         final AtomicInteger timestampCount = new AtomicInteger();
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper,
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper,
                 this.getDataSourceFactory(), transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {

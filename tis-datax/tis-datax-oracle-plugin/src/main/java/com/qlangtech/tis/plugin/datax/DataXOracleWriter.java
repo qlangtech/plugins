@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -76,7 +77,8 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
 //        }
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
+        final CreateTableSqlBuilder createTableSqlBuilder
+                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (pks.isEmpty()) {

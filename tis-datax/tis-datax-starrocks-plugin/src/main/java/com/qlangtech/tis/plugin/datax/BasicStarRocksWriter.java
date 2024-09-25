@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.StarRocksWriterContext;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -104,7 +105,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
     protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
-    protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
+    protected static abstract class BasicCreateTableSqlBuilder<T extends ColWrapper> extends CreateTableSqlBuilder<T> {
         public BasicCreateTableSqlBuilder(
                 IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta, Optional<RecordTransformerRules> transformers) {
             super(tableMapper, dsMeta, transformers);
@@ -121,19 +122,19 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
+        protected List<T> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
             // 将主键排在最前面
 
-            List<ColWrapper> result = Lists.newArrayList();
+            List<T> result = Lists.newArrayList();
             for (String pk : pks) {
                 for (IColMetaGetter c : cols) {
                     if (pk.equalsIgnoreCase(c.getName())) {
-                        result.add(createColWrapper(c));
+                        result.add((T) createColWrapper(c));
                     }
                 }
             }
             cols.stream().filter((c) -> !pks.contains(c.getName())).forEach((c) -> {
-                result.add(createColWrapper(c));
+                result.add((T) createColWrapper(c));
             });
             return result;
         }
@@ -166,8 +167,8 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         }
 
         @Override
-        protected ColWrapper createColWrapper(IColMetaGetter c) {
-            return new ColWrapper(c) {
+        protected T createColWrapper(IColMetaGetter c) {
+            return (T) new ColWrapper(c) {
                 @Override
                 public String getMapperType() {
                     return convertType(this.meta).token;

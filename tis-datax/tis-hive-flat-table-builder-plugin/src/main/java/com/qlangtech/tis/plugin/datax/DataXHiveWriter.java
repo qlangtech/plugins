@@ -57,6 +57,7 @@ import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -179,7 +180,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
         final ITISFileSystem fileSystem = this.getFs().getFileSystem();
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
+                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
 
             @Override
             protected CreateTableName getCreateTableName() {

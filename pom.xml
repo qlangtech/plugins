@@ -296,6 +296,10 @@
                 <version>${hive.version}</version>
                 <exclusions>
                     <exclusion>
+                        <artifactId>jdk.tools</artifactId>
+                        <groupId>jdk.tools</groupId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>tomcat</groupId>
                         <artifactId>jasper-compiler</artifactId>
                     </exclusion>
@@ -727,10 +731,7 @@
                     <artifactId>maven-clean-plugin</artifactId>
                     <version>3.1.0</version>
                 </plugin>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                </plugin>
+
                 <plugin>
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>3.1.2</version>
@@ -1064,15 +1065,7 @@
                 </executions>
             </plugin>
 -->
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.${java.level}</source>
-                    <target>1.${java.level}</target>
-                    <testSource>1.${java.level.test}</testSource>
-                    <testTarget>1.${java.level.test}</testTarget>
-                </configuration>
-            </plugin>
+
             <!--
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

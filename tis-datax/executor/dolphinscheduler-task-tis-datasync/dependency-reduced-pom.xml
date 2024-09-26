@@ -146,7 +146,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <tis.version>${project.version}</tis.version>
     <dolphinscheduler.version>3.2.2</dolphinscheduler.version>
+    <tis.version>${project.version}</tis.version>
   </properties>
 </project>

@@ -46,10 +46,10 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
+import io.kubernetes.client.openapi.models.RbacV1Subject;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1RoleBinding;
 import io.kubernetes.client.openapi.models.V1RoleRef;
-import io.kubernetes.client.openapi.models.V1Subject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
@@ -175,7 +175,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
                 roleRef.kind("ClusterRole");
                 roleBinding.setRoleRef(roleRef);
 
-                V1Subject subject = new V1Subject();
+                RbacV1Subject subject = new RbacV1Subject();
                 subject.setName(this.svcAccount);
                 subject.setNamespace(k8s.getNamespace());
                 // supported values: \"ServiceAccount\", \"User\", \"Group\"",

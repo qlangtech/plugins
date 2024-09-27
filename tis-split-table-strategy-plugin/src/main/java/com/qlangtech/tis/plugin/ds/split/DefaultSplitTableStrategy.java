@@ -189,7 +189,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
                     return physicsTabNames.stream();
 
                 };
-
+                msgHandler.addActionMessage(context,"识别到的逻辑表与物理表映射，如下：");
                 for (Map.Entry<String /**ip*/, HostDBs /**dbs*/> entry : hostDBs.entrySet()) {
 
                     entry.getValue().getDbStream().forEach((dbName) -> {

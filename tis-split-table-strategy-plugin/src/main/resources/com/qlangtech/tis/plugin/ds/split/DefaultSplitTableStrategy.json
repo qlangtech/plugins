@@ -8,6 +8,11 @@
     "rows": 3,
     "placeholder": "127.0.0.1[00-31],127.0.0.2[32-63],127.0.0.3,127.0.0.4[9],baisui.com[0-9]"
   },
+  "testTab": {
+    "label": "测试表",
+    "placeholder": "orderdetail",
+    "help": "提交表单用户测试，所填正则式是否能正确识别物理分表。输入需要识别的逻辑表名，点击‘校验’按钮会进行自动识别。"
+  },
   "prefixWildcardStyle": {
     "label": "增量前缀匹配",
     "dftVal": false,

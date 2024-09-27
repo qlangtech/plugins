@@ -24,6 +24,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -44,6 +45,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -280,8 +282,39 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
 
         @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return validateSourceAndTargetEndIsSame(msgHandler, context, postFormVals.newInstance());
+        }
+
+        /**
+         * 校验源端和目标端不能为同一个相同的数据源，犯这样错误的同学太不应该了
+         *
+         * @param msgHandler
+         * @param context
+         * @param targetDataxWriter
+         * @return
+         */
+        private boolean validateSourceAndTargetEndIsSame(IControlMsgHandler msgHandler, Context context, BasicDataXRdbmsWriter targetDataxWriter) {
+            IDataxProcessor dataXProcessor = DataxProcessor.load((IPluginContext) msgHandler, msgHandler.getCollectionName());
+            IDataxReader dataXRreader = dataXProcessor.getReader((IPluginContext) msgHandler);
+
+            if (dataXRreader instanceof IDataSourceFactoryGetter) {
+                if (StringUtils.equals(targetDataxWriter.dbName, ((IDataSourceFactoryGetter) dataXRreader).getDataSourceFactory().identityValue())) {
+                    msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "源端和目标端不能相同，这非常危险！回头是岸啊");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals form) {
+
             BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter) form.newInstance();
+            if (!validateSourceAndTargetEndIsSame(msgHandler, context, dataxWriter)) {
+                return false;
+            }
+
 
             return validatePostForm(msgHandler, context, dataxWriter);
         }

@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -71,13 +72,13 @@ public class JoinHiveTask extends HiveTask {
 
 
     @Override
-    protected void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException {
+    protected void executeSql(String sql, JDBCConnection conn) throws SQLException {
         HiveDBUtils.execute(conn, sql, joinTaskStatus);
     }
 
     @Override
     protected List<String> getHistoryPts(
-            DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
+            DataSourceMeta mrEngine, JDBCConnection conn, EntityName table) throws Exception {
         return HiveRemoveHistoryDataTask.getHistoryPts(mrEngine, conn, table);
     }
 
@@ -92,7 +93,7 @@ public class JoinHiveTask extends HiveTask {
     @Override
     protected void initializeTable(DataSourceMeta ds
             , ColsParser insertParser
-            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+            , JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
 
         final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable);
         if (fileSystem == null) {
@@ -123,7 +124,7 @@ public class JoinHiveTask extends HiveTask {
 
 
     public static void cleanHistoryTable(ITISFileSystem fileSystem, IPath parentPath
-            , DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws IOException {
+            , DataSourceMeta mrEngine, JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws IOException {
         // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
         //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
         // 清理hive数据
@@ -143,7 +144,7 @@ public class JoinHiveTask extends HiveTask {
      * 创建hive表
      */
     public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat
-            , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, DataSourceMeta.JDBCConnection conn) {
+            , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, JDBCConnection conn) {
         try {
             HiveTableBuilder tableBuilder = new HiveTableBuilder("0", fsFormat);
             tableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, dumpTable, cols, (hiveSQl) -> {

@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,7 @@ public class MariaDBDataSourceFactory extends MySQLDataSourceFactory {
     private transient org.mariadb.jdbc.Driver driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new org.mariadb.jdbc.Driver();
         }

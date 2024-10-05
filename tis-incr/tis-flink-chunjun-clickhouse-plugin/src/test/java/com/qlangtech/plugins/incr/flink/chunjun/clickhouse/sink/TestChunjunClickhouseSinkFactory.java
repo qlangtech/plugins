@@ -276,7 +276,7 @@ public class TestChunjunClickhouseSinkFactory
             });
 
             try {
-                try (DataSourceMeta.JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0], false)) {
+                try (JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0], false)) {
                     Statement statement = conn.createStatement();
                     //+ " where id='" + colIdVal + "'"
                     ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName);

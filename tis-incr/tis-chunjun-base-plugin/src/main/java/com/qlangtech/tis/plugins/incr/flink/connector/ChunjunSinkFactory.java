@@ -72,6 +72,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
@@ -508,7 +509,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
                 JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
 
-                try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
+                try (JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
                     routputFormat.dbConn = conn.getConnection();
                     routputFormat.initColumnList();
                 } catch (SQLException e) {

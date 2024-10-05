@@ -107,10 +107,6 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         // CountDownLatch countDown = new CountDownLatch(1);
 
         this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
-
-//        if (!countDown.await(60, TimeUnit.SECONDS)) {
-// throw new IllegalStateException("";
-//        }
         return executeFlinkJob(dataxName, env);
     }
 

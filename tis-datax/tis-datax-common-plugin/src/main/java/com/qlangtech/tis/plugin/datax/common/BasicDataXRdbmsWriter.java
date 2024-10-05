@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -162,7 +163,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
-            try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
+            try (JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
                 process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
             }
         }
@@ -178,7 +179,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @return tableExist 表是否存在
      */
     public static boolean process(String dataXName, IDataxProcessor processor
-            , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, DataSourceMeta.JDBCConnection jdbcConn
+            , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, JDBCConnection jdbcConn
             , String tableName) {
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalArgumentException("param dataXName can not be null");

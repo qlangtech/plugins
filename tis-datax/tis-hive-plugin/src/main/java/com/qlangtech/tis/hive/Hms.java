@@ -28,6 +28,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.jdbc.HiveDriver;
@@ -50,13 +51,13 @@ public class Hms implements Describable<Hms> {
     @FormField(ordinal = 5, validate = {Validator.require})
     public UserToken userToken;
 
-    public static DataSourceMeta.JDBCConnection createConnection(String jdbcUrl, UserToken userToken) throws Exception {
+    public static JDBCConnection createConnection(String jdbcUrl, UserToken userToken) throws Exception {
         HiveDriver hiveDriver = new HiveDriver();
         Properties props = new Properties();
         StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);
-        return userToken.accept(new IUserTokenVisitor<DataSourceMeta.JDBCConnection>() {
+        return userToken.accept(new IUserTokenVisitor<JDBCConnection>() {
             @Override
-            public DataSourceMeta.JDBCConnection visit(IUserNamePasswordUserToken ut) throws Exception {
+            public JDBCConnection visit(IUserNamePasswordUserToken ut) throws Exception {
                 props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
                 props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
                 UserGroupInformation.setConfiguration(new HiveConf());
@@ -64,13 +65,13 @@ public class Hms implements Describable<Hms> {
             }
 
             @Override
-            public DataSourceMeta.JDBCConnection visit(IOffUserToken token) throws Exception {
+            public JDBCConnection visit(IOffUserToken token) throws Exception {
                 UserGroupInformation.setConfiguration(new HiveConf());
                 return createConnection(hiveDriver, props, jdbcUrlBuffer);
             }
 
             @Override
-            public DataSourceMeta.JDBCConnection visit(IKerberosUserToken token) throws Exception {
+            public JDBCConnection visit(IKerberosUserToken token) throws Exception {
                 IKerberos kerberosCfg = token.getKerberosCfg();
                 jdbcUrlBuffer.append(";principal=")
                         .append(kerberosCfg.getPrincipal());
@@ -90,14 +91,14 @@ public class Hms implements Describable<Hms> {
         });
     }
 
-    private static DataSourceMeta.JDBCConnection createConnection(
+    private static JDBCConnection createConnection(
             HiveDriver hiveDriver, Properties props, StringBuffer jdbcUrlBuffer) throws SQLException {
         String jdbcUrl = jdbcUrlBuffer.toString();
-        return new DataSourceMeta.JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
+        return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
     }
 
 
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, String dbName, boolean usingPool) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, String dbName, boolean usingPool) throws SQLException {
         final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());

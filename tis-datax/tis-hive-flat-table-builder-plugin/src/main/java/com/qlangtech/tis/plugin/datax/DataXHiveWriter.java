@@ -65,6 +65,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -137,12 +138,12 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     public ExecuteResult startTask(ITableBuildTask dumpTask) {
 
         try {
-            try (DataSourceMeta.JDBCConnection conn = getConnection()) {
+            try (JDBCConnection conn = getConnection()) {
                 HiveDBUtils.executeNoLog(conn, "SET hive.exec.dynamic.partition = true");
                 HiveDBUtils.executeNoLog(conn, "SET hive.exec.dynamic.partition.mode = nonstrict");
                 return dumpTask.process(new ITaskContext() {
                     @Override
-                    public DataSourceMeta.JDBCConnection getObj() {
+                    public JDBCConnection getObj() {
                         return conn;
                     }
                 });
@@ -231,7 +232,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "DataXHiveWriter-tpl.json");
     }
 
-    public DataSourceMeta.JDBCConnection getConnection() {
+    public JDBCConnection getConnection() {
         Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
@@ -398,7 +399,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
             if (!execContext.isDryRun()) {
                 Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);
                 Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
-                try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
+                try (JDBCConnection hiveConn = this.getConnection()) {
                     final Path dumpParentPath = tabDumpParentPath;
                     BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
                             , Collections.singletonMap(dumpTable, () -> {

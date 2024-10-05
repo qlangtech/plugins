@@ -18,7 +18,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.IDBAuthorizeTokenGetter;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableInDB;

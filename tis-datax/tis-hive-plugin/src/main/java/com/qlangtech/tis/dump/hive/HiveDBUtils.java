@@ -28,6 +28,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStat
 import com.qlangtech.tis.hive.Hms;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DelegatingStatement;
@@ -203,14 +204,14 @@ public class HiveDBUtils {
         return hiveDatasource;
     }
 
-    public DataSourceMeta.JDBCConnection createConnection() {
+    public JDBCConnection createConnection() {
         return createConnection(0);
     }
 
-    public DataSourceMeta.JDBCConnection createConnection(int retry) {
-        DataSourceMeta.JDBCConnection conn = null;
+    public JDBCConnection createConnection(int retry) {
+        JDBCConnection conn = null;
         try {
-            conn = new DataSourceMeta.JDBCConnection(hiveDatasource.getConnection(), hiveJdbcUrl);
+            conn = new JDBCConnection(hiveDatasource.getConnection(), hiveJdbcUrl);
             executeNoLog(conn, "set hive.exec.dynamic.partition.mode=nonstrict");
             return conn;
         } catch (Exception e) {
@@ -233,22 +234,22 @@ public class HiveDBUtils {
         }
     }
 
-    public void close(DataSourceMeta.JDBCConnection conn) {
+    public void close(JDBCConnection conn) {
         try {
             conn.close();
         } catch (Throwable e) {
         }
     }
 
-    public static boolean execute(DataSourceMeta.JDBCConnection conn, String sql, IJoinTaskStatus joinTaskStatus) throws SQLException {
+    public static boolean execute(JDBCConnection conn, String sql, IJoinTaskStatus joinTaskStatus) throws SQLException {
         return execute(conn, sql, true, /* listenLog */          joinTaskStatus);
     }
 
-    public static boolean execute(DataSourceMeta.JDBCConnection conn, String sql) throws SQLException {
+    public static boolean execute(JDBCConnection conn, String sql) throws SQLException {
         return execute(conn, sql, new JoinTaskStatus("dump"));
     }
 
-    public static boolean executeNoLog(DataSourceMeta.JDBCConnection conn, String sql) throws SQLException {
+    public static boolean executeNoLog(JDBCConnection conn, String sql) throws SQLException {
         return execute(conn, sql, false, /* listenLog */
                 new JoinTaskStatus("dump"));
     }
@@ -260,7 +261,7 @@ public class HiveDBUtils {
      * @return
      * @throws Exception
      */
-    private static boolean execute(DataSourceMeta.JDBCConnection conn, String sql, boolean listenLog, IJoinTaskStatus joinTaskStatus) throws SQLException {
+    private static boolean execute(JDBCConnection conn, String sql, boolean listenLog, IJoinTaskStatus joinTaskStatus) throws SQLException {
         synchronized (HiveDBUtils.class) {
             try (Statement stmt = conn.getConnection().createStatement()) {
                 // Future<?> f = null;// exec.submit(createLogRunnable(stmt));
@@ -368,7 +369,7 @@ public class HiveDBUtils {
 
         HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200", "tis");
 
-        DataSourceMeta.JDBCConnection con = dbUtils.createConnection();
+        JDBCConnection con = dbUtils.createConnection();
 
         // // Connection con = DriverManager.getConnection(
         // // "jdbc:hive://10.1.6.211:10000/tis", "", "");

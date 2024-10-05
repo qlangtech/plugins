@@ -142,7 +142,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 
         String colName = null;
         dsFactory = getDorisSourceFactory(feServiceHost, jdbcPort, loadPort);
-        try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(
+        try (JDBCConnection conn = dsFactory.getConnection(
                 dsFactory.buidJdbcUrl(null, feServiceHost, null), false)) {
 
             try (Statement statement = conn.createStatement()) {

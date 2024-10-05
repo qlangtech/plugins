@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -141,7 +142,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 //    }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
 
         try {
             Class.forName(JDBC_DRIVER);

@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -124,7 +125,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {

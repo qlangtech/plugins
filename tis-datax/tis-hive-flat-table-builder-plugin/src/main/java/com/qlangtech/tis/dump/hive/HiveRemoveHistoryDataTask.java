@@ -25,6 +25,7 @@ import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ public class HiveRemoveHistoryDataTask {
      * @param hiveConnection
      * @throws Exception
      */
-    public void deleteHdfsHistoryFile(EntityName dumpTable, DataSourceMeta.JDBCConnection hiveConnection) {
+    public void deleteHdfsHistoryFile(EntityName dumpTable, JDBCConnection hiveConnection) {
         try {
             logger.info("start deleteHdfsHistoryFile data[{}] files", dumpTable);
             this.fileSystem.deleteHistoryFile(dumpTable);
@@ -96,7 +97,7 @@ public class HiveRemoveHistoryDataTask {
      * @param hiveConnection
      * @throws Exception
      */
-    public void deleteHdfsHistoryFile(EntityName dumpTable, DataSourceMeta.JDBCConnection hiveConnection, String timestamp) {
+    public void deleteHdfsHistoryFile(EntityName dumpTable, JDBCConnection hiveConnection, String timestamp) {
         try {
             logger.info("start delete history data{} files", dumpTable);
 //            this.deleteMetadata(dumpTable, timestamp);
@@ -218,11 +219,11 @@ public class HiveRemoveHistoryDataTask {
 //    }
 
 
-    public void dropHistoryHiveTable(EntityName dumpTable, DataSourceMeta.JDBCConnection conn) {
+    public void dropHistoryHiveTable(EntityName dumpTable, JDBCConnection conn) {
         this.dropHistoryHiveTable(dumpTable, conn, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 
-    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(EntityName dumpTable, DataSourceMeta.JDBCConnection conn, Integer partitionRetainNum) {
+    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(EntityName dumpTable, JDBCConnection conn, Integer partitionRetainNum) {
         return this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, partitionRetainNum);
     }
 
@@ -230,7 +231,7 @@ public class HiveRemoveHistoryDataTask {
      * 删除hive中的历史表
      */
     public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(
-            EntityName dumpTable, DataSourceMeta.JDBCConnection conn, PartitionFilter filter, Integer maxPartitionSave) {
+            EntityName dumpTable, JDBCConnection conn, PartitionFilter filter, Integer maxPartitionSave) {
         if (maxPartitionSave < 1) {
             throw new IllegalArgumentException("param maxPartitionSave can not small than 1");
         }
@@ -279,11 +280,11 @@ public class HiveRemoveHistoryDataTask {
         return table.getFullName((this.ds.getEscapeChar()));
     }
 
-    public static List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, final EntityName table) throws Exception {
+    public static List<String> getHistoryPts(DataSourceMeta mrEngine, JDBCConnection conn, final EntityName table) throws Exception {
         return getHistoryPts(mrEngine, conn, (ps) -> true, table);
     }
 
-    private static List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, PartitionFilter filter, final EntityName table) throws Exception {
+    private static List<String> getHistoryPts(DataSourceMeta mrEngine, JDBCConnection conn, PartitionFilter filter, final EntityName table) throws Exception {
         final Set<String> ptSet = new HashSet<>();
         final String showPartition = "show partitions " + table.getFullName((mrEngine.getEscapeChar()));
         final Pattern ptPattern = Pattern.compile(pt + "=(\\d+)");

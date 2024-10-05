@@ -23,6 +23,7 @@ import com.mysql.cj.conf.PropertyKey;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
@@ -43,7 +44,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
     private transient com.mysql.cj.jdbc.Driver mysql8Driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
 
         if (mysql8Driver == null) {
             mysql8Driver = new com.mysql.cj.jdbc.Driver();

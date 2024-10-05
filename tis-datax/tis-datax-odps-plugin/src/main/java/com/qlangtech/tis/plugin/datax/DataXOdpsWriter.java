@@ -45,6 +45,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -322,10 +323,10 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public ExecuteResult startTask(ITableBuildTask dumpTask) {
 
-        try (DataSourceMeta.JDBCConnection conn = this.getConnection()) {
+        try (JDBCConnection conn = this.getConnection()) {
             return dumpTask.process(new ITaskContext() {
                 @Override
-                public DataSourceMeta.JDBCConnection getObj() {
+                public JDBCConnection getObj() {
                     return conn;
                 }
             });
@@ -335,7 +336,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
     }
 
-    public DataSourceMeta.JDBCConnection getConnection() {
+    public JDBCConnection getConnection() {
         OdpsDataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {

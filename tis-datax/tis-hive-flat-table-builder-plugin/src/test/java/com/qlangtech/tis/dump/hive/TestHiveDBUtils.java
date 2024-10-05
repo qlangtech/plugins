@@ -19,6 +19,7 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import junit.framework.TestCase;
 
 import java.sql.ResultSet;
@@ -33,7 +34,7 @@ public class TestHiveDBUtils extends TestCase {
     public void testTetConnection() throws Exception {
         HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200:10000", "tis");
 
-        try (DataSourceMeta.JDBCConnection con = dbUtils.createConnection()) {
+        try (JDBCConnection con = dbUtils.createConnection()) {
 
             // // Connection con = DriverManager.getConnection(
             // // "jdbc:hive://10.1.6.211:10000/tis", "", "");

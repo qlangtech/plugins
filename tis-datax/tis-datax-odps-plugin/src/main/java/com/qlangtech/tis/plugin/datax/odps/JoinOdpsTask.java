@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -67,7 +68,7 @@ public class JoinOdpsTask extends HiveTask {
     }
 
     @Override
-    protected void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException {
+    protected void executeSql(String sql, JDBCConnection conn) throws SQLException {
 
         OdpsDataSourceFactory dsFactory
                 = (OdpsDataSourceFactory) dsFactoryGetter.getDataSourceFactory();
@@ -172,7 +173,7 @@ public class JoinOdpsTask extends HiveTask {
 
     @Override
     protected List<String> getHistoryPts(
-            DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
+            DataSourceMeta mrEngine, JDBCConnection conn, EntityName table) throws Exception {
         OdpsDataSourceFactory dsFactory = (OdpsDataSourceFactory) mrEngine;
         Table tab = dsFactory.getOdpsTable(table, Optional.empty());
         PartitionSpec ptSpec = null;
@@ -189,7 +190,7 @@ public class JoinOdpsTask extends HiveTask {
 
     @Override
     protected void initializeTable(DataSourceMeta ds, ColsParser insertParser
-            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+            , JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
 
         OdpsDataSourceFactory dsFactory = (OdpsDataSourceFactory) ds;
         initializeTable(ds, conn, dumpTable,
@@ -222,7 +223,7 @@ public class JoinOdpsTask extends HiveTask {
      * @param conn
      */
     private void createTable(OdpsDataSourceFactory dsFactory, EntityName dumpTable
-            , ColsParser insertParser, DataSourceMeta.JDBCConnection conn) {
+            , ColsParser insertParser, JDBCConnection conn) {
         // ISqlTask.RewriteSql rewriteSql = insertParser.getSql();
 //        String sql = rewriteSql.rewriteSql;
 //        try {
@@ -256,7 +257,7 @@ public class JoinOdpsTask extends HiveTask {
         }
     }
 
-    private boolean isTableSame(OdpsDataSourceFactory dsFactory, DataSourceMeta.JDBCConnection conn
+    private boolean isTableSame(OdpsDataSourceFactory dsFactory, JDBCConnection conn
             , ColsParser allCols, EntityName dumpTable) {
         TableSchema tabSchema = dsFactory.getTableSchema(dumpTable);
         for (HiveColumn col : allCols.getColsExcludePartitionCols()) {

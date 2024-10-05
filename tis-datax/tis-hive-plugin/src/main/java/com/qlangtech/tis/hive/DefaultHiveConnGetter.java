@@ -39,6 +39,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -118,7 +119,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 //            }
 //        }
 
-        DataSourceMeta.JDBCConnection conn = null;
+        JDBCConnection conn = null;
         try {
 
             conn = HiveDBUtils.getInstance(hiveAddress, dbName, params.getUserToken()).createConnection();
@@ -161,7 +162,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     }
 
     @Override
-    public DataSourceMeta.JDBCConnection createConfigInstance() {
+    public JDBCConnection createConfigInstance() {
         try {
             return HiveDBUtils.getInstance(this.hiveAddress, this.dbName, getUserToken()).createConnection();
         } catch (Throwable e) {

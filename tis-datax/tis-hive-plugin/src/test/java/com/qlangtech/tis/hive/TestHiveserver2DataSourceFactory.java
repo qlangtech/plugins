@@ -46,7 +46,7 @@ public class TestHiveserver2DataSourceFactory {
         UserToken userToken = createKerberToken();
 
         // UserToken userToken = new Kerber;
-        try (DataSourceMeta.JDBCConnection conn = Hms.createConnection(jdbcUrl, userToken)) {
+        try (JDBCConnection conn = Hms.createConnection(jdbcUrl, userToken)) {
             Assert.assertNotNull(conn);
 
             conn.query("show tables", (result) -> {

@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -129,7 +130,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         return getConnection(jdbcUrl, false, verify);
     }
 

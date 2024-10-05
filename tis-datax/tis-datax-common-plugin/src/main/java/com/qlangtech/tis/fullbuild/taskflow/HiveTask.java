@@ -93,7 +93,7 @@ public abstract class HiveTask extends AdapterTask {
      * @return
      * @throws Exception
      */
-    public static boolean isTableExists(DataSourceMeta ds, DataSourceMeta.JDBCConnection connection, EntityName dumpTable) throws Exception {
+    public static boolean isTableExists(DataSourceMeta ds, JDBCConnection connection, EntityName dumpTable) throws Exception {
         // 判断表是否存在
 //        if (!isDBExists(mrEngine, connection, dumpTable.getDbName())) {
 //            // DB都不存在，table肯定就不存在啦
@@ -127,7 +127,7 @@ public abstract class HiveTask extends AdapterTask {
 //            return contain;
     }
 
-//    public static boolean isDBExists(MREngine mrEngine, DataSourceMeta.JDBCConnection connection, String dbName) throws Exception {
+//    public static boolean isDBExists(MREngine mrEngine, JDBCConnection connection, String dbName) throws Exception {
 //        AtomicBoolean dbExist = new AtomicBoolean(false);
 //        connection.query(mrEngine.showDBSQL, result -> {
 //            if (StringUtils.equals(result.getString(1), dbName)) {
@@ -200,7 +200,7 @@ public abstract class HiveTask extends AdapterTask {
         String insertSql = rewriteSql.convert2InsertIntoSQL(this.dsFactoryGetter.getDataSourceFactory(), this.nodeMeta.getExportName());
 
         this.validateDependenciesNode(taskname);
-        final DataSourceMeta.JDBCConnection conn = this.getTaskContextObj();
+        final JDBCConnection conn = this.getTaskContextObj();
         DataSourceFactory dsFactory = dsFactoryGetter.getDataSourceFactory();
 
         //final String newCreatePt = primaryTable.getTabPartition();
@@ -245,7 +245,7 @@ public abstract class HiveTask extends AdapterTask {
      */
     private void processJoinTask(ISqlTask.RewriteSql sql) {
         try {
-            final DataSourceMeta.JDBCConnection conn = this.getTaskContextObj();
+            final JDBCConnection conn = this.getTaskContextObj();
             final ColsParser insertParser = new ColsParser(sql, conn);
 
             DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
@@ -265,11 +265,11 @@ public abstract class HiveTask extends AdapterTask {
      * @param partitionRetainNum 保留多少个分区
      * @throws Exception
      */
-    protected abstract void initializeTable(DataSourceMeta mrEngine, ColsParser insertParser, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception;
+    protected abstract void initializeTable(DataSourceMeta mrEngine, ColsParser insertParser, JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception;
 
-    protected abstract void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException;
+    protected abstract void executeSql(String sql, JDBCConnection conn) throws SQLException;
 
-    protected abstract List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, final EntityName table) throws Exception;
+    protected abstract List<String> getHistoryPts(DataSourceMeta mrEngine, JDBCConnection conn, final EntityName table) throws Exception;
 
     protected void validateDependenciesNode(String taskname) {
         Boolean dependencyWorkStatus = null;
@@ -356,10 +356,10 @@ public abstract class HiveTask extends AdapterTask {
 
     protected class ColsParser {
         private final ISqlTask.RewriteSql sql;
-        private final DataSourceMeta.JDBCConnection conn;
+        private final JDBCConnection conn;
         private AbstractInsertFromSelectParser sqlParser;
 
-        public ColsParser(ISqlTask.RewriteSql sql, DataSourceMeta.JDBCConnection conn) {
+        public ColsParser(ISqlTask.RewriteSql sql, JDBCConnection conn) {
             this.sql = sql;
             this.conn = conn;
         }
@@ -391,7 +391,7 @@ public abstract class HiveTask extends AdapterTask {
         }
     }
 
-    private AbstractInsertFromSelectParser getSQLParserResult(String sql, DataSourceMeta.JDBCConnection conn) {
+    private AbstractInsertFromSelectParser getSQLParserResult(String sql, JDBCConnection conn) {
         DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
         Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter = (rewriteSql) -> {
             List<ColMeta> cols = rewriteSql.getCols();
@@ -423,7 +423,7 @@ public abstract class HiveTask extends AdapterTask {
     }
 
 //    private AbstractInsertFromSelectParser getSQLParserResult(
-//            String sql, DataSourceFactory dsFactory, DataSourceMeta.JDBCConnection conn, AbstractInsertFromSelectParser insertParser) {
+//            String sql, DataSourceFactory dsFactory, JDBCConnection conn, AbstractInsertFromSelectParser insertParser) {
 //
 //        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
 //            @Override
@@ -454,7 +454,7 @@ public abstract class HiveTask extends AdapterTask {
      * @param dumpTable
      * @throws Exception
      */
-    public static void initializeTable(DataSourceMeta ds, DataSourceMeta.JDBCConnection conn
+    public static void initializeTable(DataSourceMeta ds, JDBCConnection conn
             , EntityName dumpTable, IHistoryTableProcessor historyTableProcessor, Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
 //        if (partitionRetainNum == null || partitionRetainNum < 1) {
 //            throw new IllegalArgumentException("illegal param partitionRetainNum ");

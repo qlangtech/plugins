@@ -30,6 +30,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.junit.Assert;
@@ -110,7 +111,7 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
             }
 
             @Override
-            protected void startProcessConn(DataSourceMeta.JDBCConnection conn) throws SQLException {
+            protected void startProcessConn(JDBCConnection conn) throws SQLException {
                 super.startProcessConn(conn);
                 conn.getConnection().setAutoCommit(false);
             }

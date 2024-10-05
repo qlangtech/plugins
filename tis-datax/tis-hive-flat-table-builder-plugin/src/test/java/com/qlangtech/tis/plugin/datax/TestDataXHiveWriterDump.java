@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -123,7 +124,7 @@ public class TestDataXHiveWriterDump {
         IDataxProcessor processor = EasyMock.mock("processor", IDataxProcessor.class);
         File ddlDir = folder.newFolder("ddlDir");
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(applicationTab);
+        CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(applicationTab, Optional.empty());
         Assert.assertNotNull("createDDL can not be null", createDDL);
 
         FileUtils.write(new File(ddlDir, applicationTab.getTo() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX)
@@ -142,7 +143,7 @@ public class TestDataXHiveWriterDump {
         preExec.run();
 
         WriterTemplate.realExecuteDump(TestDataXHiveWriter.mysql2hiveDataXName
-                , DataXCfgJson.path(TestDataXHiveWriterDump.class,"hive-datax-writer-assert-without-option-val.json"), dataxWriter);
+                , DataXCfgJson.path(TestDataXHiveWriterDump.class, "hive-datax-writer-assert-without-option-val.json"), dataxWriter);
 
         IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, applicationTab.getSourceTab(), null);
         postExec.run();
@@ -154,7 +155,7 @@ public class TestDataXHiveWriterDump {
         Assert.assertTrue(applicationPS.isPresent());
         Assert.assertEquals(pt, applicationPS.get().pt.getPt());
 
-        try (DataSourceMeta.JDBCConnection connection = dataxWriter.getConnection()) {
+        try (JDBCConnection connection = dataxWriter.getConnection()) {
             connection.query("select count(1) from " + applicationTab.getTo()
                             + " where " + IDumpTable.PARTITION_PT + "='" + pt + "'"
                     , (result) -> {

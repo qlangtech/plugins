@@ -27,6 +27,7 @@ import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.TestHiveInsertFromSelectParser;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -55,7 +56,7 @@ public class TestHiveTableBuilder extends TestCase {
             EasyMock.expect(sourceMeta.removeEscapeChar(c.getName())).andReturn(c.getName());
         }
 
-        DataSourceMeta.JDBCConnection conn = EasyMock.mock("conn", DataSourceMeta.JDBCConnection.class);
+        JDBCConnection conn = EasyMock.mock("conn", JDBCConnection.class);
         Connection connection = EasyMock.mock("connection", Connection.class);
 
         Statement statement = EasyMock.mock("statement", Statement.class);

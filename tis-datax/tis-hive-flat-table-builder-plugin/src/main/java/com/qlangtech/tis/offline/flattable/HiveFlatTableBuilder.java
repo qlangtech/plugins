@@ -22,6 +22,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -164,7 +165,7 @@ public class HiveFlatTableBuilder  //extends FlatTableBuilder
 //            }
 //        }
 
-        DataSourceMeta.JDBCConnection conn = null;
+        JDBCConnection conn = null;
         try {
 
             conn = HiveDBUtils.getInstance(hiveAddress, dbName, params.getUserToken()).createConnection();

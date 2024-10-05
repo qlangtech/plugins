@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -84,14 +85,14 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToEmpty(this.userName));
         if (StringUtils.isNotEmpty(this.password)) {
             props.put("password", StringUtils.trimToEmpty(this.password));
         }
         try {
-            return new DataSourceMeta.JDBCConnection(mysql5Driver.connect(jdbcUrl, props), jdbcUrl);
+            return new JDBCConnection(mysql5Driver.connect(jdbcUrl, props), jdbcUrl);
         } catch (SQLException e) {
             throw TisException.create(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }

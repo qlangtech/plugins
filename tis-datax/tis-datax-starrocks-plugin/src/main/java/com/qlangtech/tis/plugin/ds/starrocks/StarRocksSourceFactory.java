@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ds.starrocks;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 
 import java.sql.SQLException;
 import java.util.Optional;
@@ -35,8 +36,8 @@ public class StarRocksSourceFactory extends BasicSourceFactory {
     public static final String DISPLAY_NAME = "StarRocks";
 
     @Override
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
-        return super.getConnection(jdbcUrl, verify);
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+        return super.createConnection(jdbcUrl, verify);
     }
 
     @Override

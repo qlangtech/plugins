@@ -159,7 +159,7 @@ public class TestDataXDaMengWriter {
         DaMengDataSourceFactory mysqlDs = TestDaMengDataSourceFactory.createDaMengDataSourceFactory();
 //        new DaMengDataSourceFactory() {
 //            @Override
-//            public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+//            public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
 //                return null;
 //            }
 //        };

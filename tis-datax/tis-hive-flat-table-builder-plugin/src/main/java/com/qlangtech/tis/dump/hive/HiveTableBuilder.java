@@ -25,6 +25,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class HiveTableBuilder {
 //         * @return
 //         * @throws Exception
 //         */
-//        public static List<String> getExistTables(MREngine mrEngine, DataSourceMeta.JDBCConnection conn, String dbName) throws Exception {
+//        public static List<String> getExistTables(MREngine mrEngine, JDBCConnection conn, String dbName) throws Exception {
 //            final List<String> tables = new ArrayList<>();
 //            if (!HiveTask.isDBExists(mrEngine, conn, dbName)) {
 //                // DB都不存在，table肯定就不存在啦
@@ -106,7 +107,7 @@ public class HiveTableBuilder {
      * @throws Exception
      */
     public StringBuffer createHiveTableAndBindPartition(
-            DataSourceMeta sourceMeta, DataSourceMeta.JDBCConnection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+            DataSourceMeta sourceMeta, JDBCConnection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
         if (StringUtils.isEmpty(table.getDbName())) {
             throw new IllegalArgumentException("table.getDbName can not be empty");
         }
@@ -160,7 +161,7 @@ public class HiveTableBuilder {
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, DataSourceMeta.JDBCConnection conn) throws Exception {
+    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn) throws Exception {
         bindHiveTables(engine, hiveTables, conn,
                 (columns, hiveTable) -> {
                     return isTableSame(engine, conn, columns.colsMeta, hiveTable);
@@ -177,7 +178,7 @@ public class HiveTableBuilder {
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, DataSourceMeta.JDBCConnection conn
+    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn
             , IsTableSchemaSame isTableSchemaSame, CreateHiveTableAndBindPartition createHiveTableAndBindPartition) throws Exception {
 
         try {
@@ -229,7 +230,7 @@ public class HiveTableBuilder {
     }
 
 
-    public static boolean isTableSame(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
+    public static boolean isTableSame(DataSourceMeta mrEngine, JDBCConnection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
         boolean isTableSame;
         final StringBuffer errMsg = new StringBuffer();
         final StringBuffer equalsCols = new StringBuffer("compar equals:");
@@ -289,7 +290,7 @@ public class HiveTableBuilder {
      * @param
      * @throws Exception
      */
-    void bindPartition(DataSourceMeta.JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName table, int startIndex) throws Exception {
+    void bindPartition(JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName table, int startIndex) throws Exception {
 
         visitSubPmodPath(table, columns, startIndex, (pmod, path) -> {
             String sql = "alter table " + table + " add if not exists partition(" + IDumpTable.PARTITION_PT + "='"
@@ -325,7 +326,7 @@ public class HiveTableBuilder {
     }
 
 
-    private void createHiveTableAndBindPartition(DataSourceMeta sourceMeta, DataSourceMeta.JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName tableName) throws Exception {
+    private void createHiveTableAndBindPartition(DataSourceMeta sourceMeta, JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName tableName) throws Exception {
         createHiveTableAndBindPartition(sourceMeta, conn, tableName, columns.colsMeta, (hiveSQl) -> {
                     //final String hivePath = tableName.getNameWithPath();
                     int startIndex = 0;

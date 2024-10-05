@@ -26,6 +26,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
@@ -50,7 +51,7 @@ import java.util.concurrent.Callable;
 public class BindHiveTableTool {
     private static final Logger logger = LoggerFactory.getLogger(HiveTableBuilder.class);
 
-    public static void bindHiveTables(DataSourceMeta engine, DataSourceMeta.JDBCConnection hiveConn,
+    public static void bindHiveTables(DataSourceMeta engine, JDBCConnection hiveConn,
                                       ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables
             , String timestamp) {
 
@@ -67,7 +68,7 @@ public class BindHiveTableTool {
     }
 
 
-    public static void bindHiveTables(DataSourceMeta engine, DataSourceMeta.JDBCConnection hiveConn,
+    public static void bindHiveTables(DataSourceMeta engine, JDBCConnection hiveConn,
                                       ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables
             , String timestamp, HiveTableBuilder.IsTableSchemaSame isTableSchemaSame,
                                       HiveTableBuilder.CreateHiveTableAndBindPartition createHiveTableAndBindPartition) {

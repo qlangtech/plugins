@@ -14,6 +14,7 @@ import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
@@ -96,7 +97,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     private transient dm.jdbc.driver.DmDriver driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new dm.jdbc.driver.DmDriver();
         }
@@ -522,7 +523,8 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         }
 
         @Override
-        protected boolean validateConnection(JDBCConnection conn, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
+        protected boolean validateConnection(JDBCConnection conn, BasicDataSourceFactory dsFactory
+                , IControlMsgHandler msgHandler, Context context) throws TisException {
             final String schema = conn.getSchema();
             DaMengDataSourceFactory damengSource = (DaMengDataSourceFactory) dsFactory;
             if (!StringUtils.equals(schema, damengSource.dbName)

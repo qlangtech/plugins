@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
@@ -537,7 +538,7 @@ public abstract class CUDCDCTestSuit {
         return statement.executeUpdate(sql);
     }
 
-    protected void startProcessConn(DataSourceMeta.JDBCConnection conn) throws SQLException {
+    protected void startProcessConn(JDBCConnection conn) throws SQLException {
         conn.getConnection().setAutoCommit(false);
     }
 

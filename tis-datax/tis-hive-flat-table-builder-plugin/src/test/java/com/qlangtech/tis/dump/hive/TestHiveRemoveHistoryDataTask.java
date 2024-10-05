@@ -23,6 +23,7 @@ import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -47,7 +48,7 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
         DataSourceMeta sourceMeta = EasyMock.createMock("sourceMeta", DataSourceMeta.class);
 
         ITISFileSystem fileSystem = EasyMock.createMock("fileSystem", ITISFileSystem.class);
-        DataSourceMeta.JDBCConnection hiveConn = EasyMock.createMock("hiveConn", DataSourceMeta.JDBCConnection.class);
+        JDBCConnection hiveConn = EasyMock.createMock("hiveConn", JDBCConnection.class);
 
         Statement showDBStatment = EasyMock.createMock("showDBStatment", Statement.class);
         ResultSet resultSet = EasyMock.createMock("resultSet", ResultSet.class);

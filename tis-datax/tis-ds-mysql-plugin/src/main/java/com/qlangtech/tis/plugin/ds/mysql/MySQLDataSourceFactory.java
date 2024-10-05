@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.FacadeDataSource;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.IFacadeDataSource;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;

@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.sink;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
@@ -53,7 +53,7 @@ public class TISJdbcOutputFormat extends JdbcOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false);
+        JDBCConnection conn = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false);
         return conn.getConnection();
     }
 }

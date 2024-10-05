@@ -22,6 +22,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.Memoizer;
@@ -42,7 +43,7 @@ public class TableColsMeta extends Memoizer<String, Map<String, ColumnMetaData>>
     private final DataSourceFactory datasource;
     private final String dbName;
 
-    private final DataSourceMeta.JDBCConnection connection;
+    private final JDBCConnection connection;
 
 
     public TableColsMeta(DataSourceFactory datasource, String dbName) {
@@ -50,7 +51,7 @@ public class TableColsMeta extends Memoizer<String, Map<String, ColumnMetaData>>
         this.dbName = dbName;
         final DBConfig dbConfig = datasource.getDbConfig();
 
-        AtomicReference<DataSourceMeta.JDBCConnection> conn = new AtomicReference<>();
+        AtomicReference<JDBCConnection> conn = new AtomicReference<>();
         try {
             dbConfig.vistDbName((config, jdbcUrl, ip, dbname) -> {
                 conn.set(datasource.getConnection(jdbcUrl, false));

@@ -70,12 +70,6 @@
       <artifactId>tis-base-test</artifactId>
       <version>4.0.1</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>tis-common</artifactId>
-          <groupId>com.qlangtech.tis</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.dolphinscheduler</groupId>

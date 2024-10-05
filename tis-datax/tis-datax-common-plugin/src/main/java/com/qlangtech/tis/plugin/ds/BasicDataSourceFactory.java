@@ -70,7 +70,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     /**
      * 节点描述
      */
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.hostWithoutPort})
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String nodeDesc;
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public int port;
@@ -306,7 +306,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         //Connection conn = null;
         String jdbcUrl = buidJdbcUrl(db, ip, dbName);
         try {
-            validateConnection(jdbcUrl, p);
+
+
+            JDBCConnectionFactory connectionFactory = (url, verify) -> getConnection(url, verify);
+            
+            validateConnection(connectionFactory, jdbcUrl, p);
         } catch (TisException e) {
             throw e;
         } catch (Exception e) {
@@ -337,7 +341,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;
             return TISZeppelinClient.createJdbcNotebook(dsFactory);
         }
-
 
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

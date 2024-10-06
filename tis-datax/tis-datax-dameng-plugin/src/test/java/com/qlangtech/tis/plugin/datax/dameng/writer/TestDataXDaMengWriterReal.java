@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.datax.dameng.writer;
 
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -81,7 +82,7 @@ public class TestDataXDaMengWriterReal {
         TestDataXDaMengWriter.setPlaceholderReader();
 
         DataXCfgJson wjson = DataXCfgJson.content(TestDataXDaMengWriter.generateDataXCfg(writer, Optional.of(tabMap)));
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap);
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap, Optional.empty());
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = folder.newFolder();// new File(".");

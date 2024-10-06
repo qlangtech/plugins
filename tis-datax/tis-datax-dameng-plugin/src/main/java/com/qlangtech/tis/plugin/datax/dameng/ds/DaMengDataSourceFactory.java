@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -280,7 +281,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
 
             @Override
             public IDataSourceDumper next() {
-                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
+                final String  jdbcUrl = jdbcUrls.get(index.getAndIncrement());
                 return new MySqlDataSourceDumper(jdbcUrl, table);
             }
         };
@@ -303,7 +304,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     private class MySqlDataSourceDumper implements IDataSourceDumper {
-        private final String jdbcUrl;
+        private final String  jdbcUrl;
         private final TISTable table;
 
         private JDBCConnection connection;

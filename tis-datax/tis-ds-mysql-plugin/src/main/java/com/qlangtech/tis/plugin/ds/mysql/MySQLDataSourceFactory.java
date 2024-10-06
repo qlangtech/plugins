@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.FacadeDataSource;
@@ -271,7 +272,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             public IDataSourceDumper next() {
                 int idx;
                 final String jdbcUrl = jdbcUrls.get(idx = index.getAndIncrement());
-                if (StringUtils.isEmpty(jdbcUrl)) {
+                if (jdbcUrl == null) {
                     throw new IllegalStateException("jdbcUrl can not be empty,jdbcUrls.size:" + length
                             + ",applyIdx:" + idx + ",jdbcUrls:"
                             + jdbcUrls.stream().map((url) -> "[" + url + "]").collect(Collectors.joining(",")));

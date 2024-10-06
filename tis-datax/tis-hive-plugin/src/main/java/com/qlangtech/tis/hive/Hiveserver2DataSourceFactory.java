@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
@@ -131,7 +132,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
     @Override
     public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-        return getConnection(jdbcUrl, false, verify);
+        return getConnection((jdbcUrl), false, verify);
     }
 
     @Override
@@ -158,7 +159,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
         final String hiveJdbcUrl = createHiveJdbcUrl();
-        try (JDBCConnection conn = this.getConnection(hiveJdbcUrl, false)) {
+        try (JDBCConnection conn = this.getConnection((hiveJdbcUrl), false)) {
             connProcessor.vist(conn);
         } catch (Exception e) {
             throw new RuntimeException(e);

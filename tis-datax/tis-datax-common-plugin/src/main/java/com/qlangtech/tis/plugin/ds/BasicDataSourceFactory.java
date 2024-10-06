@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+ 
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
@@ -143,8 +144,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     private List<ColumnMetaData> parseTableColMeta(EntityName table, boolean inSink, DBConfig config, String ip, String dbname) throws Exception {
         // List<ColumnMetaData> columns = Lists.newArrayList();
         String jdbcUrl = buidJdbcUrl(config, ip, dbname);
-
-        return parseTableColMeta(inSink, table, jdbcUrl);
+        return parseTableColMeta(inSink, table, (jdbcUrl));
     }
 
 
@@ -306,11 +306,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         //Connection conn = null;
         String jdbcUrl = buidJdbcUrl(db, ip, dbName);
         try {
-
-
-            JDBCConnectionFactory connectionFactory = (url, verify) -> getConnection(url, verify);
-
-            validateConnection(connectionFactory, jdbcUrl, p);
+            validateConnection((jdbcUrl), p);
         } catch (TisException e) {
             throw e;
         } catch (Exception e) {

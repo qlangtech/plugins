@@ -23,6 +23,8 @@ import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.mysql.source.MysqlInputFormat;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.element.column.BigDecimalColumn;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
@@ -52,7 +54,7 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl(), false).getConnection();
+                .getConnection((jdbcConf.getJdbcUrl()), false).getConnection();
     }
 
     @Override

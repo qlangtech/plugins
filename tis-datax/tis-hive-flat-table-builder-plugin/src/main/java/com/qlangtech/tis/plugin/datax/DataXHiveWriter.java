@@ -61,6 +61,8 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -236,7 +238,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            return dsFactory.getConnection(jdbcUrl, false);
+            return dsFactory.getConnection((jdbcUrl), false);
         } catch (SQLException e) {
             throw new RuntimeException(jdbcUrl, e);
         }

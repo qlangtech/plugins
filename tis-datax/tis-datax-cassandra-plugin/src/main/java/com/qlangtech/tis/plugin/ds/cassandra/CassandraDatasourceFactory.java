@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
+ 
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -85,7 +86,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     public DataDumpers getDataDumpers(TISTable table) {
         List<String> jdbcUrls = Lists.newArrayList();
         for (String host : this.getHosts()) {
-            jdbcUrls.add(host);
+            jdbcUrls.add((host));
         }
         return DataDumpers.create(jdbcUrls, table);
     }
@@ -217,7 +218,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl,boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

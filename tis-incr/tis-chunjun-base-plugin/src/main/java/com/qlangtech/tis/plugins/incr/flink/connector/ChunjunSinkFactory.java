@@ -68,6 +68,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -365,7 +366,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * @see JdbcSinkFactory
      */
     private CreateChunjunSinkFunctionResult createSinkFunction(
-            String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
+            String dbName, final String targetTabName, SelectedTab tab, String  jdbcUrl
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
 
 

@@ -17,6 +17,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.IDBAuthorizeTokenGetter;
@@ -128,7 +129,7 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
         try {
             dbConfig.vistDbName(new DBConfig.IProcess() {
                 @Override
-                public boolean visit(DBConfig config, String jdbcUrl, String ip, String dbName) throws Exception {
+                public boolean visit(DBConfig config, String  jdbcUrl, String ip, String dbName) throws Exception {
                     jdbcUrlRef.set(jdbcUrl);
                     return true;
                 }

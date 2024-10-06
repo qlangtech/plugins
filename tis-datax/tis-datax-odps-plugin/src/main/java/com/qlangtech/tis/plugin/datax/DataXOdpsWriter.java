@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -342,7 +343,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         try {
             return dsFactory.getConnection(jdbcUrl, false);
         } catch (SQLException e) {
-            throw new RuntimeException(jdbcUrl, e);
+            throw new RuntimeException(String.valueOf(jdbcUrl), e);
         }
     }
 
@@ -376,7 +377,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         public OdpsContext(DataXOdpsWriter odpsWriter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformerRules) {
             this.odpsWriter = odpsWriter;
             this.tableMapper = tableMapper;
-            this.cols = TabCols.create( null, tableMapper, transformerRules).getRawCols();
+            this.cols = TabCols.create(null, tableMapper, transformerRules).getRawCols();
             this.dsFactory = odpsWriter.getDataSourceFactory();
             this.accessKey = this.dsFactory.getAccessKey();
 

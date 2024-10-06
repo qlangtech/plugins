@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+ 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -163,7 +164,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
-            try (JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
+            try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), false)) {
                 process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
             }
         }

@@ -37,11 +37,9 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
-import com.qlangtech.tis.realtime.DefaultJDBCConnectionPool;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -173,8 +171,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws JobOrchestrateException {
 
-        try (DefaultJDBCConnectionPool connectionPool = new DefaultJDBCConnectionPool()) {
-            JDBCConnection.connectionPool.set(connectionPool);
+//        try (DefaultJDBCConnectionPool connectionPool = new DefaultJDBCConnectionPool()) {
+//            JDBCConnection.connectionPool.set(connectionPool);
+        try {
             File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
             this.deploy(collection, streamUberJar
                     , (request) -> {
@@ -185,7 +184,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         } catch (Exception e) {
             throw new JobOrchestrateException(e);
         } finally {
-            JDBCConnection.connectionPool.remove();
+            // JDBCConnection.connectionPool.remove();
         }
     }
 

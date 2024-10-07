@@ -99,8 +99,8 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     public JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
             , IDataxProcessor dataXProcessor) throws Exception {
 
-        try (DefaultJDBCConnectionPool connectionPool = new DefaultJDBCConnectionPool()) {
-            JDBCConnection.connectionPool.set(connectionPool);
+//        try (DefaultJDBCConnectionPool connectionPool = new DefaultJDBCConnectionPool()) {
+//            JDBCConnection.connectionPool.set(connectionPool);
             StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
 
             if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
@@ -113,9 +113,9 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
 
             this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
             return executeFlinkJob(dataxName, env);
-        } finally {
-            JDBCConnection.connectionPool.remove();
-        }
+//        } finally {
+//            JDBCConnection.connectionPool.remove();
+//        }
     }
 
     protected Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(

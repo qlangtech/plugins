@@ -68,7 +68,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -366,7 +366,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * @see JdbcSinkFactory
      */
     private CreateChunjunSinkFunctionResult createSinkFunction(
-            String dbName, final String targetTabName, SelectedTab tab, String  jdbcUrl
+            String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
 
 
@@ -601,7 +601,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
                             final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
                             // 初始化表RDBMS的表，如果表不存在就创建表
-                            DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
+                            //  DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
                             final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, EntityName.parse(tableName))
                                     .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                                     .collect(Collectors.toList());

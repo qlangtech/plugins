@@ -18,15 +18,17 @@
 
 package com.qlangtech.tis.realtime;
 
- 
+
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -35,27 +37,28 @@ import java.util.Map;
 public class DefaultJDBCConnectionPool extends JDBCConnectionPool implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(DefaultJDBCConnectionPool.class);
 
-    private final Map<String, JDBCConnection> connectionCache = new HashMap<>();
+    private final ConcurrentMap<String, JDBCConnection> connectionCache = Maps.newConcurrentMap();
 
     public DefaultJDBCConnectionPool() {
     }
 
     @Override
-    public JDBCConnection getConnection(String  jdbcUrl, boolean verify) {
-        return connectionCache.get(jdbcUrl);
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify, Function<String, JDBCConnection> mappingFunction) {
+        return connectionCache.computeIfAbsent(jdbcUrl, mappingFunction.andThen((conn) -> {
+            return new JDBCConnection(conn.getConnection(), conn.getUrl()) {
+                @Override
+                public void close() throws SQLException {
+
+                }
+            };
+        }));
     }
 
     @Override
-    public JDBCConnection setConnection(String jdbcUrl, boolean verify, JDBCConnection conn) {
-        JDBCConnection newConn = new JDBCConnection(conn.getConnection(), conn.getUrl()) {
-            @Override
-            public void close() throws SQLException {
-
-            }
-        };
-        connectionCache.put(jdbcUrl, newConn);
-        return newConn;
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) {
+        return connectionCache.get(jdbcUrl);
     }
+
 
     @Override
     public void close() throws Exception {

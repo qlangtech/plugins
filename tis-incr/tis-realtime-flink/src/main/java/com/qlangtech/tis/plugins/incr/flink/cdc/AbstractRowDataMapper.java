@@ -423,7 +423,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             if (o instanceof java.nio.ByteBuffer) {
                 return StringData.fromBytes(((java.nio.ByteBuffer) o).array());
             }
-            return StringData.fromString((String) o);
+            return StringData.fromString(String.valueOf(o));
         }
     }
 

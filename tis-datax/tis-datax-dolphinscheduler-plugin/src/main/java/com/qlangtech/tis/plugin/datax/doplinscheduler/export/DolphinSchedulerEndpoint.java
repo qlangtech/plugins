@@ -77,7 +77,7 @@ public class DolphinSchedulerEndpoint extends ParamsConfig {
     private void tryConnect(IControlMsgHandler msgHandler, Context context) {
         //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/Worker%E5%88%86%E7%BB%84%E7%AE%A1%E7%90%86/queryAllWorkerGroupsPaging
         DolphinSchedulerResponse response = createSchedulerURLBuilder().appendSubPath("worker-groups")
-               // .appendQueryParam(FIELD_PAGE_NO, 1).appendQueryParam(FIELD_PAGE_SIZE, 100)
+                // .appendQueryParam(FIELD_PAGE_NO, 1).appendQueryParam(FIELD_PAGE_SIZE, 100)
                 .appendPageParam()
                 .applyGet(Optional.of(new StreamErrorProcess() {
                     @Override
@@ -89,7 +89,9 @@ public class DolphinSchedulerEndpoint extends ParamsConfig {
                         }
                     }
                 }));
-
+        if (context.hasErrors()) {
+            return;
+        }
         if (!response.isSuccess()) {
             throw TisException.create(response.getMessage());
         }

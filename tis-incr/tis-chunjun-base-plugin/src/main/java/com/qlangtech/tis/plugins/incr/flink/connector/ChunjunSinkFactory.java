@@ -601,7 +601,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
                             final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
                             // 初始化表RDBMS的表，如果表不存在就创建表
-                            //  DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
+                            DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
                             final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, EntityName.parse(tableName))
                                     .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                                     .collect(Collectors.toList());

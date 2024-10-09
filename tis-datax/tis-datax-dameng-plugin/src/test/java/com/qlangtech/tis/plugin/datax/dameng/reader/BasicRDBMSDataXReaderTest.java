@@ -5,6 +5,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -28,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -78,7 +80,7 @@ public abstract class BasicRDBMSDataXReaderTest
         final File ddlDir = folder.newFolder("ddlDir");
         EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
         AbstractCreateTableSqlBuilder.CreateDDL createDDL
-                = this.dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(tab));
+                = this.dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(tab), Optional.empty());
 
         FileUtils.write(new File(ddlDir
                 , tab.getName() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX), createDDL.getDDLScript());

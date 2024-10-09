@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
- 
+
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -147,9 +147,9 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
     @Override
     public final void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        if (RobustReflectionConverter2.usedPluginInfo.get().isDryRun()) {
-            return;
-        }
+//        if (RobustReflectionConverter2.usedPluginInfo.get().isDryRun()) {
+//            return;
+//        }
         process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);
     }
 
@@ -179,7 +179,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @param tableName
      * @return tableExist 表是否存在
      */
-    public static boolean process(String dataXName, IDataxProcessor processor
+    public static void process(String dataXName, IDataxProcessor processor
             , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, JDBCConnection jdbcConn
             , String tableName) {
         if (StringUtils.isEmpty(dataXName)) {
@@ -187,50 +187,58 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
         boolean autoCreateTable = !dataXWriter.isGenerateCreateDDLSwitchOff();
-        try {
-            if (autoCreateTable) {
+        //  try {
+        if (autoCreateTable) {
 
-
-                File createDDL = new File(processor.getDataxCreateDDLDir(null)
-                        , tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
-                if (!createDDL.exists()) {
-                    throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
-                }
-                Connection conn = jdbcConn.getConnection();
-                DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
-                String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-                final EntityName tab = EntityName.parse(tableName);
-
-                boolean tableExist = false;
-                List<ColumnMetaData> cols = Lists.newArrayList();
+            jdbcConn.initializeSinkTab(tableName, () -> {
                 try {
-                    cols = dsFactory.getTableMetadata(jdbcConn, true, tab);
-                    tableExist = true;
-                } catch (TableNotFoundException e) {
-                    logger.warn(e.toString());
+                    File createDDL = new File(processor.getDataxCreateDDLDir(null)
+                            , tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+                    if (!createDDL.exists()) {
+                        throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
+                    }
+                    Connection conn = jdbcConn.getConnection();
+                    DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
+                    String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
+                    final EntityName tab = EntityName.parse(tableName);
+
+                    boolean tableExist = false;
+                    List<ColumnMetaData> cols = Lists.newArrayList();
+                    try {
+                        cols = dsFactory.getTableMetadata(jdbcConn, true, tab);
+                        tableExist = true;
+                    } catch (TableNotFoundException e) {
+                        logger.warn(e.toString());
+                    }
+
+                    if (!tableExist) {
+                        // 表不存在
+                        boolean success = false;
+                        try {
+                            try (Statement statement = conn.createStatement()) {
+                                logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
+                                success = statement.execute(createScript);
+                            }
+                        } catch (SQLException e) {
+                            throw new RuntimeException(createScript, e);
+                        }
+                    } else {
+                        logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
+                                , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
+                    }
+                    // return tableExist;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
 
-                if (!tableExist) {
-                    // 表不存在
-                    boolean success = false;
-                    try {
-                        try (Statement statement = conn.createStatement()) {
-                            logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
-                            success = statement.execute(createScript);
-                        }
-                    } catch (SQLException e) {
-                        throw new RuntimeException(createScript, e);
-                    }
-                } else {
-                    logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
-                            , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
-                }
-                return tableExist;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+            });
+
         }
-        return false;
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+        //  return false;
     }
 
 

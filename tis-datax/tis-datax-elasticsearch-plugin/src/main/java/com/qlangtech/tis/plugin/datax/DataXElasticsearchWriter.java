@@ -64,11 +64,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -139,7 +137,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @Override
     public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, TableAlias tableAlias) {
-        List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx, Optional.empty());
+        List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx, false);
 //        IColMetaGetter col = null;
 //        ISchemaField schemaCol = null;
         ISchema schema = convert2Schema(tableAlias);
@@ -167,28 +165,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         metaContent.parseResult = schema;
         ESField field = null;
 
-        // RecordTransformerRules transformerRules = RecordTransformerRules.loadTransformerRules(pluginCtx, tab.getName());
-        List<IColMetaGetter> cols = tab.overwriteCols(pluginCtx,Optional.empty());// RecordTransformerRules.overwriteCols(pluginCtx, tab);
-//        if (transformerRules != null) {
-//            cols = transformerRules.overwriteCols(tab.getCols());
-//        } else {
-//            cols = tab.getCols().stream().collect(Collectors.toList());
-//        }
+        List<IColMetaGetter> cols = tab.overwriteCols(pluginCtx, false);// RecordTransformerRules.overwriteCols(pluginCtx, tab);
+        if (CollectionUtils.isEmpty(cols)) {
+            throw new IllegalStateException("table:" + tab.getName() + " relevant cols can not be empty");
+        }
         for (IColMetaGetter m : cols) {
-//            if (m.isDisable()) {
-//                continue;
-//            }
-
-
-            field = convert(m);// new ESField();
-//            field.setName(m.getName());
-//            field.setStored(true);
-//            if (m.isPk()) {
-//                field.setUniqueKey(true);
-//            }
-//            m.getType().accept(new CMetaTypeVisitor(field));
-//
-//            field.setType(this.mapSearchEngineType(m.getType().getCollapse()));
+            field = convert(m);
             schema.fields.add(field);
         }
         byte[] schemaContent = null;

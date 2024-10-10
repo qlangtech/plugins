@@ -51,6 +51,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
  
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -157,7 +158,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
      * @see DataXDorisWriter.DorisType
      */
     @Override
-    protected Object parseType(CMeta cm) {
+    protected Object parseType(IColMetaGetter cm) {
         // DorisType
 
         return cm.getType().accept(DataXDorisWriter.columnTokenRecognise);

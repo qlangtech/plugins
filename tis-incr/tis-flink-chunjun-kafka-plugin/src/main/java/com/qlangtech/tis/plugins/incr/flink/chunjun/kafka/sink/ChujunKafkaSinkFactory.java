@@ -200,7 +200,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
 
     @Override
-    protected Object parseType(CMeta cm) {
+    protected Object parseType(IColMetaGetter cm) {
         return cm.getType();
     }
 

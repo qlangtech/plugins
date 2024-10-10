@@ -308,19 +308,17 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
 
-        List<Map<String, Object>> cols = Lists.newArrayList();
-        Map<String, Object> col = null;
-
-        //FIXME: 构建sink端的列不应该使用Source端的colMeta信息，你该需要重构
-//        for (CMeta cm : tab.getCols()) {
-//            col = Maps.newHashMap();
-//            col.put("name", cm.getName());
-//            col.put("type", parseType(cm));
-//            cols.add(col);
-//        }
         SinkColMetas colMetasMap = ColMetaUtils.getColMetasMap(this, targetTabName);
 
-        // params.put(ConfigConstant.KEY_COLUMN, cols);
+        List<Map<String, Object>> cols = Lists.newArrayList();
+        Map<String, Object> col = null;
+        for (IColMetaGetter cm : colMetasMap.getCols()) {
+            col = Maps.newHashMap();
+            col.put("name", cm.getName());
+            col.put("type", parseType(cm));
+            cols.add(col);
+        }
+         params.put(ConfigConstant.KEY_COLUMN, cols);
         params.put(KEY_FULL_COLS, colMetasMap.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         //    params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         params.put("batchSize", this.batchSize);
@@ -632,7 +630,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-    protected Object parseType(CMeta cm) {
+    protected Object parseType(IColMetaGetter cm) {
         return cm.getType().getS();
     }
 

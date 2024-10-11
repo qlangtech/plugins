@@ -116,7 +116,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
 
         IDataxProcessor.TableMap tableMapper = WriterTemplate.createCustomer_order_relationTableMap();
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper, Optional.empty());
         Assert.assertNotNull(createDDL);
         // 多主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
@@ -125,7 +125,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
         Assert.assertTrue(firstCustomerregisterId.isPresent());
         firstCustomerregisterId.get().setPk(false);
 
-        createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
+        createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper, Optional.empty());
         Assert.assertNotNull(createDDL);
         // 单主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "single-pks-create-ddl.txt"), createDDL.toString());

@@ -40,7 +40,7 @@ import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
- 
+
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -234,7 +234,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
             @Override
             protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
+                return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
                         return c.getType().accept(typeTransfer);

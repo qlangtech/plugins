@@ -32,7 +32,7 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
- 
+
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
@@ -40,6 +40,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -86,10 +87,10 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
             @Override
             protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
+                return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
-                        return convertType(this.meta);
+                        return convertType(this.getType());
                     }
                 };
             }
@@ -103,9 +104,10 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
                 script.append(" SETTINGS index_granularity = 8192");
             }
 
-            private String convertType(IColMetaGetter col) {
-                DataType type = col.getType();
-                switch (type.getJdbcType()) {
+            private String convertType(DataType type) {
+
+                switch (Objects.requireNonNull(type, "type can not be null")
+                        .getJdbcType()) {
                     case INTEGER:
                     case TINYINT:
                     case SMALLINT:

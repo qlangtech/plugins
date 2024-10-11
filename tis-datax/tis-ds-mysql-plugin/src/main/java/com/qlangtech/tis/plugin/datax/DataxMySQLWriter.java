@@ -214,10 +214,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
 
             @Override
             protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
+                return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
-                        return convertType(this.meta);
+                        return convertType(this);
                     }
                 };
             }
@@ -227,7 +227,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
              * @param col
              * @return
              */
-            private String convertType(IColMetaGetter col) {
+            private String convertType(ColWrapper col) {
                 DataType type = col.getType();
                 switch (type.getJdbcType()) {
                     case CHAR: {

@@ -71,10 +71,11 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         final CreateTableSqlBuilder createTableSqlBuilder
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
 
-            private String convertType(IColMetaGetter col) {
+            private String convertType(DataType type, boolean isPk) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html
-                StringBuffer createSql = new StringBuffer(getSqlServerType(col));
-                if (col.isPk()) {
+                StringBuffer createSql = new StringBuffer(getSqlServerType(type));
+
+                if (isPk) {
                     createSql.append(" primary key ");
                 }
                 return createSql.toString();
@@ -82,16 +83,16 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
             @Override
             protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
+                return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
-                        return convertType(this.meta);
+                        return convertType(this.getType(), this.isPk());
                     }
                 };
             }
 
-            private String getSqlServerType(IColMetaGetter col) {
-                DataType type = col.getType();
+            private String getSqlServerType(DataType type) {
+
                 switch (type.getJdbcType()) {
                     case INTEGER:
                     case TINYINT:

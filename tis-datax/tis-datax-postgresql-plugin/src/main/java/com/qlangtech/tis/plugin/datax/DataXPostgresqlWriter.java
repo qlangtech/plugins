@@ -23,19 +23,12 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -55,128 +48,9 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
-
         PGDataSourceFactory ds = this.getDataSourceFactory();
-        // 多个主键
-        boolean multiPk = Objects.requireNonNull(tableMapper.getSourceCols(), "sourceCols can not be null")
-                .stream().filter((col) -> col.isPk()).count() > 1;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper, ds, transformers) {
-            @Override
-            protected CreateTableName getCreateTableName() {
-                return new CreateTableName(ds.tabSchema, tableMapper.getTo(), this);
-            }
-
-            @Override
-            protected void appendExtraColDef(List<String> pks) {
-//                if (!pks.isEmpty()) {
-//                    script.append("  PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
-//                            .collect(Collectors.joining(","))).append(")").append("\n");
-//                }
-                if (multiPk) {
-                    this.script.append(", CONSTRAINT ").append("uk_" + tableMapper.getTo() + "_unique_" + pks.stream().map((c) -> c).collect(Collectors.joining("_")))
-                            .append(" UNIQUE(")
-                            .append(pks.stream().map((c) -> c).collect(Collectors.joining(","))).append(")");
-                }
-            }
-
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
-                    @Override
-                    public String getMapperType() {
-                        return convertType(this.meta);
-                    }
-                };
-            }
-
-            @Override
-            protected void appendTabMeta(List<String> pks) {
-
-            }
-
-            /**
-             * https://www.runoob.com/mysql/mysql-data-types.html
-             * @param col
-             * @return
-             */
-            private String convertType(IColMetaGetter col) {
-                DataType type = col.getType();
-                String colType = type.accept(new DataType.TypeVisitor<String>() {
-                    @Override
-                    public String bigInt(DataType type) {
-                        return "BIGINT";
-                    }
-
-                    @Override
-                    public String doubleType(DataType type) {
-                        return "FLOAT8";
-                    }
-
-                    @Override
-                    public String dateType(DataType type) {
-                        return "DATE";
-                    }
-
-                    @Override
-                    public String timestampType(DataType type) {
-                        return "TIMESTAMP";
-                    }
-
-                    @Override
-                    public String bitType(DataType type) {
-                        return "BIT";
-                    }
-
-                    @Override
-                    public String blobType(DataType type) {
-                        return "BYTEA";
-                    }
-
-                    @Override
-                    public String varcharType(DataType type) {
-                        return "VARCHAR(" + type.getColumnSize() + ")";
-                    }
-
-                    @Override
-                    public String intType(DataType type) {
-                        return "INTEGER";
-                    }
-
-                    @Override
-                    public String floatType(DataType type) {
-                        return "FLOAT4";
-                    }
-
-                    @Override
-                    public String decimalType(DataType type) {
-                        return "DECIMAL";
-                    }
-
-                    @Override
-                    public String timeType(DataType type) {
-                        return "TIME";
-                    }
-
-                    @Override
-                    public String tinyIntType(DataType dataType) {
-                        return smallIntType(dataType);
-                    }
-
-                    @Override
-                    public String smallIntType(DataType dataType) {
-                        return "SMALLINT";
-                    }
-                });
-
-                return colType + (!multiPk && col.isPk() ? " PRIMARY KEY" : StringUtils.EMPTY);
-            }
-
-        };
+        final CreateTableSqlBuilder createTableSqlBuilder = new PostgreSQLCreateTableSqlBuilder(tableMapper, ds, transformers);
         return createTableSqlBuilder.build();
     }
 

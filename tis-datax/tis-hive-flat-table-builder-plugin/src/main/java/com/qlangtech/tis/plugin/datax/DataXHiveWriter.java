@@ -62,7 +62,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -218,7 +218,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
             @Override
             protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c) {
+                return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
                         return c.getType().accept(HiveColumn.hiveTypeVisitor);

@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -338,14 +339,24 @@ public class WriterTemplate {
     public static IDataxProcessor.TableMap createCustomer_order_relationTableMap(Optional<ISelectedTab> tab) {
         IDataxProcessor.TableMap tableMap
                 = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
+            List<CMeta> _cols;
+
             @Override
             public String getName() {
                 return TAB_customer_order_relation;
             }
 
             @Override
+            public List<String> getPrimaryKeys() {
+                return getCols().stream().filter((col) -> col.isPk()).map((col) -> col.getName()).collect(Collectors.toList());
+            }
+
+            @Override
             public List<CMeta> getCols() {
-                return createColMetas();
+                if (_cols == null) {
+                    _cols = createColMetas();
+                }
+                return _cols;
             }
         });
         tableMap.setTo(TAB_customer_order_relation);

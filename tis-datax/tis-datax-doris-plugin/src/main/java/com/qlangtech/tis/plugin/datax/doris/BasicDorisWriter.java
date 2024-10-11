@@ -107,8 +107,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         protected DorisType dorisType;
         private final BasicCreateTableSqlBuilder sqlBuilder;
 
-        public DorisColWrapper(IColMetaGetter meta, BasicCreateTableSqlBuilder sqlBuilder) {
-            super(meta);
+        public DorisColWrapper(IColMetaGetter meta, List<String> pks, BasicCreateTableSqlBuilder sqlBuilder) {
+            super(meta, pks);
             this.sqlBuilder = sqlBuilder;
             this.dorisType = convertType(meta);
         }
@@ -120,7 +120,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         @Override
         protected final void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-            if (sqlBuilder.isPK(this.meta.getName())) {
+            if (sqlBuilder.isPK(this.getName())) {
                 ddlScript.append(" NOT NULL");
             }
         }
@@ -154,10 +154,10 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             this.dorisTab = tableMapper.getSourceTab();
             this.primaryKeys = Lists.newArrayList();
             for (String pk : this.dorisTab.getPrimaryKeys()) {
-                for (IColMetaGetter c : this.getCols()) {
+                for (DorisColWrapper c : this.getCols()) {
                     if (pk.equalsIgnoreCase(c.getName())) {
                         // result.add(createColWrapper(c));
-                        this.primaryKeys.add(createColWrapper(c));
+                        this.primaryKeys.add((c));
                     }
                 }
             }
@@ -178,7 +178,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         protected abstract String getUniqueKeyToken();
 
         @Override
-        protected List<DorisColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
+        protected List<DorisColWrapper> preProcessCols(List<String> pks, List<DorisColWrapper> cols) {
             //return super.preProcessCols(pks, cols);
 
             // 将主键排在最前面
@@ -187,7 +187,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
             cols.stream().filter((c) -> !this.pks.contains(c.getName())).forEach((c) -> {
-                result.add(createColWrapper(c));
+                result.add((c));
             });
             return result;
         }
@@ -204,8 +204,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             if (pks.size() > 0) {
                 script.append(primaryKeys.stream().map((pk) -> wrapWithEscape(pk.getName())).collect(Collectors.joining(",")));
             } else {
-                List<IColMetaGetter> cols = this.getCols();
-                Optional<IColMetaGetter> firstCol = cols.stream().findFirst();
+                List<DorisColWrapper> cols = this.getCols();
+                Optional<DorisColWrapper> firstCol = cols.stream().findFirst();
                 if (firstCol.isPresent()) {
                     script.append(firstCol.get().getName());
                 } else {
@@ -226,7 +226,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         @Override
         protected DorisColWrapper createColWrapper(IColMetaGetter c) {
-            return new DorisColWrapper(c, this);
+
+            return new DorisColWrapper(c, this.pks, this);
         }
 
 

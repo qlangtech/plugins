@@ -115,7 +115,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
             @Override
             protected DorisColWrapper createColWrapper(IColMetaGetter col) {
-                return new DorisColWrapper(col, this) {
+                return new DorisColWrapper(col, this.pks, this) {
                     @Override
                     protected DorisType convertType(IColMetaGetter col) {
                         DorisType type = super.convertType(col);

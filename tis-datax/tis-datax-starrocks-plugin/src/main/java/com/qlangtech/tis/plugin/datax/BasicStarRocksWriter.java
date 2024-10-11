@@ -42,6 +42,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -122,19 +123,19 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
 
         @Override
-        protected List<T> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
+        protected List<T> preProcessCols(List<String> pks, List<T> cols) {
             // 将主键排在最前面
 
             List<T> result = Lists.newArrayList();
             for (String pk : pks) {
-                for (IColMetaGetter c : cols) {
+                for (T c : cols) {
                     if (pk.equalsIgnoreCase(c.getName())) {
-                        result.add((T) createColWrapper(c));
+                        result.add(c);
                     }
                 }
             }
             cols.stream().filter((c) -> !pks.contains(c.getName())).forEach((c) -> {
-                result.add((T) createColWrapper(c));
+                result.add(c);
             });
             return result;
         }
@@ -153,8 +154,8 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
                         .map((pk) -> wrapWithEscape(pk))
                         .collect(Collectors.joining(",")));
             } else {
-                List<IColMetaGetter> cols = this.getCols();
-                Optional<IColMetaGetter> firstCol = cols.stream().findFirst();
+                List<T> cols = this.getCols();
+                Optional<T> firstCol = cols.stream().findFirst();
                 if (firstCol.isPresent()) {
                     script.append(firstCol.get().getName());
                 } else {
@@ -168,24 +169,24 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
         @Override
         protected T createColWrapper(IColMetaGetter c) {
-            return (T) new ColWrapper(c) {
+            return (T) new ColWrapper(c, this.pks) {
                 @Override
                 public String getMapperType() {
-                    return convertType(this.meta).token;
+                    return convertType(getType()).token;
                 }
 
                 @Override
                 protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                    if (this.meta.isPk()) {
+                    if (this.isPk()) {
                         ddlScript.append(" NOT NULL");
                     }
                 }
             };
         }
 
-        protected DorisType convertType(IColMetaGetter col) {
-            DataType type = col.getType();
-            return type.accept(columnTokenRecognise);
+        protected DorisType convertType(DataType type) {
+            return Objects.requireNonNull(type, "type can not be null")
+                    .accept(columnTokenRecognise);
         }
     }
 

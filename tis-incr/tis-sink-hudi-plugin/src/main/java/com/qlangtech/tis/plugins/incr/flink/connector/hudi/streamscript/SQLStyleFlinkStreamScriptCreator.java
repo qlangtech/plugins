@@ -105,19 +105,20 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     = new CreateTableSqlBuilder<ColWrapper>(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta, Optional.empty()) {
                 @Override
                 protected ColWrapper createColWrapper(IColMetaGetter c) {
-                    return new ColWrapper(c) {
+                    return new ColWrapper(c, this.pks) {
                         @Override
                         public String getMapperType() {
-                            return convertType(meta);
+                            return convertType(this);
                         }
 
                         @Override
                         protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
                             // super.appendExtraConstraint(ddlScript);
                             // appendExtraConstraint
-                            Optional<String> f
-                                    = pks.stream().filter((pk) -> pk.equals(meta.getName())).findFirst();
-                            if (f.isPresent()) {
+
+//                            Optional<String> f
+//                                    = pks.stream().filter((pk) -> pk.equals(this.getName())).findFirst();
+                            if (this.isPk()) {
                                 ddlScript.append(" PRIMARY KEY NOT ENFORCED");
                             }
                         }
@@ -185,7 +186,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
         }
     }
 
-    private String convertType(IColMetaGetter col) {
+    private String convertType(ColWrapper col) {
         // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/
         return col.getType().accept(new DataType.TypeVisitor<String>() {
             @Override

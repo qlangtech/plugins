@@ -103,7 +103,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                     case FLOAT:
                     case DOUBLE:
                     case DECIMAL:
-                        return "decimal(8,4)";
+                        return "decimal(" + type.getColumnSize() + ", " + type.getDecimalDigits() + ")";
                     case DATE:
                     case TIME:
                     case TIMESTAMP:

@@ -180,7 +180,8 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
-            return rowData.getField(colIndex);
+            Object val = rowData.getField(colIndex);
+            return ((Number) val).longValue();
         }
     }
 
@@ -204,7 +205,8 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
-            return rowData.getFloat(colIndex);
+            Object val = rowData.getField(colIndex);
+            return ((Number) val).floatValue();//.getFloat(colIndex);
         }
     }
 
@@ -231,7 +233,11 @@ public class RowFieldGetterFactory {
 
         @Override
         public Object getObject(GenericRowData rowData) {
-            return rowData.getShort(colIndex);
+            Object val = rowData.getField(colIndex);
+            if (val instanceof java.lang.Byte) {
+                return ((java.lang.Byte) val).shortValue();
+            }
+            return (Short) val; //rowData.getShort(colIndex);
         }
     }
 

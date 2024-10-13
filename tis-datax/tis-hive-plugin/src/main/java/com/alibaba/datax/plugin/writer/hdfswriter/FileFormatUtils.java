@@ -6,6 +6,7 @@ import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.core.statistics.plugin.task.util.DirtyRecord;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.HdfsFormat;
@@ -153,7 +154,7 @@ public class FileFormatUtils {
                         String message = String.format("字段类型转换错误：实际字段值为[%s].",
                                 //colMeta.getType(),
                                 column.toString());
-                        taskPluginCollector.collectDirtyRecord(record, message);
+                        taskPluginCollector.collectDirtyRecord(DirtyRecord.create(record), message);
                         transportResult.setRight(true);
                         break;
                     }

@@ -41,10 +41,13 @@ public class DataXSparkWriter extends DataXHiveWriter {
 
     @TISExtension()
     public static class DataXSparkWriterDescriptor extends DataXHiveWriter.DefaultDescriptor {
+        @Override
+        public EndType getEndType() {
+            return EndType.Spark;
+        }
 
         @Override
         public String getDisplayName() {
-
             return DATAX_NAME;
         }
     }

@@ -72,6 +72,25 @@
     </modules>
     <profiles>
         <profile>
+            <id>default-emr</id>
+            <properties>
+                <spark2.version>2.4.4</spark2.version>
+                <hadoop-version>${hadoop2x-version}</hadoop-version>
+                <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
+                <hudi.version>0.14.1</hudi.version>
+                <hive.version>2.3.1</hive.version>
+                <scala.binary.version>2.12</scala.binary.version>
+                <scala.version>2.12.9</scala.version>
+                <appname>all</appname>
+
+                <hudi>${hudi.version}</hudi>
+                <spark>${spark2.version}</spark>
+                <hive>${hive.version}</hive>
+                <hadoop>${hadoop-version}</hadoop>
+
+            </properties>
+        </profile>
+        <profile>
             <!--https://emr-next.console.aliyun.com/#/resource/all/create/ecs-->
             <id>aliyun-emr</id>
             <properties>

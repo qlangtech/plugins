@@ -3,7 +3,8 @@
     "disable": true
   },
   "splitTableStrategy": {
-    "label": "分表识别"
+    "label": "分库分表",
+    "dftVal": "off"
   },
   "userName": {
     "placeholder": "SYSDBA"

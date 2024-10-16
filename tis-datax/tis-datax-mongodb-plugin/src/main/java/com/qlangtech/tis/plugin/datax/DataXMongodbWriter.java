@@ -149,7 +149,7 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
-        private transient SuFormProperties rewriteSubFormProperties;
+      //  private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
@@ -242,18 +242,18 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
                     "subForm clazz:" + targetClass + " " + "can not find relevant Descriptor");
         }
 
-        @Override
-        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-            if (rewriteSubFormProperties != null) {
-                return rewriteSubFormProperties;
-            }
-            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-
-            rewriteSubFormProperties =
-                    SuFormProperties.copy(PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor),
-                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
-            return rewriteSubFormProperties;
-        }
+//        @Override
+//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+//            if (rewriteSubFormProperties != null) {
+//                return rewriteSubFormProperties;
+//            }
+//            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
+//
+//            rewriteSubFormProperties =
+//                    SuFormProperties.copy(PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor),
+//                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
+//            return rewriteSubFormProperties;
+//        }
         /**
          * implements DataxWriter.IRewriteSuFormProperties End
          */

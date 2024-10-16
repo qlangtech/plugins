@@ -194,27 +194,27 @@ public class DataXKafkaWriter extends DataxWriter {
     @TISExtension
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
 
-        private transient SuFormProperties rewriteSubFormProperties;
+       // private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
         }
 
-        @Override
-        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-
-            if (rewriteSubFormProperties != null) {
-                return rewriteSubFormProperties;
-            }
-
-            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-            rewriteSubFormProperties = SuFormProperties.copy(
-                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
-                    , newSubDescriptor.clazz
-                    , newSubDescriptor
-                    , subformProps);
-            return rewriteSubFormProperties;
-        }
+//        @Override
+//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+//
+//            if (rewriteSubFormProperties != null) {
+//                return rewriteSubFormProperties;
+//            }
+//
+//            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
+//            rewriteSubFormProperties = SuFormProperties.copy(
+//                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
+//                    , newSubDescriptor.clazz
+//                    , newSubDescriptor
+//                    , subformProps);
+//            return rewriteSubFormProperties;
+//        }
 
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {

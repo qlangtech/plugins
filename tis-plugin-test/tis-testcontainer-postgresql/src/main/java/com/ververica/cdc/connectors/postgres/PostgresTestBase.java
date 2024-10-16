@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.cdc.connectors.postgres;
+package com.ververica.cdc.connectors.postgres;
 
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;

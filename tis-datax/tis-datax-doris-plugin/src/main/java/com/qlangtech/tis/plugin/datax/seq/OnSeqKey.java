@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -63,7 +64,7 @@ public class OnSeqKey extends SeqKey {
     }
 
     @Override
-    public StringBuffer createDDLScript(AbstractCreateTableSqlBuilder tableMapper) {
+    public StringBuffer createDDLScript(AbstractCreateTableSqlBuilder<? extends ColWrapper> tableMapper) {
         // if (StringUtils.isNotEmpty(this.seqKey)) {
         if (tableMapper == null) {
             throw new IllegalArgumentException("param tableMapper can not be null");
@@ -72,8 +73,8 @@ public class OnSeqKey extends SeqKey {
             throw new IllegalArgumentException("param seqKey can not be null");
         }
         StringBuffer seqBuffer = new StringBuffer();
-        List<IColMetaGetter> cols = tableMapper.getCols();
-        Optional<IColMetaGetter> p = cols.stream().filter((c) -> seqKey.equals(c.getName())).findFirst();
+        List<? extends ColWrapper> cols = tableMapper.getCols();
+        Optional<? extends ColWrapper> p = cols.stream().filter((c) -> c.isPk()).findFirst();
         if (!p.isPresent()) {
             throw new IllegalStateException("can not find col:" + seqKey);
         }
@@ -99,7 +100,7 @@ public class OnSeqKey extends SeqKey {
                 DataXReaderColType t = c.getType().getCollapse();
                 return t == DataXReaderColType.INT || t == DataXReaderColType.Long || t == DataXReaderColType.Date;
             });
-        }).stream().map((c)-> new Option(c.getName())).collect(Collectors.toList());
+        }).stream().map((c) -> new Option(c.getName())).collect(Collectors.toList());
         return result;
     }
 

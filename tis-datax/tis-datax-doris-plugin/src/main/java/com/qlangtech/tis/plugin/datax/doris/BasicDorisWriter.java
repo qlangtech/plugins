@@ -103,13 +103,13 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
-    protected static class DorisColWrapper extends ColWrapper {
+    protected static final class DorisColWrapper extends ColWrapper {
         protected DorisType dorisType;
-        private final BasicCreateTableSqlBuilder sqlBuilder;
+        private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
 
-        public DorisColWrapper(IColMetaGetter meta, List<String> pks, BasicCreateTableSqlBuilder sqlBuilder) {
+        public DorisColWrapper(IColMetaGetter meta, List<String> pks, DataType.TypeVisitor<DorisType> columnTokenRecognise) {
             super(meta, pks);
-            this.sqlBuilder = sqlBuilder;
+            this.columnTokenRecognise = Objects.requireNonNull(columnTokenRecognise, "columnTokenRecognise can not be null");
             this.dorisType = convertType(meta);
         }
 
@@ -120,14 +120,53 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         @Override
         protected final void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-            if (sqlBuilder.isPK(this.getName())) {
+            if (this.isPk()) {
                 ddlScript.append(" NOT NULL");
             }
         }
 
         protected DorisType convertType(IColMetaGetter col) {
-            DataType type = col.getType();
-            return type.accept(Objects.requireNonNull(sqlBuilder).columnTokenRecognise);
+
+            final DorisType type = col.getType().accept((columnTokenRecognise));
+
+            DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
+
+                @Override
+                public DorisType bigInt(DataType type) {
+                    return null;
+                }
+
+                @Override
+                public DorisType doubleType(DataType type) {
+                    return null;
+                }
+
+                @Override
+                public DorisType dateType(DataType type) {
+                    return new DorisType(type, true, "DATEV2");
+                }
+
+                @Override
+                public DorisType timestampType(DataType type) {
+                    return new DorisType(type, true, "DATETIMEV2");
+                }
+
+                @Override
+                public DorisType bitType(DataType type) {
+                    return null;
+                }
+
+                @Override
+                public DorisType blobType(DataType type) {
+                    return null;
+                }
+
+                @Override
+                public DorisType varcharType(DataType type) {
+                    return null;
+                }
+            });
+            return fixType != null ? fixType : type;
         }
     }
 
@@ -148,6 +187,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
                 , DataSourceMeta dsMeta
                 , DataType.TypeVisitor<DorisType> columnTokenRecognise
                 , Optional<RecordTransformerRules> transformers) {
+
             super(tableMapper, dsMeta, transformers);
             this.columnTokenRecognise = columnTokenRecognise;
             // (DorisSelectedTab)
@@ -227,7 +267,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         protected DorisColWrapper createColWrapper(IColMetaGetter c) {
 
-            return new DorisColWrapper(c, this.pks, this);
+            return new DorisColWrapper(c, this.pks, columnTokenRecognise);
         }
 
 

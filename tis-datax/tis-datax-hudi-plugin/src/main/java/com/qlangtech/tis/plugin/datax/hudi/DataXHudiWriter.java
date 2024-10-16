@@ -188,7 +188,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @TISExtension()
     public static class DefaultDescriptor extends HdfsWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
-        private transient SuFormProperties rewriteSubFormProperties;
+       // private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
@@ -240,19 +240,19 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
 
-        @Override
-        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-
-            if (rewriteSubFormProperties != null) {
-                return rewriteSubFormProperties;
-            }
-
-            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-            rewriteSubFormProperties =
-                    SuFormProperties.copy(PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor),
-                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
-            return rewriteSubFormProperties;
-        }
+//        @Override
+//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+//
+//            if (rewriteSubFormProperties != null) {
+//                return rewriteSubFormProperties;
+//            }
+//
+//            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
+//            rewriteSubFormProperties =
+//                    SuFormProperties.copy(PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor),
+//                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
+//            return rewriteSubFormProperties;
+//        }
 
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {

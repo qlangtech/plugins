@@ -115,53 +115,8 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
             @Override
             protected DorisColWrapper createColWrapper(IColMetaGetter col) {
-                return new DorisColWrapper(col, this.pks, this) {
-                    @Override
-                    protected DorisType convertType(IColMetaGetter col) {
-                        DorisType type = super.convertType(col);
-                        DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
-
-                            @Override
-                            public DorisType bigInt(DataType type) {
-                                return null;
-                            }
-
-                            @Override
-                            public DorisType doubleType(DataType type) {
-                                return null;
-                            }
-
-                            @Override
-                            public DorisType dateType(DataType type) {
-                                return new DorisType(type, true, "DATEV2");
-                            }
-
-                            @Override
-                            public DorisType timestampType(DataType type) {
-                                return new DorisType(type, true, "DATETIMEV2");
-                            }
-
-                            @Override
-                            public DorisType bitType(DataType type) {
-                                return null;
-                            }
-
-                            @Override
-                            public DorisType blobType(DataType type) {
-                                return null;
-                            }
-
-                            @Override
-                            public DorisType varcharType(DataType type) {
-                                return null;
-                            }
-                        });
-                        return fixType != null ? fixType : type;
-                    }
-                };
+                return new DorisColWrapper(col, this.pks, columnTokenRecognise);
             }
-
-
         };
     }
 
@@ -173,7 +128,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor implements DataxWriter.IRewriteSuFormProperties {
-        private transient SuFormProperties rewriteSubFormProperties;
+      //  private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
@@ -186,19 +141,19 @@ public class DataXDorisWriter extends BasicDorisWriter {
                     , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
         }
 
-        @Override
-        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-            if (rewriteSubFormProperties != null) {
-                return rewriteSubFormProperties;
-            }
-            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-            rewriteSubFormProperties = SuFormProperties.copy(
-                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
-                    , newSubDescriptor.clazz
-                    , newSubDescriptor
-                    , subformProps);
-            return rewriteSubFormProperties;
-        }
+//        @Override
+//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+//            if (rewriteSubFormProperties != null) {
+//                return rewriteSubFormProperties;
+//            }
+//            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
+//            rewriteSubFormProperties = SuFormProperties.copy(
+//                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
+//                    , newSubDescriptor.clazz
+//                    , newSubDescriptor
+//                    , subformProps);
+//            return rewriteSubFormProperties;
+//        }
 
         @Override
         public String getDisplayName() {

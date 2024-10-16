@@ -26,7 +26,6 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -153,10 +152,10 @@ public class DataXHiveReader extends AbstractDFSReader {
             return null;
         }
 
-        @Override
-        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-            return null;
-        }
+//        @Override
+//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+//            return null;
+//        }
 
         @Override
         public String getDisplayName() {

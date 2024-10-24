@@ -131,16 +131,4 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
         }
     }
 
-
-    @Override
-    public String getTopic() {
-        return null;
-    }
-
-    @Override
-    public void setDeserialize(IAsyncMsgDeserialize deserialize) {
-
-    }
-
-
 }

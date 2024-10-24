@@ -118,15 +118,6 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
         return sourceFuncs;
     }
 
-    @Override
-    public String getTopic() {
-        return null;
-    }
-
-    @Override
-    public void setDeserialize(IAsyncMsgDeserialize deserialize) {
-
-    }
 
     @Override
     public IConsumerHandle getConsumerHandle() {

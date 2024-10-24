@@ -25,7 +25,7 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis</artifactId>
-        <version>4.0.1</version>
+        <version>4.1.0</version>
     </parent>
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-plugin-parent</artifactId>
@@ -216,7 +216,7 @@
         <scmTag>HEAD</scmTag>
         <!-- Where to put temporary files during test runs. -->
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>
-        <testcontainers.version>1.17.3</testcontainers.version>
+        <testcontainers.version>1.18.3</testcontainers.version>
         <powerjob.version>4.3.6</powerjob.version>
         <mariadb-java-client.version>3.4.1</mariadb-java-client.version>
     </properties>

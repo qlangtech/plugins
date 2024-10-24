@@ -3,12 +3,12 @@
   <parent>
     <artifactId>tis-aliyun-jindo-sdk-extends</artifactId>
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <version>4.0.1</version>
+    <version>4.1.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.qlangtech.tis.plugins</groupId>
   <artifactId>tis-aliyun-jindo-sdk-extends-impl</artifactId>
-  <version>4.0.1</version>
+  <version>4.1.0</version>
   <licenses>
     <license>
       <name>GNU Affero General Public License</name>
@@ -46,7 +46,7 @@
     <dependency>
       <groupId>com.alibaba.datax</groupId>
       <artifactId>datax-common</artifactId>
-      <version>4.0.1</version>
+      <version>4.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -64,7 +64,7 @@
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
-      <version>4.0.1</version>
+      <version>4.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

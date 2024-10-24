@@ -191,14 +191,4 @@ public abstract class ChunjunSourceFunction
         return cm.getType().getS();
     }
 
-
-    @Override
-    public String getTopic() {
-        return null;
-    }
-
-    @Override
-    public void setDeserialize(IAsyncMsgDeserialize deserialize) {
-
-    }
 }

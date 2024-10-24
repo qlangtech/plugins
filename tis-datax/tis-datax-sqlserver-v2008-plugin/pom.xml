@@ -45,6 +45,11 @@
 <!--            <version>4.0</version>-->
 <!--        </dependency>-->
 
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.sqlserver</groupId>

@@ -80,7 +80,7 @@ import java.util.zip.ZipEntry;
 public class CompileAndPackage implements ICompileAndPackage {
     private static final Logger logger = LoggerFactory.getLogger(CompileAndPackage.class);
     private final List<PluginWrapper.Dependency> extraPluginDependencies;
-    private final Set<PluginManifest.ExplodePluginManifest> classInExtraPlugin;
+    private final Set<PluginManifest> classInExtraPlugin;
 
     public CompileAndPackage(List<PluginWrapper.Dependency> extraPluginDependencies) {
         this(extraPluginDependencies, Collections.emptySet());
@@ -298,8 +298,9 @@ public class CompileAndPackage implements ICompileAndPackage {
             return Config.getPluginLibDir(plugin.shortName).getAbsolutePath() + "/*";
         }).collect(Collectors.toList()));
 
-        depClasspath.addAll(this.classInExtraPlugin.stream().map((clazzInPlugin) -> {
-            return clazzInPlugin.getPluginLibDir().getAbsolutePath() + "/*";
+        depClasspath.addAll(this.classInExtraPlugin.stream().flatMap((clazzInPlugin) -> {
+            return clazzInPlugin.getClasspath().stream();
+            // return clazzInPlugin.getPluginLibDir().getAbsolutePath() + "/*";
         }).collect(Collectors.toList()));
 
         return ScalaCompilerSupport.streamScriptCompile(sourceRoot, depClasspath, loggerListener);

@@ -19,6 +19,7 @@
 package com.alibaba.datax.plugin.writer.hudi;
 
 import com.qlangtech.tis.extension.impl.PluginManifest;
+import com.qlangtech.tis.extension.impl.PluginManifest.ExplodePluginManifest;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -72,7 +73,7 @@ public class HudiConfig {
     }
 
     private static File getHudiPluginLibDir() {
-        return PluginManifest.create(HudiConfig.class).getPluginLibDir();
+        return ((ExplodePluginManifest) PluginManifest.create(HudiConfig.class)).getPluginLibDir();
         // return Config.getPluginLibDir();
 
 

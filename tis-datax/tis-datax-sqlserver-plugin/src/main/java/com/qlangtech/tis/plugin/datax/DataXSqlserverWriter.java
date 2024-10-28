@@ -149,7 +149,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
         @Override
         public boolean isSupportIncr() {
-            return false;
+            return true;
         }
 
         @Override

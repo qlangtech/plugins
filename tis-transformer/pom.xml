@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
-            <version>4.0.0</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

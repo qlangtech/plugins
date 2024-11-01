@@ -242,7 +242,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 // , sourceColsMeta
                 , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
-                , this.parallelism, RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), tabName, tab, sourceFlinkColCreator));
+                , this.parallelism
+                , RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue()
+                , tabName
+                , tab
+                , Objects.requireNonNull(sourceFlinkColCreator, "sourceFlinkColCreator can not be null")));
     }
 
 
@@ -318,7 +322,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             col.put("type", parseType(cm));
             cols.add(col);
         }
-         params.put(ConfigConstant.KEY_COLUMN, cols);
+        params.put(ConfigConstant.KEY_COLUMN, cols);
         params.put(KEY_FULL_COLS, colMetasMap.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         //    params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         params.put("batchSize", this.batchSize);

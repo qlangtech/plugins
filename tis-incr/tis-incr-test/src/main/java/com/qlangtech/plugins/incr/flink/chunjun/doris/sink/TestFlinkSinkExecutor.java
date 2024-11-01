@@ -21,10 +21,13 @@ package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -45,6 +48,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
@@ -54,6 +58,7 @@ import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
+import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -98,7 +103,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     protected static final String dbName = "tis";
 
     String colEntityId = "entity_id";
-    String colNum = "num";
+    protected String colNum = "num";
     static protected String colId = "id";
     String colCreateTime = "create_time";
     protected String updateTime = "update_time";
@@ -155,7 +160,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     }
 
-    private int updateNumVal = 999;
+    protected int updateNumVal = 999;
 
     protected DTO[] createTestDTO() {
         return createTestDTO(true);
@@ -192,8 +197,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             IFlinkColCreator flinkColCreator = null;
             Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
-            //int updateNumVal = 999;
             Assert.assertEquals(1, sinkFunction.size());
+            this.startTestSinkSync(sinkFunction);
+
+
             for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
                 Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey());
@@ -210,6 +217,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             env.execute("testJob");
 
         });
+    }
+
+    protected void startTestSinkSync(Map<TableAlias, TabSinkFunc<RowData>> sinkFunction) {
     }
 
     // @Test
@@ -248,6 +258,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             mapper.put(tableName, new TableAlias(tableName));
             TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
             EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper);
+            EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
 
             File ddlDir = folder.newFolder("ddl");
             String tabSql = tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
@@ -257,6 +268,21 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
+            };
+            HeteroEnum.incrSourceListenerFactoryStub = (dataX) -> {
+
+                MQListenerFactory mockIncrSourceFactory = new MQListenerFactory() {
+                    @Override
+                    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+                        return AbstractRowDataMapper::mapFlinkCol;
+                    }
+
+                    @Override
+                    public IMQListener create() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+                return mockIncrSourceFactory;
             };
             IDataxReader dataxReader = createDataxReader();
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
@@ -482,7 +508,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected abstract DataxWriter createDataXWriter();
 
-    private DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
+    protected DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
         DTO d = new DTO();
         d.setEventType(eventType);
         d.setTableName(tableName);

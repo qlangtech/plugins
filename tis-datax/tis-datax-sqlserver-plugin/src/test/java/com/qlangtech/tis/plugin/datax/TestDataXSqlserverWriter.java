@@ -89,11 +89,11 @@ public class TestDataXSqlserverWriter extends TestCase {
 
         DataXSqlserverWriter writer = getDataXSqlserverWriter();
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        CreateTableSqlBuilder.CreateDDL createDDL = writer.generateCreateDDL(tableMap.get());
+        CreateTableSqlBuilder.CreateDDL createDDL = writer.generateCreateDDL(tableMap.get(),Optional.empty());
         assertNull(createDDL);
 
         writer.autoCreateTable = true;
-        createDDL = writer.generateCreateDDL(tableMap.get());
+        createDDL = writer.generateCreateDDL(tableMap.get(),Optional.empty());
         assertNotNull(createDDL);
 
         assertEquals("CREATE TABLE orderinfo_new\n" +

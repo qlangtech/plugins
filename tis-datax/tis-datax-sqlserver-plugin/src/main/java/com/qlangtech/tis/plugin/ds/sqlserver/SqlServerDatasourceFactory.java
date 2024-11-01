@@ -42,7 +42,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName;// + ";user=" + this.userName + ";password=" + password;
+        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName;
         if (StringUtils.isNotEmpty(this.extraParams)) {
             jdbcUrl = jdbcUrl + ";" + this.extraParams;
         }

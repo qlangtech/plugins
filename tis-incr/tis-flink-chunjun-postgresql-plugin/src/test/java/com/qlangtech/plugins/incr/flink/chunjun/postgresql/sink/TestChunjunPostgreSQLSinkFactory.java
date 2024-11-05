@@ -34,6 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -71,7 +72,7 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ArrayList<String> getUniqueKey() {
+    protected List<String> getUniqueKey(List<CMeta> metaCols) {
         return Lists.newArrayList(colId);
     }
 

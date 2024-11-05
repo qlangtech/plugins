@@ -73,10 +73,10 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
         return insertType;
     }
 
-    @Override
-    protected ArrayList<String> getUniqueKey() {
-        return Lists.newArrayList(colId, updateTime);
-    }
+//    @Override
+//    protected ArrayList<String> getUniqueKey() {
+//        return Lists.newArrayList(colId, updateTime);
+//    }
 
     @Override
     protected BasicDataSourceFactory getDsFactory() {

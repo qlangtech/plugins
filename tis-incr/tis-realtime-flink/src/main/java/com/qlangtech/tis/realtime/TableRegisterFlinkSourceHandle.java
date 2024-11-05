@@ -30,6 +30,7 @@ import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -221,7 +222,7 @@ public abstract class TableRegisterFlinkSourceHandle
             tRules = transformers.get();
 
             ITransformerBuildInfo transformerCfg = tRules.createTransformerBuildInfo(namedContext);
-            List<IColMetaGetter> colsWithContextParams
+            List<OutputParameter> colsWithContextParams
                     = transformerCfg.overwriteColsWithContextParams(srcCols);
             transformerMapper = new RowTransformerMapper(
                     FlinkCol.getAllTabColsMeta(colsWithContextParams

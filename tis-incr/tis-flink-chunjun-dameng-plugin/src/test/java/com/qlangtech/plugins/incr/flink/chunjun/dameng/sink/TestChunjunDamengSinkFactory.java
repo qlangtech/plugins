@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.writer.DataXDaMengWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.oracle.DamengDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.TISDamengContainer;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -34,6 +35,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -67,17 +69,18 @@ public class TestChunjunDamengSinkFactory extends TestFlinkSinkExecutor {
 
     @Override
     protected UpdateMode createIncrMode() {
-      //  InsertType insertType = new InsertType();
+        //  InsertType insertType = new InsertType();
         UpsertType updateMode = new UpsertType();
-       // UpdateType updateMode = new UpdateType();
+        // UpdateType updateMode = new UpdateType();
         //  updateMode.updateKey = Lists.newArrayList(colId, updateTime);
         return updateMode;
     }
 
-    @Override
-    protected ArrayList<String> getUniqueKey() {
-        return Lists.newArrayList(colId, updateTime);
-    }
+//    @Override
+//    protected ArrayList<String> getUniqueKey(List<CMeta> metaCols) {
+//        //  return Lists.newArrayList(colId, updateTime);
+//        return super.getUniqueKey(metaCols);
+//    }
 
     @Override
     protected BasicDataSourceFactory getDsFactory() {
@@ -87,6 +90,7 @@ public class TestChunjunDamengSinkFactory extends TestFlinkSinkExecutor {
     @Test
     @Override
     public void testSinkSync() throws Exception {
+
         super.testSinkSync();
     }
 

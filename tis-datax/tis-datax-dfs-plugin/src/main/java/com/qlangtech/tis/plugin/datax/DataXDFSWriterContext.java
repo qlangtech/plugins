@@ -46,7 +46,7 @@ public class DataXDFSWriterContext implements IDataxContext {
         Objects.requireNonNull(writer.dfsLinker, "prop linker can not be null");
         this.tableMapper = tableMapper;
 
-        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tableMapper.getSourceCols()).getCols())
+        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tableMapper.getSourceCols()).getColsWithoutVirtualInfo())
                 .orElseGet(() -> tableMapper.getSourceCols().stream().collect(Collectors.toList()));
 
         //  this.ftpServer = FTPServer.getServer(writer.linker);

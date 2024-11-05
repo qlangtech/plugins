@@ -21,6 +21,7 @@ package com.qlangtech.tis.realtime;
 import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -49,9 +50,9 @@ public class SelectedTableTransformerRules {
         this.rules = transformerRules.createTransformerBuildInfo(dataXContext);
     }
 
-    List<IColMetaGetter> cols;
+    List<OutputParameter> cols;
 
-    public List<IColMetaGetter> overwriteColsWithContextParams() {
+    public List<OutputParameter> overwriteColsWithContextParams() {
         if (cols == null) {
             cols = rules.overwriteColsWithContextParams(this.tab.getCols());
         }

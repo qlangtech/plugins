@@ -28,6 +28,7 @@ import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceH
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -46,6 +48,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.http.HttpEntity;
 import org.junit.After;
 import org.junit.Assert;
@@ -246,50 +249,49 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     public void testSinkSyncWithSQL() throws Exception {
 
         AtomicInteger httpPutCount = getHttpPutCount();
-        super.testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
-            /**
-             * ==================================================
-             */
-            TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
-            tableRegisterHandle.setSinkFuncFactory(sinkFactory);
 
-//            (tab) -> {
-//                return () -> {
-//                    return selectedTab.getCols().stream()
-//                            .map((c) -> new HdfsColMeta(
-//                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
-//                };
-//            }
+        IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+            @Override
+            protected void runStream(DataxProcessor dataxProcessor
+                    , ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
+                /**
+                 * ==================================================
+                 */
+                TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
+                tableRegisterHandle.setSinkFuncFactory(sinkFactory);
 
-            tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
-                @Override
-                public ISelectedTab getSelectedTab(String tableName) {
-                    throw new UnsupportedOperationException(tableName);
-                }
+                tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
+                    @Override
+                    public ISelectedTab getSelectedTab(String tableName) {
+                        throw new UnsupportedOperationException(tableName);
+                    }
 
-                @Override
-                public IStreamTableMeta getStreamTableMeta(String tableName) {
-                    return () -> {
-                        return selectedTab.getCols().stream()
-                                .map((c) -> new HdfsColMeta(
-                                        c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
-                    };
-                }
-            });
+                    @Override
+                    public IStreamTableMeta getStreamTableMeta(String tableName) {
+                        return () -> {
+                            return selectedTab.getCols().stream()
+                                    .map((c) -> new HdfsColMeta(
+                                            c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+                        };
+                    }
+                });
 
-            List<ReaderSource> sourceFuncts = Lists.newArrayList();
-            dataxProcessor.getTabAlias().forEach((key, val) -> {
-                Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val);
-                sourceFuncts.add(sourceStream.getRight());
-            });
+                List<ReaderSource> sourceFuncts = Lists.newArrayList();
+                dataxProcessor.getTabAlias().forEach((key, val) -> {
+                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(this, env, val);
+                    sourceFuncts.add(sourceStream.getRight());
+                });
 
-            SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
-            sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
-            tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
-            /**
-             * ===========================================
-             */
-        });
+                SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
+                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
+                tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
+                /**
+                 * ===========================================
+                 */
+            }
+        };
+
+        super.testSinkSync(streamScriptRun);
         Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
     }
 

@@ -66,7 +66,7 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
     @Override
     public List<OutputParameter> outParameters() {
         return this.to.stream().map((col) -> {
-            return OutputParameter.create(getPrefixToFieldName(col), col);
+            return TargetColType.create(getPrefixToFieldName(col), col);
         }).collect(Collectors.toList());//.stream().map((c) -> c).collect(Collectors.toList());
     }
 

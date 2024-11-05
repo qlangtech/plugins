@@ -45,7 +45,7 @@ public class CassandraWriterContext implements IDataxContext {
         this.tabMapper = tabMapper;
         this.dsFactory = writer.getDataSourceFactory();
 
-        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tabMapper.getSourceCols()).getCols())
+        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tabMapper.getSourceCols()).getColsWithoutVirtualInfo())
                 .orElseGet(() -> tabMapper.getSourceCols().stream().collect(Collectors.toList()));
     }
 

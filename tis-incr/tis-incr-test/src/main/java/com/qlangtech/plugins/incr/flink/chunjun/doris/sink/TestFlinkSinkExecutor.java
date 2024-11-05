@@ -39,6 +39,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -59,6 +60,7 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -82,13 +84,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -103,7 +106,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     protected static final String dbName = "tis";
 
     String colEntityId = "entity_id";
-    protected String colNum = "num";
+    protected final String colNum = "num";
     static protected String colId = "id";
     String colCreateTime = "create_time";
     protected String updateTime = "update_time";
@@ -112,6 +115,21 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     static String price = "price";
 
     String pk = "88888888887";
+    public static final String newAddedRecord = "88888888889";
+    public static final String deleteFinallyId = "88888888890";
+
+
+    final String colEntityIdVal = "334556";
+    final int colNumVal = 5;
+    final int colNumValUpdated = 999;
+    final long colCreateTimeVal = 20211113115959l;
+    final BigDecimal priceVal = new BigDecimal("1314.99");
+
+    final String updateDateVal = "2021-12-09";
+    final String starTimeVal = "2021-12-18 09:21:20";
+    final String updateTimeVal = "2021-12-17 09:21:20";
+    final String updateTimeValUpdated = "2021-12-17 09:21:22";
+
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
 
@@ -135,7 +153,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = createDTO(DTO.EventType.ADD);
         DTO update = createDTO(DTO.EventType.UPDATE_AFTER, (after) -> {
-            after.put(colNum, 999);
+            after.put(colNum, colNumValUpdated);
         });
 
         // env.fromElements(new DTO[]{d, update}).addSink(new PrintSinkFunction<>());
@@ -156,23 +174,35 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         env.execute("testJob");
 
-        Thread.sleep(5000);
+        Thread.sleep(3000);
 
     }
 
-    protected int updateNumVal = 999;
+    //  protected int updateNumVal = 999;
 
-    protected DTO[] createTestDTO() {
-        return createTestDTO(true);
+//    protected DTO[] createTestDTO() {
+//        return createTestDTO(true);
+//    }
+
+
+    public interface FlinkTestCase {
+        public List<DTO> createTestData();
+
+        public void verifyRelevantRow(CreateDDL ddl, Statement statement) throws SQLException;
     }
 
-    protected DTO[] createTestDTO(boolean needDelete) {
 
-
+    /**
+     * 创建一条针对同一
+     *
+     * @param needDelete
+     * @return
+     */
+    private List<DTO> createDTOsForOneSingleRecord(boolean needDelete) {
         DTO add = createDTO(DTO.EventType.ADD);
         final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
-            after.put(colNum, updateNumVal);
-            after.put(updateTime, "2021-12-17 09:21:22");
+            after.put(colNum, colNumValUpdated);
+            after.put(updateTime, updateTimeValUpdated);
         });
         final DTO updateAfter = updateBefore.colone();
         updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
@@ -184,7 +214,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             delete.setEventType(DTO.EventType.DELETE);
             dtos.add(delete);
         }
-        return dtos.toArray(new DTO[dtos.size()]); //new DTO[]{add, updateAfter};
+        return dtos;
     }
 
     /**
@@ -193,31 +223,72 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
      * @throws Exception
      */
     protected void testSinkSync() throws Exception {
-        testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
 
-            IFlinkColCreator flinkColCreator = null;
-            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
-            Assert.assertEquals(1, sinkFunction.size());
-            this.startTestSinkSync(sinkFunction);
+        final IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+            @Override
+            public void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
+                IFlinkColCreator flinkColCreator = null;
+                Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
+                Assert.assertEquals(1, sinkFunction.size());
+                TestFlinkSinkExecutor.this.startTestSinkSync(sinkFunction);
 
 
-            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+                for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
-                Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey());
+                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey(), this);
 
-                entry.getValue().add2Sink(sourceStream.getKey());
+                    entry.getValue().add2Sink(sourceStream.getKey());
 
-                //  sourceStream.getStream().addSink();
+                    //  sourceStream.getStream().addSink();
 
-                // entry.getValue().add2Sink(sourceStream.addStream(env.fromElements(new DTO[]{d, update})));
-                // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
-                break;
+                    // entry.getValue().add2Sink(sourceStream.addStream(env.fromElements(new DTO[]{d, update})));
+                    // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
+                    break;
+                }
+
+                env.execute("testJob");
             }
 
-            env.execute("testJob");
 
-        });
+        };
+
+
+        this.testSinkSync(streamScriptRun);
     }
+
+//    protected DTO[] createTestDTO() {
+//
+//        // 创建一条更新记录
+//        List<DTO> dtos = createDTOsForOneSingleRecord(false);
+//
+//        // 创建一条添加记录
+//        DTO newAdd = createDTO(DTO.EventType.ADD, (after) -> {
+//            after.put(colId, newAddedRecord);
+//        });
+//
+//        dtos.add(newAdd);
+//
+//
+//        // 创建三条event，最终该记录会被删除
+//        List<DTO> deleteFinally = this.createDTOsForOneSingleRecord(true);
+//        Map<String, Object> after;
+//        Map<String, Object> before;
+//        for (DTO d : deleteFinally) {
+//            after = d.getAfter();
+//            before = d.getBefore();
+//            if (MapUtils.isNotEmpty(after)) {
+//                after.put(colId, deleteFinallyId);
+//            }
+//            if (MapUtils.isNotEmpty(before)) {
+//                before.put(colId, deleteFinallyId);
+//            }
+//            // 三条： 1.添加 2.更新 3.删除
+//            dtos.add(d);
+//        }
+//
+//        Assert.assertEquals(7, dtos.size());
+//        return dtos.toArray(new DTO[dtos.size()]); //new DTO[]{add, updateAfter};
+//    }
 
     protected void startTestSinkSync(Map<TableAlias, TabSinkFunc<RowData>> sinkFunction) {
     }
@@ -225,6 +296,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     // @Test
     protected void testSinkSync(IStreamScriptRun streamScriptRun) throws Exception {
 
+        List<FlinkTestCase> flinkTestCases = streamScriptRun.createFlinkTestCases();
 
         //  System.out.println("logger.getClass():" + logger.getClass());
 
@@ -249,8 +321,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         try {
 
-            //   String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate,
-            //   starTime};
+            // 定义MetaData
             SelectedTab totalpayInfo = createSelectedTab();
             // tableName = totalpayInfo.getName();
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
@@ -347,7 +418,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
 
             streamScriptRun.runStream(dataxProcessor, sinkFactory, env, totalpayInfo);
-            Thread.sleep(9000);
+            Thread.sleep(3000);
 
 
             // DBConfig dbConfig = this.getDsFactory().getDbConfig();
@@ -360,52 +431,176 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                 final CreateTableSqlBuilder.CreateDDL ddl = createDDL;
                 this.getDsFactory().visitFirstConnection((c) -> {
                     Connection conn = c.getConnection();
-                    try (Statement statement = conn.createStatement()) {
-                        // + " where id='" + pk + "'"
-                        try (ResultSet resultSet = statement.executeQuery(ddl.getSelectAllScript())) {
-                            if (resultSet.next()) {
-                                IResultRows.printRow(resultSet);
-                                assertResultSetFromStore(resultSet);
-                            } else {
-                                Assert.fail("have not find row with id=" + pk);
-                            }
-                        }
-                    }
+                    bizVerify(conn, flinkTestCases, ddl);
                 });
             }
 
 
             this.verifyAll();
         } catch (Throwable e) {
-            Thread.sleep(14000);
+            //  Thread.sleep(4000);
             throw new RuntimeException(e);
         }
     }
 
 
-    public interface IStreamScriptRun {
+    /**
+     * 到目标端数据库中验证最终数据是否正确
+     *
+     * @param conn
+     * @param ddl
+     * @throws SQLException
+     */
+    protected void bizVerify(Connection conn, List<FlinkTestCase> flinkTestCases, CreateDDL ddl) throws SQLException {
 
-        void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
-                       SelectedTab selectedTab) throws Exception;
+        try (Statement statement = conn.createStatement()) {
+            for (FlinkTestCase testCase : flinkTestCases) {
+                testCase.verifyRelevantRow(ddl, statement);
+            }
+        }
     }
 
-    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env,
+
+    public abstract class IStreamScriptRun {
+
+        protected abstract void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
+                                          SelectedTab selectedTab) throws Exception;
+
+        private void verifyReocrdVals(CreateDDL ddl, Statement statement, String pk, int colNumVal, String updateTimeVal) throws SQLException {
+            final String selectSQL = ddl.getSelectAllScript();
+            try (ResultSet resultSet = statement.executeQuery(selectSQL + " where " + colId + "='" + pk + "'")) {
+                if (resultSet.next()) {
+                    // 添加且被更新了
+                    IResultRows.printRow(resultSet);
+                    assertResultSetFromStore(resultSet);
+
+                    Assert.assertEquals("val of " + colEntityId, colEntityIdVal, resultSet.getString(colEntityId));
+                    Assert.assertEquals("val of " + colNum, colNumVal, resultSet.getInt(colNum));
+                    Assert.assertEquals("val of " + colId, pk, resultSet.getString(colId));
+                    Assert.assertEquals("val of " + colCreateTime, colCreateTimeVal, resultSet.getLong(colCreateTime));
+                    SimpleDateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    Assert.assertEquals("val of " + updateTime, updateTimeVal, datetimeFormat.format(resultSet.getTimestamp(updateTime)));
+                    Assert.assertEquals("val of " + starTime, starTimeVal, datetimeFormat.format(resultSet.getTimestamp(starTime)));
+
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Assert.assertEquals("val of " + updateDate, updateDateVal, dateFormat.format(resultSet.getDate(updateDate)));
+                    Assert.assertEquals("val of " + price, priceVal, resultSet.getBigDecimal(price));
+
+                } else {
+                    Assert.fail("have not find row with id=" + pk);
+                }
+            }
+        }
+
+
+        public List<FlinkTestCase> createFlinkTestCases() {
+            List<FlinkTestCase> testCases = Lists.newArrayList();
+            /**
+             * 创建一条更新记录
+             */
+            testCases.add(new FlinkTestCase() {
+                @Override
+                public List<DTO> createTestData() {
+                    return createDTOsForOneSingleRecord(false);
+                }
+
+                @Override
+                public void verifyRelevantRow(CreateDDL ddl, Statement statement) throws SQLException {
+                    verifyReocrdVals(ddl, statement, pk, colNumValUpdated, updateTimeValUpdated);
+                }
+            });
+
+            /**
+             * 创建一条添加记录
+             */
+            testCases.add(new FlinkTestCase() {
+                @Override
+                public List<DTO> createTestData() {
+                    DTO newAdd = createDTO(DTO.EventType.ADD, (after) -> {
+                        after.put(colId, newAddedRecord);
+                    });
+                    return Lists.newArrayList(newAdd);
+                }
+
+                @Override
+                public void verifyRelevantRow(CreateDDL ddl, Statement statement) throws SQLException {
+                    String selectSQL = ddl.getSelectAllScript();
+                    try (ResultSet resultSet = statement.executeQuery(selectSQL)) {
+                        while (resultSet.next()) {
+                            System.out.println("----->" + resultSet.getString(colId));
+                        }
+                    }
+
+
+                    verifyReocrdVals(ddl, statement, newAddedRecord, colNumVal, updateTimeVal);
+                }
+            });
+
+            /**
+             * 创建三条event，最终该记录会被删除
+             */
+            testCases.add(new FlinkTestCase() {
+                @Override
+                public List<DTO> createTestData() {
+                    List<DTO> deleteFinally = createDTOsForOneSingleRecord(true);
+                    Map<String, Object> after;
+                    Map<String, Object> before;
+                    for (DTO d : deleteFinally) {
+                        after = d.getAfter();
+                        before = d.getBefore();
+                        if (MapUtils.isNotEmpty(after)) {
+                            after.put(colId, deleteFinallyId);
+                        }
+                        if (MapUtils.isNotEmpty(before)) {
+                            before.put(colId, deleteFinallyId);
+                        }
+                        // 三条： 1.添加 2.更新 3.删除
+                    }
+                    return deleteFinally;
+                }
+
+                @Override
+                public void verifyRelevantRow(CreateDDL ddl, Statement statement) throws SQLException {
+
+                    final String countSQL = ddl.getCountSelectScript(Optional.of(colId + "='" + deleteFinallyId + "'"));
+                    try (ResultSet resultSet = statement.executeQuery(countSQL)) {
+                        if (resultSet.next()) {
+                            Assert.assertEquals("result count must be 0", 0, resultSet.getInt(1));
+                        } else {
+                            Assert.fail("must contain value for SQL:" + countSQL);
+                        }
+                    }
+                }
+            });
+
+            return testCases;
+        }
+    }
+
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(IStreamScriptRun streamScriptRun, StreamExecutionEnvironment env,
                                                                     TableAlias tableAlia) {
-        return createReaderSource(env, tableAlia, true);
+        return createReaderSource(env, tableAlia, streamScriptRun);
     }
 
-    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env,
-                                                                    TableAlias tableAlia, boolean needDelete) {
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(
+            StreamExecutionEnvironment env,
+            TableAlias tableAlia, IStreamScriptRun streamScriptRun) {
+        List<DTO> testRecords = Lists.newArrayList();
+        for (FlinkTestCase testCase : streamScriptRun.createFlinkTestCases()) {
+            for (DTO dto : testCase.createTestData()) {
+                testRecords.add(dto);
+            }
+        }
+
         DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
         ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
-                env.fromElements(this.createTestDTO(needDelete)).setParallelism(1));
+                env.fromElements(testRecords.toArray(new DTO[testRecords.size()])).setParallelism(1));
         readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
         return Pair.of(sourceStream, readerSource);
     }
 
     protected void assertResultSetFromStore(ResultSet resultSet) throws SQLException {
-        Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
-
+        //  Assert.assertEquals("val of " + colNum, colNumValUpdated, resultSet.getInt(colNum));
         Assert.assertNotNull(resultSet.getTimestamp(updateTime));
         Assert.assertNotNull(resultSet.getTimestamp(starTime));
     }
@@ -473,7 +668,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         SelectedTab totalpayInfo = createSelectedTab(metaCols);
         totalpayInfo.setIncrSinkProps(sinkExt);
         totalpayInfo.name = tableName;
-        totalpayInfo.primaryKeys = getUniqueKey();
+        totalpayInfo.primaryKeys = getUniqueKey(metaCols);
         return totalpayInfo;
     }
 
@@ -484,8 +679,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         return tab;
     }
 
-    protected ArrayList<String> getUniqueKey() {
-        return Lists.newArrayList(colId, updateTime);
+    protected List<String> getUniqueKey(List<CMeta> metaCols) {
+        return (metaCols.stream().filter((col) -> col.isPk()).map((col) -> col.getName()).collect(Collectors.toList()));//.collect(Collectors.toList());
+        //  return Lists.newArrayList(colId, updateTime);
     }
 
     protected CMeta createUpdateTime() {
@@ -513,17 +709,17 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         d.setEventType(eventType);
         d.setTableName(tableName);
         Map<String, Object> after = Maps.newHashMap();
-        after.put(colEntityId, "334556");
-        after.put(colNum, 5);
+        after.put(colEntityId, colEntityIdVal);
+        after.put(colNum, colNumVal);
         after.put(colId, pk);
-        after.put(colCreateTime, 20211113115959l);
+        after.put(colCreateTime, colCreateTimeVal);
         //  after.put(updateTime, "2021-12-17T09:21:20Z");
-        after.put(updateTime, "2021-12-17 09:21:20");
-        after.put(starTime, "2021-12-18 09:21:20");
-        after.put(updateDate, "2021-12-09");
-        after.put(price, new BigDecimal("1314.99"));
+        after.put(updateTime, updateTimeVal);
+        after.put(starTime, starTimeVal);
+        after.put(updateDate, updateDateVal);
+        after.put(price, priceVal);
         d.setAfter(after);
-        if (eventType != DTO.EventType.ADD) {
+        if (eventType != DTO.EventType.ADD || consumer.length > 0) {
             d.setBefore(Maps.newHashMap(after));
             for (Consumer<Map<String, Object>> c : consumer) {
                 c.accept(after);

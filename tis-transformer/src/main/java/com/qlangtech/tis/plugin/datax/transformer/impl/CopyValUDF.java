@@ -54,7 +54,7 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
 
     @Override
     public List<OutputParameter> outParameters() {
-        return Collections.singletonList(OutputParameter.create(this.getTO()));
+        return Collections.singletonList(TargetColType.create(this.getTO()));
     }
 
     @Override

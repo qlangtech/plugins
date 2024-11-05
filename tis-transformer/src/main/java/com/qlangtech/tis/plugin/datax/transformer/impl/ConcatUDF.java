@@ -92,7 +92,7 @@ public class ConcatUDF extends UDFDefinition {
 
     @Override
     public List<OutputParameter> outParameters() {
-        return Collections.singletonList(OutputParameter.create(this.to));
+        return Collections.singletonList(TargetColType.create(this.to));
     }
 
     @Override

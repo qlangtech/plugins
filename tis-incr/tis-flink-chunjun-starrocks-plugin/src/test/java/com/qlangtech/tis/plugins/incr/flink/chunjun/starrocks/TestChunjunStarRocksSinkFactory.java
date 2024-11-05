@@ -27,6 +27,7 @@ import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -46,6 +47,7 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -91,13 +93,15 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
     @Test
     public void testSinkSyncWithSQL() throws Exception {
 
-        // AtomicInteger httpPutCount = getHttpPutCount();
-        super.testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
-            /**
-             * ==================================================
-             */
-            TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
-            tableRegisterHandle.setSinkFuncFactory(sinkFactory);
+        IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+            @Override
+            protected void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
+                                     SelectedTab selectedTab) throws Exception {
+                /**
+                 * ==================================================
+                 */
+                TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
+                tableRegisterHandle.setSinkFuncFactory(sinkFactory);
 
 //            (tab) -> {
 //                return () -> {
@@ -107,34 +111,37 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
 //                };
 //            }
 
-            tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
-                @Override
-                public ISelectedTab getSelectedTab(String tableName) {
-                    return new DefaultTab(tableName);
-                }
+                tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
+                    @Override
+                    public ISelectedTab getSelectedTab(String tableName) {
+                        return new DefaultTab(tableName);
+                    }
 
-                @Override
-                public IStreamTableMeta getStreamTableMeta(String tableName) {
-                    return () -> selectedTab.getCols().stream()
-                            .map((c) -> new HdfsColMeta(
-                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
-                }
-            });
+                    @Override
+                    public IStreamTableMeta getStreamTableMeta(String tableName) {
+                        return () -> selectedTab.getCols().stream()
+                                .map((c) -> new HdfsColMeta(
+                                        c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+                    }
+                });
 
-            List<ReaderSource> sourceFuncts = Lists.newArrayList();
-            dataxProcessor.getTabAlias().forEach((key, val) -> {
-                Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val, false);
-                sourceFuncts.add(sourceStream.getRight());
-            });
+                List<ReaderSource> sourceFuncts = Lists.newArrayList();
+                dataxProcessor.getTabAlias().forEach((key, val) -> {
+                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val, this);
+                    sourceFuncts.add(sourceStream.getRight());
+                });
 
-            SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
-            sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
-            tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
-            /**
-             * ===========================================
-             */
-        });
-        // Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
+                SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
+                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
+                tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
+                /**
+                 * ===========================================
+                 */
+            }
+        };
+
+
+        super.testSinkSync(streamScriptRun);
     }
 
     // assertResultSetFromStore(resultSet);

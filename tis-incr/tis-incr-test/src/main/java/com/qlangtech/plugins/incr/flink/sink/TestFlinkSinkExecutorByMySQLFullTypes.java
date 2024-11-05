@@ -36,6 +36,7 @@ import org.junit.Assert;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -68,7 +69,7 @@ public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSin
         sinkExt.incrMode = upsert;
       //  sinkExt.uniqueKey =
         this.tabFullType.setIncrSinkProps(sinkExt);
-        this.tabFullType.primaryKeys = getUniqueKey();
+        this.tabFullType.primaryKeys = getUniqueKey(Collections.emptyList());
 
         List<CMeta> cols = this.tabFullType.getCols();
         Assert.assertTrue(CollectionUtils.isNotEmpty(cols));
@@ -76,7 +77,7 @@ public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSin
     }
 
     @Override
-    protected ArrayList<String> getUniqueKey() {
+    protected List<String> getUniqueKey(List<CMeta> metaCols) {
         return Lists.newArrayList(colId);
     }
 
@@ -114,7 +115,7 @@ public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSin
 //        super.assertResultSetFromStore(resultSet);
 //    }
 
-    @Override
+   // @Override
     protected DTO[] createTestDTO() {
         return new DTO[]{load("full_types_dto.xml")};
     }

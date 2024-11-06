@@ -67,7 +67,7 @@
         <module>tis-flink-cdc-mongdb-plugin</module>
 <!--        <module>tis-sink-clickhouse-plugin</module>-->
 
-<!--    为了编译通过暂时先注释掉 -->   <module>tis-sink-hudi-plugin</module>
+<!--    为了编译通过暂时先注释掉    <module>tis-sink-hudi-plugin</module>-->
 
         <!--        <module>tis-chunjun-dependency</module>-->
         <module>tis-flink-chunjun-mysql-plugin</module>

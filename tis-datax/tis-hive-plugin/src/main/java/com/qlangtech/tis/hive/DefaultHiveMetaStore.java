@@ -87,6 +87,10 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
             StorageDescriptor storageDesc = table.getSd();
 
 
+//            for (FieldSchema hiveCol : storageDesc.getCols()) {
+//
+//            }
+
             return new HiveTable(table.getTableName()) {
                 @Override
                 public List<String> getPartitionKeys() {

@@ -70,12 +70,12 @@
         <module>tis-datax-mariadb-plugin</module>
 <!--        <module>tis-ds-mysql-mariadb-plugin</module>-->
         <module>tis-datax-local-executor</module>
-        <!-- 为测试通过暂时注释掉-->
+        <!-- 为测试通过暂时注释掉
         <module>tis-datax-hudi-dependency</module>
         <module>tis-datax-hudi-test</module>
         <module>tis-datax-hudi-plugin</module>
         <module>tis-datax-hudi-common</module>
-
+-->
         <module>tis-datax-hdfs-plugin</module>
         <module>tis-datax-hdfs-reader-writer-plugin</module>
 

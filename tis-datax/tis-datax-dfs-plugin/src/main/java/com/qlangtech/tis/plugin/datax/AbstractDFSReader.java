@@ -74,7 +74,7 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
      * ================================================================================
      */
     @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta.getDFSFiles(filter);", atLeastOne = true)
-    public transient List<SelectedTab> selectedTabs;
+    public transient List<ISelectedTab> selectedTabs;
 
     public abstract List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities();
 

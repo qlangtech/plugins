@@ -35,6 +35,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -69,9 +71,29 @@ public class DataXHiveReader extends AbstractDFSReader {
         return IOUtils.loadResourceFromClasspath(DataXHiveReader.class, "DataXHiveReader-tpl.json");
     }
 
+    private transient int preSelectedTabsHash;
+
     @Override
     public List<ISelectedTab> getSelectedTabs() {
-        return Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null").stream().collect(Collectors.toList());
+        //BasicDataXRdbmsReader
+        Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
+        if (this.preSelectedTabsHash == selectedTabs.hashCode()) {
+            return selectedTabs;
+        }
+
+        try (TableColsMeta colMeta = this.getDfsLinker().getTabsMeta()) {
+            selectedTabs = this.selectedTabs.stream().map((tab) -> {
+                ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
+                    return colMeta.get(t.getName());
+                });
+                return tab;
+            }).collect(Collectors.toList());
+            this.preSelectedTabsHash = selectedTabs.hashCode();
+            return selectedTabs;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override

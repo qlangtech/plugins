@@ -137,7 +137,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
 
-        final List<SelectedTab> tabs = selectedTabs;
+        final List<ISelectedTab> tabs = selectedTabs;
         final int tabsLength = tabs.size();
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
         ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
@@ -156,7 +156,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
 
             @Override
             public IDataxReaderContext next() {
-                SelectedTab tab = tabs.get(currentIndex);
+                ISelectedTab tab = tabs.get(currentIndex);
 
                 ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
                     List<ColumnMetaData> colsMeta = getFTPFileMetaData(EntityName.parse(t.getName()), dfs);

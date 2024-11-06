@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
@@ -84,6 +85,11 @@ public class HiveDFSLinker extends TDFSLinker {
         }
         Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
         return fileSystem;
+    }
+
+    public TableColsMeta getTabsMeta() {
+        Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
+        return new TableColsMeta(dsFactory, dsFactory.dbName);
     }
 
 

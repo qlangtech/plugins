@@ -19,17 +19,15 @@
 package com.qlangtech.tis.hive.reader;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.plugin.unstructuredstorage.Compress;
-import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
-import com.qlangtech.tis.datax.Delimiter;
+import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
-import com.qlangtech.tis.hive.reader.impl.HadoopInputFormat;
-import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.hive.reader.impl.HadoopParquetInputFormat;
+import com.qlangtech.tis.hive.reader.impl.HadoopTextInputFormat;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -39,8 +37,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
-import com.qlangtech.tis.plugin.datax.format.TextFormat;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
@@ -49,12 +45,12 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.mapred.JobConf;
 
-import java.io.BufferedReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -152,38 +148,30 @@ public class HiveDFSLinker extends TDFSLinker {
             jobConf.set(entry.getKey(), entry.getValue());
         }
         try {
+            // example: MapredParquetInputFormat for Parquet
             Class<?> inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
-            // forExample : LazySimpleSerDe
+            // forExample : LazySimpleSerDe, ParquetHiveSerDe
             SerDe serde = (SerDe) Class.forName(
                     sdInfo.getSerializationLib()
                     , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
 
             // String columnNameProperty = tableProperties.getProperty(serdeConstants.LIST_COLUMNS);
             Properties props = new Properties();
-            props.setProperty(serdeConstants.LIST_COLUMNS, String.join(String.valueOf(SerDeUtils.COMMA), table.getCols()));
+            List<HiveTabColType> cols = table.getCols();
+            props.setProperty(serdeConstants.LIST_COLUMNS
+                    , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+            props.setProperty(serdeConstants.LIST_COLUMN_TYPES
+                    , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
             serde.initialize(jobConf, props);
 
             if (org.apache.hadoop.mapred.TextInputFormat.class.isAssignableFrom(inputFormatClass)) {
                 org.apache.hadoop.mapred.TextInputFormat inputFormat
                         = (org.apache.hadoop.mapred.TextInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-
                 inputFormat.configure(jobConf);
-                return new HadoopInputFormat(entityName, inputFormat, serde, jobConf);
-
-//                TextFormat txtFormat = new TextFormat() {
-//                    @Override
-//                    public UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) {
-//                        return super.createReader(reader, sourceCols);
-//                    }
-//                };
-//                txtFormat.header = false;
-//
-                //        txtFormat.fieldDelimiter = Delimiter.parseByVal(sdParams.get(serdeConstants.FIELD_DELIM)).token;
-//                txtFormat.nullFormat = sdParams.get(serdeConstants.SERIALIZATION_NULL_FORMAT);
-//                txtFormat.dateFormat = "yyyy-MM-dd";
-//                txtFormat.compress = Compress.none.token;
-//                txtFormat.encoding = TisUTF8.getName();
-//                return txtFormat;
+                return new HadoopTextInputFormat(entityName, cols.size(), inputFormat, serde, jobConf);
+            } else if (MapredParquetInputFormat.class == inputFormatClass) {
+                MapredParquetInputFormat pqInputFormat = (MapredParquetInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+                return new HadoopParquetInputFormat(entityName, cols.size(), pqInputFormat, serde, jobConf);
             } else {
                 throw new IllegalStateException("outputFormatClass:" + inputFormatClass.getName() + " can not be resolved");
             }

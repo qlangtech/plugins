@@ -37,8 +37,11 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -97,38 +100,51 @@ public class HiveReader extends TDFSReader {
 
             // 创建 JobConf 对象
 //            JobConf job = new JobConf(conf);
-
+            List<ColumnEntry> colsMeta = createColsMeta(Optional.of(inputFormat.getEntityName()));
             // 指定输入路径
             Path inputPath = new Path(fileName);
             // FileInputFormat.addInputPath(job, inputPath);
 
-            try (RecordReader<LongWritable, Text> recordReader = inputFormat.getRecordReader(inputPath)) {
-                LongWritable key = new LongWritable();
-                Text value = new Text();
-                Object row = null;
-                StructObjectInspector inspector = (StructObjectInspector) inputFormat.getSerde().getObjectInspector();
-                List<ColumnEntry> colsMeta = createColsMeta(Optional.of(inputFormat.getEntityName()));
-                ColumnEntry columnEntry = null;
-                Object fieldVal = null;
-                final String[] parseRows = new String[colsMeta.size()];
-                while (recordReader.next(key, value)) {
-                    //
-                    row = inputFormat.getSerde().deserialize(value);
-                    Arrays.fill(parseRows, null);
-                    for (int i = 0; i < colsMeta.size(); i++) {
-                        columnEntry = colsMeta.get(i);
-                        fieldVal = inspector.getStructFieldData(row, inspector.getStructFieldRef(columnEntry.getColName()));
-                        if (fieldVal != null) {
-                            parseRows[i] = String.valueOf(fieldVal);
-                        }
-                    }
+            // try (RecordReader<LongWritable, Text> recordReader = inputFormat.getRecordReader(inputPath)) {
 
-                    UnstructuredStorageReaderUtil.transportOneRecord(col2Index, recordSender, colsMeta, parseRows, this.getTaskPluginCollector());
-                    System.out.println("Key: " + key.get() + ", Value: " + value);
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            inputFormat.iterateReadRecords(col2Index
+                    , colsMeta, inputPath, recordSender, this.getTaskPluginCollector());
+
+
+//            try (RecordReader<NullWritable, ArrayWritable> recordReader = inputFormat.getRecordReader(inputPath)) {
+////                LongWritable key = new LongWritable();
+////                Text value = new Text();
+//
+//
+//                Object row = null;
+//                StructObjectInspector inspector = (StructObjectInspector) inputFormat.getSerde().getObjectInspector();
+//                List<ColumnEntry> colsMeta = createColsMeta(Optional.of(inputFormat.getEntityName()));
+//                ColumnEntry columnEntry = null;
+//                Object fieldVal = null;
+//                final String[] parseRows = new String[colsMeta.size()];
+//
+//
+//                NullWritable key = NullWritable.get();
+//                ArrayWritable value = new ArrayWritable(Text.class, new Writable[colsMeta.size()]);
+//
+//                while (recordReader.next(key, value)) {
+//                    //
+//                    row = inputFormat.getSerde().deserialize(value);
+//                    Arrays.fill(parseRows, null);
+//                    for (int i = 0; i < colsMeta.size(); i++) {
+//                        columnEntry = colsMeta.get(i);
+//                        fieldVal = inspector.getStructFieldData(row, inspector.getStructFieldRef(columnEntry.getColName()));
+//                        if (fieldVal != null) {
+//                            parseRows[i] = String.valueOf(fieldVal);
+//                        }
+//                    }
+//
+//                    UnstructuredStorageReaderUtil.transportOneRecord(col2Index, recordSender, colsMeta, parseRows, this.getTaskPluginCollector());
+//                    System.out.println("Key: " + key.get() + ", Value: " + value);
+//                }
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
 
 
 //            // 获取输入分割

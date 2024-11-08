@@ -1,0 +1,5 @@
+transaction_id,bigint(20),YES,"",0,""
+customer_id,bigint(20),YES,"","",""
+amount,decimal(10,2),YES,"","",""
+product_code,varchar(255),YES,"","",""
+transaction_date,timestamp,YES,"","",""

@@ -2,6 +2,7 @@ package com.qlangtech.tis.hive;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.hive.meta.PartitionFilter;
 import com.qlangtech.tis.fs.IPath;
@@ -62,7 +63,7 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
                 }
 
                 @Override
-                public List<String> getCols() {
+                public List<HiveTabColType> getCols() {
                     throw new UnsupportedOperationException();
                 }
 
@@ -95,13 +96,13 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         try {
             final Table table = storeClient.getTable(database, tableName);
             StorageDescriptor storageDesc = table.getSd();
-            final List<String> cols = storageDesc.getCols()
-                    .stream().map((col) -> col.getName()).collect(Collectors.toUnmodifiableList());
+            final List<HiveTabColType> cols = storageDesc.getCols()
+                    .stream().map((col) -> new HiveTabColType(col.getName(), col.getType())).collect(Collectors.toUnmodifiableList());
 
             return new HiveTable(table.getTableName()) {
 
                 @Override
-                public List<String> getCols() {
+                public List<HiveTabColType> getCols() {
                     return cols;
                 }
 

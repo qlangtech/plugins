@@ -62,17 +62,19 @@ import java.util.List;
 public class TestDataXHiveReaderRealDump extends TestCase {
 
     private static String dataXName = "test";
-    private static final String NAME_TAB = "instancedetail";
+    // private static final String NAME_TAB = "instancedetail";
 
-    public void testGetHdfsPath() throws Exception {
-        DataXHiveReader dataxReader = createReader(dataXName);
-        HiveDFSLinker dfsLinker = dataxReader.getDfsLinker();
-        FileSystemFactory fs = dfsLinker.getFs();
-        try (InputStream out = fs.getFileSystem()
-                .open(new HdfsPath("hdfs://192.168.28.200:30070/user/hive/warehouse/instancedetail/000000_0"))) {
-            System.out.println(org.apache.commons.io.IOUtils.toString(out));
-        }
-    }
+    private static final String NAME_TAB = "customer_transactions";
+
+//    public void testGetHdfsPath() throws Exception {
+//        DataXHiveReader dataxReader = createReader(dataXName);
+//        HiveDFSLinker dfsLinker = dataxReader.getDfsLinker();
+//        FileSystemFactory fs = dfsLinker.getFs();
+//        try (InputStream out = fs.getFileSystem()
+//                .open(new HdfsPath("hdfs://192.168.28.200:30070/user/hive/warehouse/instancedetail/000000_0"))) {
+//            System.out.println(org.apache.commons.io.IOUtils.toString(out));
+//        }
+//    }
 
 
     // @Test
@@ -89,25 +91,58 @@ public class TestDataXHiveReaderRealDump extends TestCase {
         };
         Hiveserver2DataSourceFactory dsFactory = TestDataXHiveWriterDump.createHiveserver2DataSourceFactory(UserTokenUtils.createNoneAuthToken());
         dsFactory.visitFirstConnection((conn) -> {
-            try {
-                conn.execute("drop table " + NAME_TAB);
-                conn.execute("CREATE TABLE `" + NAME_TAB + "`(                              \n" +
-                        "   `foo` int,                                       \n" +
-                        "   `bar` string)                                    \n" +
-                        " ROW FORMAT SERDE                                   \n" +
-                        "   'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'  \n" +
-                        " STORED AS INPUTFORMAT                              \n" +
-                        "   'org.apache.hadoop.mapred.TextInputFormat'       \n" +
-                        " OUTPUTFORMAT                                       \n" +
-                        "   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' \n" +
-                        " LOCATION                                           \n" +
-                        "   'hdfs://192.168.28.200:30070/user/hive/warehouse/" + NAME_TAB + "' \n" +
-                        " TBLPROPERTIES (                                    \n" +
-                        "   'transient_lastDdlTime'='1730453007')");
-                conn.execute("insert into " + NAME_TAB + "(foo,bar) values (1,'name1'),(2,'name2'),(3,'name3'),(4,'name4')");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                conn.execute("drop table " + NAME_TAB);
+//                conn.execute("CREATE TABLE `" + NAME_TAB + "`(                              \n" +
+//                        "   `foo` int,                                       \n" +
+//                        "   `bar` string)                                    \n" +
+//                        " ROW FORMAT SERDE                                   \n" +
+//                        "   'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'  \n" +
+//                        " STORED AS INPUTFORMAT                              \n" +
+//                        "   'org.apache.hadoop.mapred.TextInputFormat'       \n" +
+//                        " OUTPUTFORMAT                                       \n" +
+//                        "   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' \n" +
+//                        " LOCATION                                           \n" +
+//                        "   'hdfs://192.168.28.200:30070/user/hive/warehouse/" + NAME_TAB + "' \n" +
+//                        " TBLPROPERTIES (                                    \n" +
+//                        "   'transient_lastDdlTime'='1730453007')");
+//                conn.execute("insert into " + NAME_TAB + "(foo,bar) values (1,'name1'),(2,'name2'),(3,'name3'),(4,'name4')");
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+
+//            try {
+//                conn.execute("drop table " + "customer_transactions");
+//                conn.execute("CREATE TABLE customer_transactions (\n" +
+//                        "    transaction_id INT,\n" +
+//                        "    customer_id INT,\n" +
+//                        "    amount DECIMAL(10,2),\n" +
+//                        "    product_code STRING,\n" +
+//                        "    transaction_date TIMESTAMP\n" +
+//                        ")\n" +
+//                        "STORED AS PARQUET\n" +
+//                        "LOCATION                                           \n" +
+//                        "   'hdfs://192.168.28.200:30070/user/hive/warehouse/customer_transactions' \n" +
+//                        "TBLPROPERTIES (\n" +
+//                        "    'parquet.compression'='SNAPPY',          -- 设置压缩算法为Snappy\n" +
+//                        "    'parquet.block.size'='134217728',        -- 设置块大小为128MB\n" +
+//                        "    'parquet.page.size'='1048576',           -- 设置页面大小为1MB\n" +
+//                        "    'parquet.dictionary.enabled'='TRUE',     -- 启用字典编码\n" +
+//                        "    'parquet.enable.dictionary'='TRUE',      -- 启用字典编码（重复参数，但确保生效）\n" +
+//                        "    'parquet.write.support'='org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'  -- 指定输出格式类\n" +
+//                        ")");
+//
+//                conn.execute("INSERT INTO customer_transactions (transaction_id, customer_id, amount, product_code, transaction_date)\n" +
+//                        "VALUES \n" +
+//                        "(1, 101, 150.00, 'A123', '2024-01-01 00:00:00'),\n" +
+//                        "(2, 102, 200.50, 'B456', '2024-01-02 00:00:00'),\n" +
+//                        "(3, 103, 75.25, 'C789', '2024-01-03 00:00:00'),\n" +
+//                        "(4, 104, 300.00, 'D101', '2024-01-04 00:00:00'),\n" +
+//                        "(5, 105, 50.00, 'E102', '2024-01-05 00:00:00')");
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+
         });
         TIS.dsFactoryPluginStoreGetter = (p) -> {
             DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
@@ -131,6 +166,7 @@ public class TestDataXHiveReaderRealDump extends TestCase {
                     , "hive-datax-reader-test-cfg.json", true, (writerJsonInput) -> {
                         return Configuration.from(writerJsonInput);
                     });
+            readerConf.set("parameter.entityName", NAME_TAB);
             readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
             readerConf.set(IDataXCfg.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY,
                     dsFactory.identityValue());

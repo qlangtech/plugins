@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.starrocks;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -27,17 +28,15 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.common.WriterJson;
+import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import com.starrocks.connector.datax.plugin.writer.starrockswriter.row.StarRocksDelimiterParser;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -61,6 +60,16 @@ public class TestDataXStarRocksWriter extends TestCase {
     }
 
     private static final String DataXName = "mysql_doris";
+
+    public void test() {
+        ;
+        long l = new Long(0);
+        proce(l);
+    }
+
+    private void proce(Object o) {
+        System.out.println(o + "  " + o.getClass().isPrimitive() + " " + Long.TYPE.isPrimitive() + " " + long.class.isPrimitive());
+    }
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXStarRocksWriter.getDftTemplate();
@@ -181,7 +190,7 @@ public class TestDataXStarRocksWriter extends TestCase {
             };
             EasyMock.replay(dataXProcessor);
 
-            WriterTemplate.realExecuteDump(WriterJson.path("starrocks_writer_real_dump.json"), createDorisWriter.writer);
+            WriterTemplate.realExecuteDump(DataXCfgJson.path(DataXStarRocksWriter.class, "starrocks_writer_real_dump.json"), createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

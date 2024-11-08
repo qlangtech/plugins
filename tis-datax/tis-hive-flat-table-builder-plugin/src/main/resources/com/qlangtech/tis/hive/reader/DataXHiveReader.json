@@ -4,7 +4,7 @@
   },
   "ptFilter": {
     "label": "目标分区",
-    "dftVal": "com.qlangtech.tis.hive.reader.DataXHiveReader.getPtDftVal()"
+    "dftVal": "on"
   },
   "resMatcher": {
     "disable": true

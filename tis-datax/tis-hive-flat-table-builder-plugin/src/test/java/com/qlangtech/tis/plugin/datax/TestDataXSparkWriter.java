@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 
 import java.util.Optional;
 
@@ -58,7 +59,7 @@ public class TestDataXSparkWriter extends BasicTest {
         DataXSparkWriter writer = new DataXSparkWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
 
-        JSONObject desc = descJson.getDescriptorsJSON();
+        DescriptorsJSONResult desc = descJson.getDescriptorsJSON();
         System.out.println(JsonUtil.toString(desc));
 
         JsonUtil.assertJSONEqual(TestDataXSparkWriter.class, "desc-json/datax-writer-spark.json", desc, (m, e, a) -> {
@@ -140,7 +141,9 @@ public class TestDataXSparkWriter extends BasicTest {
             return dataxWriter;
         };
 
-        WriterTemplate.realExecuteDump(DataXCfgJson.path("spark-datax-writer-assert-without-option-val.json"), dataxWriter);
+        WriterTemplate.realExecuteDump(
+                DataXCfgJson.path(DataXSparkWriter.class, "spark-datax-writer-assert-without-option-val.json")
+                , dataxWriter);
     }
 
 

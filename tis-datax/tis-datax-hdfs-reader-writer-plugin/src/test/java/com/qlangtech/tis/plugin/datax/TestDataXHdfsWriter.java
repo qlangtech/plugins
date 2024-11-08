@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class TestDataXHdfsWriter extends BasicTest {
     public void testDescriptorsJSONGenerate() {
         DataXHdfsWriter writer = new DataXHdfsWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
-        JSONObject desc = descJson.getDescriptorsJSON();
+        DescriptorsJSONResult desc = descJson.getDescriptorsJSON();
         System.out.println(JsonUtil.toString(desc));
 
         JsonUtil.assertJSONEqual(TestDataXHdfsWriter.class, "desc-json/datax-writer-hdfs.json", desc, (m, e, a) -> {
@@ -85,7 +86,7 @@ public class TestDataXHdfsWriter extends BasicTest {
         textFormat.fieldDelimiter = Delimiter.Tab.token;
         hdfsWriter.fileType = textFormat;
         hdfsWriter.writeMode = "nonConflict";
-      //  hdfsWriter.fieldDelimiter = "\t";
+        //  hdfsWriter.fieldDelimiter = "\t";
         hdfsWriter.compress = "gzip";
         hdfsWriter.encoding = "utf-8";
         hdfsWriter.template = DataXHdfsWriter.getDftTemplate();
@@ -157,7 +158,9 @@ public class TestDataXHdfsWriter extends BasicTest {
 //        System.out.println("clear path:" + path);
 //        fileSystem.delete(path, true);
 //
-        WriterTemplate.realExecuteDump(DataXCfgJson.path("hdfs-datax-writer-assert-without-option-val.json"), hdfsWriter);
+        WriterTemplate.realExecuteDump(
+                DataXCfgJson.path(TestDataXHdfsWriter.class, "hdfs-datax-writer-assert-without-option-val.json")
+                , hdfsWriter);
     }
 
 }

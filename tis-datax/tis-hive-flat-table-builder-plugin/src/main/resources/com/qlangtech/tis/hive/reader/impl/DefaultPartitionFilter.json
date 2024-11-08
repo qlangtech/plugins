@@ -1,0 +1,5 @@
+{
+  "ptFilter": {
+    "dftVal": "com.qlangtech.tis.hive.reader.impl.DefaultPartitionFilter.getPtDftVal()"
+  }
+}

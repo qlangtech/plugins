@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -64,7 +65,7 @@ public class TestDataXHiveWriter extends BasicTest {
         DataXHiveWriter writer = new DataXHiveWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
 
-        JSONObject desc = descJson.getDescriptorsJSON();
+        DescriptorsJSONResult desc = descJson.getDescriptorsJSON();
         System.out.println(JsonUtil.toString(desc));
 
         JsonUtil.assertJSONEqual(TestDataXHiveWriter.class, "desc-json/datax-writer-hive.json", desc, (m, e, a) -> {
@@ -133,7 +134,7 @@ public class TestDataXHiveWriter extends BasicTest {
         writer.fileType = txtFormat;
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
         EasyMock.replay(fsFactory, fs);
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getApplicationTab());
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getApplicationTab(), Optional.empty());
 
         assertNotNull(ddl);
 

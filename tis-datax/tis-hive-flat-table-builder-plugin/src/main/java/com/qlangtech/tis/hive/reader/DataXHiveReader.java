@@ -22,20 +22,18 @@ package com.qlangtech.tis.hive.reader;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.config.hive.meta.PartitionFilter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -53,10 +51,12 @@ import java.util.stream.Collectors;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-08-19 15:42
+ * @see com.alibaba.datax.plugin.reader.hive.HiveReader
  **/
 public class DataXHiveReader extends AbstractDFSReader {
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String ptFilter;
+    
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public PartitionFilter ptFilter;
 
     public DataXHiveReader() {
         this.resMatcher = new HiveDFSResMatcher();
@@ -128,9 +128,11 @@ public class DataXHiveReader extends AbstractDFSReader {
         return result;
     }
 
-    public static String getPtDftVal() {
-        return IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST;
-    }
+//    public static PartitionFilter getPtDftVal() {
+//        DefaultPartitionFilter dftPartition = new DefaultPartitionFilter();
+//        dftPartition.ptFilter = IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST;
+//        return dftPartition;
+//    }
 
     public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
         if (CollectionUtils.isEmpty(descs)) {
@@ -144,7 +146,7 @@ public class DataXHiveReader extends AbstractDFSReader {
 
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {
-        return this.getDfsLinker().getFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param " + "entityName can not be null")));
+        return this.getDfsLinker().getInputFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
     }
 
 

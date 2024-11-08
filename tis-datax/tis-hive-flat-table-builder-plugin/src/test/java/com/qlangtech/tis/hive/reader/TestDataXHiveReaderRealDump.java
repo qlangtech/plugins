@@ -22,14 +22,20 @@ import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.hive.reader.impl.DefaultPartitionFilter;
+import com.qlangtech.tis.hive.reader.impl.NonePartition;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.DataXGlobalConfig;
 import com.qlangtech.tis.plugin.datax.DefaultDataxProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.TestDataXHiveWriterDump;
@@ -44,6 +50,8 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,16 +64,51 @@ public class TestDataXHiveReaderRealDump extends TestCase {
     private static String dataXName = "test";
     private static final String NAME_TAB = "instancedetail";
 
+    public void testGetHdfsPath() throws Exception {
+        DataXHiveReader dataxReader = createReader(dataXName);
+        HiveDFSLinker dfsLinker = dataxReader.getDfsLinker();
+        FileSystemFactory fs = dfsLinker.getFs();
+        try (InputStream out = fs.getFileSystem()
+                .open(new HdfsPath("hdfs://192.168.28.200:30070/user/hive/warehouse/instancedetail/000000_0"))) {
+            System.out.println(org.apache.commons.io.IOUtils.toString(out));
+        }
+    }
+
 
     // @Test
     public void testRealDump() throws Exception {
         DataxProcessor.processorGetter = (dataXName) -> {
-            DefaultDataxProcessor processor = new DefaultDataxProcessor();
+            DefaultDataxProcessor processor = new DefaultDataxProcessor() {
+                @Override
+                public IDataxGlobalCfg getDataXGlobalCfg() {
+                    return new DataXGlobalConfig();
+                }
+            };
             processor.name = dataXName;
             return processor;
         };
         Hiveserver2DataSourceFactory dsFactory = TestDataXHiveWriterDump.createHiveserver2DataSourceFactory(UserTokenUtils.createNoneAuthToken());
-
+        dsFactory.visitFirstConnection((conn) -> {
+            try {
+                conn.execute("drop table " + NAME_TAB);
+                conn.execute("CREATE TABLE `" + NAME_TAB + "`(                              \n" +
+                        "   `foo` int,                                       \n" +
+                        "   `bar` string)                                    \n" +
+                        " ROW FORMAT SERDE                                   \n" +
+                        "   'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'  \n" +
+                        " STORED AS INPUTFORMAT                              \n" +
+                        "   'org.apache.hadoop.mapred.TextInputFormat'       \n" +
+                        " OUTPUTFORMAT                                       \n" +
+                        "   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' \n" +
+                        " LOCATION                                           \n" +
+                        "   'hdfs://192.168.28.200:30070/user/hive/warehouse/" + NAME_TAB + "' \n" +
+                        " TBLPROPERTIES (                                    \n" +
+                        "   'transient_lastDdlTime'='1730453007')");
+                conn.execute("insert into " + NAME_TAB + "(foo,bar) values (1,'name1'),(2,'name2'),(3,'name3'),(4,'name4')");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         TIS.dsFactoryPluginStoreGetter = (p) -> {
             DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
             return new DataSourceFactoryPluginStore(key, false) {
@@ -117,17 +160,27 @@ public class TestDataXHiveReaderRealDump extends TestCase {
         HiveDFSLinker hiveDFSLinker = new HiveDFSLinker();
 
         HdfsFileSystemFactory fsFactory = new HdfsFileSystemFactory();
+        fsFactory.userHostname = true;
         fsFactory.rootDir = "/user/admin";
         fsFactory.userToken = UserTokenUtils.createNoneAuthToken();
         fsFactory.hdfsSiteContent //
-                = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "\n" + "<configuration>\n" + "  <property>\n" + "    <name>fs.defaultFS</name>\n" + "    <value>hdfs://192.168.28.200</value>\n" + "  </property>\n" + "</configuration>";
+                = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "\n"
+                + "<configuration>\n"
+                + "  <property>\n"
+                + "    <name>fs.defaultFS</name>\n"
+                + "    <value>hdfs://192.168.28.200:30070</value>\n"
+                + "  </property>\n"
+                + "</configuration>";
         // fsFactory.getFileSystem();
 
 
         hiveDFSLinker.fileSystem = fsFactory;
         hiveDFSLinker.linker = "hiveSourceRef";
         hiveReader.dfsLinker = hiveDFSLinker;
-        hiveReader.ptFilter = DataXHiveReader.getPtDftVal();
+//        DefaultPartitionFilter partitionFilter = new DefaultPartitionFilter();
+//        partitionFilter.ptFilter = DefaultPartitionFilter.getPtDftVal();
+        hiveReader.ptFilter = NonePartition.create();// partitionFilter; //DataXHiveReader.getPtDftVal();
         return hiveReader;
     }
 }

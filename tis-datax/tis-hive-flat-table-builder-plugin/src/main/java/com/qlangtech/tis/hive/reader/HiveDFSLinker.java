@@ -20,6 +20,7 @@ package com.qlangtech.tis.hive.reader;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.datax.Delimiter;
@@ -27,6 +28,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.hive.reader.impl.HadoopInputFormat;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -38,6 +40,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
@@ -47,10 +50,15 @@ import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.SerDeUtils;
+import org.apache.hadoop.mapred.JobConf;
 
+import java.io.BufferedReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -120,37 +128,64 @@ public class HiveDFSLinker extends TDFSLinker {
 //    }
 
     /**
+     * 获取读hive对应 HDFS 文件 Reader 器
+     *
      * @param entityName
      * @return
      * @see org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+     * @see org.apache.hadoop.mapred.TextInputFormat
      */
-    public FileFormat getFileFormat(String entityName) {
+    public FileFormat getInputFileFormat(String entityName) {
         if (StringUtils.isEmpty(entityName)) {
             throw new IllegalArgumentException("param entityName can not be empty");
         }
 
         Hiveserver2DataSourceFactory dfFactory = getDataSourceFactory();
-
+        org.apache.hadoop.conf.Configuration conf = getFs().getConfiguration();
         HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
         HiveTable.StoredAs storedAs = table.getStoredAs();
         SerDeInfo sdInfo = storedAs.getSerdeInfo();
+        // sdInfo.getSerializationLib()
         Map<String, String> sdParams = sdInfo.getParameters();
+        JobConf jobConf = new JobConf(conf);
+        for (Map.Entry<String, String> entry : sdParams.entrySet()) {
+            jobConf.set(entry.getKey(), entry.getValue());
+        }
         try {
-            Class<?> outputFormatClass = Class.forName(storedAs.outputFormat, false, HiveDFSLinker.class.getClassLoader());
-            if (org.apache.hadoop.mapred.TextOutputFormat.class.isAssignableFrom(outputFormatClass)) {
+            Class<?> inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
+            // forExample : LazySimpleSerDe
+            SerDe serde = (SerDe) Class.forName(
+                    sdInfo.getSerializationLib()
+                    , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
 
+            // String columnNameProperty = tableProperties.getProperty(serdeConstants.LIST_COLUMNS);
+            Properties props = new Properties();
+            props.setProperty(serdeConstants.LIST_COLUMNS, String.join(String.valueOf(SerDeUtils.COMMA), table.getCols()));
+            serde.initialize(jobConf, props);
 
-                TextFormat txtFormat = new TextFormat();
-                txtFormat.header = false;
+            if (org.apache.hadoop.mapred.TextInputFormat.class.isAssignableFrom(inputFormatClass)) {
+                org.apache.hadoop.mapred.TextInputFormat inputFormat
+                        = (org.apache.hadoop.mapred.TextInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
 
-                txtFormat.fieldDelimiter = Delimiter.parseByVal(sdParams.get(serdeConstants.FIELD_DELIM)).token;
-                txtFormat.nullFormat = sdParams.get(serdeConstants.SERIALIZATION_NULL_FORMAT);
-                txtFormat.dateFormat = "yyyy-MM-dd";
-                txtFormat.compress = Compress.none.token;
-                txtFormat.encoding = TisUTF8.getName();
-                return txtFormat;
+                inputFormat.configure(jobConf);
+                return new HadoopInputFormat(entityName, inputFormat, serde, jobConf);
+
+//                TextFormat txtFormat = new TextFormat() {
+//                    @Override
+//                    public UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) {
+//                        return super.createReader(reader, sourceCols);
+//                    }
+//                };
+//                txtFormat.header = false;
+//
+                //        txtFormat.fieldDelimiter = Delimiter.parseByVal(sdParams.get(serdeConstants.FIELD_DELIM)).token;
+//                txtFormat.nullFormat = sdParams.get(serdeConstants.SERIALIZATION_NULL_FORMAT);
+//                txtFormat.dateFormat = "yyyy-MM-dd";
+//                txtFormat.compress = Compress.none.token;
+//                txtFormat.encoding = TisUTF8.getName();
+//                return txtFormat;
             } else {
-                throw new IllegalStateException("outputFormatClass:" + outputFormatClass.getName() + " can not be resolved");
+                throw new IllegalStateException("outputFormatClass:" + inputFormatClass.getName() + " can not be resolved");
             }
             // HiveIgnoreKey
         } catch (Exception e) {

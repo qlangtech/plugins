@@ -84,7 +84,7 @@ public class TestDataXHiveWriterDump {
         final DataXHiveWriter dataxWriter = new DataXHiveWriter() {
             @Override
             public Hiveserver2DataSourceFactory getDataSourceFactory() {
-                return createHiveserver2DataSourceFactory(UserTokenUtils.createKerberosToken());
+                return createHiveserver2DataSourceFactory(UserTokenUtils.createNoneAuthToken());
             }
 
             @Override
@@ -143,7 +143,8 @@ public class TestDataXHiveWriterDump {
         preExec.run();
 
         WriterTemplate.realExecuteDump(TestDataXHiveWriter.mysql2hiveDataXName
-                , DataXCfgJson.path(TestDataXHiveWriterDump.class, "hive-datax-writer-assert-without-option-val.json"), dataxWriter);
+                , DataXCfgJson.path(TestDataXHiveWriterDump.class
+                        , "hive-datax-writer-assert-without-option-val.json"), dataxWriter);
 
         IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, applicationTab.getSourceTab(), null);
         postExec.run();

@@ -57,7 +57,7 @@
         <module>tis-datax-sqlserver-v2008-plugin</module>
         <module>tis-datax-sqlserver-v2019-plugin</module>
 
-        <module>tis-datax-cassandra-plugin</module>
+<!--        <module>tis-datax-cassandra-plugin</module>-->
         <module>tis-datax-oracle-plugin</module>
         <module>tis-datax-doris-plugin</module>
         <module>tis-datax-starrocks-plugin</module>

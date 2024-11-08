@@ -19,6 +19,7 @@
 package com.qlangtech.tis.hive.reader;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import junit.framework.TestCase;
@@ -30,6 +31,11 @@ import java.util.Optional;
 public class TestDataXHiveReader extends TestCase {
 
     private static final String dataXName = "testDataXName";
+
+    @Test
+    public void testDescGenerate() {
+        PluginDesc.testDescGenerate(DataXHiveReader.class, "hive-datax-reader-descriptor.json");
+    }
 
     @Test
     public void testTempateGenerate() throws Exception {

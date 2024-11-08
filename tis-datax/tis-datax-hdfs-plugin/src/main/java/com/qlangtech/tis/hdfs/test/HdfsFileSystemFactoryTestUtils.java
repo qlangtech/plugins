@@ -20,6 +20,7 @@ package com.qlangtech.tis.hdfs.test;
 
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Describable;
@@ -40,6 +41,7 @@ public class HdfsFileSystemFactoryTestUtils {
 
     public static HdfsFileSystemFactory getFileSystemFactory() {
         HdfsFileSystemFactory fsFactory = new HdfsFileSystemFactory();
+        fsFactory.userToken = new OffUserToken();
         fsFactory.name = FS_NAME;
         // fsFactory.setHdfsAddress(DEFAULT_HDFS_ADDRESS);
         fsFactory.userHostname = true;

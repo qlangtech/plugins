@@ -79,18 +79,25 @@ public class TDFSReader extends FtpReader {
         private List<ColumnEntry> cols;
         private FileFormat fileFormat;
 
+        public <T extends FileFormat> T getFileFormat() {
+            return (T) fileFormat;
+        }
+
         @Override
         public void init() {
             this.reader = getDfsReader(this.containerContext);
             super.init();
         }
-
+        protected TDFSLinker getDFSLinker() {
+            return Objects.requireNonNull(reader.dfsLinker, "reader.dfsLinker can not be null");
+        }
         /**
          * @param paths     value of Key.PATH
          * @param processor
          * @return
          */
-        private DFSResMatcher.SourceColsMeta getSourceColsMeta(ITDFSSession hdfsSession, Optional<String> entityName, List<String> paths, IDataxProcessor processor) {
+        private DFSResMatcher.SourceColsMeta getSourceColsMeta(ITDFSSession hdfsSession
+                , Optional<String> entityName, List<String> paths, IDataxProcessor processor) {
             if (CollectionUtils.isEmpty(paths)) {
                 throw new IllegalArgumentException("param path can not be empty");
             }

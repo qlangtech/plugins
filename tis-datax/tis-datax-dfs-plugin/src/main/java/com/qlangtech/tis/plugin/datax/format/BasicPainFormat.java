@@ -25,6 +25,7 @@ import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.Delimiter;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -57,6 +58,10 @@ public abstract class BasicPainFormat extends FileFormat {
 
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String nullFormat;
+
+    public static String defaultNullFormat() {
+        return TimeFormat.DATA_FORMAT;
+    }
 
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fieldDelimiter;

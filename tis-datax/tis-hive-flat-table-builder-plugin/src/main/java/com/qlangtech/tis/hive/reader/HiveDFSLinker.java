@@ -141,11 +141,10 @@ public class HiveDFSLinker extends TDFSLinker {
         HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
         HiveTable.StoredAs storedAs = table.getStoredAs();
         SerDeInfo sdInfo = storedAs.getSerdeInfo();
-        // sdInfo.getSerializationLib()
         Map<String, String> sdParams = sdInfo.getParameters();
-        JobConf jobConf = new JobConf(conf);
+        Properties props = new Properties();
         for (Map.Entry<String, String> entry : sdParams.entrySet()) {
-            jobConf.set(entry.getKey(), entry.getValue());
+            props.setProperty(entry.getKey(), entry.getValue());
         }
         try {
             // example: MapredParquetInputFormat for Parquet
@@ -156,12 +155,13 @@ public class HiveDFSLinker extends TDFSLinker {
                     , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
 
             // String columnNameProperty = tableProperties.getProperty(serdeConstants.LIST_COLUMNS);
-            Properties props = new Properties();
+
             List<HiveTabColType> cols = table.getCols();
             props.setProperty(serdeConstants.LIST_COLUMNS
                     , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
             props.setProperty(serdeConstants.LIST_COLUMN_TYPES
                     , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+            JobConf jobConf = new JobConf(conf);
             serde.initialize(jobConf, props);
 
             if (org.apache.hadoop.mapred.TextInputFormat.class.isAssignableFrom(inputFormatClass)) {

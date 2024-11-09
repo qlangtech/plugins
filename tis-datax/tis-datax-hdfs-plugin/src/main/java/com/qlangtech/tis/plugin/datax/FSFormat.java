@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 
@@ -27,6 +28,7 @@ import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
  * @create: 2023-01-27 14:28
  * @see TextFSFormat
  **/
+@TISExtensible
 public abstract class FSFormat implements Describable<FSFormat> {
     public abstract char getFieldDelimiter();
 

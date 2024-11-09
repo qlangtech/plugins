@@ -26,6 +26,7 @@ import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
+import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import org.apache.hadoop.fs.Path;
@@ -65,8 +66,9 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
     public HadoopInputFormat(String entityName, int colSize
             , FileInputFormat inputFormat
             , SerDe serde, JobConf conf) {
+        super();
+        this.dateFormat = BasicPainFormat.defaultNullFormat();
         this.entityName = entityName;
-
         this.inputFormat = Objects.requireNonNull(inputFormat, "inputFormat can not be null");
         this.conf = Objects.requireNonNull(conf, "conf can not be null");
         this.serde = Objects.requireNonNull(serde, "serde can not be null");

@@ -7,7 +7,7 @@
   "dateFormat": {
     "label": "日期格式",
     "help": "描述：日期类型的数据序列化到文件中时的格式，例如 \"dateFormat\": \"yyyy-MM-dd\"。",
-    "dftVal": "yyyy-MM-dd"
+    "dftVal": "com.qlangtech.tis.plugin.datax.format.BasicPainFormat.defaultNullFormat()"
   },
   "nullFormat": {
     "label": "空值替代符",

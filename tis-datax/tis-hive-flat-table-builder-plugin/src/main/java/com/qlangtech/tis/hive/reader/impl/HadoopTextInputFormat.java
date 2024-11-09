@@ -24,8 +24,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
 
-import java.util.List;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-11-08 14:06

@@ -108,6 +108,9 @@
                 <scala.version>2.12.9</scala.version>
                 <appname>all</appname>
             </properties>
+            <dependencies>
+
+            </dependencies>
             <modules>
 
             </modules>
@@ -308,6 +311,12 @@
                 <artifactId>easymock</artifactId>
                 <version>4.2</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hive</groupId>
+                <artifactId>hive-serde</artifactId>
+                <version>${hive.version}</version>
             </dependency>
 
             <dependency>

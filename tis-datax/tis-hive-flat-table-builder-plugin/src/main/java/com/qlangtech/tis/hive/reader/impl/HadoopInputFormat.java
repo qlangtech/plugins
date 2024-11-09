@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -54,14 +54,14 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
     private final org.apache.hadoop.mapred.FileInputFormat inputFormat;
     private final JobConf conf;
     private final String entityName;
-    private final SerDe serde;
+    private final AbstractSerDe serde;
 
     private final K key;
     private final V value;
 
     public HadoopInputFormat(String entityName, int colSize
             , FileInputFormat inputFormat
-            , SerDe serde, JobConf conf) {
+            , AbstractSerDe serde, JobConf conf) {
         super();
         this.dateFormat = BasicPainFormat.defaultNullFormat();
         this.entityName = entityName;
@@ -83,7 +83,9 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
         Objects.requireNonNull(colsMeta, "colsMeta can not be null");
         // try (RecordReader<LongWritable, Text> recordReader = inputFormat.getRecordReader(inputPath)) {
         // NullWritable, ArrayWritable
-        try (RecordReader<K, V> recordReader = this.getRecordReader(inputPath)) {
+        RecordReader<K, V> recordReader = null;
+        try {
+            recordReader = this.getRecordReader(inputPath);
 //                LongWritable key = new LongWritable();
 //                Text value = new Text();
 
@@ -115,6 +117,11 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                recordReader.close();
+            } catch (Throwable e) {
+            }
         }
     }
 
@@ -127,7 +134,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
         return inputFormat.getSplits(conf, 1);
     }
 
-    public SerDe getSerde() {
+    public AbstractSerDe getSerde() {
         return this.serde;
     }
 

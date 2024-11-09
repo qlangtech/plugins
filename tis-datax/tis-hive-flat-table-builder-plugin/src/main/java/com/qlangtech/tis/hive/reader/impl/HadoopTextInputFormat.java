@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.hive.reader.impl;
 
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
@@ -29,7 +29,7 @@ import org.apache.hadoop.mapred.JobConf;
  * @create: 2024-11-08 14:06
  **/
 public class HadoopTextInputFormat extends HadoopInputFormat<LongWritable, Text> {
-    public HadoopTextInputFormat(String entityName, int colSize, FileInputFormat inputFormat, SerDe serde, JobConf conf) {
+    public HadoopTextInputFormat(String entityName, int colSize, FileInputFormat inputFormat, AbstractSerDe serde, JobConf conf) {
         super(entityName, colSize, inputFormat, serde, conf);
     }
 

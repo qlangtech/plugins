@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.hive.reader.impl;
 
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -31,7 +31,7 @@ import org.apache.hadoop.mapred.JobConf;
  * @create: 2024-11-08 14:15
  **/
 public class HadoopParquetInputFormat extends HadoopInputFormat<NullWritable, ArrayWritable> {
-    public HadoopParquetInputFormat(String entityName, int colSize, FileInputFormat inputFormat, SerDe serde, JobConf conf) {
+    public HadoopParquetInputFormat(String entityName, int colSize, FileInputFormat inputFormat, AbstractSerDe serde, JobConf conf) {
         super(entityName, colSize, inputFormat, serde, conf);
     }
 

@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.SerDe;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -150,7 +150,7 @@ public class HiveDFSLinker extends TDFSLinker {
             // example: MapredParquetInputFormat for Parquet
             Class<?> inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
             // forExample : LazySimpleSerDe, ParquetHiveSerDe
-            SerDe serde = (SerDe) Class.forName(
+            AbstractSerDe serde = (AbstractSerDe) Class.forName(
                     sdInfo.getSerializationLib()
                     , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
 

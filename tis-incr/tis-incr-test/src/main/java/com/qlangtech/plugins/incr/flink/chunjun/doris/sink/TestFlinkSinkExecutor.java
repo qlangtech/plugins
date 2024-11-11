@@ -186,8 +186,20 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
 
     public interface FlinkTestCase {
+        /**
+         * 添加测试记录
+         *
+         * @return
+         */
         public List<DTO> createTestData();
 
+        /**
+         * 生成对应的校验逻辑
+         *
+         * @param ddl
+         * @param statement
+         * @throws SQLException
+         */
         public void verifyRelevantRow(CreateDDL ddl, Statement statement) throws SQLException;
     }
 

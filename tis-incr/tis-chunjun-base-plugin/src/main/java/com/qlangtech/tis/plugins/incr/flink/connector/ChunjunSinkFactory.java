@@ -287,7 +287,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         return sinkFuncRef.get();
     }
 
-
+    /**
+     * Sink端是否支持upset操作？ 如支持，则会自动过滤binlog 的 updateBefore操作记录
+     *
+     * @return
+     */
     protected abstract boolean supportUpsetDML();
 
     protected final SyncConf createSyncConf(SelectedTab tab, String targetTabName, Supplier<Map<String, Object>> paramsCreator, DataxWriter dataxWriter) {

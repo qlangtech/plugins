@@ -35,16 +35,26 @@ import java.util.function.Function;
  * @create: 2024-02-21 19:02
  **/
 public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
+    private ReplicaIdentity replicaIdentity;
 
+    /**
+     * @param tabs
+     * @param flinkColCreator
+     * @param contextParamValsGetterMapper
+     * @param replicaIdentity              pg的binlog 内容的before内容不是默认传输的，用户可以选择不传输before值
+     */
     public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs, IFlinkColCreator<FlinkCol> flinkColCreator
-            , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
+            , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
+            , ReplicaIdentity replicaIdentity
+    ) {
         super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert(), contextParamValsGetterMapper);
+        this.replicaIdentity = replicaIdentity;
     }
 
     @Override
     protected Struct getBeforeVal(Struct value) {
         Struct beforeVal = super.getBeforeVal(value);
-        if (beforeVal == null) {
+        if (this.replicaIdentity.isShallContainBeforeVals() && beforeVal == null) {
             throw new IllegalStateException("lack before vals  ,for resolve this issue:https://developer.aliyun.com/ask/575334 \n shall execute alter: ALTER TABLE your_table_name REPLICA IDENTITY FULL;");
         }
         return beforeVal;

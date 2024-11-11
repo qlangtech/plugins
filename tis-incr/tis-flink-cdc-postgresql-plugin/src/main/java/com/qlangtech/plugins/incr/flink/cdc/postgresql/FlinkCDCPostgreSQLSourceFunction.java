@@ -111,7 +111,7 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
                                             .password(dsFactory.password)
                                             .debeziumProperties(debeziumProperties)
                                             .startupOptions(sourceFactory.getStartupOptions())
-                                            .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper)) // converts SourceRecord to JSON String
+                                            .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper,sourceFactory.getRepIdentity())) // converts SourceRecord to JSON String
                                             .build();
 
 

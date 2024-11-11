@@ -1,4 +1,18 @@
 {
+  "replicaIdentity": {
+    "label": "REPLICA IDENTITY",
+    "dftVal": "DEFAULT",
+    "enum": [
+      {
+        "val": "DEFAULT",
+        "label": "DEFAULT"
+      },
+      {
+        "val": "FULL",
+        "label": "FULL"
+      }
+    ]
+  },
   "decodingPluginName": {
     "dftVal": "decoderbufs",
     "label": "解码器",

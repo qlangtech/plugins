@@ -119,7 +119,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
         Struct after = value.getStruct("after");
 
         Map<String, Object> afterVals = new HashMap<>();
-        
+
         /**==========================
          * 设置环境绑定参数值
          ==========================*/
@@ -149,22 +149,26 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
 
 
     private void extractBeforeRow(DTO dto, Struct value, Schema valueSchema) {
-        Schema beforeSchema = valueSchema.field("before").schema();
+
         Struct before = getBeforeVal(value);
-        Map<String, Object> beforeVals = new HashMap<>();
-        Object beforeVal = null;
-        for (Field f : beforeSchema.fields()) {
-            beforeVal = before.get(f.name());
-            if (beforeVal == null) {
-                continue;
+        if (before != null) {
+            Schema beforeSchema = valueSchema.field("before").schema();
+            Map<String, Object> beforeVals = new HashMap<>();
+            Object beforeVal = null;
+            for (Field f : beforeSchema.fields()) {
+                beforeVal = before.get(f.name());
+                if (beforeVal == null) {
+                    continue;
+                }
+                try {
+                    beforeVals.put(f.name(), rawValConvert.convert(dto, f, beforeVal));
+                } catch (Exception e) {
+                    throw new RuntimeException("field:" + f.name() + ",beforeVal:" + beforeVal, e);
+                }
             }
-            try {
-                beforeVals.put(f.name(), rawValConvert.convert(dto, f, beforeVal));
-            } catch (Exception e) {
-                throw new RuntimeException("field:" + f.name() + ",beforeVal:" + beforeVal, e);
-            }
+            dto.setBefore(beforeVals);
         }
-        dto.setBefore(beforeVals);
+
     }
 
     protected Struct getBeforeVal(Struct value) {

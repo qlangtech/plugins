@@ -54,7 +54,7 @@ public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
 //            * wal2json_rds_streaming and pgoutput.
 
     @Override
-    public  IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
         IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
             return meta.getType().accept(new PGCDCTypeVisitor(meta, colIndex));
         };
@@ -70,8 +70,17 @@ public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
     /**
      * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html#incremental-snapshot-optionshttps://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html#incremental-snapshot-options
      */
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
+    // REPLICA IDENTITY
+    @FormField(ordinal = 2, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String replicaIdentity;
+
+
+    public ReplicaIdentity getRepIdentity() {
+        return ReplicaIdentity.parse(this.replicaIdentity);
+    }
+
 
     /**
      * 只支持两种option 'latest' 和 'initial'

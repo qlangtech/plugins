@@ -23,8 +23,10 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.plugin.AliyunEndpoint;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
+
+import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
+import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
+
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -59,8 +61,8 @@ public class AliayunJindoFSFactory extends HdfsFileSystemFactory {
         config.set("fs.AbstractFileSystem.oss.impl", com.aliyun.jindodata.oss.OSS.class.getName());
         config.set("fs.oss.impl", com.aliyun.jindodata.oss.JindoOssFileSystem.class.getName());
 
-        AliyunEndpoint end = getAliyunEndpoint();
-        AccessKey accessKey = end.getAccessKey();
+        IAliyunEndpoint end = getAliyunEndpoint();
+        IAliyunAccessKey accessKey = end.getAccessKey();
 
         config.set("fs.oss.accessKeyId", accessKey.getAccessKeyId());
         config.set("fs.oss.accessKeySecret", accessKey.getAccessKeySecret());
@@ -68,7 +70,7 @@ public class AliayunJindoFSFactory extends HdfsFileSystemFactory {
         config.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, "oss://" + this.bucket + "/");
     }
 
-    protected AliyunEndpoint getAliyunEndpoint() {
+    protected IAliyunEndpoint getAliyunEndpoint() {
         return IHttpToken.getAliyunEndpoint(endpoint);
     }
 

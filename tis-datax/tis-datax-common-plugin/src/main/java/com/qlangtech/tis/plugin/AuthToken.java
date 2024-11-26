@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin;
 
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 
@@ -28,6 +27,12 @@ import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
  * @create: 2022-10-31 09:51
  **/
 public abstract class AuthToken implements Describable<AuthToken> {
+    public static final String KEY_ACCESS = "accessKey";
+    public interface IAliyunAccessKey {
+        public String getAccessKeyId();
+
+        public String getAccessKeySecret();
+    }
 
     public abstract <T> T accept(Visitor<T> visitor);
 
@@ -38,7 +43,7 @@ public abstract class AuthToken implements Describable<AuthToken> {
             throw new UnsupportedOperationException();
         }
 
-        default public T visit(AccessKey accessKey) {
+        default public T visit(IAliyunAccessKey accessKey) {
             throw new UnsupportedOperationException();
         }
 

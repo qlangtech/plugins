@@ -82,7 +82,7 @@
         <module>tis-flink-chunjun-clickhouse-plugin</module>
         <module>tis-flink-chunjun-starrocks-plugin</module>
         <module>tis-flink-chunjun-kafka-plugin</module>
-        <module>tis-flink-chunjun-rabbitmq-plugin</module>
+<!--        <module>tis-flink-chunjun-rabbitmq-plugin</module>-->
         <module>tis-flink-chunjun-dameng-plugin</module>
         <module>tis-flink-msg-format-plugin</module>
         <module>tis-flink-cdc-mysql-shade-4-debezium-connector-mysql</module>

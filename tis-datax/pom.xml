@@ -47,7 +47,7 @@
         <module>tis-datax-common-rdbms-plugin</module>
         <module>tis-datax-test-common</module>
 
-        <module>tis-datax-oss-plugin</module>
+<!--        <module>tis-datax-oss-plugin</module>-->
         <module>tis-datax-elasticsearch-plugin</module>
         <module>tis-datax-clickhouse-plugin</module>
         <module>tis-datax-postgresql-plugin</module>
@@ -55,7 +55,7 @@
         <module>tis-datax-dfs-plugin</module>
         <module>tis-datax-sqlserver-plugin</module>
         <module>tis-datax-sqlserver-v2008-plugin</module>
-        <module>tis-datax-sqlserver-v2019-plugin</module>
+
 
 <!--        <module>tis-datax-cassandra-plugin</module>-->
         <module>tis-datax-oracle-plugin</module>
@@ -66,7 +66,7 @@
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-ds-mysql-plugin</module>
         <module>tis-ds-mysql-v5-plugin</module>
-        <module>tis-ds-mysql-v8-plugin</module>
+
         <module>tis-datax-mariadb-plugin</module>
 <!--        <module>tis-ds-mysql-mariadb-plugin</module>-->
         <module>tis-datax-local-executor</module>

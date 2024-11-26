@@ -60,7 +60,7 @@
         <module>tis-plugin-test/tis-testcontainer-dameng</module>
         <module>tis-e2e</module>
         <module>tis-kerberos-plugin</module>
-        <module>tis-split-table-strategy-plugin</module>
+
         <module>tis-powerjob-common-plugin</module>
         <module>tis-datax/tis-datax-local-embedded-executor</module>
         <module>tis-transformer</module>

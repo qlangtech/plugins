@@ -33,19 +33,18 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
+import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +159,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
      */
     public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
         return descs.stream().filter((desc) -> {
-            return desc instanceof AccessKey.DefaultDescriptor;
+            return StringUtils.equals(desc.getDisplayName(), AuthToken.KEY_ACCESS);//  instanceof AccessKey.DefaultDescriptor;
         }).collect(Collectors.toList());
     }
 
@@ -176,7 +175,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
             throw new SQLException(e);
         }
 
-        AccessKey accessKey = getAccessKey();
+        IAliyunAccessKey accessKey = getAccessKey();
         Connection conn = DriverManager.getConnection(
                 jdbcUrl,
                 accessKey.getAccessKeyId(), accessKey.getAccessKeySecret());
@@ -188,7 +187,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
         OdpsDataSourceFactory endpoint = this;
         Configuration config = Configuration.newDefault();
         config.set(Key.ACCOUNT_TYPE, Constant.DEFAULT_ACCOUNT_TYPE);
-        AccessKey accessKey = endpoint.getAccessKey();
+        IAliyunAccessKey accessKey = endpoint.getAccessKey();
         config.set(Key.ACCESS_ID, accessKey.getAccessKeyId());
         config.set(Key.ACCESS_KEY, accessKey.getAccessKeySecret());
         config.set(Key.ODPS_SERVER, endpoint.odpsServer);
@@ -214,10 +213,10 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
         return getJdbcUrls(false);
     }
 
-    public AccessKey getAccessKey() {
-        return this.authToken.accept(new AuthToken.Visitor<AccessKey>() {
+    public IAliyunAccessKey getAccessKey() {
+        return this.authToken.accept(new AuthToken.Visitor<IAliyunAccessKey>() {
             @Override
-            public AccessKey visit(AccessKey accessKey) {
+            public IAliyunAccessKey visit(IAliyunAccessKey accessKey) {
                 return accessKey;
             }
         });

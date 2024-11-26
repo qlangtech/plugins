@@ -21,12 +21,11 @@ package com.qlangtech.tis.zeppelin;
 import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.AuthToken;
+import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.HttpEndpoint;
 import com.qlangtech.tis.plugin.IdentityName;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
-import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.qlangtech.tis.web.start.TisSubModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.zeppelin.client.ClientConfig;
@@ -86,7 +85,7 @@ public class TISZeppelinClient {
                         }
 
                         @Override
-                        public Void visit(AccessKey accessKey) {
+                        public Void visit(IAliyunAccessKey accessKey) {
                             return null;
                         }
 

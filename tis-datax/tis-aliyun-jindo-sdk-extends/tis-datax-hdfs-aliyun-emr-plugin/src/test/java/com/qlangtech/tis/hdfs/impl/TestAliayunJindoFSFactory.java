@@ -24,6 +24,7 @@ import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.fs.*;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.AliyunEndpoint;
+import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +57,7 @@ public class TestAliayunJindoFSFactory {
 
         AliayunJindoFSFactory fsFactory = new AliayunJindoFSFactory() {
             @Override
-            protected AliyunEndpoint getAliyunEndpoint() {
+            protected IAliyunEndpoint getAliyunEndpoint() {
                 return aliyunEndpoint;
             }
         };

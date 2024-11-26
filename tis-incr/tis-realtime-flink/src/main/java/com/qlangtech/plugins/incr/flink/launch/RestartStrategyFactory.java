@@ -22,6 +22,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtensible;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.RestartStrategyOptions;
@@ -32,9 +33,10 @@ import java.util.Optional;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-25 16:33
- * @see com.qlangtech.plugins.incr.flink.launch.restart.ExponentialDelay
+ * // @see com.qlangtech.plugins.incr.flink.launch.restart.ExponentialDelay
  **/
 @Public
+@TISExtensible
 public abstract class RestartStrategyFactory implements Describable<RestartStrategyFactory> {
 
     public RestartStrategies.RestartStrategyConfiguration parseRestartStrategy() {

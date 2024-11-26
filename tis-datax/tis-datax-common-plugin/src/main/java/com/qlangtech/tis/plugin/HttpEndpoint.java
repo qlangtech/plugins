@@ -74,7 +74,15 @@ public class HttpEndpoint extends ParamsConfig implements IHttpToken {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor {
+        public DefaultDescriptor() {
+            this(KEY_DISPLAY_NAME);
+        }
+
+        public DefaultDescriptor(String paramsConfigType) {
+            super(paramsConfigType);
+        }
+
         @Override
         public String getDisplayName() {
             return KEY_DISPLAY_NAME;

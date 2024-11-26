@@ -1,6 +1,5 @@
-## targetTables
-
-请选择需要同步到DolphinScheduler的表，最大同步数量
-
 {
+  "targetTables": {
+    "help": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.impl.LimitDSTargetTables.getHelpInfo()"
+  }
 }

@@ -93,7 +93,10 @@ public class FTPServer extends ParamsConfig {
     }
 
     @TISExtension
-    public static class DefaultDesc extends Descriptor<ParamsConfig> implements IEndTypeGetter {
+    public static class DefaultDesc extends BasicParamsConfigDescriptor implements IEndTypeGetter {
+        public DefaultDesc() {
+            super(FTP_SERVER);
+        }
         @Override
         public String getDisplayName() {
             return FTP_SERVER;

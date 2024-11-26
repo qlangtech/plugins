@@ -95,26 +95,6 @@ public class DolphinSchedulerEndpoint extends ParamsConfig {
         if (!response.isSuccess()) {
             throw TisException.create(response.getMessage());
         }
-
-//        new StreamProcess<Boolean>() {
-//            public void error(int status, InputStream errstream, IOException e) throws Exception {
-//                if (HttpURLConnection.HTTP_UNAUTHORIZED == status) {
-//                    msgHandler.addFieldError(context, FIELD_KEY_SERVER_TOKEN, "请检查令牌是否有误");
-//                    return;
-//                } else {
-//                    super.error(status, errstream, e);
-//                }
-//            }
-//
-//            @Override
-//            public Boolean p(int status, InputStream stream, Map<String, List<String>> headerFields) throws IOException {
-//                JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
-//                if (result.getBooleanValue("success")) {
-//                    return true;
-//                }
-//                throw TisException.create(result.getString("msg"));
-//            }
-//        }
     }
 
     @Override
@@ -123,9 +103,9 @@ public class DolphinSchedulerEndpoint extends ParamsConfig {
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
         public DefaultDescriptor() {
-            super();
+            super(DISPLAY_NAME);
         }
 
         @Override

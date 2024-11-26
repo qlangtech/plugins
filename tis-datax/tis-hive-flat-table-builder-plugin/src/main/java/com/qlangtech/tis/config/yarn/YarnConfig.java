@@ -64,7 +64,7 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
 
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor {
 
         // private List<YarnConfig> installations;
         @Override
@@ -73,7 +73,7 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
         }
 
         public DefaultDescriptor() {
-            super();
+            super(KEY_DISPLAY_NAME);
             // this.load();
         }
     }

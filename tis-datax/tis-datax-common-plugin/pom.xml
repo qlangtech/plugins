@@ -33,11 +33,11 @@
 
     <dependencies>
 
-        <dependency>
-            <groupId>org.apache.zeppelin</groupId>
-            <artifactId>zeppelin-client-tis-${project.version}</artifactId>
-            <version>${zeppelin.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.zeppelin</groupId>-->
+<!--            <artifactId>zeppelin-client-tis-${project.version}</artifactId>-->
+<!--            <version>${zeppelin.version}</version>-->
+<!--        </dependency>-->
 
 
         <dependency>

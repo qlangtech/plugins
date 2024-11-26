@@ -118,8 +118,12 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
 
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor {
         private static final Pattern PATTERN_Principal = Pattern.compile(".+?@.+?");
+
+        public DefaultDescriptor() {
+            super(IKerberos.IDENTITY);
+        }
 
         @Override
         public String getDisplayName() {

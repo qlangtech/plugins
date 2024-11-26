@@ -24,19 +24,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
- 
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.zeppelin.TISZeppelinClient;
-import org.apache.commons.collections.MapUtils;
+//import com.qlangtech.tis.zeppelin.TISZeppelinClient;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -50,7 +47,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -326,17 +322,17 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     }
 
     public abstract static class BasicRdbmsDataSourceFactoryDescriptor
-            extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory> implements INotebookable {
+            extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory>  {
         public static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\&\\w+?\\=\\w+?)*");
         // private static final ZeppelinClient zeppelinClient;
 
 
-        @Override
-        public String createOrGetNotebook(Describable describable) throws Exception {
-
-            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;
-            return TISZeppelinClient.createJdbcNotebook(dsFactory);
-        }
+//        @Override
+//        public String createOrGetNotebook(Describable describable) throws Exception {
+//
+//            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;
+//            return TISZeppelinClient.createJdbcNotebook(dsFactory);
+//        }
 
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

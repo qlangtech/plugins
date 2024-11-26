@@ -185,7 +185,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected boolean acceptTable(ISelectedTab selectedTab) {
-        for (IdentityName tab : this.exportCfg.target.targetTables) {
+        for (IdentityName tab : this.exportCfg.target.getTargetTables()) {
             if (StringUtils.equals(tab.identityValue(), selectedTab.getName())) {
                 return true;
             }

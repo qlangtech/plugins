@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -32,11 +33,14 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-09-06 08:31
  **/
+@TISExtensible
 public abstract class DSTargetTables implements Describable<DSTargetTables> {
     protected static final String KEY_FIELD_TARGET_TABLES = "targetTables";
 
     @FormField(ordinal = 200, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<IdentityName> targetTables = Lists.newArrayList();
+
+    public abstract List<IdentityName> getTargetTables();
 
     @Override
     public final Descriptor<DSTargetTables> getDescriptor() {

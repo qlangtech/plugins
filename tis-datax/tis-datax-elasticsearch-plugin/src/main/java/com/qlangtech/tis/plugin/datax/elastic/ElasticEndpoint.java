@@ -21,10 +21,7 @@ package com.qlangtech.tis.plugin.datax.elastic;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESInitialization;
-import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.HttpEndpoint;
@@ -32,7 +29,6 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.zeppelin.TISZeppelinClient;
 import io.searchbox.client.JestResult;
 import io.searchbox.cluster.Health;
 
@@ -77,7 +73,10 @@ public class ElasticEndpoint extends HttpEndpoint {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements INotebookable, IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements  IEndTypeGetter {
+        public DefaultDescriptor() {
+            super(KEY_ELASTIC_SEARCH_DISPLAY_NAME);
+        }
 
         @Override
         public EndType getEndType() {
@@ -90,12 +89,12 @@ public class ElasticEndpoint extends HttpEndpoint {
          * @return
          * @throws Exception
          */
-        @Override
-        public String createOrGetNotebook(Describable describable) throws Exception {
-
-            ParamsConfig cfg = (ParamsConfig) describable; //postFormVals.newInstance(this, msgHandler);
-            ElasticEndpoint endpoint = (ElasticEndpoint) cfg;
-            return TISZeppelinClient.createESNotebook(endpoint);
+//        @Override
+//        public String createOrGetNotebook(Describable describable) throws Exception {
+//
+//            ParamsConfig cfg = (ParamsConfig) describable; //postFormVals.newInstance(this, msgHandler);
+//            ElasticEndpoint endpoint = (ElasticEndpoint) cfg;
+//            return TISZeppelinClient.createESNotebook(endpoint);
 
 //            ElasticEndpoint endpoint = (ElasticEndpoint) cfg;
 //            String idVal = cfg.identityValue();
@@ -141,7 +140,7 @@ public class ElasticEndpoint extends HttpEndpoint {
 //            notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));
 //            FileUtils.write(notebookToken, notebookId, TisUTF8.get(), false);
 //            return notebookId;
-        }
+      //  }
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {

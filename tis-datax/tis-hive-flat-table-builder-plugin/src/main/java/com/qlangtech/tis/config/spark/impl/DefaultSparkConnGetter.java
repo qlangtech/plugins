@@ -64,9 +64,9 @@ public class DefaultSparkConnGetter extends ParamsConfig implements ISparkConnGe
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
         public DefaultDescriptor() {
-            super();
+            super(PLUGIN_NAME);
             // this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 

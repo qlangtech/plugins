@@ -23,7 +23,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
-import com.qlangtech.plugins.incr.flink.launch.clustertype.KubernetesApplication;
+import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
@@ -198,7 +198,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //                                , Optional.of("http://" + serverPortExport.getClusterHost(
 //                                        coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
 //                                , clusterClient, flinkManager.getK8SImage());
-                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, endpoint
+                        clusterMeta[0] = ClusterType.createClusterMeta(FlinkClusterType.K8SSession, endpoint
                                 , clusterClient, k8SImage);
 
                         SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);

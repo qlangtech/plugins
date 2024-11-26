@@ -86,14 +86,14 @@ public class DataXGlobalConfig extends ParamsConfig implements IDataxGlobalCfg {
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor {
         @Override
         public String getDisplayName() {
             return IDataxGlobalCfg.KEY_DISPLAY_NAME;// "DataX-global";
         }
 
         public DefaultDescriptor() {
-            super();
+            super(IDataxGlobalCfg.KEY_DISPLAY_NAME);
         }
 
         public boolean validateChannel(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

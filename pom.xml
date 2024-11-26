@@ -1123,7 +1123,7 @@
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>maven-tpi-plugin</artifactId>
                 <extensions>true</extensions>
-                <configuration>
+                <configuration >
                     <pluginFirstClassLoader>true</pluginFirstClassLoader>
                     <minimumJavaVersion>1.${java.level}</minimumJavaVersion>
                     <classpathDependentExcludes>${maven-tpi-plugin.classpathDependentExcludes}

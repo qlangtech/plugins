@@ -106,9 +106,9 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
         public DefaultDescriptor() {
-            super();
+            super(IK8sContext.KEY_DISPLAY_NAME);
             this.load();
         }
 
@@ -116,11 +116,6 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         public final EndType getEndType() {
             return EndType.K8S;
         }
-
-//        @Override
-//        public Map<String, Object> getExtractProps() {
-//            return this.getEndType().appendProps(super.getExtractProps());
-//        }
 
         @Override
         public String getDisplayName() {

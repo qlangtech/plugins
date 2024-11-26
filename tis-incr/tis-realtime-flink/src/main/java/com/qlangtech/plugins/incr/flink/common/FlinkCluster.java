@@ -117,7 +117,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
 
         // private List<YarnConfig> installations;
         @Override
@@ -126,7 +126,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         }
 
         public DefaultDescriptor() {
-            super();
+            super(KEY_DISPLAY_NAME);
             // this.load();
         }
 

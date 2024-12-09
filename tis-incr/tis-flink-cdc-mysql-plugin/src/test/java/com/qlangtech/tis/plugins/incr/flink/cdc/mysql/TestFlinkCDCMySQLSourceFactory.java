@@ -139,6 +139,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
                 return sourceHandle;
             }
         };
@@ -424,7 +425,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 //                vals.put("multiline_c", RowValsExample.RowVal.$("ST_GeomFromText('MultiLineString((1 1,2 2,3 3),(4 4,5 5))')"));
 //                vals.put("multipolygon_c", RowValsExample.RowVal.$("ST_GeomFromText('MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)), ((5 5, 7 5, 7 7, 5 7, 5 5)))')"));
 //                vals.put("geometrycollection_c", RowValsExample.RowVal.$("ST_GeomFromText('GEOMETRYCOLLECTION(POINT(10 10), POINT(30 30), LINESTRING(15 15, 20 20))')"));
-                TestRow fullTypeRow = new TestRow(RowKind.INSERT, new RowValsExample(vals));
+
+                TestRow fullTypeRow = new TestRow(RowKind.INSERT, this.getColMetaMapper() ,new RowValsExample(vals));
                 fullTypeRow.idVal = pk;
 //                fullTypeRow.updateVals.put(colBitC, (statement, index, ovals) -> {
 //
@@ -459,7 +461,9 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     }
 
     protected FlinkCDCMySQLSourceFactory createCDCFactory() {
-        return new FlinkCDCMySQLSourceFactory();
+        FlinkCDCMySQLSourceFactory mySQLSourceFactory = new FlinkCDCMySQLSourceFactory();
+        mySQLSourceFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+        return mySQLSourceFactory;
     }
 
 

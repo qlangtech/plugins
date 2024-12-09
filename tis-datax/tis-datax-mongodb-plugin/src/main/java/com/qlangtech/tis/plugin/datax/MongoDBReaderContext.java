@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bson.BsonDocument;
 import org.bson.Document;
 
 import java.util.List;
@@ -68,7 +69,7 @@ public class MongoDBReaderContext extends RdbmsReaderContext<DataXMongodbReader,
             public List<CMeta> getSourceCols() {
                 DataXMongodbReader.DefaultMongoTable mtable =
                         (DataXMongodbReader.DefaultMongoTable) ((DataXMongodbReader) plugin).findMongoTable(selectedTab.getName());
-                List<Pair<MongoCMeta, Function<Document, Column>>> cols = mtable.getMongoPresentCols();
+                List<Pair<MongoCMeta, Function<BsonDocument, Column>>> cols = mtable.getMongoPresentCols();
                 return cols.stream().map((p) -> p.getKey()).collect(Collectors.toList());
             }
         };

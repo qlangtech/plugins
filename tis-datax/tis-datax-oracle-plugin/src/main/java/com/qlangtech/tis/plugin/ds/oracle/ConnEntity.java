@@ -33,4 +33,6 @@ public abstract class ConnEntity implements Describable<ConnEntity> {
     }
 
     protected abstract String getEntityName();
+
+    public abstract String getConnName();
 }

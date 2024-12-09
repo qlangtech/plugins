@@ -4,6 +4,8 @@ The ampersand-separated connection options of MongoDB. eg: `replicaSet=test&conn
 
 Default: none
 
+https://docs.mongodb.com/manual/reference/connection-string/#std-label-connections-connection-options
+
 ## errorsTolerance
 
 Whether to continue processing messages if an error is encountered. 
@@ -26,42 +28,23 @@ eg.
 ```
 ensures that only documents in which the closed field is set to false are copied.
 
-## copyExisting
+## updateRecordComplete
 
-Whether copy existing data from source collections.
+MongoDB 发生更新时候，before数据获取策略，目前有两种方式
+1. FULL_CHANGE_LOG: （包括： `RowKind.UPDATE_BEFORE`,`RowKind.UPDATE_AFTER` 两种类型消息） [Full Changelog详细参考](https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#full-changeloga-namefull-changelog-id003-a)
+2. UPDATE_LOOKUP: 通过 CDC内部合并更新内容和更新之前的整条记录值（包括： 只有`RowKind.UPDATE_AFTER`一种类型消息）
 
-## errorsLogEnable
+## startupOption
 
-Whether details of failed operations should be written to the log file.
+Debezium startup options
 
-Default: `true`
+参数详细请参考：[https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#startup-reading-position](https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#startup-reading-position)
 
-## copyExistingMaxThreads
+* `Initial`:
+  Performs an initial snapshot on the monitored database tables upon first startup, and continue to read the latest oplog.
 
-The number of threads to use when performing the data copy.
+* `Latest`(default):
+  Never to perform snapshot on the monitored database tables upon first startup, just read from the end of the oplog which means only have the changes since the connector was started.
 
-Default: `Processors Count`
-
-## copyExistingQueueSize
-
-The max size of the queue to use when copying data.
-
-Default: `16000`
-
-## pollMaxBatchSize
-
-Maximum number of change stream documents to include in a single batch when polling for new data.
-
-Default: `1000`
-
-## pollAwaitTimeMillis
-
-The amount of time to wait before checking for new results on the change stream.
-
-Default: `1500`
-
-## heartbeatIntervalMillis
-
-The length of time in milliseconds between sending heartbeat messages. Use 0 to disable.
-
-Default: `0` 
+* `Timestamp`:
+  Skip snapshot phase and start reading oplog events from a specific timestamp.

@@ -14,5 +14,10 @@
   "extraParams": {
     "placeholder": "a=123;b=456",
     "helpUrl": "https://docs.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties?view=sql-server-ver15"
+  },
+  "tabSchema": {
+    "label": "schema",
+    "dftVal": "dbo",
+    "help": "Specify the schema (or several schema separated by commas) to be set in the search-path. This schema will be used to resolve unqualified object names used in statements over this connection."
   }
 }

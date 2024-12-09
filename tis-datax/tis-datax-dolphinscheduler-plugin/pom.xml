@@ -37,22 +37,18 @@
 
     <dependencies>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-split-table-strategy-plugin</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-split-table-strategy-plugin</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-common</artifactId>
             <version>${dolphinscheduler.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.dolphinscheduler</groupId>-->
-<!--            <artifactId>dolphinscheduler-api</artifactId>-->
-<!--            <version>${dolphinscheduler.version}</version>-->
-<!--        </dependency>-->
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>

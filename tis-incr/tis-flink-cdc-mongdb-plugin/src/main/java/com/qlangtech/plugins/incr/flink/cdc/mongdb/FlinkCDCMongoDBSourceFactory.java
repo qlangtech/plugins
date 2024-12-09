@@ -24,14 +24,16 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+
+import java.time.ZoneId;
 
 /**
- * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/mongodb-cdc.html
+ * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-02 11:36
@@ -39,41 +41,34 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 @Public
 public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public MongoCDCStartupOptions startupOption;
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String timeZone;
+    /**
+     * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#full-changeloga-namefull-changelog-id003-a
+     */
+    @FormField(ordinal = 9, validate = {Validator.require})
+    public UpdateRecordComplete updateRecordComplete;
+
+
+    public ZoneId parseZoneId() {
+        return ZoneId.of(timeZone);
+    }
+
+    @FormField(ordinal = 10, advance = true, type = FormFieldType.INPUTTEXT)
     public String connectionOptions;
 
-//    @FormField(ordinal = 1, type = FormFieldType.ENUM)
-//    public String errorsTolerance;
-
-    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA)
+    @FormField(ordinal = 11, advance = true, type = FormFieldType.TEXTAREA)
     public String copyExistingPipeline;
-
-    @FormField(ordinal = 3, type = FormFieldType.ENUM)
-    public Boolean copyExisting;
-
-//    @FormField(ordinal = 4, type = FormFieldType.ENUM)
-//    public Boolean errorsLogEnable;
-
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer copyExistingMaxThreads;
-
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer copyExistingQueueSize;
-
-    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer pollMaxBatchSize;
-
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer pollAwaitTimeMillis;
-
-    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer heartbeatIntervalMillis;
 
     private transient IConsumerHandle consumerHandle;
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
-        return AbstractRowDataMapper::mapFlinkCol;
+        return (meta, colIndex) -> {
+            return meta.getType().accept(new MongoDBCDCTypeVisitor(meta, colIndex, this.parseZoneId()));
+        };
     }
 
     @Override
@@ -91,10 +86,11 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
         return this.consumerHandle;
     }
 
+
     /**
      * 还没有调试好暂时不支持
      */
-    //@TISExtension()
+    @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {

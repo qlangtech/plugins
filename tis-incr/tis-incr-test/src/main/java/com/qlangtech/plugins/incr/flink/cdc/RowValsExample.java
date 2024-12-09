@@ -159,6 +159,9 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
 
                 @Override
                 public String getAssertActual(Object val) {
+                    if (val instanceof java.time.LocalDate) {
+                        return String.valueOf(localDateTimeToDate(((java.time.LocalDate) val)).getTime());
+                    }
                     return String.valueOf(localDateTimeToDate((LocalDateTime) val).getTime());
                 }
             };

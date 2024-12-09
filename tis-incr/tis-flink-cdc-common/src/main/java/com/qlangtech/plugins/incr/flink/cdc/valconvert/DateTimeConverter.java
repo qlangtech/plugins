@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.valconvert;
 
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
@@ -60,7 +61,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
     public DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     protected DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    protected static ZoneId timestampZoneId = ZoneId.systemDefault();
+    public static ZoneId timestampZoneId = ZoneId.systemDefault();
 
 
     public static void setDatetimeConverters(String convertType, Properties debeziumProperties) {
@@ -71,7 +72,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
         debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put("datetime.format.timestamp.zone"
-                , DataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
+                , MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId());
     }
 
 

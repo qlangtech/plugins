@@ -31,6 +31,11 @@
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-flink-cdc-mongdb-plugin</artifactId>
     <packaging>tpi</packaging>
+
+    <properties>
+        <json-path.version>2.7.0</json-path.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -103,6 +108,40 @@
             <artifactId>tis-flink-cdc-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- test dependencies on TestContainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <version>1.18.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>${json-path.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-incr-test</artifactId>
+        </dependency>
+
     </dependencies>
 
 

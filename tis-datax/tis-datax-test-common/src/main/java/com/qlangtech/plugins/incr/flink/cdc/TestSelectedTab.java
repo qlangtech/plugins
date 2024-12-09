@@ -36,6 +36,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -59,14 +60,26 @@ public class TestSelectedTab extends SelectedTab {
 
     public static SelectedTab createSelectedTab(EntityName tabName
             , DataSourceFactory dataSourceFactory) throws TableNotFoundException {
-        return createSelectedTab(tabName, dataSourceFactory, (t) -> {
+        return createSelectedTab(tabName, dataSourceFactory, (tab) -> {
+            try {
+                return dataSourceFactory.getTableMetadata(false, tab);
+            } catch (TableNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static SelectedTab createSelectedTab(EntityName tabName
+            , DataSourceFactory dataSourceFactory, Function<EntityName, List<ColumnMetaData>> tableMetadataGetter) {
+        return createSelectedTab(tabName, dataSourceFactory, tableMetadataGetter, (t) -> {
         });
     }
 
     public static SelectedTab createSelectedTab(EntityName tabName //
-            , DataSourceFactory dataSourceFactory //
-            , Consumer<SelectedTab> baseTabSetter) throws TableNotFoundException {
-        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(false, tabName);
+            , DataSourceFactory dataSourceFactory
+            , Function<EntityName, List<ColumnMetaData>> tableMetadataGetter
+            , Consumer<SelectedTab> baseTabSetter) {
+        List<ColumnMetaData> tableMetadata = tableMetadataGetter.apply(tabName);// dataSourceFactory.getTableMetadata(false, tabName);
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
         }

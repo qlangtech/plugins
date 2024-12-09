@@ -19,9 +19,12 @@
 package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.DefaultTableNameConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
+import com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.MongoDBDeserializationSchema;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
@@ -31,19 +34,30 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.function.Function;
 
 /**
- * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/mongodb-cdc.html
+ * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-02 11:40
@@ -59,62 +73,75 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-            DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
+            BasicDataXRdbmsReader mongoReader = (BasicDataXRdbmsReader) dataSource;
+            MangoDBDataSourceFactory dsFactory = (MangoDBDataSourceFactory) mongoReader.getDataSourceFactory();
+            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
+            Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
+                    = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, mongoReader, tabs);
+            Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
+            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            for (ISelectedTab tab : tabs) {
+                FlinkColMapper colsMapper
+                        = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
+                tabColsMapper.put(tab.getName(), colsMapper);
+            }
 
-            MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
+            final MongoDBDeserializationSchema deserializationSchema
+                    = new MongoDBDeserializationSchema(
+                    new MongoDBSourceDTOColValProcess(tabColsMapper)
+                    , new DefaultTableNameConvert()
+                    , contextParamValsGetterMapper);
 
-            List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs);
-
-            SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
+            SourceChannel sourceChannel = new SourceChannel(
+                    SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
+                        List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs, deserializationSchema);
+                        return sourceFunctions;
+                    }));
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-           // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
+            // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
     }
 
-    private List<ReaderSource> createSourceFunctions(MangoDBDataSourceFactory dsFactory, List<ISelectedTab> tabs) {
+    private List<ReaderSource> createSourceFunctions(
+            MangoDBDataSourceFactory dsFactory, List<ISelectedTab> tabs, TISDeserializationSchema deserializationSchema) {
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
-        for (ISelectedTab tab : tabs) {
-            MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
-                    .hosts(dsFactory.address)
-                    .databaseList(dsFactory.dbName)
-                    .collectionList(tab.getName())
-                    .connectionOptions(sourceFactory.connectionOptions)
-                    //.errorsTolerance(sourceFactory.errorsTolerance)
-                    .username(dsFactory.getUserName())
-                    .password(dsFactory.getPassword())
-                    .deserializer(new TISDeserializationSchema());
 
-            //  builder.
-//            if (sourceFactory.errorsLogEnable != null) {
-//                builder.errorsLogEnable(sourceFactory.errorsLogEnable);
-//            }
-            if (sourceFactory.copyExisting != null) {
-                builder.copyExisting(sourceFactory.copyExisting);
-            }
-            if (sourceFactory.copyExistingMaxThreads != null) {
-                builder.copyExistingMaxThreads(sourceFactory.copyExistingMaxThreads);
-            }
-            if (sourceFactory.copyExistingQueueSize != null) {
-                builder.copyExistingMaxThreads(sourceFactory.copyExistingQueueSize);
-            }
-            if (sourceFactory.pollMaxBatchSize != null) {
-                builder.copyExistingMaxThreads(sourceFactory.pollMaxBatchSize);
-            }
-            if (sourceFactory.pollAwaitTimeMillis != null) {
-                builder.copyExistingMaxThreads(sourceFactory.pollAwaitTimeMillis);
-            }
-            if (sourceFactory.heartbeatIntervalMillis != null) {
-                builder.copyExistingMaxThreads(sourceFactory.heartbeatIntervalMillis);
-            }
 
-            SourceFunction<DTO> source = builder.build();
+        String[] collectionList = tabs.stream()
+                .map((tab) -> dsFactory.getDbName() + "." + tab.getName())
+                .toArray(String[]::new);
+//        for (ISelectedTab tab : tabs) {
+//        }
+        MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
+                .hosts(dsFactory.address)
+                .databaseList(dsFactory.dbName)
+                //  .startupOptions(sourceFactory.getStartupOptions())
 
-            sourceFuncs.add(ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName + "_" + tab.getName(), source));
-        }
+                .collectionList(collectionList)
+                .connectionOptions(sourceFactory.connectionOptions)
+                .copyExistingPipeline(sourceFactory.copyExistingPipeline)
+
+                // .fullDocumentBeforeChange(sourceFactory.fullDocumentBeforeChange)
+//                .scanFullChangelog(true)
+//                .updateLookup(true)
+                // .copyExisting(sourceFactory.copyExisting)
+                //.errorsTolerance(sourceFactory.errorsTolerance)
+                .username(dsFactory.getUserName())
+                .password(dsFactory.getPassword())
+                .deserializer(deserializationSchema);
+
+
+        Objects.requireNonNull(sourceFactory.startupOption, "startupOption can not be null").setProperty(builder);
+        Objects.requireNonNull(sourceFactory.updateRecordComplete, "updateRecordComplete can not be null").setProperty(builder);
+
+        SourceFunction<DTO> source = builder.build();
+
+        sourceFuncs.add(ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName, source));
+
         return sourceFuncs;
     }
 

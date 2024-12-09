@@ -20,14 +20,17 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.Row;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -237,7 +240,10 @@ public class FlinkCol implements Serializable {
                 // com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter
                 String val = (String) o;
                 return LocalDateTime.parse(val, val.contains("T") ? datetimeFormatter_with_zone : datetimeFormatter);
+            } else if (o instanceof Long) {
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli((Long) o), ZoneId.systemDefault());
             }
+
             return (LocalDateTime) o;
         }
     }

@@ -148,7 +148,7 @@
     </profiles>
 
     <properties>
-        <zeppelin.version>0.10.2-SNAPSHOT</zeppelin.version>
+
         <hadoop3-version>3.2.1</hadoop3-version>
 
         <scala.version>2.12.9</scala.version>

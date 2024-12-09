@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.LatestLocation;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.StartLocation;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.poll.RunInterval;
@@ -141,7 +142,7 @@ public class CDCTestSuitParams {
                     SelectedTabPropsExtends incrTabExtend = new SelectedTabPropsExtends();
                     RunInterval polling = new RunInterval();
                     polling.useMaxFunc = true;
-                    polling.incrColumn = this.incrColumn;//CUDCDCTestSuit.key_update_time; //cdcTestSuit.getPrimaryKeyName(tab);
+                    polling.incrColumn = this.incrColumn;
                     polling.pollingInterval = 4999;
                     polling.startLocation = this.startLocation;
                     incrTabExtend.polling = polling;
@@ -167,7 +168,7 @@ public class CDCTestSuitParams {
     }
 
     public interface OverwriteSelectedTab {
-        void apply(CUDCDCTestSuit cdcTestSuit, String tabName, BasicDataSourceFactory dataSourceFactory, SelectedTab tab);
+        void apply(CUDCDCTestSuit cdcTestSuit, String tabName, DataSourceFactory dataSourceFactory, SelectedTab tab);
     }
 
 

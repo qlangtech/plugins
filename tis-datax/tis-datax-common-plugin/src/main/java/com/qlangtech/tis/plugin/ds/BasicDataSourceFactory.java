@@ -92,6 +92,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     @FormField(ordinal = 15, advance = true, type = FormFieldType.INPUTTEXT)
     public String extraParams;
 
+    public String getDbName() {
+        return this.dbName;
+    }
 
     public String getUserName() {
         return this.userName;
@@ -317,12 +320,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         return BasicRdbmsDataSourceFactoryDescriptor.class;
     }
 
-    public String getDbName() {
-        return this.dbName;
-    }
 
     public abstract static class BasicRdbmsDataSourceFactoryDescriptor
-            extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory>  {
+            extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory> {
         public static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\&\\w+?\\=\\w+?)*");
         // private static final ZeppelinClient zeppelinClient;
 

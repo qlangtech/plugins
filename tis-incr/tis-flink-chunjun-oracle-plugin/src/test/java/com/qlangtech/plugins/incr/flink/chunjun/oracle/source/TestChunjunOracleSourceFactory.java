@@ -85,7 +85,7 @@ public class TestChunjunOracleSourceFactory {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return oracleDS;
             }
 
@@ -96,6 +96,7 @@ public class TestChunjunOracleSourceFactory {
 
             @Override
             protected List<TestRow> createExampleTestRows() throws Exception {
+                Map<String, ColMeta> colMetaMapper = this.getColMetaMapper();
                 List<TestRow> exampleRows = Lists.newArrayList();
                 TestRow row = null;
                 Map<String, RowValsExample.RowVal> vals = null;
@@ -105,7 +106,7 @@ public class TestChunjunOracleSourceFactory {
                     vals = Maps.newHashMap();
                     vals.put(tabNameFull_types_pk, RowValsExample.RowVal.$((long) i));
                     vals.put(key_timestamp6_c, parseTimestamp("2020-07-17 18:00:22"));
-                    row = new TestRow(RowKind.INSERT, new RowValsExample(vals));
+                    row = new TestRow(RowKind.INSERT, colMetaMapper, new RowValsExample(vals));
                     row.idVal = i;
                     exampleRows.add(row);
                 }
@@ -151,7 +152,7 @@ public class TestChunjunOracleSourceFactory {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return oracleDS;
             }
 
@@ -164,6 +165,7 @@ public class TestChunjunOracleSourceFactory {
 
             @Override
             protected List<TestRow> createExampleTestRows() throws Exception {
+                Map<String, ColMeta> colMapper = this.getColMetaMapper();
                 List<TestRow> exampleRows = Lists.newArrayList();
                 Date now = new Date();
                 TestRow row = null;
@@ -192,15 +194,15 @@ public class TestChunjunOracleSourceFactory {
                     vals.put("time_c", parseTimestamp("1970-01-01 18:00:22"));
                     vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0));
 
-                    row = new TestRow(RowKind.INSERT, new RowValsExample(vals));
-                    row.updateVals.put(key_timestamp6_c, (statement, index, ovals) -> {
+                    row = new TestRow(RowKind.INSERT, colMapper, new RowValsExample(vals));
+                    row.updateVals.put(key_timestamp6_c, (meta, statement, ovals) -> {
                         RowValsExample.RowVal newt = parseTimestamp("2020-07-18 18:00:22");
-                        statement.setTimestamp(index, newt.getVal());
+                        statement.setTimestamp(meta, newt.getVal());
                         return newt;
                     });
-                    row.updateVals.put("small_c", (statement, index, ovals) -> {
+                    row.updateVals.put("small_c", (meta, statement, ovals) -> {
                         RowValsExample.RowVal nsmall = RowValsExample.RowVal.$(2l);
-                        statement.setLong(index, nsmall.getVal());
+                        statement.setLong(meta, nsmall.getVal());
                         return nsmall;
                     });
                     row.idVal = i;

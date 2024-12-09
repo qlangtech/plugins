@@ -58,6 +58,10 @@
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>plugin-unstructured-storage-util</artifactId>
                 </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>org.mongodb</groupId>-->
+<!--                    <artifactId>mongo-java-driver</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -77,11 +81,18 @@
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
 
+        <!-- 该驱动 可以被mongodb-driver-sync 替换
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>3.12.14</version>
         </dependency>
+ -->
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>mongodb-driver-sync</artifactId>-->
+<!--            <version>4.11.2</version>-->
+<!--        </dependency>-->
 
 <!--        <dependency>-->
 <!--            <groupId>org.mongodb</groupId>-->

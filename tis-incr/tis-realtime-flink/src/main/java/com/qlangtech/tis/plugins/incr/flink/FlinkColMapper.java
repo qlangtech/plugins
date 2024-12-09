@@ -35,6 +35,10 @@ public class FlinkColMapper implements Serializable {
         this.colMapper = colMapper;
     }
 
+    public Map<String, FlinkCol> getColMapper() {
+        return colMapper;
+    }
+
     public BiFunction getSourceDTOColValProcess(String colName) {
         FlinkCol fcol = colMapper.get(colName);
         if (fcol == null) {

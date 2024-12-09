@@ -18,13 +18,12 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.google.common.collect.Maps;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import org.apache.flink.util.Collector;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -35,10 +34,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * A JSON format implementation of {@link DebeziumDeserializationSchema} which deserializes the
@@ -51,7 +52,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(TISDeserializationSchema.class);
 
-    private final ISourceValConvert rawValConvert;
+    protected final ISourceValConvert rawValConvert;
     private final Function<String, String> physicsTabName2LogicName;
     private final Map<String /**tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper;
 
@@ -76,65 +77,120 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     @Override
     public void deserialize(SourceRecord record, Collector<DTO> out) throws Exception {
         DTO dto = new DTO();
-        Envelope.Operation op = Envelope.operationFor(record);
+        EventOperation op = getOp(record);
+        if (isSkipProcess(op)) {
+            return;
+        }
         Struct value = (Struct) record.value();
         Schema valueSchema = record.valueSchema();
+        setTableRelevantMeta(record, dto);
+
+        dto.setTableName(physicsTabName2LogicName.apply(dto.getPhysicsTabName()));
+
+        if (op.isInsert()) {
+            if (this.extractAfterRow(op, dto, value, valueSchema)) {
+                this.processNewAdd(out, dto);
+            }
+        } else if (op.isUpdate()) {
+            boolean containBeforeVals = this.extractBeforeRow(dto, value, valueSchema);
+            boolean containAfterVals = this.extractAfterRow(op, dto, value, valueSchema);
+
+            if (containBeforeVals) {
+                dto.setEventType(DTO.EventType.UPDATE_BEFORE);
+                out.collect(dto);
+            }
+            if (containAfterVals) {
+                dto = dto.colone();
+                dto.setEventType(DTO.EventType.UPDATE_AFTER);
+                out.collect(dto);
+            }
+        } else if (op.isDelete()) {
+
+            this.extractForDelete(dto, value, valueSchema);
+            dto.setEventType(DTO.EventType.DELETE);
+            out.collect(dto);
+        } else {
+            throw new IllegalStateException("invalid op:" + op);
+        }
+
+//        if (op != Envelope.Operation.CREATE && op != Envelope.Operation.READ) {
+//            if (op == Envelope.Operation.DELETE) {
+//                this.extractBeforeRow(dto, value, valueSchema);
+//                dto.setEventType(DTO.EventType.DELETE);
+//                out.collect(dto);
+//            } else {
+//                this.extractBeforeRow(dto, value, valueSchema);
+//                this.extractAfterRow(dto, value, valueSchema);
+//
+//                processUpdate(out, dto);
+//            }
+//        } else {
+//            this.extractAfterRow(dto, value, valueSchema);
+//            processNewAdd(out, dto);
+//        }
+    }
+
+    protected void extractForDelete(DTO dto, Struct value, Schema valueSchema) {
+        this.extractBeforeRow(dto, value, valueSchema);
+    }
+
+    protected boolean isSkipProcess(EventOperation op) {
+        return false;
+    }
+
+    protected EventOperation getOp(SourceRecord record) {
+        return new EventOperation(Envelope.operationFor(record));
+    }
+
+    protected void setTableRelevantMeta(SourceRecord record, DTO dto) {
         Matcher topicMatcher = PATTERN_TOPIC.matcher(record.topic());
         if (!topicMatcher.matches()) {
             throw new IllegalStateException("topic is illegal:" + record.topic());
         }
         dto.setDbName(topicMatcher.group(1));
         final String physicsTabName = topicMatcher.group(2);
-        dto.setTableName(physicsTabName2LogicName.apply(physicsTabName));
         dto.setPhysicsTabName(physicsTabName);
-
-        if (op != Envelope.Operation.CREATE && op != Envelope.Operation.READ) {
-            if (op == Envelope.Operation.DELETE) {
-                this.extractBeforeRow(dto, value, valueSchema);
-                dto.setEventType(DTO.EventType.DELETE);
-                out.collect(dto);
-            } else {
-                this.extractBeforeRow(dto, value, valueSchema);
-                this.extractAfterRow(dto, value, valueSchema);
-
-                // TODO: 需要判断这条记录是否要处理
-                dto.setEventType(DTO.EventType.UPDATE_BEFORE);
-                out.collect(dto);
-
-                dto = dto.colone();
-                dto.setEventType(DTO.EventType.UPDATE_AFTER);
-                out.collect(dto);
-            }
-        } else {
-            this.extractAfterRow(dto, value, valueSchema);
-//            this.validator.validate(delete, RowKind.INSERT);
-            dto.setEventType(DTO.EventType.ADD);
-            out.collect(dto);
-        }
     }
 
+    protected void processNewAdd(Collector<DTO> out, DTO dto) {
+        dto.setEventType(DTO.EventType.ADD);
+        out.collect(dto);
+    }
 
-    private void extractAfterRow(DTO dto, Struct value, Schema valueSchema) {
-        Schema afterSchema = valueSchema.field("after").schema();
-        Struct after = value.getStruct("after");
+//    protected void processUpdate(Collector<DTO> out, DTO dto) {
+//
+//    }
+
+
+    private boolean extractAfterRow(EventOperation operation, DTO dto, Struct value, Schema valueSchema) {
+        final List<Field> fields = getAfterFields(dto, value, valueSchema);
 
         Map<String, Object> afterVals = new HashMap<>();
 
         /**==========================
          * 设置环境绑定参数值
          ==========================*/
-        Map<String, Function<RunningContext, Object>> contextParamsGetter
-                = this.contextParamValsGetterMapper.get(dto.getTableName());
+        Map<String, Function<RunningContext, Object>> contextParamsGetter = this.contextParamValsGetterMapper.get(dto.getTableName());
         if (contextParamsGetter != null) {
             contextParamsGetter.forEach((contextParamName, getter) -> {
                 afterVals.put(contextParamName, getter.apply(new RdbmsRunningContext(dto.getDbName(), dto.getPhysicsTabName())));
             });
         }
 
+        if (fillAfterValsFromEvent(operation, dto, value, valueSchema, fields, afterVals)) {
+            dto.setAfter(afterVals);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    protected boolean fillAfterValsFromEvent(EventOperation operation, DTO dto, Struct value
+            , Schema valueSchema, List<Field> fields, Map<String, Object> afterVals) {
         Object afterVal = null;
-        for (Field field : afterSchema.fields()) {
-            afterVal = after.get(field.name());
+        Struct after = value.getStruct("after");
+        for (Field field : fields) {
+            afterVal = after.get(field);
             if (afterVal == null) {
                 continue;
             }
@@ -144,18 +200,34 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
                 throw new RuntimeException("field:" + field.name() + ",afterVal:" + afterVal, e);
             }
         }
-        dto.setAfter(afterVals);
+        return true;
     }
 
 
-    private void extractBeforeRow(DTO dto, Struct value, Schema valueSchema) {
+    protected List<Field> getAfterFields(DTO dto, Struct value, Schema valueSchema) {
+        Schema afterSchema = valueSchema.field("after").schema();
+        return afterSchema.fields();
+    }
 
+    protected List<Field> getBeforeFields(DTO dto, Struct value, Schema valueSchema) {
+        Schema afterSchema = valueSchema.field("before").schema();
+        return afterSchema.fields();
+    }
+
+
+    /**
+     * @param dto
+     * @param value
+     * @param valueSchema
+     * @return 是否收集
+     */
+    protected boolean extractBeforeRow(DTO dto, Struct value, Schema valueSchema) {
+        final List<Field> fields = getBeforeFields(dto, value, valueSchema);
         Struct before = getBeforeVal(value);
+        Map<String, Object> beforeVals = new HashMap<>();
         if (before != null) {
-            Schema beforeSchema = valueSchema.field("before").schema();
-            Map<String, Object> beforeVals = new HashMap<>();
             Object beforeVal = null;
-            for (Field f : beforeSchema.fields()) {
+            for (Field f : fields) {
                 beforeVal = before.get(f.name());
                 if (beforeVal == null) {
                     continue;
@@ -166,9 +238,9 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
                     throw new RuntimeException("field:" + f.name() + ",beforeVal:" + beforeVal, e);
                 }
             }
-            dto.setBefore(beforeVals);
         }
-
+        dto.setBefore(beforeVals);
+        return true;
     }
 
     protected Struct getBeforeVal(Struct value) {

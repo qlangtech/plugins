@@ -1,56 +1,25 @@
 {
   "connectionOptions": {
-  },
-  "errorsTolerance": {
-    "enum": [
-      {
-        "label": "None",
-        "val": "none"
-      },
-      {
-        "label": "All",
-        "val": "all"
-      }
-    ]
+    "label": "Conn Options"
   },
   "copyExistingPipeline": {
     "placeholder": "[{\"$match\": {\"closed\": \"false\"}}]",
     "style": "codemirror",
     "mode": "application/ld+json",
-    "rows": 4
+    "rows": 2
   },
-  "copyExisting": {
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
+  "updateRecordComplete": {
+    "label": "补全策略",
+    "dftVal": "UPDATE_LOOKUP"
   },
-  "errorsLogEnable": {
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
+  "startupOption": {
+    "label": "起始位点",
+    "dftVal": "LATEST_OFFSET"
   },
-  "copyExistingMaxThreads": {
-  },
-  "copyExistingQueueSize": {
-  },
-  "pollMaxBatchSize": {
-  },
-  "pollAwaitTimeMillis": {
-  },
-  "heartbeatIntervalMillis": {
+  "timeZone": {
+    "label": "所在时区",
+    "dftVal": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.dftZoneId()",
+    "enum": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.availableZoneIds()",
+    "help": "设置所在时区"
   }
 }

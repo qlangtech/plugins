@@ -2,7 +2,7 @@ package com.qlangtech.tis.plugin.ds.mangodb;
 
 import com.alibaba.citrus.turbine.Context;
 import com.mongodb.AuthenticationMechanism;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.extension.Descriptor;
@@ -54,7 +54,7 @@ public class TestMangoDBDataSourceFactory extends TestCase implements TISEasyMoc
         BsonValue val = null;
         BsonDocument bdoc = null;
         for (Document doc : user.find()) {
-            bdoc = doc.toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
+            bdoc = doc.toBsonDocument(BsonDocument.class, database.getCodecRegistry());
 
             for (Map.Entry<String, Object> entry : doc.entrySet()) {
                 v = entry.getValue();

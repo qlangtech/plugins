@@ -126,13 +126,15 @@ public abstract class ReaderSource<T> {
         @Override
         protected final void afterSourceStreamGetter(
                 Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<DTO> operator) {
+
             SingleOutputStreamOperator<DTO> mainStream
                     = operator.process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-                    .collect(Collectors.toMap((e) -> e.getKey().getFrom(), (e) -> ((DTOStream.DispatchedDTOStream) e.getValue()).outputTag))));
+                    .collect(Collectors.toMap((e) -> e.getKey().getFrom()
+                            , (e) -> ((DTOStream.DispatchedDTOStream) e.getValue()).outputTag))));
+
             for (Map.Entry<TableAlias, DTOStream> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }
-            // return mainStream;
         }
     }
 

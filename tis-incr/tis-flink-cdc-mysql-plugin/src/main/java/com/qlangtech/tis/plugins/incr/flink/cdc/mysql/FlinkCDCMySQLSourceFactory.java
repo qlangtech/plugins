@@ -73,17 +73,18 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String timeZone;
 
-    public static String dftZoneId() {
-        return BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId();
-    }
+//    public static String dftZoneId() {
+//      //  return BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId();
+//        return MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId();
+//    }
 
-    public static List<Option> availableZoneIds() {
-        List<Option> opts = Lists.newArrayList();
-        ZoneId.SHORT_IDS.forEach((key, val) -> {
-            opts.add(new Option(val, val));
-        });
-        return opts;
-    }
+//    public static List<Option> availableZoneIds() {
+//        List<Option> opts = Lists.newArrayList();
+//        ZoneId.SHORT_IDS.forEach((key, val) -> {
+//            opts.add(new Option(val, val));
+//        });
+//        return opts;
+//    }
 
 
     @Override

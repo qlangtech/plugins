@@ -11,5 +11,25 @@
         "label": "Latest"
       }
     ]
+  },
+  "timeZone": {
+    "label": "所在时区",
+    "dftVal": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.dftZoneId()",
+    "enum": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.availableZoneIds()",
+    "help": "设置Oracle服务端所在时区"
+  },
+  "independentBinLogMonitor": {
+    "label": "BinLog独立监听",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
   }
 }

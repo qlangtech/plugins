@@ -39,10 +39,15 @@ public class ServiceNameConnEntity extends ConnEntity implements Serializable {
 
     @Override
     protected String getEntityName() {
+        return "/" + getConnName();
+    }
+
+    @Override
+    public String getConnName() {
         if (StringUtils.isEmpty(this.serviceName)) {
             throw new IllegalStateException("prop serverName can not be null");
         }
-        return "/" + this.serviceName;
+        return this.serviceName;
     }
 
     @Override

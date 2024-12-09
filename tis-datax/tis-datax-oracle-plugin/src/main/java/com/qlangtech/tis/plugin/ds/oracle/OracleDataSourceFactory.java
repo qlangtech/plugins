@@ -41,6 +41,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -77,19 +78,13 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     @FormField(validate = Validator.require, ordinal = 2)
     public ConnEntity connEntity;
 
-
-    //    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
-    //    public Boolean allAuthorized;
-
     @FormField(ordinal = 8, validate = {Validator.require})
     public Authorized allAuthorized;
-
 
     @Override
     public String getDBSchema() {
         return StringUtils.trimToNull(allAuthorized.getSchema());
     }
-
 
     @Override
     public Optional<String> getEscapeChar() {
@@ -98,7 +93,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public String getDbName() {
-        return "default";
+        return Objects.requireNonNull(this.connEntity, "connEntity can not be null").getConnName();
     }
 
     @Override
@@ -249,7 +244,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
                 }
 
                 // 当MySQL中的Date类型映射到Oracle中时，Oracle作为Sink端应该作为Date类型 https://github.com/qlangtech/tis/issues/192
-                if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
+                //if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
+                if ("DATE".equalsIgnoreCase(type.typeName)) {
                     // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
                     return DataType.create(Types.DATE, type.typeName, type.getColumnSize());
                 }

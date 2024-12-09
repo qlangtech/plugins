@@ -39,10 +39,15 @@ public class SIDConnEntity extends ConnEntity implements Serializable {
 
     @Override
     protected String getEntityName() {
+        return ":" + this.getConnName();
+    }
+
+    @Override
+    public String getConnName() {
         if (StringUtils.isEmpty(this.sid)) {
             throw new IllegalStateException("prop sid can not be empty");
         }
-        return ":" + this.sid;
+        return this.sid;
     }
 
     @Override

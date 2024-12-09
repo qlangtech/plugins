@@ -75,8 +75,8 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
 
             @Override
-            protected Map<String, RowVal> createInsertRowValMap() {
-                Map<String, RowVal> vals = super.createInsertRowValMap();
+            protected Map<String, RowVal> createInsertRowValMap(int colIndex) {
+                Map<String, RowVal> vals = super.createInsertRowValMap(colIndex);
                 vals.put("testid", RowVal.decimal(611555862087072406l, 0));
                 return vals;
             }

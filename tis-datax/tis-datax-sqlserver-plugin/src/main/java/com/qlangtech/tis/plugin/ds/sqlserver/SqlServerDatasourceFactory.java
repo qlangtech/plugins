@@ -20,6 +20,9 @@ package com.qlangtech.tis.plugin.ds.sqlserver;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -37,16 +40,23 @@ import java.util.regex.Pattern;
  * @create: 2021-06-07 09:47
  **/
 @Public
-public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory {
+public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory implements BasicDataSourceFactory.ISchemaSupported {
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    public String tabSchema;
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName;
+        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName + ";encrypt=false";
         if (StringUtils.isNotEmpty(this.extraParams)) {
             jdbcUrl = jdbcUrl + ";" + this.extraParams;
         }
         return jdbcUrl;
+    }
+
+    @Override
+    public String getDBSchema() {
+        return this.tabSchema;
     }
 
     @Override
@@ -74,7 +84,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         if (password != null) {
             info.put("password", password);
         }
-        //info.put("connectTimeout", "60000");
+        info.put("characterEncoding", "UTF-8");
         return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
     }
 
@@ -88,7 +98,8 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     // @TISExtension
     public static abstract class BasicDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
         private static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\;\\w+?\\=\\w+?)*");
-       private static final  Pattern pattern_identity = Pattern.compile("[A-Z\\da-z_\\-\\.]+");
+        private static final Pattern pattern_identity = Pattern.compile("[A-Z\\da-z_\\-\\.]+");
+
         @Override
         protected final String getDataSourceName() {
             return DS_TYPE_SQL_SERVER + "-" + getVersion();

@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import java.sql.PreparedStatement;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -27,15 +27,20 @@ import java.util.concurrent.Callable;
  * @create: 2022-01-15 17:10
  **/
 public class RowValsUpdate extends RowVals<RowValsUpdate.UpdatedColVal> {
+    private final TestRow testRow;
 
-
-    public void put(String key, TestRow.ColValSetter val) {
-        super.put(key, new UpdatedColVal(val));
+    public RowValsUpdate(TestRow testRow) {
+        this.testRow = Objects.requireNonNull(testRow, "testRow can not be null");
     }
 
-    static class UpdatedColVal implements Callable<Object> {
+    public void put(String key, TestRow.ColValSetter val) {
+        super.put(key, new UpdatedColVal(val, testRow.getColMetaMapper(key)));
+    }
+
+    public static class UpdatedColVal implements Callable<Object> {
         public final TestRow.ColValSetter updateStrategy;
         public RowValsExample.RowVal updatedVal;
+        private ColMeta colMeta;
 
         @Override
         public Object call() throws Exception {
@@ -43,13 +48,14 @@ public class RowValsUpdate extends RowVals<RowValsUpdate.UpdatedColVal> {
                     , "updatedVal can not be null").call();
         }
 
-        public UpdatedColVal(TestRow.ColValSetter updateStrategy) {
+        public UpdatedColVal(TestRow.ColValSetter updateStrategy, ColMeta colMeta) {
             this.updateStrategy = updateStrategy;
+            this.colMeta = colMeta;
         }
 
-        public void setPrepColVal(PreparedStatement statement, int colIndex, RowValsExample vals) throws Exception {
-            this.updatedVal = updateStrategy.setPrepColVal(statement, colIndex, vals);
-            Objects.requireNonNull(this.updatedVal, "colIndex:" + colIndex);
+        public void setPrepColVal(IStatementSetter statement, RowValsExample vals) throws Exception {
+            this.updatedVal = updateStrategy.setPrepColVal(colMeta, statement, vals);
+            Objects.requireNonNull(this.updatedVal, "updatedVal");
         }
     }
 }

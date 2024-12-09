@@ -20,10 +20,14 @@ package com.qlangtech.tis.plugin.ds.mangodb;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mongodb.AuthenticationMechanism;
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
@@ -32,24 +36,36 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bson.BsonDocument;
+import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +93,9 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String userSource;
+
+    @FormField(ordinal = 10, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer inspectRowCount;
 
 
     public String getDbName() {
@@ -121,42 +140,129 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public TableInDB getTablesInDB() {
-        MongoClient mongoClient = null;
+        //  MongoClient mongoClient = null;
         TableInDB tabs = TableInDB.create(this);
-        try {
-            mongoClient = createMongoClient();
+
+        return vistMongoClient((mongoClient) -> {
             MongoDatabase database = mongoClient.getDatabase(this.dbName);
             for (String tab : database.listCollectionNames()) {
                 tabs.add(this.address, tab);
             }
             //  Lists.newArrayList(database.listCollectionNames());
             return tabs;
-        } finally {
-            try {
-                mongoClient.close();
-            } catch (Throwable e) {
-            }
+        });
+    }
+
+    protected final <RESULT> RESULT vistMongoClient(Function<MongoClient, RESULT> consumer) {
+        try (MongoClient mongoClient = createMongoClient()) {
+            return consumer.apply(mongoClient);
         }
     }
 
     @Override
-    public DBConfig getDbConfig() {
-        throw new UnsupportedOperationException("getDbConfig");
-    }
-
-    @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
-        throw new UnsupportedOperationException();
+
+        /**
+         * 为了支持mongoCDC 单元测试用
+         */
+        this.vistMongoClient((mongoClient) -> {
+            try {
+                connProcessor.vist(new MongoJDBCConnection(mongoClient));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
     }
+
+    @Override
+    public String toString() {
+        return "MangoDBDataSourceFactory{" +
+                "address='" + address + '\'' +
+                ", dbName='" + dbName + '\'' +
+                ", authMechanism='" + authMechanism + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", userSource='" + userSource + '\'' +
+                ", inspectRowCount=" + inspectRowCount +
+                '}';
+    }
+
+    public static class MongoJDBCConnection extends JDBCConnection {
+        private final MongoClient mongoClient;
+
+        public MongoJDBCConnection(MongoClient mongoClient) {
+            super(null, null);
+            this.mongoClient = mongoClient;
+        }
+
+        public final MongoClient getMongoClient() {
+            return this.mongoClient;
+        }
+    }
+
+
+    @Override
+    public DBConfig getDbConfig() {
+        // throw new UnsupportedOperationException("getDbConfig");
+        JdbcUrlBuilder jdbcUrlBuilder = new JdbcUrlBuilder() {
+            @Override
+            public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
+                return ip + ":" + dbName;
+            }
+
+            @Override
+            public String identityValue() {
+                return MangoDBDataSourceFactory.this.identityValue();
+            }
+        };
+        DBConfig dbConfig = new DBConfig(jdbcUrlBuilder);
+        dbConfig.addDbName(this.address, this.dbName);
+        return dbConfig;
+    }
+
+//    @Override
+//    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
+//        throw new UnsupportedOperationException("table:" + table.getFullName() + " get meta is not supported");
+//    }
+
+    @Override
+    public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+        MangoDBDataSourceFactory plugin = this;
+        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
+        int inspectedRows = 0;
+        try {
+            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
+                    + "be null ");
+
+            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
+            final CodecRegistry codecRegistry = database.getCodecRegistry();
+            MongoCollection<BsonDocument> user = database.getCollection(table.getTableName(), BsonDocument.class);
+
+            for (BsonDocument doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
+                    "inspectRowCount can not " + "be" + " null"))) {
+                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, codecRegistry);
+                inspectedRows++;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        if (inspectedRows < 1 || MapUtils.isEmpty(colsSchema)) {
+            throw new IllegalStateException(
+                    "has not found any cols meta info for:" + table.getFullName()
+                            + ",inspectedRows:" + inspectedRows + ",colsSchema.size:" + colsSchema.size());
+        }
+        List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
+        return result;
+    }
+
 
     private MongoClient createMongoClient() {
-        MongoClient mongoClient = null;
-        List<String> addressList = getAddressList(this.address);
+        List<ServerAddress> serverAddresses = parseServerAddress(getAddressList(this.address));
+        MongoClientSettings.Builder setting = MongoClientSettings.builder();
+        setting.applyToClusterSettings((builder) -> builder.hosts(serverAddresses));
+
         if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
             MongoCredential credential = null;
 
@@ -174,10 +280,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
                     case GSSAPI:
                         credential = MongoCredential.createGSSAPICredential(this.username);
                         break;
-                    case MONGODB_CR:
-                        credential = MongoCredential.createMongoCRCredential(this.username, this.userSource,
-                                password.toCharArray());
-                        break;
+//                    case MONGODB_CR:
+//                        credential = MongoCredential.createMongoCRCredential(this.username, this.userSource,
+//                                password.toCharArray());
+//                        break;
                     case SCRAM_SHA_1:
                         credential = MongoCredential.createScramSha1Credential(this.username, this.userSource,
                                 password.toCharArray());
@@ -190,12 +296,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
                 }
                 logger.info("create credential by " + aMechanism);
             }
-            mongoClient = new MongoClient(parseServerAddress(addressList), Collections.singletonList(credential));
-        } else {
-            mongoClient = new MongoClient(parseServerAddress(addressList));
+            setting.credential(Objects.requireNonNull(credential, "credential can not be null"));
         }
         // mongoClient.close();
-        return mongoClient;
+        return MongoClients.create(setting.build());
     }
 
     private static final Option usernamePasswordAuthMethod = new Option("USERNAME & PASSWORD", "usernamePasswordAuthMethod");

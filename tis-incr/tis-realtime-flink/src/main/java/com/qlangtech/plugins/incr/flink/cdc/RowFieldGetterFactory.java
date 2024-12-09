@@ -257,8 +257,8 @@ public class RowFieldGetterFactory {
         }
     }
 
-    static abstract class BasicGetter implements RowData.FieldGetter {
-        final int colIndex;
+    public static abstract class BasicGetter implements RowData.FieldGetter {
+        public final int colIndex;
         final String colName;
 
         public BasicGetter(String colName, int colIndex) {

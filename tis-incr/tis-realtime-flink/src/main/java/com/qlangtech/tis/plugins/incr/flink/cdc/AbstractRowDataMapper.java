@@ -376,7 +376,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
-    static class DateConvert extends FlinkCol.LocalDateProcess {
+    public static class DateConvert extends FlinkCol.LocalDateProcess {
         @Override
         public Object apply(Object o) {
             LocalDate localDate = (LocalDate) super.apply(o);
@@ -386,7 +386,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
     //  private static final ZoneId sysDefaultZone = ZoneId.systemDefault();
 
-    static class TimestampDataConvert extends FlinkCol.DateTimeProcess {
+    public static class TimestampDataConvert extends FlinkCol.DateTimeProcess {
         @Override
         public Object apply(Object o) {
             LocalDateTime v = (LocalDateTime) super.apply(o);

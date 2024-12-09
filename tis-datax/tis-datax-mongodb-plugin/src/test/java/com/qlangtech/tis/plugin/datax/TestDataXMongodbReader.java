@@ -336,7 +336,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
                 return DataXMongodbReader.class;
             }
         };
-        reader.inspectRowCount = 200;
+       // reader.inspectRowCount = 200;
         reader.selectedTabs = getSelectedTabs(disableDocTypeField);
         reader.template = DataXMongodbReader.getDftTemplate();
         return reader;

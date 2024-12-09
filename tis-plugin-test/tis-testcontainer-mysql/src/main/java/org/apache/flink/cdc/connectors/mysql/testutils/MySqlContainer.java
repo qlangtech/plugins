@@ -120,7 +120,7 @@ public class MySqlContainer extends JdbcDatabaseContainer implements IDataSource
 //        return this.createMySqlDataSourceFactory(dataxName, true);
 //    }
 
-    public static final String TOKEN_MySQLV8DataSourceFactory ="MySQLV8DataSourceFactory";
+    public static final String TOKEN_MySQLV8DataSourceFactory = "MySQLV8DataSourceFactory";
 
     /**
      * @param dataxName
@@ -149,16 +149,23 @@ public class MySqlContainer extends JdbcDatabaseContainer implements IDataSource
         formData.addProp("dbName", container.getDatabaseName());
         // formData.addProp("nodeDesc", mySqlContainer.getHost());
 
-        formData.addProp("nodeDesc", NetUtils.getHost());
+        // formData.addProp("nodeDesc", NetUtils.getHost());
 
         if (splitTabStrategy) {
             Descriptor.FormData splitStrategyForm = new Descriptor.FormData();
             splitStrategyForm.addProp("tabPattern", SplitTableStrategy.PATTERN_PHYSICS_TABLE.pattern());
+            splitStrategyForm.addProp("testTab", "test");
+            splitStrategyForm.addProp("prefixWildcardStyle", "false");
+            splitStrategyForm.addProp("nodeDesc", NetUtils.getHost());
+
             formData.addSubForm("splitTableStrategy"
                     , "com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy", splitStrategyForm);
+
         } else {
+            Descriptor.FormData form = new Descriptor.FormData();
+            form.addProp("host", NetUtils.getHost());
             formData.addSubForm("splitTableStrategy"
-                    , "com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy", new Descriptor.FormData());
+                    , "com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy",form);
         }
 
 

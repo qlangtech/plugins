@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
@@ -36,8 +37,12 @@ public class TestRow extends BasicRow {
 
     public final RowValsExample vals;
     public Object idVal;
-    public final RowValsUpdate updateVals = new RowValsUpdate();
+    public final RowValsUpdate updateVals = new RowValsUpdate(this);
+    private final Map<String, ColMeta> colMetaMapper;
 
+    public ColMeta getColMetaMapper(String colKey) {
+        return Objects.requireNonNull(this.colMetaMapper.get(colKey), "colKey:" + colKey + " relevant mapper can not be null");
+    }
 
     public List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> getUpdateValsCols() {
         List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = updateVals.getCols();
@@ -55,9 +60,10 @@ public class TestRow extends BasicRow {
 
     public boolean willbeDelete = false;
 
-    public TestRow(RowKind kind, RowValsExample vals) {
+    public TestRow(RowKind kind, Map<String, ColMeta> colMetaMapper, RowValsExample vals) {
         super(kind);
         this.vals = vals;
+        this.colMetaMapper = colMetaMapper;
     }
 
     public Integer getInt(String key) {
@@ -136,11 +142,10 @@ public class TestRow extends BasicRow {
     public interface ColValSetter {
         /**
          * @param statement
-         * @param parameterIndex
          * @param ovals
          * @return newVal
          * @throws Exception
          */
-        public RowValsExample.RowVal setPrepColVal(PreparedStatement statement, int parameterIndex, RowValsExample ovals) throws Exception;
+        public RowValsExample.RowVal setPrepColVal(ColMeta colMeta, IStatementSetter statement, RowValsExample ovals) throws Exception;
     }
 }

@@ -86,7 +86,7 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
 
         @Override
         public boolean isSupportIncr() {
-            return false;
+            return true;
         }
 
         @Override

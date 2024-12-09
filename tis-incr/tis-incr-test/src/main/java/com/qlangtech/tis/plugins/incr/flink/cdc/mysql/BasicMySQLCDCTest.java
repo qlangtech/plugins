@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
@@ -114,7 +114,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 //return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -122,6 +122,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
+                Map<String, ColMeta> colMetaMapper = this.getColMetaMapper();
                 //  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);
@@ -153,14 +154,14 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 vals.put("email", RowValsExample.RowVal.$("xxx@hotmail.com"));
                 vals.put("ip", RowValsExample.RowVal.$("192.192.192.192"));
                 vals.put("address", RowValsExample.RowVal.$("极乐世界f座 630103"));
-                TestRow stuRow = new TestRow(RowKind.INSERT, new RowValsExample(vals));
+                TestRow stuRow = new TestRow(RowKind.INSERT, colMetaMapper, new RowValsExample(vals));
 
 
                 BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
                 Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
                 dataSourceFactory.visitFirstConnection((conn) -> {
 
-                    insertTestRow(conn.getConnection(), stuRow);
+                    insertTestRow(conn, stuRow);
 
 //                    Statement statement = conn.createStatement();
 //                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
@@ -209,7 +210,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
 
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -234,7 +235,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase); //new CDCTestSuitParams("base");
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);// MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -250,9 +251,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //            }
 
 
-
             @Override
-            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader,String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
@@ -278,7 +278,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CDCTestSuitParams suitParams = tabParamMap.get(tabInstanceDetail);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -296,7 +296,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //            }
 
             @Override
-            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader,String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);

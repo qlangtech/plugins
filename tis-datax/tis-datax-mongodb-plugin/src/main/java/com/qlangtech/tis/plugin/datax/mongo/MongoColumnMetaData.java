@@ -3,13 +3,18 @@ package com.qlangtech.tis.plugin.datax.mongo;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mongodb.MongoClient;
-import com.qlangtech.tis.plugin.ds.*;
+import com.mongodb.client.MongoClient;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataTypeMeta;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import org.apache.commons.collections.ListUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 
 import java.util.Collections;
 import java.util.List;
@@ -55,8 +60,8 @@ public class MongoColumnMetaData extends ColumnMetaData {
 
 
     public static void parseMongoDocTypes(
-            Map<String, MongoColumnMetaData> colsSchema, Document doc) {
-        BsonDocument bdoc = doc.toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
+            Map<String, MongoColumnMetaData> colsSchema, BsonDocument bdoc, CodecRegistry codecRegistry) {
+       // BsonDocument bdoc = doc.toBsonDocument(BsonDocument.class, codecRegistry);
         parseMongoDocTypes(false, Collections.emptyList(), colsSchema, bdoc);
     }
 

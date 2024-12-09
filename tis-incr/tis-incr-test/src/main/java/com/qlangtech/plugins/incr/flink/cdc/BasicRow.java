@@ -45,7 +45,7 @@ public abstract class BasicRow {
         List<String> valsEnum = Lists.newArrayList(rowKind.shortString());
         for (ColMeta key : keys) {
             Object val = null;
-            if (updateVal.isPresent() && updateVal.get().getUpdateVal) {
+            if (rowKind == RowKind.UPDATE_AFTER && updateVal.isPresent() && updateVal.get().getUpdateVal) {
                 val = getUpdateVal(key);
             }
             if (val == null) {

@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -30,7 +31,7 @@ import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.FacadeDataSource;
@@ -237,8 +238,10 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         try {
+
             StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName +
-                    "?" + JDBC_PARAM_AUTO_RECONNECT + "&useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
+                    "?" + JDBC_PARAM_AUTO_RECONNECT + "&useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone="
+                    + URLEncoder.encode(MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }

@@ -27,24 +27,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mongodb.Function;
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.CompanionPluginFactory;
 import com.qlangtech.tis.plugin.ValidatorCommons;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -52,7 +45,6 @@ import com.qlangtech.tis.plugin.datax.common.FilterUnexistCol;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMetaCreatorFactory;
-import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
 import com.qlangtech.tis.plugin.datax.mongo.MongoDataXColUtils;
 import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -75,8 +67,8 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -106,32 +98,30 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer inspectRowCount;
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
         MangoDBDataSourceFactory plugin = getDataSourceFactory();
-        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
-        try {
-            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
-                    + "be null ");
-
-            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
-            MongoCollection<Document> user = database.getCollection(table.getTableName());
-
-            for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
-                    "inspectRowCount can not " + "be" + " null"))) {
-
-
-                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
-        return result;
+        return plugin.getTableMetadata(inSink, table);
+//        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
+//        try {
+//            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
+//                    + "be null ");
+//
+//            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
+//            final CodecRegistry codecRegistry = database.getCodecRegistry();
+//            MongoCollection<Document> user = database.getCollection(table.getTableName());
+//
+//            for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
+//                    "inspectRowCount can not " + "be" + " null"))) {
+//                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, codecRegistry);
+//            }
+//
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
+//        return result;
     }
 
     @Override
@@ -151,7 +141,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             @Override
             public List<String> getCols(SelectedTab tab) {
                 DefaultMongoTable mongoTable = (DefaultMongoTable) findMongoTable(tab.getName());
-                List<Pair<MongoCMeta, Function<Document, Column>>> cols = mongoTable.getMongoPresentCols();
+                List<Pair<MongoCMeta, Function<BsonDocument, Column>>> cols = mongoTable.getMongoPresentCols();
                 return cols.stream().map((p) -> p.getKey().getName()).collect(Collectors.toList());
             }
 
@@ -165,7 +155,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     static class DefaultMongoTable implements IMongoTable {
         private final SelectedTab table;
         private final MongoSelectedTabExtend tabExtend;
-        private List<Pair<MongoCMeta, Function<Document, Column>>> presentCols;
+        private List<Pair<MongoCMeta, Function<BsonDocument, Column>>> presentCols;
 
         public DefaultMongoTable(SelectedTab table) {
             this.table = table;
@@ -174,9 +164,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         }
 
         @Override
-        public Record convert2RecordByItem(Record record, Document item) {
+        public Record convert2RecordByItem(Record record, BsonDocument item) {
 
-            for (Pair<MongoCMeta, Function<Document, Column>> p : this.getMongoPresentCols()) {
+            for (Pair<MongoCMeta, Function<BsonDocument, Column>> p : this.getMongoPresentCols()) {
                 record.addColumn(p.getValue().apply(item));
             }
 
@@ -184,7 +174,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         }
 
 
-        List<Pair<MongoCMeta, Function<Document, Column>>> getMongoPresentCols() {
+        List<Pair<MongoCMeta, Function<BsonDocument, Column>>> getMongoPresentCols() {
             if (this.presentCols == null) {
                 presentCols = Lists.newArrayList();
 
@@ -198,8 +188,12 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                         splitFieldMetas = mongoCol.getDocFieldSplitMetas();
                         for (MongoCMeta.MongoDocSplitCMeta scol : splitFieldMetas) {
                             presentCols.add(Pair.of(scol, (doc) -> {
-                                Object val = doc.getEmbedded(scol.getEmbeddedKeys(), Object.class);
-                                return MongoDataXColUtils.createCol(scol, val);
+
+
+                                BsonValue nestVal = getEmbeddedValue(scol.getEmbeddedKeys(), doc);
+
+                              //  Object val = doc.getEmbedded(scol.getEmbeddedKeys(), Object.class);
+                                return MongoDataXColUtils.createCol(scol, nestVal);
                             }));
                         }
                     }
@@ -209,7 +203,8 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                     }
 
                     presentCols.add(Pair.of(mongoCol, (doc) -> {
-                        Object val = doc.get(mongoCol.getName(), Object.class);
+                        BsonValue val = doc.get(mongoCol.getName());
+                        //  Object val = doc.get(mongoCol.getName(), Object.class);
                         return MongoDataXColUtils.createCol(mongoCol, val);
                     }));
                 }
@@ -226,6 +221,31 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         public Document getCollectionQueryFilter() {
             return tabExtend.filter.createFilter();
         }
+    }
+
+    private static BsonValue getEmbeddedValue(List<String> keys, BsonDocument doc) {
+        BsonValue value = null;
+        String key = null;
+        Iterator<String> keyIterator = keys.iterator();
+
+        while (keyIterator.hasNext()) {
+            key = keyIterator.next();
+            value = doc.get(key);
+            if (value == null) {
+                return null;
+            }
+            if (value.isDocument()) {
+                doc = value.asDocument();
+            } else {
+                if (keyIterator.hasNext()) {
+                    throw new IllegalStateException(String.format("At key %s, the value is not a BsonDocument (%s)", key, value.getClass().getName()));
+                }
+                return value;
+            }
+        }
+
+        return doc;
+        // return clazz != null ? clazz.cast(value) : value;
     }
 
     /**
@@ -385,7 +405,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
         @Override
         public boolean isSupportIncr() {
-            return false;
+            return true;
         }
 
         @Override

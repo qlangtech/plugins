@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import junit.framework.TestCase;
+import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.Document;
 import org.junit.Assert;
@@ -28,15 +29,15 @@ public class TestMongoColumnMetaData extends TestCase {
     public void testParseMongoDocTypes() {
 
         Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
-        List<Document> docs = IOUtils.loadResourceFromClasspath(TestMongoColumnMetaData.class //
+        List<BsonDocument> docs = IOUtils.loadResourceFromClasspath(TestMongoColumnMetaData.class //
                 , "user-rows.json", true, (input) -> {
-                    List<Document> result = Lists.newArrayList();
+                    List<BsonDocument> result = Lists.newArrayList();
 
                     JSONObject obj = null;
                     JSONArray array = JSONArray.parseArray(org.apache.commons.io.IOUtils.toString(input, TisUTF8.get()));
                     for (Object o : array) {
                         obj = (JSONObject) o;
-                        result.add(Document.parse(obj.toJSONString()));
+                        result.add(BsonDocument.parse(obj.toJSONString()));
                     }
 
                     return result;
@@ -44,8 +45,8 @@ public class TestMongoColumnMetaData extends TestCase {
         Assert.assertEquals(3, docs.size());
 
         //   MongoColumnMetaData.parseMongoDocTypes( colsSchema, doc);
-        for (Document doc : docs) {
-            MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc);
+        for (BsonDocument doc : docs) {
+            MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, null);
         }
 
         Assert.assertEquals(5, colsSchema.size());

@@ -10,11 +10,14 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import org.apache.commons.collections.ListUtils;
+import org.bson.BSONException;
 import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
  */
 public class MongoColumnMetaData extends ColumnMetaData {
     private final BsonType mongoFieldType;
+    private static final Logger logger = LoggerFactory.getLogger(MongoColumnMetaData.class);
 
     /**
      * 检测该列是在全部检测的列中含有值的数量
@@ -61,7 +65,7 @@ public class MongoColumnMetaData extends ColumnMetaData {
 
     public static void parseMongoDocTypes(
             Map<String, MongoColumnMetaData> colsSchema, BsonDocument bdoc, CodecRegistry codecRegistry) {
-       // BsonDocument bdoc = doc.toBsonDocument(BsonDocument.class, codecRegistry);
+        // BsonDocument bdoc = doc.toBsonDocument(BsonDocument.class, codecR"timestampToLocalTimestampField" -> {MongoColumnMetaData@15873} "ColumnMetaData{key='timestampToLocalTimestampField', type=93,-1,-1, index=10, schemaFieldType=null, pk=false}"egistry);
         parseMongoDocTypes(false, Collections.emptyList(), colsSchema, bdoc);
     }
 
@@ -96,7 +100,7 @@ public class MongoColumnMetaData extends ColumnMetaData {
                         colMeta = new MongoColumnMetaData(index, key, val.getBsonType());
                         colsSchema.put(key, colMeta);
                     } else if (colMeta.getMongoFieldType() != BsonType.STRING //
-                            && !val.isNull() && colMeta.getMongoFieldType() != val.getBsonType()) {
+                            && !val.isNull() && (BsonType.STRING == val.getBsonType())) {
                         //TODO： 前后两次类型不同
                         // 则直接将类型改成String类型
                         colMeta = new MongoColumnMetaData(index, key, BsonType.STRING);
@@ -110,8 +114,15 @@ public class MongoColumnMetaData extends ColumnMetaData {
                     }
 
 
-                    if (colMeta.getMongoFieldType() == BsonType.STRING) {
-                        colMeta.setMaxStrLength(val.asString().getValue().length());
+                    try {
+                        if (colMeta.getMongoFieldType() == BsonType.STRING) {
+                            if (val.isString()) {
+                                colMeta.setMaxStrLength(val.asString().getValue().length());
+                            }
+                        }
+                    } catch (BSONException e) {
+                        // throw new RuntimeException(e);
+                        logger.warn("col:" + entry.getKey() + "mongoType:String,but val type:" + val, e);
                     }
 
                     colMeta.incrContainValCount();
@@ -170,8 +181,6 @@ public class MongoColumnMetaData extends ColumnMetaData {
 
     private static DataType mapType(BsonType mongoFieldType) {
         switch (mongoFieldType) {
-            case NULL:
-                return null;
             case INT32:
                 return DataType.getType(JDBCTypes.INTEGER);
             case INT64:
@@ -182,6 +191,7 @@ public class MongoColumnMetaData extends ColumnMetaData {
                 return DataType.getType(JDBCTypes.DOUBLE);
             case BOOLEAN:
                 return DataType.getType(JDBCTypes.BOOLEAN);
+            case NULL:
             case MAX_KEY:
             case MIN_KEY:
             case OBJECT_ID:
@@ -190,7 +200,7 @@ public class MongoColumnMetaData extends ColumnMetaData {
             case STRING:
                 return DataType.getType(JDBCTypes.VARCHAR);
             case DATE_TIME:
-                return DataType.getType(JDBCTypes.DATE);
+              //  return DataType.getType(JDBCTypes.DATE);
             case TIMESTAMP:
                 return DataType.getType(JDBCTypes.TIMESTAMP);
             case DECIMAL128:

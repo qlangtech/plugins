@@ -79,6 +79,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -180,7 +181,8 @@ public abstract class CUDCDCTestSuit {
         this.cols = Lists.newArrayList();
         HdfsColMeta cMeta = null;
         int colIndex = 1;
-        for (CMeta c : tab.getCols()) {
+        List<CMeta> cs = tab.getCols();
+        for (CMeta c : cs) {
             cMeta = new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType());
             cols.add(new ColMeta(colIndex++, cMeta));
         }
@@ -200,8 +202,8 @@ public abstract class CUDCDCTestSuit {
     }
 
     public final String getPrimaryKeyName(ISelectedTab tab) {
-
-        for (CMeta col : tab.getCols()) {
+        List<CMeta> cs = tab.getCols();
+        for (CMeta col : cs) {
             if (col.isPk()) {
                 return getEscapedCol(col);
             }
@@ -321,7 +323,7 @@ public abstract class CUDCDCTestSuit {
                 List<AssertRow> rows = fetchRows(snapshot, 1, deleteRow, true);
                 for (AssertRow rr : rows) {
                     //System.out.println("------------" + rr.getInt(keyBaseId));
-                //    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.DELETE, true)), consumerHandle, deleteRow, rr);
+                    //    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.DELETE, true)), consumerHandle, deleteRow, rr);
 
                 }
             }
@@ -598,10 +600,8 @@ public abstract class CUDCDCTestSuit {
         return sourceHandle;
     }
 
-    private BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
+    protected BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
         DataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName, this.splitTabSuffix.isPresent());
-
-
         BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {
             @Override
             protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
@@ -634,10 +634,12 @@ public abstract class CUDCDCTestSuit {
             if (suitParam.overwriteSelectedTab != null) {
                 suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);
             }
-        });
-
+        }, this.getCmetaCreator());
     }
 
+    protected Supplier<CMeta> getCmetaCreator() {
+        return () -> new CMeta();
+    }
 
     protected abstract DataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy);
 

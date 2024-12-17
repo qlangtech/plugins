@@ -26,23 +26,27 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.ElementPluginDesc;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.extension.impl.PropertyType;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable.BasicDescriptor;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,6 +61,16 @@ public class DataXDorisWriter extends BasicDorisWriter {
     public CreateTable createTableModel;
 
 
+    public static List<BasicDescriptor> autoCreateTableFilter(List<BasicDescriptor> descs, String endType) {
+        if (CollectionUtils.isEmpty(descs)) {
+            return Collections.emptyList();
+        }
+        EndType targetEndType = EndType.parse(endType);
+        return descs.stream().filter((desc) -> {
+            return desc.getEndType() == null || targetEndType == desc.getEndType();
+        }).collect(Collectors.toList());
+    }
+
     public static String getDftLoadProps() {
         return "{\n" +
                 "    \"" + Keys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
@@ -66,7 +80,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return this.createTableModel.isOff();
+        return this.createTableModel.isOff() || !this.autoCreateTable.enabled();
     }
 
     @Override
@@ -93,33 +107,12 @@ public class DataXDorisWriter extends BasicDorisWriter {
         };
     }
 
-    //protected abstract DataType.TypeVisitor<DorisType> getColumnTokenRecognise();
-
     public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new ColumnTokenRecognise() {
         @Override
         protected String getDecimalToken() {
             return "DECIMALV3";
         }
     };
-
-
-    @Override
-    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), columnTokenRecognise, transformers) {
-
-
-            @Override
-            protected String getUniqueKeyToken() {
-                return createTableModel.getKeyToken();
-            }
-
-            @Override
-            protected DorisColWrapper createColWrapper(IColMetaGetter col) {
-                return new DorisColWrapper(col, this.pks, columnTokenRecognise);
-            }
-        };
-    }
-
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "writer-tpl.json");
@@ -128,7 +121,6 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor implements DataxWriter.IRewriteSuFormProperties {
-      //  private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
@@ -140,20 +132,6 @@ public class DataXDorisWriter extends BasicDorisWriter {
             return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
                     , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
         }
-
-//        @Override
-//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-//            if (rewriteSubFormProperties != null) {
-//                return rewriteSubFormProperties;
-//            }
-//            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-//            rewriteSubFormProperties = SuFormProperties.copy(
-//                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
-//                    , newSubDescriptor.clazz
-//                    , newSubDescriptor
-//                    , subformProps);
-//            return rewriteSubFormProperties;
-//        }
 
         @Override
         public String getDisplayName() {

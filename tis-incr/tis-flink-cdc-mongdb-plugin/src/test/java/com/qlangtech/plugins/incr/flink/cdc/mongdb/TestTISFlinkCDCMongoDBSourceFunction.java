@@ -42,12 +42,17 @@ import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory.IConnProcessor;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
@@ -68,10 +73,12 @@ import org.junit.runners.Parameterized;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.util.Preconditions.checkState;
@@ -124,7 +131,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
         streamFactory.parallelism = 1;
         FlinkCDCMongoDBSourceFactory mongoDBCDCFactory = new FlinkCDCMongoDBSourceFactory();
         mongoDBCDCFactory.startupOption = new LatestOffset();
-        mongoDBCDCFactory.timeZone = MQListenerFactory.dftZoneId();
+        //mongoDBCDCFactory.timeZone = MQListenerFactory.dftZoneId();
         //  mongoDBCDCFactory.updateRecordComplete = new UpdateLookup();
 
         mongoDBCDCFactory.updateRecordComplete = new UpdateLookup();
@@ -144,6 +151,43 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
             protected boolean isSkipAssertTest() {
                 return true;
             }
+
+            @Override
+            protected Supplier<CMeta> getCmetaCreator() {
+                return () -> new MongoCMeta();
+            }
+
+            @Override
+            protected BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
+
+                BasicDataXRdbmsReader rdbmsReader = super.createDataxReader(dataxName, tabName);
+                DataXMongodbReader mongoReader = new DataXMongodbReader() {
+                    @Override
+                    public MangoDBDataSourceFactory getDataSourceFactory() {
+                        return (MangoDBDataSourceFactory) rdbmsReader.getDataSourceFactory();
+                    }
+                };
+                mongoReader.selectedTabs = rdbmsReader.selectedTabs;
+                mongoReader.timeZone = MQListenerFactory.dftZoneId();
+                return mongoReader;
+//                DataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName, this.splitTabSuffix.isPresent());
+//                BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {
+//                    @Override
+//                    protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+//                        return null;
+//                    }
+//
+//                    @Override
+//                    public DataSourceFactory getDataSourceFactory() {
+//                        return dataSourceFactory;
+//                    }
+//                };
+//
+//                SelectedTab baseTab = createSelectedTab(tabName, dataSourceFactory);
+//                dataxReader.selectedTabs = Collections.singletonList(baseTab);
+//                return dataxReader;
+            }
+
 
             @Override
             protected DataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {

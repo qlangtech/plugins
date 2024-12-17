@@ -31,6 +31,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -42,6 +43,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -383,7 +385,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             if (dataXWriter instanceof BasicDataXRdbmsWriter) {
                 BasicDataXRdbmsWriter rdbmsWriter = (BasicDataXRdbmsWriter) dataXWriter;
-                rdbmsWriter.autoCreateTable = true;
+                rdbmsWriter.autoCreateTable = AutoCreateTable.dft();
+                ;
                 rdbmsWriter.dataXName = dataXName;
             }
 
@@ -397,7 +400,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             // Assert.assertTrue("autoCreateTable must be true", dataXWriter.autoCreateTable);
             CreateTableSqlBuilder.CreateDDL createDDL = null;
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
-                createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
+                createDDL = dataXWriter.generateCreateDDL(SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());

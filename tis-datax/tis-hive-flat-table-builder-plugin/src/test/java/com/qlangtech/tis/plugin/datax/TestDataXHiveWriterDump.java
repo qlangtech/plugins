@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
@@ -124,7 +125,7 @@ public class TestDataXHiveWriterDump {
         IDataxProcessor processor = EasyMock.mock("processor", IDataxProcessor.class);
         File ddlDir = folder.newFolder("ddlDir");
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(applicationTab, Optional.empty());
+        CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(SourceColMetaGetter.getNone(), applicationTab, Optional.empty());
         Assert.assertNotNull("createDDL can not be null", createDDL);
 
         FileUtils.write(new File(ddlDir, applicationTab.getTo() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX)

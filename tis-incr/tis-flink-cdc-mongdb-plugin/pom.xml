@@ -63,6 +63,10 @@
                     <groupId>org.apache.flink</groupId>
                     <artifactId>flink-connector-debezium</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>mongodb-driver-sync</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -143,6 +147,20 @@
         </dependency>
 
     </dependencies>
+
+    <build>
+
+        <plugins>
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <!--不加这个，flink在执行时候会包类型转换错误-->
+                    <maskClasses>com.qlangtech.tis.plugin.datax.mongo.</maskClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>

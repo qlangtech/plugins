@@ -45,6 +45,10 @@
       ]
     }
   },
+  "autoCreateTable": {
+    "disable": false,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"aliyunOdps\");"
+  },
   "lifecycle": {
     "label": "生命周期",
     "dftVal": 3

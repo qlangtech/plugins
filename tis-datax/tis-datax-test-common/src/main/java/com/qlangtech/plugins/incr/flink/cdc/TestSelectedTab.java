@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -72,13 +73,13 @@ public class TestSelectedTab extends SelectedTab {
     public static SelectedTab createSelectedTab(EntityName tabName
             , DataSourceFactory dataSourceFactory, Function<EntityName, List<ColumnMetaData>> tableMetadataGetter) {
         return createSelectedTab(tabName, dataSourceFactory, tableMetadataGetter, (t) -> {
-        });
+        }, () -> new CMeta());
     }
 
     public static SelectedTab createSelectedTab(EntityName tabName //
             , DataSourceFactory dataSourceFactory
             , Function<EntityName, List<ColumnMetaData>> tableMetadataGetter
-            , Consumer<SelectedTab> baseTabSetter) {
+            , Consumer<SelectedTab> baseTabSetter, Supplier<CMeta> cmetaCreator) {
         List<ColumnMetaData> tableMetadata = tableMetadataGetter.apply(tabName);// dataSourceFactory.getTableMetadata(false, tabName);
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
@@ -88,7 +89,7 @@ public class TestSelectedTab extends SelectedTab {
             if (col.isPk()) {
                 pks.add(col.getName());
             }
-            CMeta c = new CMeta();
+            CMeta c = cmetaCreator.get();
             c.setPk(col.isPk());
             c.setName(col.getName());
             c.setNullable(col.isNullable());

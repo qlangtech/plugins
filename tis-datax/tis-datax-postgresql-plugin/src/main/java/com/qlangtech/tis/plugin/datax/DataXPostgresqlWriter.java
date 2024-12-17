@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -46,13 +47,14 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
         System.out.println(StringUtils.EMPTY.toCharArray()[0]);
     }
 
-    @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-        PGDataSourceFactory ds = this.getDataSourceFactory();
-
-        final CreateTableSqlBuilder createTableSqlBuilder = new PostgreSQLCreateTableSqlBuilder(tableMapper, ds, transformers);
-        return createTableSqlBuilder.build();
-    }
+//    @Override
+//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter
+//            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//        PGDataSourceFactory ds = this.getDataSourceFactory();
+//
+//        final CreateTableSqlBuilder createTableSqlBuilder = new PostgreSQLCreateTableSqlBuilder(tableMapper, ds, transformers);
+//        return createTableSqlBuilder.build();
+//    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {

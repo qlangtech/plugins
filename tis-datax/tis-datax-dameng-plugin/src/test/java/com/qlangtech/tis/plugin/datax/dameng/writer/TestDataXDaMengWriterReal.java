@@ -4,6 +4,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -11,6 +12,7 @@ import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.ds.TestDaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -82,7 +84,7 @@ public class TestDataXDaMengWriterReal {
         TestDataXDaMengWriter.setPlaceholderReader();
 
         DataXCfgJson wjson = DataXCfgJson.content(TestDataXDaMengWriter.generateDataXCfg(writer, Optional.of(tabMap)));
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap, Optional.empty());
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), tabMap, Optional.empty());
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = folder.newFolder();// new File(".");
@@ -137,7 +139,8 @@ public class TestDataXDaMengWriterReal {
                 return DataXDaMengWriter.class;
             }
         };
-        writer.autoCreateTable = true;
+        writer.autoCreateTable = AutoCreateTable.dft();
+        ;
         return writer;
     }
 }

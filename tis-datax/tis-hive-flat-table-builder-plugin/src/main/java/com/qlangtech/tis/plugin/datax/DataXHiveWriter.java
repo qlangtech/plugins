@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
@@ -58,6 +59,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -73,6 +75,7 @@ import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 
@@ -107,6 +110,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
+
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
+    // 目标源中是否自动创建表，这样会方便不少
+    public AutoCreateTable autoCreateTable;
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
@@ -179,55 +186,64 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter
+            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 
-        final ITISFileSystem fileSystem = this.getFs().getFileSystem();
-        final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
+        return autoCreateTable.createSQLDDLBuilder(this, sourceColMetaGetter, tableMapper, transformers).build();
 
-            @Override
-            protected CreateTableName getCreateTableName() {
-                CreateTableName nameBuilder = super.getCreateTableName();
-                nameBuilder.setCreateTablePredicate("CREATE EXTERNAL TABLE IF NOT EXISTS");
-                return nameBuilder;
-            }
 
-            protected void appendTabMeta(List<String> pks) {
-
-                HdfsFormat fsFormat = parseFSFormat();
-
-                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
-                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-                script.appendLine(fsFormat.getRowFormat());
-                script.appendLine("STORED AS " + fsFormat.getFileType().getType());
-
-                script.appendLine("LOCATION '").append(
-                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
-                ).append("'");
-            }
-
-            private HdfsFormat parseFSFormat() {
-
-                HdfsFormat fsFormat = new HdfsFormat();
-
-                fsFormat.setFieldDelimiter(String.valueOf(fileType.getFieldDelimiter()));
-                //  (String) TisDataXHiveWriter.jobFileType.get(this)
-                fsFormat.setFileType(fileType.getType());
-                return fsFormat;
-            }
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c, this.pks) {
-                    @Override
-                    public String getMapperType() {
-                        return c.getType().accept(HiveColumn.hiveTypeVisitor);
-                    }
-                };
-            }
-        };
-
-        return createTableSqlBuilder.build();
+//        final ITISFileSystem fileSystem = this.getFs().getFileSystem();
+//        final CreateTableSqlBuilder createTableSqlBuilder
+//                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
+//
+//            @Override
+//            public CreateTableName getCreateTableName() {
+//                CreateTableName nameBuilder = super.getCreateTableName();
+//                nameBuilder.setCreateTablePredicate("CREATE EXTERNAL TABLE IF NOT EXISTS");
+//                return nameBuilder;
+//            }
+//
+//            protected void appendTabMeta(List<String> pks) {
+//
+//                HdfsFormat fsFormat = parseFSFormat();
+//
+//                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
+//                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
+//                script.appendLine(fsFormat.getRowFormat());
+//                script.appendLine("STORED AS " + fsFormat.getFileType().getType());
+//
+//                script.appendLine("LOCATION '").append(
+//                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
+//                ).append("'");
+//            }
+//
+//            private HdfsFormat parseFSFormat() {
+//
+//                HdfsFormat fsFormat = new HdfsFormat();
+//
+//                fsFormat.setFieldDelimiter(String.valueOf(fileType.getFieldDelimiter()));
+//                //  (String) TisDataXHiveWriter.jobFileType.get(this)
+//                fsFormat.setFileType(fileType.getType());
+//                return fsFormat;
+//            }
+//
+//            @Override
+//            protected ColWrapper createColWrapper(IColMetaGetter c) {
+//                return new ColWrapper(c, this.pks) {
+//                    @Override
+//                    public String getMapperType() {
+//                        return c.getType().accept(HiveColumn.hiveTypeVisitor);
+//                    }
+//
+//                    @Override
+//                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+//                        autoCreateTable.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+//                    }
+//                };
+//            }
+//        };
+//
+//        return createTableSqlBuilder.build();
     }
 
     public static String getDftTemplate() {
@@ -373,7 +389,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return getDumpTab(tab.getName());
     }
 
-    private EntityName getDumpTab(String tabName) {
+    public EntityName getDumpTab(String tabName) {
         return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
     }
 

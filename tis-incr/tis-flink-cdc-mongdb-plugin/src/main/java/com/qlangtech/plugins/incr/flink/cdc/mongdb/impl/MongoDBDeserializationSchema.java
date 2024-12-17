@@ -18,14 +18,17 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mongdb.impl;
 
+import com.alibaba.datax.common.element.Column;
 import com.mongodb.client.model.changestream.OperationType;
 import com.qlangtech.plugins.incr.flink.cdc.EventOperation;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.mongdb.MongoDBSourceDTOColValProcess;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import io.debezium.data.Envelope.Operation;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.cdc.connectors.mongodb.internal.MongoDBEnvelope;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
@@ -75,23 +78,39 @@ public class MongoDBDeserializationSchema extends TISDeserializationSchema {
     protected void extractForDelete(DTO dto, Struct value, Schema valueSchema) {
         boolean containBeforeVals = this.extractBeforeRow(dto, value, valueSchema);
         if (!containBeforeVals) {
-            final List<Field> fields = getBeforeFields(dto, value, valueSchema);
+           // final List<Field> fields = getBeforeFields(dto, value, valueSchema);
             BsonDocument documentKey =
                     this.extractBsonDocument(value, valueSchema, MongoDBEnvelope.DOCUMENT_KEY_FIELD);
             Map<String, Object> beforeVals = new HashMap<>();
             Object beforeVal = null;
-            for (Field field : fields) {
-                beforeVal = documentKey.get(field.name());
-                if (beforeVal == null
-                        || beforeVal instanceof org.bson.BsonNull) {
+            String colName = null;
+//            for (Field field : fields) {
+//                beforeVal = documentKey.get(field.name());
+//                if (beforeVal == null
+//                        || beforeVal instanceof org.bson.BsonNull) {
+//                    continue;
+//                }
+//                try {
+//                    beforeVals.put(field.name(), rawValConvert.convert(dto, field, beforeVal));
+//                } catch (Exception e) {
+//                    throw new RuntimeException("field:" + field.name() + ",afterVal:" + beforeVal, e);
+//                }
+//            }
+
+            for (Pair<MongoCMeta, Function<BsonDocument, Object>> colProducter
+                    : colValProcess.getMongoColValProductor(dto.getTableName())) {
+                beforeVal = colProducter.getValue().apply(documentKey);
+                if (beforeVal == null) {
                     continue;
                 }
+                colName = colProducter.getKey().getName();
                 try {
-                    beforeVals.put(field.name(), rawValConvert.convert(dto, field, beforeVal));
+                    beforeVals.put(colName, beforeVal);
                 } catch (Exception e) {
-                    throw new RuntimeException("field:" + field.name() + ",afterVal:" + beforeVal, e);
+                    throw new RuntimeException("field:" + colName + ",beforeVal:" + beforeVal, e);
                 }
             }
+
             dto.setBefore(beforeVals);
         }
     }
@@ -106,20 +125,38 @@ public class MongoDBDeserializationSchema extends TISDeserializationSchema {
         Object beforeVal = null;
         Map<String, Object> beforeVals = new HashMap<>();
         dto.setBefore(beforeVals);
+        String colName = null;
         if (fullDocumentBeforeChange != null) {
 
-            for (Field field : fields) {
-                beforeVal = fullDocumentBeforeChange.get(field.name()); // after.get(field);
-                if (beforeVal == null
-                        || beforeVal instanceof org.bson.BsonNull) {
+//            for (Field field : fields) {
+//                beforeVal = fullDocumentBeforeChange.get(field.name()); // after.get(field);
+//                if (beforeVal == null
+//                        || beforeVal instanceof org.bson.BsonNull) {
+//                    continue;
+//                }
+//                try {
+//                    beforeVals.put(field.name(), rawValConvert.convert(dto, field, beforeVal));
+//                } catch (Exception e) {
+//                    throw new RuntimeException("field:" + field.name() + ",afterVal:" + beforeVal, e);
+//                }
+//            }
+
+
+            for (Pair<MongoCMeta, Function<BsonDocument, Object>> colProducter
+                    : colValProcess.getMongoColValProductor(dto.getTableName())) {
+                beforeVal = colProducter.getValue().apply(fullDocumentBeforeChange);
+                if (beforeVal == null) {
                     continue;
                 }
+                colName = colProducter.getKey().getName();
                 try {
-                    beforeVals.put(field.name(), rawValConvert.convert(dto, field, beforeVal));
+                    beforeVals.put(colName, beforeVal);
                 } catch (Exception e) {
-                    throw new RuntimeException("field:" + field.name() + ",afterVal:" + beforeVal, e);
+                    throw new RuntimeException("field:" + colName + ",beforeVal:" + beforeVal, e);
                 }
             }
+
+
             return true;
         }
 
@@ -146,8 +183,8 @@ public class MongoDBDeserializationSchema extends TISDeserializationSchema {
     @Override
     protected boolean fillAfterValsFromEvent(EventOperation operation, DTO dto, Struct value
             , Schema valueSchema, List<Field> fields, Map<String, Object> afterVals) {
-        BsonDocument documentKey =
-                extractBsonDocument(value, valueSchema, MongoDBEnvelope.DOCUMENT_KEY_FIELD);
+//        BsonDocument documentKey =
+//                extractBsonDocument(value, valueSchema, MongoDBEnvelope.DOCUMENT_KEY_FIELD);
         BsonDocument fullDocument =
                 extractBsonDocument(value, valueSchema, MongoDBEnvelope.FULL_DOCUMENT_FIELD);
         OperationType mongoOperationType = operation.getPayload1();
@@ -161,20 +198,40 @@ public class MongoDBDeserializationSchema extends TISDeserializationSchema {
             }
         }
 
-        Object afterVal = null;
+
         // Struct after = value.getStruct("after");
-        for (Field field : fields) {
-            afterVal = fullDocument.get(field.name()); // after.get(field);
-            if (afterVal == null
-                    || afterVal instanceof org.bson.BsonNull) {
+//        for (Field field : fields) {
+//            afterVal = fullDocument.get(field.name()); // after.get(field);
+//            if (afterVal == null
+//                    || afterVal instanceof org.bson.BsonNull) {
+//                continue;
+//            }
+//            try {
+//                afterVals.put(field.name(), rawValConvert.convert(dto, field, afterVal));
+//            } catch (Exception e) {
+//                throw new RuntimeException("field:" + field.name() + ",afterVal:" + afterVal, e);
+//            }
+//        }
+
+//        for (Pair<MongoCMeta, Function<BsonDocument, Column>> p : this.getMongoPresentCols()) {
+//            record.addColumn(p.getValue().apply(item));
+//        }
+        Object afterVal = null;
+        String colName = null;
+        for (Pair<MongoCMeta, Function<BsonDocument, Object>> colProducter
+                : colValProcess.getMongoColValProductor(dto.getTableName())) {
+            afterVal = colProducter.getValue().apply(fullDocument);
+            if (afterVal == null) {
                 continue;
             }
+            colName = colProducter.getKey().getName();
             try {
-                afterVals.put(field.name(), rawValConvert.convert(dto, field, afterVal));
+                afterVals.put(colName, afterVal);
             } catch (Exception e) {
-                throw new RuntimeException("field:" + field.name() + ",afterVal:" + afterVal, e);
+                throw new RuntimeException("field:" + colName + ",afterVal:" + afterVal, e);
             }
         }
+
         return true;
     }
 

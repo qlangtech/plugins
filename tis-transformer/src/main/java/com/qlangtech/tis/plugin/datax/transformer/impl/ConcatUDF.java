@@ -19,9 +19,7 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
 import com.alibaba.datax.common.element.ColumnAwareRecord;
-import com.alibaba.datax.common.element.Record;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;

@@ -1,6 +1,6 @@
 {
   "autoCreateTable": {
-    "disable": false
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"clickhouse\");"
   },
   "session": {
     "disable": true

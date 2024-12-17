@@ -21,31 +21,17 @@ package com.qlangtech.tis.plugin.datax.doris;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -85,192 +71,24 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
 
-    @Override
-    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-        //        if (!this.autoCreateTable) {
-        //            return null;
-        //        }
-        // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/DATETIMEV2/
-        // https://doris.apache.org/docs/dev/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
-        // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
-        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper, transformers);
-
-        return createTableSqlBuilder.build();
-    }
-
-    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
-
-
-    protected static final class DorisColWrapper extends ColWrapper {
-        protected DorisType dorisType;
-        private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
-
-        public DorisColWrapper(IColMetaGetter meta, List<String> pks, DataType.TypeVisitor<DorisType> columnTokenRecognise) {
-            super(meta, pks);
-            this.columnTokenRecognise = Objects.requireNonNull(columnTokenRecognise, "columnTokenRecognise can not be null");
-            this.dorisType = convertType(meta);
-        }
-
-        @Override
-        public final String getMapperType() {
-            return dorisType.token;
-        }
-
-        @Override
-        protected final void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-            if (this.isPk()) {
-                ddlScript.append(" NOT NULL");
-            }
-        }
-
-        protected DorisType convertType(IColMetaGetter col) {
-
-            final DorisType type = col.getType().accept((columnTokenRecognise));
-
-            DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
-
-                @Override
-                public DorisType bigInt(DataType type) {
-                    return null;
-                }
-
-                @Override
-                public DorisType doubleType(DataType type) {
-                    return null;
-                }
-
-                @Override
-                public DorisType dateType(DataType type) {
-                    return new DorisType(type, true, "DATEV2");
-                }
-
-                @Override
-                public DorisType timestampType(DataType type) {
-                    return new DorisType(type, true, "DATETIMEV2");
-                }
-
-                @Override
-                public DorisType bitType(DataType type) {
-                    return null;
-                }
-
-                @Override
-                public DorisType blobType(DataType type) {
-                    return null;
-                }
-
-                @Override
-                public DorisType varcharType(DataType type) {
-                    return null;
-                }
-            });
-            return fixType != null ? fixType : type;
-        }
-    }
-
-    protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder<DorisColWrapper> {
-        private final ISelectedTab dorisTab;
-        private final List<DorisColWrapper> primaryKeys;
-        private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
-        private static final Comparator<DorisColWrapper> pkSortCompare = new Comparator<DorisColWrapper>() {
-            @Override
-            public int compare(DorisColWrapper col1, DorisColWrapper col2) {
-                DorisType type1 = col1.dorisType;
-                DorisType type2 = col2.dorisType;
-                return (type1.dateType ? 1 : 0) - (type2.dateType ? 1 : 0);
-            }
-        };
-
-        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper
-                , DataSourceMeta dsMeta
-                , DataType.TypeVisitor<DorisType> columnTokenRecognise
-                , Optional<RecordTransformerRules> transformers) {
-
-            super(tableMapper, dsMeta, transformers);
-            this.columnTokenRecognise = columnTokenRecognise;
-            // (DorisSelectedTab)
-            this.dorisTab = tableMapper.getSourceTab();
-            this.primaryKeys = Lists.newArrayList();
-            for (String pk : this.dorisTab.getPrimaryKeys()) {
-                for (DorisColWrapper c : this.getCols()) {
-                    if (pk.equalsIgnoreCase(c.getName())) {
-                        // result.add(createColWrapper(c));
-                        this.primaryKeys.add((c));
-                    }
-                }
-            }
-            this.primaryKeys.sort(pkSortCompare);
-
-
-        }
-
-        @Override
-        protected void appendExtraColDef(List<String> pks) {
-
-        }
-
-        public boolean isPK(String colName) {
-            return this.pks.contains(colName);
-        }
-
-        protected abstract String getUniqueKeyToken();
-
-        @Override
-        protected List<DorisColWrapper> preProcessCols(List<String> pks, List<DorisColWrapper> cols) {
-            //return super.preProcessCols(pks, cols);
-
-            // 将主键排在最前面
-            List<DorisColWrapper> result = Lists.newArrayList();
-            result.addAll(primaryKeys);
-
-
-            cols.stream().filter((c) -> !this.pks.contains(c.getName())).forEach((c) -> {
-                result.add((c));
-            });
-            return result;
-        }
-
-        @Override
-        protected void appendTabMeta(List<String> pks) {
-
-
-            script.append(" ENGINE=olap").append("\n");
-            if (pks.size() > 0) {
-                script.append(getUniqueKeyToken() + "(").append(primaryKeys.stream().map((pk) -> wrapWithEscape(pk.getName())).collect(Collectors.joining(","))).append(")\n");
-            }
-            script.append("DISTRIBUTED BY HASH(");
-            if (pks.size() > 0) {
-                script.append(primaryKeys.stream().map((pk) -> wrapWithEscape(pk.getName())).collect(Collectors.joining(",")));
-            } else {
-                List<DorisColWrapper> cols = this.getCols();
-                Optional<DorisColWrapper> firstCol = cols.stream().findFirst();
-                if (firstCol.isPresent()) {
-                    script.append(firstCol.get().getName());
-                } else {
-                    throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
-                }
-            }
-            script.append(")\n");
-            script.append("BUCKETS 10\n");
-            StringBuffer seqBuffer = new StringBuffer();
-            if (dorisTab instanceof DorisSelectedTab) {
-                seqBuffer = ((DorisSelectedTab) dorisTab).seqKey.createDDLScript(this);
-            }
-
-            script.append("PROPERTIES(\"replication_num\" = \"1\" " + seqBuffer + " )");
-
-
-        }
-
-        @Override
-        protected DorisColWrapper createColWrapper(IColMetaGetter c) {
-
-            return new DorisColWrapper(c, this.pks, columnTokenRecognise);
-        }
-
-
-    }
-
+//    @Override
+//    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//        //        if (!this.autoCreateTable) {
+//        //            return null;
+//        //        }
+//        // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/DATETIMEV2/
+//        // https://doris.apache.org/docs/dev/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
+//        // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
+//
+//        CreateTableSqlBuilder sqlDDLBuilder = Objects.requireNonNull(this.autoCreateTable, "autoCreateTable can not be null")
+//                .createSQLDDLBuilder(
+//                        this, sourceColMetaGetter, tableMapper, transformers);
+//        return sqlDDLBuilder.build();
+//
+////        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(sourceColMetaGetter, tableMapper, transformers);
+////
+////        return createTableSqlBuilder.build();
+//    }
 
     public static class DorisType implements Serializable {
         public final DataType type;

@@ -24,8 +24,10 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -34,11 +36,12 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -48,7 +51,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -61,6 +63,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -89,7 +92,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
-    public boolean autoCreateTable;
+    public AutoCreateTable autoCreateTable;
 
     @Override
     public void startScanDependency() {
@@ -97,8 +100,26 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public final CreateDDL generateCreateDDL(
+            SourceColMetaGetter sourceColMetaGetter
+            , TableMap tableMapper
+            , Optional<RecordTransformerRules> transformers) {
+        CreateTableSqlBuilder sqlDDLBuilder
+                = Objects.requireNonNull(this.autoCreateTable, "autoCreateTable can not be null")
+                .createSQLDDLBuilder(
+                        this, sourceColMetaGetter, tableMapper, transformers);
+        return sqlDDLBuilder.build();
+    }
+
+    /**
+     * 是否已经关闭
+     *
+     * @return
+     */
+    @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return !autoCreateTable;
+        return !Objects.requireNonNull(autoCreateTable,"autoCreateTable can not be null")
+                .enabled();
     }
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
@@ -214,13 +235,19 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                     if (!tableExist) {
                         // 表不存在
                         boolean success = false;
+                        String currentExecSql = null;
                         try {
+                            List<String> statements = parseStatements(createScript); // Lists.newArrayList(StringUtils.split(createScript, ";"));
                             try (Statement statement = conn.createStatement()) {
                                 logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
-                                success = statement.execute(createScript);
+                                for (String execSql : statements) {
+                                    currentExecSql = execSql;
+                                    success = statement.execute(execSql);
+                                }
+
                             }
                         } catch (SQLException e) {
-                            throw new RuntimeException(createScript, e);
+                            throw new RuntimeException("currentExecSql:" + currentExecSql, e);
                         }
                     } else {
                         logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
@@ -239,6 +266,51 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 //            throw new RuntimeException(e);
 //        }
         //  return false;
+    }
+
+    /**
+     * <pre>
+     * CREATE TABLE "orderdetail"
+     * (
+     *     "order_id"             VARCHAR2(60 CHAR),
+     *     "global_code"          VARCHAR2(26 CHAR)
+     *  , CONSTRAINT orderdetail_pk PRIMARY KEY ("order_id")
+     * );
+     * COMMENT ON COLUMN "orderdetail"."global_code" IS '1,正常开单;2预订开单;3.排队开单;4.外卖开单';
+     * </pre>
+     *
+     * @param createScript
+     * @return
+     */
+    static List<String> parseStatements(String createScript) {
+        List<String> result = Lists.newArrayList();
+        StringBuffer sqlStatement = null;
+        char c;
+        int singleQuotesMetaCount = 0;
+        for (int idx = 0; idx < createScript.length(); idx++) {
+            c = createScript.charAt(idx);
+            if (sqlStatement == null) {
+                if (c == '\n' || c == ' ') {
+                    continue;
+                }
+                sqlStatement = new StringBuffer();
+            }
+            if (c == '\'') {
+                singleQuotesMetaCount++;
+            }
+            if (c != ';' || ((singleQuotesMetaCount & 1) > 0 /** 说明是奇数即在引号内部的';'*/)) {
+                sqlStatement.append(c);
+            } else {
+                result.add(sqlStatement.toString());
+                sqlStatement = null;
+            }
+        }
+
+        if (sqlStatement != null) {
+            result.add(sqlStatement.toString());
+        }
+
+        return result;
     }
 
 

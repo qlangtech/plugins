@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -32,6 +33,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -76,9 +78,10 @@ public class TestDataXDorisWriter extends TestCase {
 
     public void testGenerateCreateDDL() {
         DataXDorisWriter writer = new DataXDorisWriter();
-        writer.autoCreateTable = true;
+        writer.autoCreateTable = AutoCreateTable.dft();
+        ;
 
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");
@@ -213,7 +216,8 @@ public class TestDataXDorisWriter extends TestCase {
         createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
         createDorisWriter.dsFactory.name = "dorisDB";
 
-        createDorisWriter.writer.autoCreateTable = true;
+        createDorisWriter.writer.autoCreateTable = AutoCreateTable.dft();
+        ;
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");

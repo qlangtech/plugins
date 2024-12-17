@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
@@ -28,6 +29,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
@@ -173,7 +175,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 
         ClickHouseTest houseTest = createDataXWriter();
 
-        houseTest.writer.autoCreateTable = true;
+        houseTest.writer.autoCreateTable = AutoCreateTable.dft();
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");
@@ -206,11 +208,12 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 
         ClickHouseTest dataXWriter = createDataXWriter();
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap, Optional.empty());
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.writer.generateCreateDDL(
+                SourceColMetaGetter.getNone(), dataXWriter.tableMap, Optional.empty());
         assertNull(createDDL);
 
-        dataXWriter.writer.autoCreateTable = true;
-        createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap, Optional.empty());
+        dataXWriter.writer.autoCreateTable = AutoCreateTable.dft();// true;
+        createDDL = dataXWriter.writer.generateCreateDDL(SourceColMetaGetter.getNone(), dataXWriter.tableMap, Optional.empty());
         assertNotNull(createDDL);
 
         assertEquals("CREATE TABLE customer_order_relation\n" +

@@ -35,10 +35,12 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
 import java.util.Objects;
@@ -106,20 +108,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     protected String getRefectTablesSql() {
-
         return allAuthorized.getRefectTablesSql();
-
-        //        if (allAuthorized != null && allAuthorized) {
-        //            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\
-        //            .$]+') < 1";
-        //        } else {
-        //            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR
-        //            (TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
-        //            // 带上 tablespace的话后续取colsMeta会取不出
-        //            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND
-        //            tablespace_name is not null";
-        //
-        //        }
     }
 
     @Override
@@ -264,12 +253,18 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        //        return DriverManager.getConnection(jdbcUrl
-        //                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils
-        //                .trimToNull(password));
 
-        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName),
-                StringUtils.trimToNull(password)), jdbcUrl);
+        Connection conn = DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName),
+                StringUtils.trimToNull(password));
+
+        String dbSchema = null;
+        if (StringUtils.isNotEmpty(dbSchema = getDBSchema())) {
+            try (Statement statement = conn.createStatement()) {
+                statement.execute("ALTER SESSION SET CURRENT_SCHEMA = " + dbSchema);
+            }
+        }
+
+        return new JDBCConnection(conn, jdbcUrl);
     }
 
 

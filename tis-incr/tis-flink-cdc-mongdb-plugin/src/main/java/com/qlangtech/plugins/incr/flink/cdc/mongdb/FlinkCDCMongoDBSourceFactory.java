@@ -30,8 +30,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
-import java.time.ZoneId;
-
 /**
  * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/
  *
@@ -43,8 +41,7 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public MongoCDCStartupOptions startupOption;
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+
     /**
      * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#full-changeloga-namefull-changelog-id003-a
      */
@@ -52,9 +49,7 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     public UpdateRecordComplete updateRecordComplete;
 
 
-    public ZoneId parseZoneId() {
-        return ZoneId.of(timeZone);
-    }
+
 
     @FormField(ordinal = 10, advance = true, type = FormFieldType.INPUTTEXT)
     public String connectionOptions;
@@ -67,7 +62,7 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
         return (meta, colIndex) -> {
-            return meta.getType().accept(new MongoDBCDCTypeVisitor(meta, colIndex, this.parseZoneId()));
+            return meta.getType().accept(new MongoDBCDCTypeVisitor(meta, colIndex));
         };
     }
 

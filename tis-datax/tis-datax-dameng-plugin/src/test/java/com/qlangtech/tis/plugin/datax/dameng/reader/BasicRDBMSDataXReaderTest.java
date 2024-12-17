@@ -7,12 +7,14 @@ import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -50,7 +52,8 @@ public abstract class BasicRDBMSDataXReaderTest
         try {
             this.dataXWriter = clazz.newInstance();
             this.dataXWriter.dbName = "dbName";
-            this.dataXWriter.autoCreateTable = true;
+            this.dataXWriter.autoCreateTable = AutoCreateTable.dft();
+            ;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -79,8 +82,9 @@ public abstract class BasicRDBMSDataXReaderTest
 
         final File ddlDir = folder.newFolder("ddlDir");
         EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+        SourceColMetaGetter colMetaGetter = new SourceColMetaGetter(dataxReader);
         AbstractCreateTableSqlBuilder.CreateDDL createDDL
-                = this.dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(tab), Optional.empty());
+                = this.dataXWriter.generateCreateDDL(colMetaGetter, new IDataxProcessor.TableMap(tab), Optional.empty());
 
         FileUtils.write(new File(ddlDir
                 , tab.getName() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX), createDDL.getDDLScript());

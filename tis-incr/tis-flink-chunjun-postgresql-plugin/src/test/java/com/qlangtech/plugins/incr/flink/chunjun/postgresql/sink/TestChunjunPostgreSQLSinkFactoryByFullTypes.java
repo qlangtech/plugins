@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.sink.TestFlinkSinkExecutorByMySQLFullTypes;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -90,7 +91,7 @@ public class TestChunjunPostgreSQLSinkFactoryByFullTypes extends TestFlinkSinkEx
                 return (PGDataSourceFactory) pgDSFactory;
             }
         };
-        pgDataXWriter.autoCreateTable = true;
+        pgDataXWriter.autoCreateTable = AutoCreateTable.dft();;
         // pgDataXWriter.generateCreateDDL()
         return pgDataXWriter;
     }

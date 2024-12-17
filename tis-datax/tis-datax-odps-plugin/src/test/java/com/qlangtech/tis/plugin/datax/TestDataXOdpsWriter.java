@@ -7,10 +7,12 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.AuthToken;
+import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
 
-import  com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -57,9 +59,18 @@ public class TestDataXOdpsWriter extends TestCase {
     }
 
     private DataXOdpsWriter createDataXOdpsWriter() {
-        AccessKey access = new AccessKey();
-        access.accessKeyId = "accessIdXXXX";
-        access.accessKeySecret = "accessKeySecretXXX";
+        AuthToken access = new AuthToken() {
+            @Override
+            public String getAccessKeyId() {
+                return "accessIdXXXX";
+            }
+
+            @Override
+            public String getAccessKeySecret() {
+                return "accessKeySecretXXX";
+            }
+        };
+
 
         OdpsDataSourceFactory endpoint = new OdpsDataSourceFactory();
         endpoint.name = "odps1";
@@ -82,7 +93,7 @@ public class TestDataXOdpsWriter extends TestCase {
     }
 
 
-    private void validateConfigGenerate(String assertFileName, OdpsDataSourceFactory endpoint, AccessKey access, DataXOdpsWriter odpsWriter) throws IOException {
+    private void validateConfigGenerate(String assertFileName, OdpsDataSourceFactory endpoint, IAliyunAccessKey access, DataXOdpsWriter odpsWriter) throws IOException {
 
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
         IDataxProcessor.TableMap tab = tableMap.get();
@@ -94,7 +105,7 @@ public class TestDataXOdpsWriter extends TestCase {
         Assert.assertTrue(CollectionUtils.isEqualCollection(
                 Lists.newArrayList("col1", "col2", "col3"), odpsWriterContext.getColumn()));
 
-        Assert.assertEquals(access.accessKeyId, odpsWriterContext.getAccessId());
+        Assert.assertEquals(access.getAccessKeyId(), odpsWriterContext.getAccessId());
         Assert.assertEquals(access.getAccessKeySecret(), odpsWriterContext.getAccessKey());
         Assert.assertEquals(tab.getTo(), odpsWriterContext.getTable());
         Assert.assertEquals(endpoint.project, odpsWriterContext.getProject());
@@ -131,7 +142,7 @@ public class TestDataXOdpsWriter extends TestCase {
         final DataXOdpsWriter writer = createDataXOdpsWriter();
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
         // EasyMock.replay(fsFactory, fs);
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");
@@ -154,7 +165,7 @@ public class TestDataXOdpsWriter extends TestCase {
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
-        }));
+        }), Optional.empty());
 
         assertNotNull(ddl);
 

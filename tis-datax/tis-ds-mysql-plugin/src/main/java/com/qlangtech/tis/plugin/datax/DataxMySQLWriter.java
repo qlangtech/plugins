@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -35,7 +36,6 @@ import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -48,6 +48,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -61,7 +62,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -125,175 +125,181 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
     }
 
 
-    @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-
-
-        StringBuffer script = new StringBuffer();
-        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-
-        try {
-            if (threadBingDataXReader instanceof DataxMySQLReader //
-                    // 没有使用别名
-                    // && tableMapper.hasNotUseAlias() //
-                    && !transformers.isPresent()) {
-                DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-                MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-                List<ColumnMetaData> tableColsMeta = mySQLReader.getTableMetadata(EntityName.parse(tableMapper.getFrom()));
-                ISelectedTab selectedTab = mySQLReader.getSelectedTab(tableMapper.getFrom());
-
-                if (StringUtils.equalsIgnoreCase(
-                        selectedTab.getCols().stream().map((col) -> col.getName()).collect(Collectors.joining())
-                        , tableColsMeta.stream().map((col) -> col.getName()).collect(Collectors.joining()))) {
-                    // 确保没有导出列
-                    dsFactory.visitFirstConnection((c) -> {
-                        Connection conn = c.getConnection();
-                        DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
-                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()), false);
-                        Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
-                        if (physicsTabNames.isPresent()) {
-                            try (Statement statement = conn.createStatement()) {
-                                // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
-                                try (ResultSet resultSet =
-                                             statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
-                                    if (!resultSet.next()) {
-                                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
-                                                "exec" + " show create table script");
-                                    }
-                                    final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
-                                            , dsFactory.getEscapedEntity(tableMapper.getTo()));
-                                    script.append(ddl);
-                                }
-                            }
-                        } else {
-                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
-                                    "physicsTabs" + " in datasource:" + dsFactory.identityValue());
-                        }
-
-                    });
-                    return new CreateTableSqlBuilder.CreateDDL(script, null) {
-                        @Override
-                        public String getSelectAllScript() {
-                            //return super.getSelectAllScript();
-                            throw new UnsupportedOperationException();
-                        }
-                    };
-
-                }
-
-
-            }
-        } catch (TableNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (RuntimeException e) {
-            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
-                throw e;
-            } else {
-                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
-                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
-            }
-        }
-
-        // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
-        final AtomicInteger timestampCount = new AtomicInteger();
-
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper,
-                this.getDataSourceFactory(), transformers) {
-            @Override
-            protected void appendExtraColDef(List<String> pks) {
-                if (!pks.isEmpty()) {
-                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk + "`").collect(Collectors.joining(","))).append(")").append("\n");
-                }
-            }
-
-            @Override
-            protected void appendTabMeta(List<String> pks) {
-                script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
-            }
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c, this.pks) {
-                    @Override
-                    public String getMapperType() {
-                        return convertType(this);
-                    }
-                };
-            }
-
-            /**
-             * https://www.runoob.com/mysql/mysql-data-types.html
-             * @param col
-             * @return
-             */
-            private String convertType(ColWrapper col) {
-                DataType type = col.getType();
-                switch (type.getJdbcType()) {
-                    case CHAR: {
-                        String keyChar = "CHAR";
-                        if (type.getColumnSize() < 1) {
-                            return keyChar;
-                        }
-                        return keyChar + "(" + type.getColumnSize() + ")";
-                    }
-                    case BIT:
-                    case BOOLEAN:
-                        return "BOOLEAN";
-                    case REAL:
-                        return "REAL";
-                    case TINYINT: {
-                        return "TINYINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
-                    }
-                    case SMALLINT: {
-                        return "SMALLINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
-                    }
-                    case INTEGER:
-                        return "int(11)";
-                    case BIGINT: {
-                        return "BIGINT " + type.getUnsignedToken();
-                    }
-                    case FLOAT:
-                        return "FLOAT";
-                    case DOUBLE:
-                        return "DOUBLE";
-                    case DECIMAL:
-                    case NUMERIC: {
-                        if (type.getColumnSize() > 0) {
-                            return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
-                        } else {
-                            return "DECIMAL(" + DataTypeMeta.DEFAULT_DECIMAL_PRECISION + ",0)";
-                        }
-                    }
-                    case DATE:
-                        return "DATE";
-                    case TIME:
-                        return "TIME";
-                    case TIMESTAMP: {
-                        if (timestampCount.getAndIncrement() < 1) {
-                            return "TIMESTAMP";
-                        } else {
-                            return "DATETIME";
-                        }
-                    }
-                    case BLOB:
-                    case BINARY:
-                    case LONGVARBINARY:
-                    case VARBINARY:
-                        return "BLOB";
-                    case VARCHAR: {
-                        if (type.getColumnSize() > Short.MAX_VALUE) {
-                            return "TEXT";
-                        }
-                        return "VARCHAR(" + type.getColumnSize() + ")";
-                    }
-                    default:
-                        return "TINYTEXT";
-                }
-            }
-        };
-        return createTableSqlBuilder.build();
-    }
+//    @Override
+//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter colMetaGetter
+//            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//
+//
+//        StringBuffer script = new StringBuffer();
+//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
+//        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
+//
+//        try {
+//            if (threadBingDataXReader instanceof DataxMySQLReader //
+//                    // 没有使用别名
+//                    // && tableMapper.hasNotUseAlias() //
+//                    && !transformers.isPresent()) {
+//                DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
+//                MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+//                List<ColumnMetaData> tableColsMeta = mySQLReader.getTableMetadata(EntityName.parse(tableMapper.getFrom()));
+//                ISelectedTab selectedTab = mySQLReader.getSelectedTab(tableMapper.getFrom());
+//
+//                if (StringUtils.equalsIgnoreCase(
+//                        selectedTab.getCols().stream().map((col) -> col.getName()).collect(Collectors.joining())
+//                        , tableColsMeta.stream().map((col) -> col.getName()).collect(Collectors.joining()))) {
+//                    // 确保没有导出列
+//                    dsFactory.visitFirstConnection((c) -> {
+//                        Connection conn = c.getConnection();
+//                        DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
+//                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()), false);
+//                        Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
+//                        if (physicsTabNames.isPresent()) {
+//                            try (Statement statement = conn.createStatement()) {
+//                                // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
+//                                try (ResultSet resultSet =
+//                                             statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
+//                                    if (!resultSet.next()) {
+//                                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
+//                                                "exec" + " show create table script");
+//                                    }
+//                                    final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
+//                                            , dsFactory.getEscapedEntity(tableMapper.getTo()));
+//                                    script.append(ddl);
+//                                }
+//                            }
+//                        } else {
+//                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
+//                                    "physicsTabs" + " in datasource:" + dsFactory.identityValue());
+//                        }
+//
+//                    });
+//                    return new CreateTableSqlBuilder.CreateDDL(script, null) {
+//                        @Override
+//                        public String getSelectAllScript() {
+//                            //return super.getSelectAllScript();
+//                            throw new UnsupportedOperationException();
+//                        }
+//                    };
+//
+//                }
+//
+//
+//            }
+//        } catch (TableNotFoundException e) {
+//            throw new RuntimeException(e);
+//        } catch (RuntimeException e) {
+//            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
+//                throw e;
+//            } else {
+//                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
+//                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
+//            }
+//        }
+//
+//        // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
+//        final AtomicInteger timestampCount = new AtomicInteger();
+//
+//        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper,
+//                this.getDataSourceFactory(), transformers) {
+//            @Override
+//            protected void appendExtraColDef(List<String> pks) {
+//                if (!pks.isEmpty()) {
+//                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk + "`").collect(Collectors.joining(","))).append(")").append("\n");
+//                }
+//            }
+//
+//            @Override
+//            protected void appendTabMeta(List<String> pks) {
+//                script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
+//            }
+//
+//            @Override
+//            protected ColWrapper createColWrapper(IColMetaGetter c) {
+//                return new ColWrapper(c, this.pks) {
+//                    @Override
+//                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+//                        autoCreateTable.addStandardColComment(colMetaGetter, tableMapper, this, ddlScript);
+//                    }
+//
+//                    @Override
+//                    public String getMapperType() {
+//                        return convertType(this);
+//                    }
+//                };
+//            }
+//
+//            /**
+//             * https://www.runoob.com/mysql/mysql-data-types.html
+//             * @param col
+//             * @return
+//             */
+//            private String convertType(ColWrapper col) {
+//                DataType type = col.getType();
+//                switch (type.getJdbcType()) {
+//                    case CHAR: {
+//                        String keyChar = "CHAR";
+//                        if (type.getColumnSize() < 1) {
+//                            return keyChar;
+//                        }
+//                        return keyChar + "(" + type.getColumnSize() + ")";
+//                    }
+//                    case BIT:
+//                    case BOOLEAN:
+//                        return "BOOLEAN";
+//                    case REAL:
+//                        return "REAL";
+//                    case TINYINT: {
+//                        return "TINYINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
+//                    }
+//                    case SMALLINT: {
+//                        return "SMALLINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
+//                    }
+//                    case INTEGER:
+//                        return "int(11)";
+//                    case BIGINT: {
+//                        return "BIGINT " + type.getUnsignedToken();
+//                    }
+//                    case FLOAT:
+//                        return "FLOAT";
+//                    case DOUBLE:
+//                        return "DOUBLE";
+//                    case DECIMAL:
+//                    case NUMERIC: {
+//                        if (type.getColumnSize() > 0) {
+//                            return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
+//                        } else {
+//                            return "DECIMAL(" + DataTypeMeta.DEFAULT_DECIMAL_PRECISION + ",0)";
+//                        }
+//                    }
+//                    case DATE:
+//                        return "DATE";
+//                    case TIME:
+//                        return "TIME";
+//                    case TIMESTAMP: {
+//                        if (timestampCount.getAndIncrement() < 1) {
+//                            return "TIMESTAMP";
+//                        } else {
+//                            return "DATETIME";
+//                        }
+//                    }
+//                    case BLOB:
+//                    case BINARY:
+//                    case LONGVARBINARY:
+//                    case VARBINARY:
+//                        return "BLOB";
+//                    case VARCHAR: {
+//                        if (type.getColumnSize() > Short.MAX_VALUE) {
+//                            return "TEXT";
+//                        }
+//                        return "VARCHAR(" + type.getColumnSize() + ")";
+//                    }
+//                    default:
+//                        return "TINYTEXT";
+//                }
+//            }
+//        };
+//        return createTableSqlBuilder.build();
+//    }
 
 
     public static class MySQLWriterContext extends RdbmsDataxContext implements IDataxContext {

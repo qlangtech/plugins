@@ -23,6 +23,7 @@ import com.aliyun.odps.task.SQLTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
@@ -248,7 +249,8 @@ public class JoinOdpsTask extends HiveTask {
         IDataxProcessor.TableMap tabMapper
                 = IDataxProcessor.TableMap.create(dumpTable.getTabName(), cols);
 
-        CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(tabMapper, Optional.empty());
+        CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(
+                SourceColMetaGetter.getNone(), tabMapper, Optional.empty());
         StringBuffer ddlScript = createDDL.getDDLScript();
         try {
             conn.execute(ddlScript.toString());

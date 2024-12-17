@@ -30,6 +30,7 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -169,7 +170,7 @@ public class TestDataXStarRocksWriter extends TestCase {
         // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
         createDorisWriter.dsFactory.nodeDesc = "localhost";
 
-        createDorisWriter.writer.autoCreateTable = true;
+        createDorisWriter.writer.autoCreateTable = AutoCreateTable.dft();;
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");

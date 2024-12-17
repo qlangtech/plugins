@@ -19,6 +19,7 @@
 import com.qlangtech.tis.plugin.datax.TestDataXGlobalConfig;
 import com.qlangtech.tis.plugin.datax.TestDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.TestDefaultDataxProcessor;
+import com.qlangtech.tis.plugin.datax.common.TestBasicDataXRdbmsWriter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -33,6 +34,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestDataXGlobalConfig.class);
         suite.addTestSuite(TestDataXJobSubmit.class);
         suite.addTestSuite(TestDefaultDataxProcessor.class);
+        suite.addTestSuite(TestBasicDataXRdbmsWriter.class);
         return suite;
     }
 

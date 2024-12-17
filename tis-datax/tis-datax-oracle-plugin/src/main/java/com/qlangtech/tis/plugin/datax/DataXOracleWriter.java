@@ -24,18 +24,12 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -64,123 +58,124 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
 //        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
 //    }
 
-    /**
-     * https://docs.oracle.com/cd/B28359_01/server.111/b28318/sqlplsql.htm#CNCPT1732
-     *
-     * @param tableMapper
-     * @return
-     */
-    @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
-        CreateTableSqlBuilder.CreateDDL createDDL = null;
-
-        final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
-            @Override
-            protected void appendExtraColDef(List<String> pks) {
-                if (pks.isEmpty()) {
-                    return;
-                }
-                script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
-                        .append(pks.stream().map((pk) -> wrapWithEscape(pk))
-                                .collect(Collectors.joining(","))).append(")").append("\n");
-            }
-
-            @Override
-            protected void appendTabMeta(List<String> pks) {
-            }
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c,this.pks) {
-                    @Override
-                    public String getMapperType() {
-                        return convertType(this);
-                    }
-                };
-            }
-
-            /**
-             * https://docs.oracle.com/database/121/SQLRF/sql_elements001.htm#SQLRF30020
-             * https://docs.oracle.com/cd/B28359_01/server.111/b28318/datatype.htm
-             * @param col
-             * @return
-             */
-            private String convertType(ColWrapper col) {
-                DataType type = col.getType();
-                switch (type.getJdbcType()) {
-                    case CHAR: {
-                        String keyChar = "CHAR";
-                        if (type.getColumnSize() < 1) {
-                            return keyChar;
-                        }
-                        return keyChar + "(" + type.getColumnSize() + ")";
-                    }
-                    case BIT:
-                    case BOOLEAN:
-                        return "NUMBER(1,0)";
-                    case REAL: {
-                        if (type.getColumnSize() > 0 && type.getDecimalDigits() > 0) {
-                            // 在PG->Oracle情况下，PG中是Real类型 通过jdbc反射得到columnSize和getDecimalDigits()都为8，这样number(8,8)就没有小数位了，出问题了
-                            // 在此进行除2处理
-                            int scale = type.getDecimalDigits();
-                            if (scale >= type.getColumnSize()) {
-                                scale = scale / 2;
-                            }
-                            return "NUMBER(" + type.getColumnSize() + "," + scale + ")";
-                        }
-                        return "BINARY_FLOAT";
-                    }
-                    case TINYINT:
-                    case SMALLINT:
-                        return "SMALLINT";
-                    case INTEGER:
-                    case BIGINT:
-                        return "INTEGER";
-                    case FLOAT:
-                        return "BINARY_FLOAT";
-                    case DOUBLE:
-                        return "BINARY_DOUBLE";
-                    case DECIMAL:
-                    case NUMERIC: {
-                        if (type.getColumnSize() > 0) {
-                            return "DECIMAL(" + Math.min(type.getColumnSize(), 38) + "," + type.getDecimalDigits() + ")";
-                        } else {
-                            return "DECIMAL";
-                        }
-                    }
-                    case DATE:
-                        return "DATE";
-                    case TIME:
-                        return "TIMESTAMP(0)";
-                    // return "TIME";
-                    case TIMESTAMP:
-                        return "TIMESTAMP";
-                    case BLOB:
-                    case BINARY:
-                    case LONGVARBINARY:
-                    case VARBINARY:
-                        return "BLOB";
-                    case VARCHAR: {
-                        if (type.getColumnSize() > Short.MAX_VALUE) {
-                            return "CLOB";
-                        }
-                        return "VARCHAR2(" + type.getColumnSize() + " CHAR)";
-                    }
-                    default:
-                        // return "TINYTEXT";
-                        return "CLOB";
-                }
-            }
-
-
-        };
-        createDDL = createTableSqlBuilder.build();
-        return createDDL;
-    }
+//    /**
+//     * https://docs.oracle.com/cd/B28359_01/server.111/b28318/sqlplsql.htm#CNCPT1732
+//     *
+//     * @param tableMapper
+//     * @return
+//     */
+//    @Override
+//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter
+//            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//
+//        CreateTableSqlBuilder.CreateDDL createDDL = null;
+//
+//        final CreateTableSqlBuilder createTableSqlBuilder
+//                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
+//            @Override
+//            protected void appendExtraColDef(List<String> pks) {
+//                if (pks.isEmpty()) {
+//                    return;
+//                }
+//                script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
+//                        .append(pks.stream().map((pk) -> wrapWithEscape(pk))
+//                                .collect(Collectors.joining(","))).append(")").append("\n");
+//            }
+//
+//            @Override
+//            protected void appendTabMeta(List<String> pks) {
+//                super.appendTabMeta(pks);
+//                autoCreateTable.addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
+//            }
+//
+//            @Override
+//            protected ColWrapper createColWrapper(IColMetaGetter c) {
+//                return new ColWrapper(c, this.pks) {
+//                    @Override
+//                    public String getMapperType() {
+//                        return convertType(this);
+//                    }
+//                };
+//            }
+//
+//            /**
+//             * https://docs.oracle.com/database/121/SQLRF/sql_elements001.htm#SQLRF30020
+//             * https://docs.oracle.com/cd/B28359_01/server.111/b28318/datatype.htm
+//             * @param col
+//             * @return
+//             */
+//            private String convertType(ColWrapper col) {
+//                DataType type = col.getType();
+//                switch (type.getJdbcType()) {
+//                    case CHAR: {
+//                        String keyChar = "CHAR";
+//                        if (type.getColumnSize() < 1) {
+//                            return keyChar;
+//                        }
+//                        return keyChar + "(" + type.getColumnSize() + ")";
+//                    }
+//                    case BIT:
+//                    case BOOLEAN:
+//                        return "NUMBER(1,0)";
+//                    case REAL: {
+//                        if (type.getColumnSize() > 0 && type.getDecimalDigits() > 0) {
+//                            // 在PG->Oracle情况下，PG中是Real类型 通过jdbc反射得到columnSize和getDecimalDigits()都为8，这样number(8,8)就没有小数位了，出问题了
+//                            // 在此进行除2处理
+//                            int scale = type.getDecimalDigits();
+//                            if (scale >= type.getColumnSize()) {
+//                                scale = scale / 2;
+//                            }
+//                            return "NUMBER(" + type.getColumnSize() + "," + scale + ")";
+//                        }
+//                        return "BINARY_FLOAT";
+//                    }
+//                    case TINYINT:
+//                    case SMALLINT:
+//                        return "SMALLINT";
+//                    case INTEGER:
+//                    case BIGINT:
+//                        return "INTEGER";
+//                    case FLOAT:
+//                        return "BINARY_FLOAT";
+//                    case DOUBLE:
+//                        return "BINARY_DOUBLE";
+//                    case DECIMAL:
+//                    case NUMERIC: {
+//                        if (type.getColumnSize() > 0) {
+//                            return "DECIMAL(" + Math.min(type.getColumnSize(), 38) + "," + type.getDecimalDigits() + ")";
+//                        } else {
+//                            return "DECIMAL";
+//                        }
+//                    }
+//                    case DATE:
+//                        return "DATE";
+//                    case TIME:
+//                        return "TIMESTAMP(0)";
+//                    // return "TIME";
+//                    case TIMESTAMP:
+//                        return "TIMESTAMP";
+//                    case BLOB:
+//                    case BINARY:
+//                    case LONGVARBINARY:
+//                    case VARBINARY:
+//                        return "BLOB";
+//                    case VARCHAR: {
+//                        if (type.getColumnSize() > Short.MAX_VALUE) {
+//                            return "CLOB";
+//                        }
+//                        return "VARCHAR2(" + type.getColumnSize() + " CHAR)";
+//                    }
+//                    default:
+//                        // return "TINYTEXT";
+//                        return "CLOB";
+//                }
+//            }
+//
+//
+//        };
+//        createDDL = createTableSqlBuilder.build();
+//        return createDDL;
+//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends RdbmsWriterDescriptor {

@@ -42,6 +42,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.JDBCConnectionPool;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
@@ -52,7 +53,6 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
-import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,6 +160,12 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
+    protected JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+        // return super.createConnection(jdbcUrl, verify);
+        return new MongoJDBCConnection(createMongoClient());
+    }
+
+    @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
 
         /**
@@ -196,8 +202,20 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
             this.mongoClient = mongoClient;
         }
 
+        @Override
+        public Connection getConnection() {
+            // return super.getConnection();
+            throw new UnsupportedOperationException();
+        }
+
         public final MongoClient getMongoClient() {
             return this.mongoClient;
+        }
+
+        @Override
+        public void close() throws SQLException {
+            //   super.close();
+            this.mongoClient.close();
         }
     }
 
@@ -227,27 +245,37 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 //    }
 
     @Override
+    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, boolean inSink, EntityName table) throws TableNotFoundException {
+        MongoJDBCConnection mongoConn = JDBCConnectionPool.getJDBCConnectionFromPool(conn);
+        return getMongoColumnMetaData(mongoConn.getMongoClient(), table);
+    }
+
+    @Override
     public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
-        MangoDBDataSourceFactory plugin = this;
-        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
-        int inspectedRows = 0;
-        try {
-            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
-                    + "be null ");
-
-            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
-            final CodecRegistry codecRegistry = database.getCodecRegistry();
-            MongoCollection<BsonDocument> user = database.getCollection(table.getTableName(), BsonDocument.class);
-
-            for (BsonDocument doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
-                    "inspectRowCount can not " + "be" + " null"))) {
-                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, codecRegistry);
-                inspectedRows++;
-            }
-
+        try (MongoClient mongoClient = Objects.requireNonNull(this.unwrap(MongoClient.class), " mongoClient can not "
+                + "be null ")) {
+            return getMongoColumnMetaData(mongoClient, table);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<ColumnMetaData> getMongoColumnMetaData(MongoClient mongoClient, EntityName table) {
+
+        MangoDBDataSourceFactory plugin = this;
+        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
+        int inspectedRows = 0;
+
+        MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
+        final CodecRegistry codecRegistry = database.getCodecRegistry();
+        MongoCollection<BsonDocument> user = database.getCollection(table.getTableName(), BsonDocument.class);
+
+        for (BsonDocument doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
+                "inspectRowCount can not " + "be" + " null"))) {
+            MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, codecRegistry);
+            inspectedRows++;
+        }
+
         if (inspectedRows < 1 || MapUtils.isEmpty(colsSchema)) {
             throw new IllegalStateException(
                     "has not found any cols meta info for:" + table.getFullName()

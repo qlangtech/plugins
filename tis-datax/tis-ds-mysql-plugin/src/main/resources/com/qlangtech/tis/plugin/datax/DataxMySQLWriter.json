@@ -4,7 +4,8 @@
     "enum": "com.qlangtech.tis.plugin.datax.IWriteModeSupport.supportModes()"
   },
   "autoCreateTable": {
-    "disable": false
+    "disable": false,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"mysql\");"
   },
   "dbName": {
     "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")",

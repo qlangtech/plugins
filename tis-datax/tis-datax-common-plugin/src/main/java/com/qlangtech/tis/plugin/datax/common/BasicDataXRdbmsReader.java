@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -53,6 +54,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -73,7 +75,7 @@ import java.util.stream.Collectors;
  * @create: 2021-06-05 09:54
  **/
 public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader
-        implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+        implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware, AfterPluginSaved {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -116,6 +118,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             public ContextParamValGetter<RdbmsRunningContext> valGetter() {
                 return new TableNameContextParamValGetter();
             }
+
             @Override
             public DataType getDataType() {
                 return DataType.createVarChar(50);
@@ -127,6 +130,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
 //        dbContextParams.put(dbName.getKeyName(), dbName);
 //        return dbContextParams;
+    }
+
+    @Override
+    public final void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this.preSelectedTabsHash = -1;
     }
 
     @Override

@@ -6,3 +6,10 @@
  写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ）
 ## session
   DataX在获取Mysql连接时，执行session指定的SQL语句，修改当前connection session属性 
+
+## autoCreateTable
+
+解析Reader的元数据，自动生成Writer create table DDL语句，有三种选择：
+* `off`：关闭自动生成及同步目标端建表DDL语句，当目标端表实例已经存在可选择此选项。
+* `default`：打开动生成及自动执行目标端建表DDL语句，执行任务状态由程序自动控制毋需人为干涉。
+* `customized`：用户可自定义设置`自动执行目标端建表DDL语句逻辑`，如：是否需要生成列注释等。

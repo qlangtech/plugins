@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax.mongo;
 
-import com.alibaba.datax.common.element.Column;
 import org.bson.BsonValue;
 
 import java.io.Serializable;
@@ -29,6 +28,25 @@ import java.io.Serializable;
  **/
 public interface FunctionWithPayload extends Serializable {
 
+    public abstract class MongoColValCreator {
+        final FunctionWithPayload valCreator;
+        private FunctionWithPayloadColumnDecorator _columnValueCreator;
+
+        public MongoColValCreator(FunctionWithPayload valCreator) {
+            this.valCreator = valCreator;
+        }
+
+        public final FunctionWithPayloadColumnDecorator getColumnValueCreator() {
+            if (this._columnValueCreator == null) {
+                this._columnValueCreator = this.createColumnValueCreator();
+            }
+            return this._columnValueCreator;
+        }
+
+        protected abstract FunctionWithPayloadColumnDecorator createColumnValueCreator();
+
+    }
+
     /**
      * @param o
      * @param payloads 额外传输参数，例如timeZone等
@@ -36,5 +54,5 @@ public interface FunctionWithPayload extends Serializable {
      */
     public Object apply(BsonValue o, Object... payloads);
 
-    public Column create(BsonValue o, Object... payloads);
+
 }

@@ -32,6 +32,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.DataXClickhouseWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
@@ -207,7 +208,7 @@ public class TestChunjunClickhouseSinkFactory
                 }
             };
             dataXWriter.dataXName = testDataX;
-            dataXWriter.autoCreateTable = true;
+            dataXWriter.autoCreateTable = AutoCreateTable.dft();;
 
             //EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 

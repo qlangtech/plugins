@@ -10,6 +10,12 @@
       ]
     }
   },
+  "autoCreateTable": {
+    "label": "自动建表",
+    "dftVal": "customized",
+    "help": "解析Reader的元数据，自动生成Writer create table DDL语句",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"hms\");"
+  },
   "tabDecorator": {
     "label": "表别名",
     "dftVal": "off"

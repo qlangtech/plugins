@@ -19,6 +19,7 @@
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXSqlserverWriter.getDftTemplate()"
   },
   "autoCreateTable": {
-    "disable": false
+    "disable": false,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"sqlServer\");"
   }
 }

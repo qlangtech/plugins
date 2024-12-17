@@ -1,6 +1,7 @@
 {
   "autoCreateTable": {
-    "disable": false
+    "disable": false,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"pg\");"
   },
   "dbName": {
     "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"PostgreSQL\")",

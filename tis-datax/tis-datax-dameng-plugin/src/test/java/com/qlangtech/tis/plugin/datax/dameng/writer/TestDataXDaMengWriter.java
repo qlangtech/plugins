@@ -6,8 +6,10 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
@@ -16,16 +18,19 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.BasicTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.dameng.RdbmsDataxContext;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.ds.TestDaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.selectedtab.TabApplicationCreator;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
@@ -61,10 +66,12 @@ public class TestDataXDaMengWriter {
                 return damengDS;
             }
         };
-        writer.autoCreateTable = true;
+        writer.autoCreateTable = AutoCreateTable.dft();
         setPlaceholderReader();
 
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(TabApplicationCreator.getTabApplication((cols) -> {
+
+
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), TabApplicationCreator.getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");
@@ -87,7 +94,7 @@ public class TestDataXDaMengWriter {
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
-        }));
+        }), Optional.empty());
 
         Assert.assertNotNull(ddl);
         // System.out.println(ddl);
@@ -103,6 +110,7 @@ public class TestDataXDaMengWriter {
             public void startScanDependency() {
 
             }
+
             @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 return null;
@@ -211,7 +219,7 @@ public class TestDataXDaMengWriter {
     private void validateConfigGenerate(String assertFileName, DataXDaMengWriter mySQLWriter) throws IOException {
 
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap,Optional.empty());
+        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap, Optional.empty());
         Assert.assertNotNull(subTaskCtx);
 
         RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;

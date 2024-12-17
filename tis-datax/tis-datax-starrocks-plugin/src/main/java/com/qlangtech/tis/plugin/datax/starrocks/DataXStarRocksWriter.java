@@ -21,9 +21,11 @@ package com.qlangtech.tis.plugin.datax.starrocks;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicStarRocksWriter;
+import com.qlangtech.tis.plugin.datax.starrocks.StarRocksAutoCreateTable.BasicCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import org.apache.commons.lang3.StringUtils;
@@ -61,15 +63,19 @@ public class DataXStarRocksWriter extends BasicStarRocksWriter {
         };
     }
 
-    @Override
-    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
-            @Override
-            protected String getUniqueKeyToken() {
-                return "PRIMARY KEY";
-            }
-        };
-    }
+//    @Override
+//    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(
+//            SourceColMetaGetter sourceColMetaGetter
+//            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//
+//        return new BasicCreateTableSqlBuilder(this.autoCreateTable
+//                , sourceColMetaGetter, tableMapper, this.getDataSourceFactory(), transformers) {
+//            @Override
+//            protected String getUniqueKeyToken() {
+//                return "PRIMARY KEY";
+//            }
+//        };
+//    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXStarRocksWriter.class, "writer-tpl.json");

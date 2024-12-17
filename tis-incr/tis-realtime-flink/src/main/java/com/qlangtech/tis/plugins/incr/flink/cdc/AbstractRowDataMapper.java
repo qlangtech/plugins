@@ -354,11 +354,11 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     static class TinyIntConvertByte extends BiFunction {
         @Override
         public Object apply(Object o) {
-            Short s;
+            Number s;
             if (o instanceof Boolean) {
                 s = ((Boolean) o) ? (short) 1 : 0;
             } else {
-                s = (Short) o;
+                s = (Number) o;
             }
 
             return new java.lang.Byte(s.byteValue());

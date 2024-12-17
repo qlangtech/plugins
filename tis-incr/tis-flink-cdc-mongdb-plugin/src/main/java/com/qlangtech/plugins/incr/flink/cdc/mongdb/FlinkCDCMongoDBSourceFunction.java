@@ -34,7 +34,9 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -46,6 +48,7 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -55,6 +58,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/
@@ -73,22 +77,25 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-            BasicDataXRdbmsReader mongoReader = (BasicDataXRdbmsReader) dataSource;
-            MangoDBDataSourceFactory dsFactory = (MangoDBDataSourceFactory) mongoReader.getDataSourceFactory();
+            DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
+            MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
             IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, mongoReader, tabs);
-            Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
+            Map<String, Pair<FlinkColMapper, List<MongoCMeta>>> tabColsMapper = Maps.newHashMap();
+
+
             IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
-                tabColsMapper.put(tab.getName(), colsMapper);
+                tabColsMapper.put(tab.getName()
+                        , Pair.of(colsMapper, tab.getCols().stream().map((c)-> (MongoCMeta) c).collect(Collectors.toUnmodifiableList())));
             }
 
             final MongoDBDeserializationSchema deserializationSchema
                     = new MongoDBDeserializationSchema(
-                    new MongoDBSourceDTOColValProcess(tabColsMapper)
+                    new MongoDBSourceDTOColValProcess(tabColsMapper,mongoReader.parseZoneId())
                     , new DefaultTableNameConvert()
                     , contextParamValsGetterMapper);
 

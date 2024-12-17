@@ -34,6 +34,7 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -82,7 +83,7 @@ public class TestDataxMySQLWriter extends BasicTest {
     @Test
     public void testGenerateCreateDDL() {
         DataxMySQLWriter writer = new DataxMySQLWriter();
-        writer.autoCreateTable = true;
+        writer.autoCreateTable = AutoCreateTable.dft();;
         DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
             @Override
             public void startScanDependency() {
@@ -105,7 +106,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
         });
 
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(null, getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");

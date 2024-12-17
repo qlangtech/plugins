@@ -48,7 +48,7 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
     }
 
     @Override
-    protected CreateTableName getCreateTableName() {
+    public CreateTableName getCreateTableName() {
         return new CreateTableName(ds.tabSchema, tableMapper.getTo(), this);
     }
 

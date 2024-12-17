@@ -16,6 +16,7 @@
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXOracleWriter.getDftTemplate()"
   },
   "autoCreateTable": {
-    "disable": false
+    "disable": false,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"oracle\");"
   }
 }

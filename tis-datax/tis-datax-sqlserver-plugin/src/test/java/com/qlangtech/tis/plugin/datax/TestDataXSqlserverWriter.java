@@ -19,9 +19,11 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 import junit.framework.TestCase;
@@ -89,11 +91,12 @@ public class TestDataXSqlserverWriter extends TestCase {
 
         DataXSqlserverWriter writer = getDataXSqlserverWriter();
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        CreateTableSqlBuilder.CreateDDL createDDL = writer.generateCreateDDL(tableMap.get(),Optional.empty());
+        CreateTableSqlBuilder.CreateDDL createDDL = writer.generateCreateDDL(
+                SourceColMetaGetter.getNone(), tableMap.get(), Optional.empty());
         assertNull(createDDL);
 
-        writer.autoCreateTable = true;
-        createDDL = writer.generateCreateDDL(tableMap.get(),Optional.empty());
+        writer.autoCreateTable = AutoCreateTable.dft();
+        createDDL = writer.generateCreateDDL(SourceColMetaGetter.getNone(), tableMap.get(), Optional.empty());
         assertNotNull(createDDL);
 
         assertEquals("CREATE TABLE orderinfo_new\n" +

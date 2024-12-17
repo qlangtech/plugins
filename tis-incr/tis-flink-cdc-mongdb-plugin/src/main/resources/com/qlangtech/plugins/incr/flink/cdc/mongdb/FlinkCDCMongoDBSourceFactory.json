@@ -15,11 +15,5 @@
   "startupOption": {
     "label": "起始位点",
     "dftVal": "LATEST_OFFSET"
-  },
-  "timeZone": {
-    "label": "所在时区",
-    "dftVal": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.dftZoneId()",
-    "enum": "com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory.availableZoneIds()",
-    "help": "设置所在时区"
   }
 }

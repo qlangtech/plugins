@@ -28,7 +28,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mongodb.Function;
+
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
@@ -38,6 +38,8 @@ import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.CompanionPluginFactory;
 import com.qlangtech.tis.plugin.ValidatorCommons;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -67,6 +69,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -74,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -98,6 +102,12 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String timeZone;
+
+    public ZoneId parseZoneId() {
+        return ZoneId.of(timeZone);
+    }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
@@ -128,7 +138,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     public IMongoTable findMongoTable(String tableName) {
         for (SelectedTab tab : this.selectedTabs) {
             if (StringUtils.equals(tableName, tab.getName())) {
-                return new DefaultMongoTable(tab);
+                return new DefaultMongoTable(tab, parseZoneId());
             }
         }
         throw new IllegalStateException("can not find table:" + tableName + " relevant selected tablek");
@@ -156,11 +166,13 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         private final SelectedTab table;
         private final MongoSelectedTabExtend tabExtend;
         private List<Pair<MongoCMeta, Function<BsonDocument, Column>>> presentCols;
+        private final ZoneId zoneId;
 
-        public DefaultMongoTable(SelectedTab table) {
+        public DefaultMongoTable(SelectedTab table, ZoneId zoneId) {
             this.table = table;
             this.tabExtend = Objects.requireNonNull((MongoSelectedTabExtend) table.getSourceProps(),
                     "source table:" + table.getName() + " relevant extend props can not be null");
+            this.zoneId = Objects.requireNonNull(zoneId, "zoneId");
         }
 
         @Override
@@ -176,38 +188,34 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
         List<Pair<MongoCMeta, Function<BsonDocument, Column>>> getMongoPresentCols() {
             if (this.presentCols == null) {
-                presentCols = Lists.newArrayList();
+                // List<CMeta> cols = table.cols;
+                List<MongoCMeta> mongoCols = table.getCols().stream().map((c) -> (MongoCMeta) c).collect(Collectors.toList());
+                presentCols = MongoCMeta.getMongoPresentCols(mongoCols, true, zoneId);
 
-                List<CMeta> cols = table.cols;
-
-                List<MongoCMeta.MongoDocSplitCMeta> splitFieldMetas = null;
-                for (CMeta col : cols) {
-
-                    MongoCMeta mongoCol = (MongoCMeta) col;
-                    if (mongoCol.isMongoDocType()) {
-                        splitFieldMetas = mongoCol.getDocFieldSplitMetas();
-                        for (MongoCMeta.MongoDocSplitCMeta scol : splitFieldMetas) {
-                            presentCols.add(Pair.of(scol, (doc) -> {
-
-
-                                BsonValue nestVal = getEmbeddedValue(scol.getEmbeddedKeys(), doc);
-
-                              //  Object val = doc.getEmbedded(scol.getEmbeddedKeys(), Object.class);
-                                return MongoDataXColUtils.createCol(scol, nestVal);
-                            }));
-                        }
-                    }
-
-                    if (col.isDisable()) {
-                        continue;
-                    }
-
-                    presentCols.add(Pair.of(mongoCol, (doc) -> {
-                        BsonValue val = doc.get(mongoCol.getName());
-                        //  Object val = doc.get(mongoCol.getName(), Object.class);
-                        return MongoDataXColUtils.createCol(mongoCol, val);
-                    }));
-                }
+//                List<MongoCMeta.MongoDocSplitCMeta> splitFieldMetas = null;
+//                for (CMeta col : cols) {
+//
+//                    MongoCMeta mongoCol = (MongoCMeta) col;
+//                    if (mongoCol.isMongoDocType()) {
+//                        splitFieldMetas = mongoCol.getDocFieldSplitMetas();
+//                        for (MongoCMeta.MongoDocSplitCMeta scol : splitFieldMetas) {
+//                            presentCols.add(Pair.of(scol, (doc) -> {
+//                                BsonValue nestVal = getEmbeddedValue(scol.getEmbeddedKeys(), doc);
+//                                return MongoDataXColUtils.createCol(scol, nestVal);
+//                            }));
+//                        }
+//                    }
+//
+//                    if (col.isDisable()) {
+//                        continue;
+//                    }
+//
+//                    presentCols.add(Pair.of(mongoCol, (doc) -> {
+//                        BsonValue val = doc.get(mongoCol.getName());
+//                        //  Object val = doc.get(mongoCol.getName(), Object.class);
+//                        return MongoDataXColUtils.createCol(mongoCol, val);
+//                    }));
+//                }
                 if (CollectionUtils.isEmpty(presentCols)) {
                     throw new IllegalStateException("presetnCols can not be empty");
                 }
@@ -245,7 +253,6 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         }
 
         return doc;
-        // return clazz != null ? clazz.cast(value) : value;
     }
 
     /**

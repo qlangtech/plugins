@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.element.Column;
-import com.mongodb.Function;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.TableAlias;
@@ -32,10 +31,10 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.BsonDocument;
-import org.bson.Document;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -45,16 +44,11 @@ import java.util.stream.Collectors;
 public class MongoDBReaderContext extends RdbmsReaderContext<DataXMongodbReader, MangoDBDataSourceFactory> implements IDataxReaderContext {
 
     final SelectedTab mongoTable;
-    //  private final MongoSelectedTabExtend tabExtend;
 
     public MongoDBReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper,
                                 DataXMongodbReader mongodbReader) {
         super(jobName, tab.getName(), dumper, mongodbReader);
         this.mongoTable = tab;
-        //    this.tabExtend = (MongoSelectedTabExtend) this.mongoTable.getSourceProps();
-        //
-
-        //  this.setCols(cols.stream().map((c) -> c.getKey().getName()).collect(Collectors.toList()));
     }
 
 
@@ -68,7 +62,7 @@ public class MongoDBReaderContext extends RdbmsReaderContext<DataXMongodbReader,
             @Override
             public List<CMeta> getSourceCols() {
                 DataXMongodbReader.DefaultMongoTable mtable =
-                        (DataXMongodbReader.DefaultMongoTable) ((DataXMongodbReader) plugin).findMongoTable(selectedTab.getName());
+                        (DataXMongodbReader.DefaultMongoTable) plugin.findMongoTable(selectedTab.getName());
                 List<Pair<MongoCMeta, Function<BsonDocument, Column>>> cols = mtable.getMongoPresentCols();
                 return cols.stream().map((p) -> p.getKey()).collect(Collectors.toList());
             }

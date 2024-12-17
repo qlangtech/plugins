@@ -19,7 +19,6 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
@@ -28,17 +27,13 @@ import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
 import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
-
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -53,7 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -191,124 +185,59 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
 
-    /**
-     * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
-     *
-     * @param tableMapper
-     * @return
-     */
-    @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-        final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
-
-            @Override
-            protected CreateTableName getCreateTableName() {
-                CreateTableName nameBuilder = super.getCreateTableName();
-                // EXTERNAL
-                nameBuilder.setCreateTablePredicate("CREATE TABLE IF NOT EXISTS");
-                return nameBuilder;
-            }
-
-            @Override
-            protected void appendTabMeta(List<String> pks) {
-
-                // HdfsFormat fsFormat = parseFSFormat();
-                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
-                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-                script.append("lifecycle " + Objects.requireNonNull(lifecycle, "lifecycle can not be null"));
-
-                // script.appendLine(fsFormat.getRowFormat());
-                // script.appendLine("STORED AS " + fsFormat.getFileType().getType());
-
-//                script.appendLine("LOCATION '").append(
-//                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
-//                ).append("'");
-            }
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c, this.pks) {
-                    @Override
-                    public String getMapperType() {
-                        return c.getType().accept(typeTransfer);
-                    }
-                };
-            }
-        };
-
-        return createTableSqlBuilder.build();
-    }
-
-    /**
-     * https://help.aliyun.com/document_detail/159540.html?spm=a2c4g.11186623.0.0.6ae36f60bs6Lm2
-     */
-    public static DataType.TypeVisitor<String> typeTransfer = new DataType.TypeVisitor<String>() {
-        @Override
-        public String bigInt(DataType type) {
-            return "BIGINT";
-        }
-
-        @Override
-        public String decimalType(DataType type) {
-            return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
-        }
-
-        @Override
-        public String intType(DataType type) {
-            return "INT";
-        }
-
-        @Override
-        public String tinyIntType(DataType dataType) {
-            return "TINYINT";
-        }
-
-        @Override
-        public String smallIntType(DataType dataType) {
-            return "SMALLINT";
-        }
-
-        @Override
-        public String boolType(DataType dataType) {
-            return "BOOLEAN";
-        }
-
-        @Override
-        public String floatType(DataType type) {
-            return "FLOAT";
-        }
-
-        @Override
-        public String doubleType(DataType type) {
-            return "DOUBLE";
-        }
-
-        @Override
-        public String dateType(DataType type) {
-            return "DATE";
-        }
-
-        @Override
-        public String timestampType(DataType type) {
-            return "TIMESTAMP";
-        }
-
-        @Override
-        public String bitType(DataType type) {
-            return "STRING";
-        }
-
-        @Override
-        public String blobType(DataType type) {
-            return "BINARY";
-        }
-
-        @Override
-        public String varcharType(DataType type) {
-            return "STRING";
-        }
-    };
+//    /**
+//     * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
+//     *
+//     * @param tableMapper
+//     * @return
+//     */
+//    @Override
+//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//        final CreateTableSqlBuilder createTableSqlBuilder
+//                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
+//
+//            @Override
+//            public CreateTableName getCreateTableName() {
+//                CreateTableName nameBuilder = super.getCreateTableName();
+//                // EXTERNAL
+//                nameBuilder.setCreateTablePredicate("CREATE TABLE IF NOT EXISTS");
+//                return nameBuilder;
+//            }
+//
+//            @Override
+//            protected void appendTabMeta(List<String> pks) {
+//
+//                // HdfsFormat fsFormat = parseFSFormat();
+//                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
+//                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
+//                script.append("lifecycle " + Objects.requireNonNull(lifecycle, "lifecycle can not be null"));
+//
+//                // script.appendLine(fsFormat.getRowFormat());
+//                // script.appendLine("STORED AS " + fsFormat.getFileType().getType());
+//
+////                script.appendLine("LOCATION '").append(
+////                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
+////                ).append("'");
+//            }
+//
+//            @Override
+//            protected ColWrapper createColWrapper(IColMetaGetter c) {
+//                return new ColWrapper(c, this.pks) {
+//                    @Override
+//                    public String getMapperType() {
+//                        return c.getType().accept(OdpsAutoCreateTable.typeTransfer);
+//                    }
+//
+//                    @Override
+//                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+//                        autoCreateTable.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+//                    }
+//                };
+//            }
+//        };
+//
+//        return createTableSqlBuilder.build();
+//    }
 
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {

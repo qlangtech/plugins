@@ -1,0 +1,10 @@
+{
+  "replicationNum": {
+    "label": "副本数",
+    "dftVal": 1
+  },
+  "bucketsNum": {
+    "label": "分桶数",
+    "dftVal": 10
+  }
+}

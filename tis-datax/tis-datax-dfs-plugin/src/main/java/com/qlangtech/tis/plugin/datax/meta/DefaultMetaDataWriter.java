@@ -105,7 +105,8 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
 
                         JSONArray fields = new JSONArray();
                         JSONObject field = null;
-                        for (CMeta c : tab.getCols()) {
+                        List<CMeta> cols = tab.getCols();
+                        for (CMeta c : cols) {
                             field = new JSONObject();
                             field.put(COL_NAME, c.getName());
                             field.put(COL_TYPE, c.getType().getS());

@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.common.ck.ClickHouseCommon;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -28,21 +27,12 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
-
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/clickhousewriter/src/main/resources/plugin_job_template.json
@@ -74,69 +64,74 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //        InitWriterTable.process(this.dataXName, (BasicDataXRdbmsWriter) this, targetTabName, jdbcUrls);
 //    }
 
-    @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+//    @Override
+//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 //        if (!this.autoCreateTable) {
 //            return null;
 //        }
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
-            @Override
-            protected void appendExtraColDef(List<String> pks) {
-                script.append("   ," + wrapWithEscape(ClickHouseCommon.KEY_CLICKHOUSE_CK) + " Int8 DEFAULT 1").append("\n");
-            }
-
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                return new ColWrapper(c, this.pks) {
-                    @Override
-                    public String getMapperType() {
-                        return convertType(this.getType());
-                    }
-                };
-            }
-
-            @Override
-            protected void appendTabMeta(List<String> pk) {
-                script.append(" ENGINE = CollapsingMergeTree(" + ClickHouseCommon.KEY_CLICKHOUSE_CK + ")").append("\n");
-                if (CollectionUtils.isNotEmpty(pk)) {
-                    script.append(" ORDER BY (").append(pk.stream().map((p) -> this.wrapWithEscape(p)).collect(Collectors.joining(","))).append(")\n");
-                }
-                script.append(" SETTINGS index_granularity = 8192");
-            }
-
-            private String convertType(DataType type) {
-
-                switch (Objects.requireNonNull(type, "type can not be null")
-                        .getJdbcType()) {
-                    case INTEGER:
-                    case TINYINT:
-                    case SMALLINT:
-                        return "Int32";
-                    case BIGINT:
-                        return "Int64";
-                    case FLOAT:
-                        return "Float32";
-                    case DOUBLE:
-                    case DECIMAL:
-                        return "Float64";
-                    case DATE:
-                        return "Date";
-                    case TIME:
-                    case TIMESTAMP:
-                        return "DateTime";
-                    case BIT:
-                    case BOOLEAN:
-                        return "UInt8";
-                    case BLOB:
-                    case BINARY:
-                    case LONGVARBINARY:
-                    case VARBINARY:
-                    default:
-                        return "String";
-                }
-            }
-        };
-        return createTableSqlBuilder.build();
+//        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
+//            @Override
+//            protected void appendExtraColDef(List<String> pks) {
+//                script.append("   ," + wrapWithEscape(ClickHouseCommon.KEY_CLICKHOUSE_CK) + " Int8 DEFAULT 1").append("\n");
+//            }
+//
+//            @Override
+//            protected ColWrapper createColWrapper(IColMetaGetter c) {
+//                return new ColWrapper(c, this.pks) {
+//                    @Override
+//                    public String getMapperType() {
+//                        return convertType(this.getType());
+//                    }
+//
+//                    @Override
+//                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+//                        autoCreateTable.addStandardColComment(sourceColMetaGetter,tableMapper,this,ddlScript);
+//                    }
+//                };
+//            }
+//
+//            @Override
+//            protected void appendTabMeta(List<String> pk) {
+//                script.append(" ENGINE = CollapsingMergeTree(" + ClickHouseCommon.KEY_CLICKHOUSE_CK + ")").append("\n");
+//                if (CollectionUtils.isNotEmpty(pk)) {
+//                    script.append(" ORDER BY (").append(pk.stream().map((p) -> this.wrapWithEscape(p)).collect(Collectors.joining(","))).append(")\n");
+//                }
+//                script.append(" SETTINGS index_granularity = 8192");
+//            }
+//
+//            private String convertType(DataType type) {
+//
+//                switch (Objects.requireNonNull(type, "type can not be null")
+//                        .getJdbcType()) {
+//                    case INTEGER:
+//                    case TINYINT:
+//                    case SMALLINT:
+//                        return "Int32";
+//                    case BIGINT:
+//                        return "Int64";
+//                    case FLOAT:
+//                        return "Float32";
+//                    case DOUBLE:
+//                    case DECIMAL:
+//                        return "Float64";
+//                    case DATE:
+//                        return "Date";
+//                    case TIME:
+//                    case TIMESTAMP:
+//                        return "DateTime";
+//                    case BIT:
+//                    case BOOLEAN:
+//                        return "UInt8";
+//                    case BLOB:
+//                    case BINARY:
+//                    case LONGVARBINARY:
+//                    case VARBINARY:
+//                    default:
+//                        return "String";
+//                }
+//            }
+//        };
+//        return createTableSqlBuilder.build();
         // List<ColumnMetaData> tableMetadata = this.getDataSourceFactory().getTableMetadata(tableMapper.getTo());
         //Set<String> pks = tableMetadata.stream().filter((t) -> t.isPk()).map((t) -> t.getName()).collect(Collectors.toSet());
 
@@ -181,7 +176,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
         //     return script;
-    }
+   // }
 
 
 //    @Override

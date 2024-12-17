@@ -14,5 +14,8 @@
   },
   "loadProps": {
     "dftVal": "com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter.getDftLoadProps()"
+  },
+  "autoCreateTable": {
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"starRocks\");"
   }
 }

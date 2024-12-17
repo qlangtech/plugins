@@ -21,30 +21,21 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.starrocks.StarRocksAutoCreateTable.BasicCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.starrocks.StarRocksWriterContext;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -91,181 +82,24 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
     }
 
 
-    @Override
-    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
-        // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
-        // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
-        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper, transformers);
+//    @Override
+//    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(
+//            SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+////        if (!this.autoCreateTable) {
+////            return null;
+////        }
+//        // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
+//        // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
+//        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(sourceColMetaGetter, tableMapper, transformers);
+//
+//        return createTableSqlBuilder.build();
+//    }
 
-        return createTableSqlBuilder.build();
-    }
-
-    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
-
-
-    protected static abstract class BasicCreateTableSqlBuilder<T extends ColWrapper> extends CreateTableSqlBuilder<T> {
-        public BasicCreateTableSqlBuilder(
-                IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta, Optional<RecordTransformerRules> transformers) {
-            super(tableMapper, dsMeta, transformers);
-        }
-
-        @Override
-        protected void appendExtraColDef(List<String> pks) {
-//                if (pk != null) {
-//                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
-//                }
-        }
-
-        protected abstract String getUniqueKeyToken();
+//    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(
+//            SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
-        @Override
-        protected List<T> preProcessCols(List<String> pks, List<T> cols) {
-            // 将主键排在最前面
-
-            List<T> result = Lists.newArrayList();
-            for (String pk : pks) {
-                for (T c : cols) {
-                    if (pk.equalsIgnoreCase(c.getName())) {
-                        result.add(c);
-                    }
-                }
-            }
-            cols.stream().filter((c) -> !pks.contains(c.getName())).forEach((c) -> {
-                result.add(c);
-            });
-            return result;
-        }
-
-        @Override
-        protected void appendTabMeta(List<String> pks) {
-            script.append(" ENGINE=olap").append("\n");
-            if (pks.size() > 0) {
-                script.append(getUniqueKeyToken() + "(").append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk))
-                        .collect(Collectors.joining(","))).append(")\n");
-            }
-            script.append("DISTRIBUTED BY HASH(");
-            if (pks.size() > 0) {
-                script.append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk))
-                        .collect(Collectors.joining(",")));
-            } else {
-                List<T> cols = this.getCols();
-                Optional<T> firstCol = cols.stream().findFirst();
-                if (firstCol.isPresent()) {
-                    script.append(firstCol.get().getName());
-                } else {
-                    throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
-                }
-            }
-            script.append(")\n");
-            script.append("BUCKETS 10\n");
-            script.append("PROPERTIES(\"replication_num\" = \"1\")");
-        }
-
-        @Override
-        protected T createColWrapper(IColMetaGetter c) {
-            return (T) new ColWrapper(c, this.pks) {
-                @Override
-                public String getMapperType() {
-                    return convertType(getType()).token;
-                }
-
-                @Override
-                protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                    if (this.isPk()) {
-                        ddlScript.append(" NOT NULL");
-                    }
-                }
-            };
-        }
-
-        protected DorisType convertType(DataType type) {
-            return Objects.requireNonNull(type, "type can not be null")
-                    .accept(columnTokenRecognise);
-        }
-    }
-
-    public static class DorisType implements Serializable {
-        public final DataType type;
-        final String token;
-
-        public DorisType(DataType type, String token) {
-            this.type = type;
-            this.token = token;
-        }
-    }
-
-    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise
-            = new DataType.TypeVisitor<DorisType>() {
-        @Override
-        public DorisType tinyIntType(DataType dataType) {
-            return new DorisType(dataType, "TINYINT");
-        }
-
-        @Override
-        public DorisType smallIntType(DataType dataType) {
-            return new DorisType(dataType, "SMALLINT");
-        }
-
-        @Override
-        public DorisType bigInt(DataType type) {
-            return new DorisType(type, "BIGINT");
-        }
-
-        @Override
-        public DorisType doubleType(DataType type) {
-            return new DorisType(type, "DOUBLE");
-        }
-
-        @Override
-        public DorisType dateType(DataType type) {
-            return new DorisType(type, "DATE");
-        }
-
-        @Override
-        public DorisType timestampType(DataType type) {
-            return new DorisType(type, "DATETIME");
-        }
-
-        @Override
-        public DorisType bitType(DataType type) {
-            return new DorisType(type, "TINYINT");
-        }
-
-        @Override
-        public DorisType blobType(DataType type) {
-            return varcharType(type);
-        }
-
-        @Override
-        public DorisType varcharType(DataType type) {
-            // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
-            return new DorisType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
-        }
-
-        @Override
-        public DorisType intType(DataType type) {
-            return new DorisType(type, "INT");
-        }
-
-        @Override
-        public DorisType floatType(DataType type) {
-            return new DorisType(type, "FLOAT");
-        }
-
-        @Override
-        public DorisType decimalType(DataType type) {
-            // doris or starRocks precision 不能超过超过半27
-            return new DorisType(type, "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
-        }
-    };
-
-//    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
+    //    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
 //        return columnTokenRecognise;
 //    }
 

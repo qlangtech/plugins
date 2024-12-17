@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -134,7 +135,7 @@ public class TestDataXHiveWriter extends BasicTest {
         writer.fileType = txtFormat;
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
         EasyMock.replay(fsFactory, fs);
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getApplicationTab(), Optional.empty());
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), getApplicationTab(), Optional.empty());
 
         assertNotNull(ddl);
 

@@ -19,10 +19,12 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -109,23 +111,28 @@ public class TestDataXPostgresqlWriter  //extends TestCase
     @Test
     public void testAutoCreateDDL() {
         DataXPostgresqlWriter dataXPostgresqlWriter = getDataXPostgresqlWriter();
-        dataXPostgresqlWriter.autoCreateTable = true;
+        dataXPostgresqlWriter.autoCreateTable = AutoCreateTable.dft();
+        ;
         DataxWriter.BaseDataxWriterDescriptor writerDescriptor = dataXPostgresqlWriter.getWriterDescriptor();
         Assert.assertTrue("isSupportTabCreate", writerDescriptor.isSupportTabCreate());
 
 
         IDataxProcessor.TableMap tableMapper = WriterTemplate.createCustomer_order_relationTableMap();
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper, Optional.empty());
+        CreateTableSqlBuilder.CreateDDL createDDL
+                = dataXPostgresqlWriter.generateCreateDDL(SourceColMetaGetter.getNone(), tableMapper, Optional.empty());
         Assert.assertNotNull(createDDL);
         // 多主键
-        Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
+        Assert.assertEquals(IOUtils.loadResourceFromClasspath(
+                TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
 
-        Optional<CMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> WriterTemplate.customerregisterId.equals(col.getName())).findFirst();
+        Optional<CMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream()
+                .filter((col) -> WriterTemplate.customerregisterId.equals(col.getName())).findFirst();
         Assert.assertTrue(firstCustomerregisterId.isPresent());
         firstCustomerregisterId.get().setPk(false);
 
-        createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper, Optional.empty());
+        createDDL = dataXPostgresqlWriter.generateCreateDDL(
+                SourceColMetaGetter.getNone(), tableMapper, Optional.empty());
         Assert.assertNotNull(createDDL);
         // 单主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "single-pks-create-ddl.txt"), createDDL.toString());

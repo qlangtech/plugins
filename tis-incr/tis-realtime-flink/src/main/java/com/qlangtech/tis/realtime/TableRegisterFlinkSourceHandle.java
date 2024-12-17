@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -189,8 +190,8 @@ public abstract class TableRegisterFlinkSourceHandle
         ISelectedTab selectedTab = sourceStreamMetaCreator.getSelectedTab(tabName);
 
 
-        List<IColMetaGetter> srcCols = sourceStreamMetaCreator.getStreamTableMeta(tabName).getColsMeta();
-
+        // List<IColMetaGetter> srcCols = sourceStreamMetaCreator.getStreamTableMeta(tabName).getColsMeta();
+        List<CMeta> srcCols = selectedTab.getCols(); // sourceStreamMetaCreator.getStreamTableMeta(tabName).getColsMeta();
 
         // List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(sourceStreamMetaCreator.getStreamTableMeta(tabName));
         //  String[] fieldNames = new String[cols.size()];

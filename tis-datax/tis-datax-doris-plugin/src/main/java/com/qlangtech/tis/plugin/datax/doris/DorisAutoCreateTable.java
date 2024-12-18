@@ -55,15 +55,18 @@ import static com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter.columnTokenR
  * @create: 2024-12-16 16:14
  **/
 public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper> {
+
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public CreateTable createTableModel;
     /**
      * doris副本数目
      */
-    @FormField(ordinal = 1, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 4, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer replicationNum;
     /**
      * doris表分桶数
      */
-    @FormField(ordinal = 2, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 6, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer bucketsNum;
 
 
@@ -92,7 +95,7 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
                 , dorisWriter.getDataSourceFactory(), columnTokenRecognise, transformers) {
             @Override
             protected String getUniqueKeyToken() {
-                return dorisWriter.createTableModel.getKeyToken();
+                return Objects.requireNonNull(createTableModel,"createTableModel").getKeyToken();
             }
 
             @Override

@@ -16,28 +16,31 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.doris.datamodel;
+package com.qlangtech.tis.plugin.datax.common.impl;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.datax.doris.CreateTable;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
 
 /**
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-02-28 10:32
+ * @create: 2024-12-18 09:24
  **/
-public class DuplicateCreateTable extends CreateTable {
-
+public class AutoCreateTableColCommentSwitchOFF extends AutoCreateTableColCommentSwitch {
     @Override
-    public String getKeyToken() {
-        return "DUPLICATE KEY";
+    public boolean turnOn() {
+        return false;
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<CreateTable> {
+    public static final class DftDesc extends Descriptor<AutoCreateTableColCommentSwitch> {
+        public DftDesc() {
+            super();
+        }
         @Override
         public String getDisplayName() {
-            return "Duplicate";
+            return SWITCH_OFF;
         }
     }
 }

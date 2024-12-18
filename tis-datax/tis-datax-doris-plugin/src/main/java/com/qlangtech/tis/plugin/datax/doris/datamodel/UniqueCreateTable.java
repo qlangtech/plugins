@@ -34,10 +34,10 @@ public class UniqueCreateTable extends CreateTable {
         return "UNIQUE KEY";
     }
 
-    @Override
-    public boolean isOff() {
-        return false;
-    }
+//    @Override
+//    public boolean isOff() {
+//        return false;
+//    }
 
     @TISExtension
     public static class DftDesc extends Descriptor<CreateTable> {

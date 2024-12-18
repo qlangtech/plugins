@@ -18,10 +18,6 @@
   "autoCreateTable": {
     "disable": false
   },
-  "createTableModel": {
-    "label": "建表模型",
-    "dftVal": "Unique"
-  },
   "autoCreateTable": {
     "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"doris\");"
   }

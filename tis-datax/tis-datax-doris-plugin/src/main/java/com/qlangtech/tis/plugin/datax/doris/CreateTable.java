@@ -26,7 +26,7 @@ import com.qlangtech.tis.extension.Describable;
  * @create: 2024-02-28 10:28
  **/
 public abstract class CreateTable implements Describable<CreateTable> {
-    public abstract boolean isOff();
+  //  public abstract boolean isOff();
 
     public abstract String getKeyToken();
 }

@@ -112,24 +112,6 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
                     });
                     usingMySqlCreateDDLDirectly.set(true);
-//                    return new CreateTableSqlBuilder(tableMapper,
-//                            dataXWriter.getDataSourceFactory(), transformers) {
-//                        @Override
-//                        protected ColWrapper createColWrapper(IColMetaGetter c) {
-//                            throw new UnsupportedOperationException();
-//                        }
-//
-//                        @Override
-//                        public CreateDDL build() {
-//                            return new CreateTableSqlBuilder.CreateDDL(ddlScript, null) {
-//                                @Override
-//                                public String getSelectAllScript() {
-//                                    //return super.getSelectAllScript();
-//                                    throw new UnsupportedOperationException();
-//                                }
-//                            };
-//                        }
-//                    };
                 }
             }
         } catch (TableNotFoundException e) {

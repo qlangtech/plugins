@@ -6,5 +6,9 @@
   "bucketsNum": {
     "label": "分桶数",
     "dftVal": 10
+  },
+  "createTableModel": {
+    "label": "建表模型",
+    "dftVal": "Unique"
   }
 }

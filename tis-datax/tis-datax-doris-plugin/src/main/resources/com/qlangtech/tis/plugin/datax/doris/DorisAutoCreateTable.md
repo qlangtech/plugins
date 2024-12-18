@@ -29,3 +29,16 @@ UNIQUE KEY(`id`)
 BUCKETS 16
 PROPERTIES("replication_num" = "1"  )
 ```
+
+## createTableModel
+
+TIS可以帮助用户自动生成Doris端的建表DDL语句，如Doris中已存在对应的表可选择`Off`,如需要生成可以选择`Unique`和`Duplicate`之一，如需要使用`Aggregate`模型，由于Agg模型需要设置非聚合列的聚合函数，系统无法预知。
+可先选择`Unique`和`Duplicate`任意一种，待到DDL生成之后，手动在DDL之上进行修改。
+
+Doris 支持三种数据模型：
+
+1. Aggregate
+2. Unique
+3. Duplicate
+
+[数据模型详细](https://doris.apache.org/docs/table-design/data-model/overview)

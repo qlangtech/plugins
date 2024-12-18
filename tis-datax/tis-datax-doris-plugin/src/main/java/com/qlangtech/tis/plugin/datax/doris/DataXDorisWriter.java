@@ -57,8 +57,8 @@ import java.util.stream.Collectors;
 @Public
 public class DataXDorisWriter extends BasicDorisWriter {
 
-    @FormField(ordinal = 10, validate = {Validator.require})
-    public CreateTable createTableModel;
+//    @FormField(ordinal = 10, validate = {Validator.require})
+//    public CreateTable createTableModel;
 
 
     public static List<BasicDescriptor> autoCreateTableFilter(List<BasicDescriptor> descs, String endType) {
@@ -80,7 +80,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return this.createTableModel.isOff() || !this.autoCreateTable.enabled();
+        return  !this.autoCreateTable.enabled();
     }
 
     @Override

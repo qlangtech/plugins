@@ -21,15 +21,17 @@ package com.qlangtech.tis.plugin.datax.common.impl;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.CreateTableName;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -39,8 +41,8 @@ public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> exte
     /**
      * 添加列注释
      */
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean addComment;
+    @FormField(ordinal = 0, validate = {Validator.require})
+    public AutoCreateTableColCommentSwitch addComment;
 
     @Override
     public boolean enabled() {
@@ -78,7 +80,7 @@ public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> exte
 
     @Override
     public boolean enabledColumnComment() {
-        return this.addComment;
+        return Objects.requireNonNull( this.addComment ,"addComment can not be null").turnOn();
     }
 
     //  @TISExtension

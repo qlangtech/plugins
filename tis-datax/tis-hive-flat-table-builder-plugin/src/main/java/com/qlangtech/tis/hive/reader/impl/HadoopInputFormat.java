@@ -51,7 +51,7 @@ import java.util.Objects;
  * @see com.qlangtech.tis.hive.reader.HiveDFSLinker#getInputFileFormat Create By
  **/
 public abstract class HadoopInputFormat<K, V extends Writable> extends TextFormat {
-    private final org.apache.hadoop.mapred.FileInputFormat inputFormat;
+    private final org.apache.hadoop.mapred.InputFormat inputFormat;
     private final JobConf conf;
     private final String entityName;
     private final AbstractSerDe serde;
@@ -60,7 +60,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
     private final V value;
 
     public HadoopInputFormat(String entityName, int colSize
-            , FileInputFormat inputFormat
+            , org.apache.hadoop.mapred.InputFormat inputFormat
             , AbstractSerDe serde, JobConf conf) {
         super();
         this.dateFormat = BasicPainFormat.defaultNullFormat();

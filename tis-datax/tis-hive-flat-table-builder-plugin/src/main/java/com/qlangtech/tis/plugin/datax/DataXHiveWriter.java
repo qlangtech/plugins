@@ -27,7 +27,6 @@ import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
@@ -36,13 +35,11 @@ import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
@@ -52,21 +49,13 @@ import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
 import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
-import com.qlangtech.tis.hive.HdfsFormat;
-import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -75,14 +64,12 @@ import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -93,7 +80,8 @@ import java.util.function.Supplier;
  * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
 @Public
-public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost, IPartionableWarehouse {
+public class DataXHiveWriter extends BasicFSWriter
+        implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost, IPartionableWarehouse {
     private static final String DATAX_NAME = "Hive";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -182,7 +170,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return false;
+        return !autoCreateTable.enabled();
     }
 
     @Override

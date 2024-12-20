@@ -43,7 +43,17 @@
 
 
     <dependencies>
-
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-hbase-handler</artifactId>
+            <version>${hive.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jdk.tools</groupId>
+                    <artifactId>jdk.tools</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-dfs-plugin</artifactId>

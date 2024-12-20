@@ -146,7 +146,8 @@ public class DataXHiveReader extends AbstractDFSReader {
 
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {
-        return this.getDfsLinker().getInputFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
+        return this.getDfsLinker()
+                .getInputFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
     }
 
 

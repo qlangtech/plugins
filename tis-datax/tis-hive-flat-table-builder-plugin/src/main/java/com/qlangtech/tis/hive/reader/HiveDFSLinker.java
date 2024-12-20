@@ -26,8 +26,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
-import com.qlangtech.tis.hive.reader.impl.HadoopParquetInputFormat;
-import com.qlangtech.tis.hive.reader.impl.HadoopTextInputFormat;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -45,7 +43,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
-import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeUtils;
@@ -63,9 +60,14 @@ import java.util.stream.Collectors;
  **/
 public class HiveDFSLinker extends TDFSLinker {
     public final static String NAME_DESC = "Hive";
+    public final static String KEY_FIELD_FILE_FORMAT = "fileFormat";
 
     @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
+
+    @FormField(ordinal = 6, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String fileFormat;
+
     public transient FileSystemFactory fileSystem;
 
     @Override
@@ -113,16 +115,6 @@ public class HiveDFSLinker extends TDFSLinker {
         }
     }
 
-//    static final TextFormat txtFormat;
-//
-//    static {
-//        txtFormat = new TextFormat();
-//        txtFormat.header = false;
-//        txtFormat.fieldDelimiter = Delimiter.Tab.token;
-//        txtFormat.compress = Compress.none.token;
-//        txtFormat.encoding = "utf-8";
-//    }
-
     /**
      * 获取读hive对应 HDFS 文件 Reader 器
      *
@@ -154,8 +146,6 @@ public class HiveDFSLinker extends TDFSLinker {
                     sdInfo.getSerializationLib()
                     , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
 
-            // String columnNameProperty = tableProperties.getProperty(serdeConstants.LIST_COLUMNS);
-
             List<HiveTabColType> cols = table.getCols();
             props.setProperty(serdeConstants.LIST_COLUMNS
                     , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
@@ -164,78 +154,15 @@ public class HiveDFSLinker extends TDFSLinker {
             JobConf jobConf = new JobConf(conf);
             serde.initialize(jobConf, props);
 
-            if (org.apache.hadoop.mapred.TextInputFormat.class.isAssignableFrom(inputFormatClass)) {
-                org.apache.hadoop.mapred.TextInputFormat inputFormat
-                        = (org.apache.hadoop.mapred.TextInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-                inputFormat.configure(jobConf);
-                return new HadoopTextInputFormat(entityName, cols.size(), inputFormat, serde, jobConf);
-            } else if (MapredParquetInputFormat.class == inputFormatClass) {
-                MapredParquetInputFormat pqInputFormat = (MapredParquetInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-                return new HadoopParquetInputFormat(entityName, cols.size(), pqInputFormat, serde, jobConf);
-            } else {
-                throw new IllegalStateException("outputFormatClass:" + inputFormatClass.getName() + " can not be resolved");
-            }
-            // HiveIgnoreKey
+            SupportedFileFormat supportedFileFormat = SupportedFileFormat.getSupportedFileFormat(this.fileFormat);
+            return supportedFileFormat.createFileFormatReader(entityName, cols, serde, inputFormatClass, jobConf);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-
-        //  storedAs.inputFormat;
-
-//        Map<String, String> params = sdInfo.getParameters();
-//        try {
-//            if (Class.forName(sdInfo.getSerializationLib()) == LazySimpleSerDe.class) {
-//                params.get(serdeConstants.FIELD_DELIM);
-//            }
-//        } catch (ClassNotFoundException e) {
-//            throw new RuntimeException(e);
-//        }
-        // return txtFormat;
     }
 
-//    private class HdfsTextReader extends TextFormat {
-//        private final byte[] lineDelimite;
-//
-//        public HdfsTextReader(byte[] lineDelimite) {
-//            this.lineDelimite = lineDelimite;
-//        }
-//
-//        @Override
-//        public UnstructuredReader createReader(InputStream input) {
-//
-//            org.apache.hadoop.util.LineReader lineReader //
-//                    = new org.apache.hadoop.util.LineReader(input, lineDelimite);
-//            Text line = new Text();
-//            return new UnstructuredReader() {
-//                @Override
-//                public boolean hasNext() throws IOException {
-//                    line.clear();
-//                    return lineReader.readLine(line) > 0;
-//                }
-//
-//                @Override
-//                public String[] next() throws IOException {
-//
-//                    // line.
-//                    line.write();
-//                    return new String[59];
-//                }
-//
-//                @Override
-//                public String[] getHeader() {
-//                    throw new UnsupportedOperationException();
-//                }
-//
-//                @Override
-//                public void close() throws IOException {
-//                    IOUtils.close(input);
-//                }
-//            };
-//
-//
-//        }
-//    }
+
 
 
     @TISExtension
@@ -247,6 +174,8 @@ public class HiveDFSLinker extends TDFSLinker {
                     , () -> TIS.getPluginStore(FileSystemFactory.class)
                             .getPlugins().stream()
                             .filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+
+            this.registerSelectOptions(KEY_FIELD_FILE_FORMAT,()-> SupportedFileFormat.supportedFileFormat());
         }
 
         @Override

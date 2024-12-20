@@ -34,6 +34,7 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -216,7 +217,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                         final IMetaStoreClient storeClient = Hive.getWithFastCheck(hiveCfg, false).getMSC();
                         return new DefaultHiveMetaStore(storeClient, metaStoreUrls);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+//                        if (ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class) > -1) {
+//                            throw TisException.create(metaStoreUrls, e);
+//                        }
+                        // throw new RuntimeException(metaStoreUrls, e);
+                        throw TisException.create("please check:" + metaStoreUrls, e);
                     }
                 }
             });

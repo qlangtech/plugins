@@ -73,7 +73,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return  !this.autoCreateTable.enabled();
+        return !this.autoCreateTable.enabled();
     }
 
     @Override

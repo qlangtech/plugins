@@ -172,8 +172,9 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
          ==========================*/
         Map<String, Function<RunningContext, Object>> contextParamsGetter = this.contextParamValsGetterMapper.get(dto.getTableName());
         if (contextParamsGetter != null) {
+            RdbmsRunningContext runningParamsContext = new RdbmsRunningContext(dto.getDbName(), dto.getPhysicsTabName());
             contextParamsGetter.forEach((contextParamName, getter) -> {
-                afterVals.put(contextParamName, getter.apply(new RdbmsRunningContext(dto.getDbName(), dto.getPhysicsTabName())));
+                afterVals.put(contextParamName, getter.apply(runningParamsContext));
             });
         }
 

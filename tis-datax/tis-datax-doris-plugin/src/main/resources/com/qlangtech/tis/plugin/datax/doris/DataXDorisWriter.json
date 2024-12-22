@@ -16,9 +16,7 @@
     "dftVal": "com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter.getDftLoadProps()"
   },
   "autoCreateTable": {
-    "disable": false
-  },
-  "autoCreateTable": {
+    "disable": false,
     "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"doris\");"
   }
 }

@@ -18,9 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax.seq;
 
-import com.alibaba.datax.plugin.writer.doriswriter.Keys;
+import com.alibaba.datax.plugin.writer.doriswriter.DorisWriterKeys;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -30,9 +29,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -50,7 +47,7 @@ public class OnSeqKey extends SeqKey {
 
     @Override
     public void appendBatchCfgs(JSONObject props) {
-        props.put(Keys.COL_SEQUENCE_NAME, this.seqKey);
+        props.put(DorisWriterKeys.COL_SEQUENCE_NAME, this.seqKey);
     }
 
     @Override

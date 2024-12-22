@@ -20,11 +20,9 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
@@ -35,8 +33,8 @@ import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.ContextParams.DbNameContextParamValGetter;
+import com.qlangtech.tis.plugin.datax.common.ContextParams.SystemTimeStampContextParamValGetter;
 import com.qlangtech.tis.plugin.datax.common.ContextParams.TableNameContextParamValGetter;
-import com.qlangtech.tis.plugin.datax.transformer.InParamer;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ContextParamConfig;
@@ -48,7 +46,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
-import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -56,7 +53,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,7 +95,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     @Override
     public Map<String, ContextParamConfig> getDBContextParams() {
-        //  Map<String, ContextParamConfig> dbContextParams = Maps.newHashMap();
         ContextParamConfig dbName = new ContextParamConfig("dbName") {
             @Override
             public ContextParamValGetter<RdbmsRunningContext> valGetter() {
@@ -110,6 +104,18 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             @Override
             public DataType getDataType() {
                 return DataType.createVarChar(50);
+            }
+        };
+
+        ContextParamConfig sysTimestamp = new ContextParamConfig("timestamp") {
+            @Override
+            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+                return new SystemTimeStampContextParamValGetter();
+            }
+
+            @Override
+            public DataType getDataType() {
+                return DataType.getType(JDBCTypes.TIMESTAMP);
             }
         };
 
@@ -125,7 +131,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             }
         };
 
-        return Lists.newArrayList(dbName, tableName)
+        return Lists.newArrayList(dbName, tableName, sysTimestamp)
                 .stream().collect(Collectors.toMap((cfg) -> cfg.getKeyName(), (cfg) -> cfg));
 
 //        dbContextParams.put(dbName.getKeyName(), dbName);

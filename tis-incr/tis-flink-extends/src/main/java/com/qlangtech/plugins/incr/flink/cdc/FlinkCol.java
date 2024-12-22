@@ -242,6 +242,8 @@ public class FlinkCol implements Serializable {
                 return LocalDateTime.parse(val, val.contains("T") ? datetimeFormatter_with_zone : datetimeFormatter);
             } else if (o instanceof Long) {
                 return LocalDateTime.ofInstant(Instant.ofEpochMilli((Long) o), ZoneId.systemDefault());
+            } else if (o instanceof java.util.Date) {
+                return LocalDateTime.ofInstant(Instant.ofEpochMilli(((java.util.Date) o).getTime()), ZoneId.systemDefault());
             }
 
             return (LocalDateTime) o;

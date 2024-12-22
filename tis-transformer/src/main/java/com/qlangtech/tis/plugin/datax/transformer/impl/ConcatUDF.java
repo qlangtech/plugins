@@ -18,10 +18,12 @@
 
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -30,10 +32,12 @@ import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -42,13 +46,27 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-06-17 09:52
  **/
-public class ConcatUDF extends UDFDefinition {
+public class ConcatUDF extends UDFDefinition implements AfterPluginSaved {
 
     @FormField(ordinal = 1, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<TargetColType> from;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public String separator;
+
+    private transient Separator _separator;
+
+    private Separator getSeparator() {
+        if (_separator == null) {
+            _separator = Separator.valueOf(separator);
+        }
+        return _separator;
+    }
+
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this._separator = null;
+    }
 
     @FormField(ordinal = 3, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public TargetColType to;
@@ -95,11 +113,20 @@ public class ConcatUDF extends UDFDefinition {
 
     @Override
     public void evaluate(ColumnAwareRecord record) {
-        record.setString(this.to.getName()
-                , this.from.stream().map((f) -> record.getColumn(f.getName()))
-                        //.filter((colVal) -> colVal != null)
-                        .map((val) -> (val == null) ? StringUtils.EMPTY : String.valueOf(val))
-                        .collect(Collectors.joining(Separator.valueOf(separator).sign)));
+
+        if (this.from.size() < 2 && getSeparator() == Separator.Empty) {
+            // 当输出是单个字段，且没有连接符，这样就不需要就行string类型的转换了
+            for (TargetColType colType : this.from) {
+                record.setColumn(this.to.getName(), record.getColumn(colType.getName()));
+                break;
+            }
+        } else {
+            record.setString(this.to.getName()
+                    , this.from.stream().map((f) -> record.getColumn(f.getName()))
+                            //.filter((colVal) -> colVal != null)
+                            .map((val) -> (val == null) ? StringUtils.EMPTY : String.valueOf(val))
+                            .collect(Collectors.joining(getSeparator().sign)));
+        }
     }
 
     @Override

@@ -213,7 +213,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         public boolean validateMaxBatchRows(IFieldErrorHandler msgHandler, Context context, String fieldName,
                                             String value) {
             int batchRows = Integer.parseInt(value);
-            final int MaxBatchRows = 10000;
+            final int MaxBatchRows = 5000;
             if (batchRows < MaxBatchRows) {
                 msgHandler.addFieldError(context, fieldName, "批次提交记录数不能小于:'" + MaxBatchRows + "'");
                 return false;

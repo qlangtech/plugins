@@ -33,6 +33,13 @@ public class ContextParams {
         }
     }
 
+    public static class SystemTimeStampContextParamValGetter implements ContextParamValGetter<RdbmsRunningContext> {
+        @Override
+        public Object apply(RdbmsRunningContext runningContext) {
+            return System.currentTimeMillis();
+        }
+    }
+
     public static class TableNameContextParamValGetter implements ContextParamValGetter<RdbmsRunningContext> {
         @Override
         public Object apply(RdbmsRunningContext runningContext) {

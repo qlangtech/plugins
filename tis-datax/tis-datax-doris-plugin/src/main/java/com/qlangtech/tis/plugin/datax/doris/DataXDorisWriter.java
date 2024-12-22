@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.doris;
 
-import com.alibaba.datax.plugin.writer.doriswriter.Keys;
+import com.alibaba.datax.plugin.writer.doriswriter.DorisWriterKeys;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
@@ -30,15 +30,11 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable.BasicDescriptor;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,9 +53,6 @@ import java.util.stream.Collectors;
 @Public
 public class DataXDorisWriter extends BasicDorisWriter {
 
-//    @FormField(ordinal = 10, validate = {Validator.require})
-//    public CreateTable createTableModel;
-
 
     public static List<BasicDescriptor> autoCreateTableFilter(List<BasicDescriptor> descs, String endType) {
         if (CollectionUtils.isEmpty(descs)) {
@@ -73,8 +66,8 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     public static String getDftLoadProps() {
         return "{\n" +
-                "    \"" + Keys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
-                "    \"" + Keys.LOAD_PROPS_LINE_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
+                "    \"" + DorisWriterKeys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
+                "    \"" + DorisWriterKeys.LOAD_PROPS_LINE_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
                 "}";
     }
 
@@ -97,12 +90,12 @@ public class DataXDorisWriter extends BasicDorisWriter {
         return new Separator() {
             @Override
             public String getColumnSeparator() {
-                return StringUtils.defaultIfBlank(props.getString(Keys.LOAD_PROPS_COLUMN_SEPARATOR), Separator.COL_SEPARATOR_DEFAULT);
+                return StringUtils.defaultIfBlank(props.getString(DorisWriterKeys.LOAD_PROPS_COLUMN_SEPARATOR), Separator.COL_SEPARATOR_DEFAULT);
             }
 
             @Override
             public String getRowDelimiter() {
-                return StringUtils.defaultIfBlank(props.getString(Keys.LOAD_PROPS_LINE_DELIMITER), Separator.ROW_DELIMITER_DEFAULT);
+                return StringUtils.defaultIfBlank(props.getString(DorisWriterKeys.LOAD_PROPS_LINE_DELIMITER), Separator.ROW_DELIMITER_DEFAULT);
             }
         };
     }
@@ -140,12 +133,12 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
         @Override
         protected String getRowDelimiterKey() {
-            return Keys.LOAD_PROPS_LINE_DELIMITER;
+            return DorisWriterKeys.LOAD_PROPS_LINE_DELIMITER;
         }
 
         @Override
         protected String getColSeparatorKey() {
-            return Keys.LOAD_PROPS_COLUMN_SEPARATOR;
+            return DorisWriterKeys.LOAD_PROPS_COLUMN_SEPARATOR;
         }
 
         @Override

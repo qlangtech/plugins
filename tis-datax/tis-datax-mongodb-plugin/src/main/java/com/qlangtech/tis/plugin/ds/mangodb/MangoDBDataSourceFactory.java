@@ -236,6 +236,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         };
         DBConfig dbConfig = new DBConfig(jdbcUrlBuilder);
         dbConfig.addDbName(this.address, this.dbName);
+        dbConfig.setName(this.dbName);
         return dbConfig;
     }
 

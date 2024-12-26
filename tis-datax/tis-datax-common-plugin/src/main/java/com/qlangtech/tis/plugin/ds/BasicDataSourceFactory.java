@@ -186,7 +186,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
             resultSet = statement.executeQuery(getRefectTablesSql());
             //   resultSet = statement.getResultSet();
             while (resultSet.next()) {
-                tabs.add(conn.getUrl(), resultSet.getString(1));
+                addRefectedTable(tabs, conn, resultSet);
             }
         } finally {
             if (resultSet != null) {
@@ -196,6 +196,10 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
                 statement.close();
             }
         }
+    }
+
+    protected void addRefectedTable(TableInDB tabs, JDBCConnection conn, ResultSet resultSet) throws SQLException {
+        tabs.add(conn.getUrl(), resultSet.getString(1));
     }
 
     private static transient Cache<String, TableInDB> tabsInDBCache

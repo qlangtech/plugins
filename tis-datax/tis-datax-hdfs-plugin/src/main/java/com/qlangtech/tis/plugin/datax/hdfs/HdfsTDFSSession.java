@@ -107,7 +107,17 @@ public class HdfsTDFSSession implements ITDFSSession {
         return sourceFiles;
     }
 
-    private void getListFiles(HashSet<Res> sourceFiles, ITISFileSystem fs, IPath directoryPath, List<String> relevantPaths, int parentLevel, int maxTraversalLevel) {
+    /**
+     *
+     * @param sourceFiles
+     * @param fs
+     * @param directoryPath
+     * @param relevantPaths
+     * @param parentLevel
+     * @param maxTraversalLevel
+     */
+    private void getListFiles(HashSet<Res> sourceFiles, ITISFileSystem fs
+            , IPath directoryPath, List<String> relevantPaths, int parentLevel, int maxTraversalLevel) {
         if (parentLevel < maxTraversalLevel) {
             List<IPathInfo> children = fs.listChildren(directoryPath);
             for (IPathInfo path : children) {

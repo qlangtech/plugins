@@ -19,7 +19,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -39,12 +41,18 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
     private final boolean multiPk;
     private final PGDataSourceFactory ds;
     private final TableMap tableMapper;
+    private final AutoCreateTableColCommentSwitch colCommentAdd;
+    private SourceColMetaGetter sourceColMetaGetter;
 
-    public PostgreSQLCreateTableSqlBuilder(TableMap tableMapper, PGDataSourceFactory dsMeta, Optional<RecordTransformerRules> transformers) {
+    public PostgreSQLCreateTableSqlBuilder(
+            AutoCreateTableColCommentSwitch colCommentAdd, SourceColMetaGetter sourceColMetaGetter
+            , TableMap tableMapper, PGDataSourceFactory dsMeta, Optional<RecordTransformerRules> transformers) {
         super(tableMapper, dsMeta, transformers);
         this.multiPk = this.pks.size() > 1;
         this.ds = dsMeta;
         this.tableMapper = tableMapper;
+        this.colCommentAdd = Objects.requireNonNull(colCommentAdd);
+        this.sourceColMetaGetter = Objects.requireNonNull(sourceColMetaGetter);
     }
 
     @Override
@@ -74,7 +82,8 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
 
     @Override
     protected void appendTabMeta(List<String> pks) {
-
+        super.appendTabMeta(pks);
+        this.colCommentAdd.addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
     }
 
     /**

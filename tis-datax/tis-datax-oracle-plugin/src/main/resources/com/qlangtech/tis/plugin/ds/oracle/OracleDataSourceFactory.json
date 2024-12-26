@@ -24,7 +24,7 @@
   },
   "allAuthorized": {
     "label": "包含授权",
-    "dftVal": "off"
+    "dftVal": "on"
   },
   "port": {
     "dftVal": 1521

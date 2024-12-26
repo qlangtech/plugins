@@ -122,20 +122,9 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         return Optional.of("\"");
     }
 
-    /**
-     * @param inSink
-     * @param table
-     * @param columns1
-     * @param pkCols
-     * @return
-     * @throws SQLException
-     * @see DmdbType 内部方法（d2jType）会将达梦内部的类型转成jdbc type
-     */
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
-
-        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+    protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
@@ -241,8 +230,24 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                 });
                 return fixType != null ? fixType : type;
             }
-        });
+        };
     }
+
+//    /**
+//     * @param inSink
+//     * @param table
+//     * @param columns1
+//     * @param pkCols
+//     * @return
+//     * @throws SQLException
+//     * @see DmdbType 内部方法（d2jType）会将达梦内部的类型转成jdbc type
+//     */
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+//                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
+//
+//        return this.wrapColsMeta(inSink, table, columns1, );
+//    }
 
 
     /**

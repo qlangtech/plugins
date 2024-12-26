@@ -16,27 +16,40 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ds.oracle;
+package com.qlangtech.tis.plugin.ds.sqlserver;
 
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
-import com.qlangtech.tis.plugin.ds.TableInDB;
+import org.apache.commons.lang.StringUtils;
 
-import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Connection;
 
 /**
- * 是否授权
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-03-31 16:16
+ * @create: 2024-12-22 23:21
  **/
-public abstract class Authorized implements Describable<Authorized>, Serializable {
+public class SqlServerJDBCConnection extends JDBCConnection {
+    private final String dbName;
+    private final String schema;
 
-    public abstract String getSchema();
+    public SqlServerJDBCConnection(Connection conn, String url, String dbName, String schema) {
+        super(conn, url);
+        if (StringUtils.isEmpty(dbName)) {
+            throw new IllegalArgumentException("param dbName can not be null");
+        }
+        if (StringUtils.isEmpty(schema)) {
+            throw new IllegalArgumentException("param schema can not be null");
+        }
+        this.dbName = dbName;
+        this.schema = schema;
+    }
 
-    public abstract String getRefectTablesSql();
+    @Override
+    public String getSchema() {
+        return schema;
+    }
 
-    public abstract void addRefectedTable(TableInDB tabs, JDBCConnection conn, ResultSet resultSet) throws SQLException;
+    @Override
+    public String getCatalog() {
+        return this.dbName;
+    }
 }

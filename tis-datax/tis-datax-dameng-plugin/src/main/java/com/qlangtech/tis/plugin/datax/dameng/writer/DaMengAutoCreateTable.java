@@ -69,7 +69,7 @@ public class DaMengAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             @Override
             protected void appendTabMeta(List<String> pks) {
                 super.appendTabMeta(pks);
-                DaMengAutoCreateTable.this.addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
+                DaMengAutoCreateTable.this.getAddComment().addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
             }
 
             @Override

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.hive.reader;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.plugin.datax.resmatcher.BasicDFSResMatcher;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -63,10 +64,7 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
         return ((Supplier<List<ISelectedTab>>) dfsReader).get();
     }
 
-    @Override
-    public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
-        throw new UnsupportedOperationException();
-    }
+
 
     @Override
     public boolean hasMulitTable(IDFSReader dfsReader) {

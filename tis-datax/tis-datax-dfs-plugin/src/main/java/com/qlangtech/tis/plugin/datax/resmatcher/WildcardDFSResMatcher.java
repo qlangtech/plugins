@@ -42,6 +42,7 @@ import org.apache.commons.lang.StringUtils;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -57,10 +58,6 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String wildcard;
 
-    @Override
-    public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
-        throw new UnsupportedOperationException(WildcardDFSResMatcher.class.getSimpleName() + " is not support");
-    }
 
     /**
      * @param path      value of Key.PATH
@@ -124,14 +121,19 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
     }
 
     @Override
-    public boolean hasMulitTable(IDFSReader DFSReader) {
-        return false;
+    public boolean hasMulitTable(IDFSReader dfsReader) {
+        return getSelectedTabs(dfsReader).size() > 0;
     }
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter, IDFSReader dfsReader) {
-        IDataxReaderContext readerContext = new DataXDFSReaderContext(dfsReader);
-        return IGroupChildTaskIterator.create(readerContext);
+
+        IDataxReaderContext readerContext = null;
+        for (ISelectedTab tab : dfsReader.getSelectedTabs()) {
+            readerContext = new DataXDFSReaderContext(dfsReader, tab);
+            break;
+        }
+        return IGroupChildTaskIterator.create(Objects.requireNonNull(readerContext, "readerContext"));
     }
 
     @Override

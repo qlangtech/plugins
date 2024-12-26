@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.oracle;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -38,11 +40,13 @@ import org.apache.commons.lang.StringUtils;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -96,6 +100,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     @Override
     public String getDbName() {
         return Objects.requireNonNull(this.connEntity, "connEntity can not be null").getConnName();
+    }
+
+    @Override
+    protected void addRefectedTable(TableInDB tabs, JDBCConnection conn, ResultSet resultSet) throws SQLException {
+        allAuthorized.addRefectedTable(tabs, conn, resultSet);
     }
 
     @Override
@@ -199,16 +208,53 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
-        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+    protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+
+        return new CreateColumnMeta(pkCols, columns1) {
+            private Map<String, String> _col2Comment;
+            /**
+             * https://github.com/CodePhiliaX/Chat2DB/blob/main/chat2db-server/chat2db-plugins/chat2db-oracle/src/main/java/ai/chat2db/plugin/oracle/OracleMetaData.java
+             */
+            private static final String TABLE_COMMENT_SQL = "select owner, table_name, comments from ALL_TAB_COMMENTS where OWNER = ?  and TABLE_NAME = ?";
+
+            private static final String TABLE_COLUMN_COMMENT_SQL =
+                    " SELECT owner, table_name, column_name, comments "
+                            + "             FROM all_col_comments "
+                            + "   WHERE  owner = ? and table_name = ? and comments is not null ";
 
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
+            protected DataType createColDataType(
+                    String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
                 // return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
 
                 return super.createColDataType(colName, typeName, convert2JdbcType(dbColType), colSize, decimalDigits);
+            }
+
+            @Override
+            public ColumnMetaData create(String colName, int index) throws SQLException {
+                ColumnMetaData metaData = super.create(colName, index);
+                metaData.setComment(getColumnComment().get(colName));
+                return metaData;
+            }
+
+            private Map<String, String> getColumnComment() {
+                if (_col2Comment == null) {
+                    _col2Comment = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
+                    try (PreparedStatement statement = conn.preparedStatement(TABLE_COLUMN_COMMENT_SQL)) {
+
+                        statement.setString(1, StringUtils.defaultString(removeEscapeChar(table.getDbName()), conn.getSchema()));
+                        statement.setString(2, removeEscapeChar(table.getTableName()));
+                        try (ResultSet result = statement.executeQuery()) {
+                            while (result.next()) {
+                                _col2Comment.put(result.getString(3), result.getString(4));
+                            }
+                        }
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                return this._col2Comment;
             }
 
             @Override
@@ -242,8 +288,14 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
                 return type;
             }
-        });
+        };
     }
+
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+//                                             Set<String> pkCols,JDBCConnection conn) throws SQLException, TableNotFoundException {
+//        return this.wrapColsMeta(inSink, table, columns1, );
+//    }
 
 
     @Override

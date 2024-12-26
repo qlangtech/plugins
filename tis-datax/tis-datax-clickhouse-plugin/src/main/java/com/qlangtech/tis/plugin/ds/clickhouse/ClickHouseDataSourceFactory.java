@@ -25,7 +25,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableInDB;
@@ -97,10 +97,12 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException, TableNotFoundException {
-        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+    protected CreateColumnMeta createColumnMetaBuilder(
+            EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new CreateColumnMeta(pkCols, columns1) {
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
+            protected DataType createColDataType(
+                    String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 if (Types.VARCHAR == dbColType) {
                     if (colSize < 1) {
                         colSize = Short.MAX_VALUE;
@@ -109,8 +111,14 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
                 return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
                 // return  DataType.create(dbColType, typeName, colSize);
             }
-        });
+        };
     }
+
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(
+//            boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) throws SQLException, TableNotFoundException {
+//        return this.wrapColsMeta(inSink, table, columns1, );
+//    }
 
 
     public final String getJdbcUrl() {

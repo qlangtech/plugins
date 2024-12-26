@@ -153,7 +153,7 @@ public class OdpsAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
                     @Override
                     protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                        OdpsAutoCreateTable.this.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+                        OdpsAutoCreateTable.this.addComment.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
                     }
                 };
             }

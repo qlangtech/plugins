@@ -20,11 +20,14 @@ package com.qlangtech.tis.plugin.datax.resmatcher;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
+import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -38,6 +41,11 @@ import java.util.stream.Collectors;
  * @create: 2023-08-13 22:49
  **/
 public abstract class BasicDFSResMatcher extends DFSResMatcher {
+
+    @Override
+    public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, TableMap tableMapper) throws TableNotFoundException {
+        return ColumnMetaData.convert(tableMapper.getSourceCols());
+    }
 
     protected static SourceColsMeta getSourceColsMeta(
             IDataxProcessor processor, String tabName, List<ColumnMetaData> colsMeta) {

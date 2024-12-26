@@ -93,7 +93,7 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
                     @Override
                     protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                        addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+                        addComment.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
                     }
                 };
             }

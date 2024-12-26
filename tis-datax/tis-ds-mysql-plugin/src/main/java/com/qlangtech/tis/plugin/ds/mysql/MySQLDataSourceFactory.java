@@ -122,10 +122,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
-
-        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+    protected CreateColumnMeta createColumnMetaBuilder(
+            EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
@@ -213,8 +212,15 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 });
                 return fixType != null ? fixType : type;
             }
-        });
+        };
     }
+
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+//                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
+//
+//        return this.wrapColsMeta(inSink, table, columns1, );
+//    }
 
 
     @Override

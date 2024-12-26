@@ -31,12 +31,12 @@ import java.io.File;
  * @create: 2023-04-07 09:20
  **/
 public class DataXDFSSelectTableReaderContext extends DataXDFSReaderContext {
-    private final ISelectedTab tab;
+   // private final ISelectedTab tab;
     private final int currentIndex;
 
     public DataXDFSSelectTableReaderContext(IDFSReader reader, ISelectedTab tab, int currentIndex) {
-        super(reader);
-        this.tab = tab;
+        super(reader,tab);
+       // this.tab = tab;
         this.currentIndex = currentIndex;
     }
 

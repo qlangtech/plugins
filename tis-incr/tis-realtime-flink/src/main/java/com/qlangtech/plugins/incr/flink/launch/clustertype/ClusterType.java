@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
@@ -51,10 +52,11 @@ import java.util.function.Consumer;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-07 10:36
- * @see KubernetesApplication
- * @see KubernetesSession
+ * // @see KubernetesApplication
+ * // @see KubernetesSession
  * @see Standalone
  **/
+@TISExtensible
 public abstract class ClusterType implements Describable<ClusterType>, IFlinkClusterConfig {
 
     public ServerLaunchToken getLaunchToken(TargetResName collection) {

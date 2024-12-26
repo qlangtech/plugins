@@ -43,8 +43,9 @@ public class PostgreSQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper>
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) rdbmsWriter;
         PGDataSourceFactory ds = (PGDataSourceFactory) dataXWriter.getDataSourceFactory();
+
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new PostgreSQLCreateTableSqlBuilder(tableMapper, ds, transformers);
+                = new PostgreSQLCreateTableSqlBuilder(this.getAddComment(), sourceColMetaGetter, tableMapper, ds, transformers);
         return createTableSqlBuilder;
     }
 

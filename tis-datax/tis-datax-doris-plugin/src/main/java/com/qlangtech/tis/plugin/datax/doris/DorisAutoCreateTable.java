@@ -264,7 +264,7 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
                 ddlScript.append(" NOT NULL");
             }
             // SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, ColWrapper colWrapper
-            autoCreateTable.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+            autoCreateTable.getAddComment().addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
         }
 
         protected DorisType convertType(IColMetaGetter col) {

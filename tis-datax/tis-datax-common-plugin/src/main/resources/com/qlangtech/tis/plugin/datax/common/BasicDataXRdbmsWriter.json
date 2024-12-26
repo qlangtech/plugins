@@ -12,7 +12,7 @@
   },
   "autoCreateTable": {
     "label": "自动建表",
-    "dftVal": "default",
+    "dftVal": "on",
     "disable": true
   }
 }

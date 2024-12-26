@@ -1,0 +1,8 @@
+{
+  "linker": {
+    "disable": true
+  },
+  "path": {
+    "placeholder": "example：/admin/instancedetail（linux.）"
+  }
+}

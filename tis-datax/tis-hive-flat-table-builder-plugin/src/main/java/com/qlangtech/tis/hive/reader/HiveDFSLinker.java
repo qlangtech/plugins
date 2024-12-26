@@ -42,14 +42,10 @@ import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.metastore.api.SerDeInfo;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
-import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -132,28 +128,26 @@ public class HiveDFSLinker extends TDFSLinker {
         org.apache.hadoop.conf.Configuration conf = getFs().getConfiguration();
         HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
         HiveTable.StoredAs storedAs = table.getStoredAs();
-        SerDeInfo sdInfo = storedAs.getSerdeInfo();
-        Map<String, String> sdParams = sdInfo.getParameters();
-        Properties props = new Properties();
-        for (Map.Entry<String, String> entry : sdParams.entrySet()) {
-            props.setProperty(entry.getKey(), entry.getValue());
-        }
+//        SerDeInfo sdInfos = storedAs.getSerdeInfo();
+//        Map<String, String> sdParams = sdInfo.getParameters();
+        final Properties props = storedAs.getSerdeProperties(table);// new Properties();
+//        for (Map.Entry<String, String> entry : sdParams.entrySet()) {
+//            props.setProperty(entry.getKey(), entry.getValue());
+//        }
         try {
             // example: MapredParquetInputFormat for Parquet
             Class<?> inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
             // forExample : LazySimpleSerDe, ParquetHiveSerDe
             AbstractSerDe serde = (AbstractSerDe) Class.forName(
-                    sdInfo.getSerializationLib()
+                    storedAs.getSerializationLib()
                     , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
-
-            List<HiveTabColType> cols = table.getCols();
-            props.setProperty(serdeConstants.LIST_COLUMNS
-                    , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
-            props.setProperty(serdeConstants.LIST_COLUMN_TYPES
-                    , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+//            props.setProperty(serdeConstants.LIST_COLUMNS
+//                    , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+//            props.setProperty(serdeConstants.LIST_COLUMN_TYPES
+//                    , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
             JobConf jobConf = new JobConf(conf);
             serde.initialize(jobConf, props);
-
+            List<HiveTabColType> cols = table.getCols();
             SupportedFileFormat supportedFileFormat = SupportedFileFormat.getSupportedFileFormat(this.fileFormat);
             return supportedFileFormat.createFileFormatReader(entityName, cols, serde, inputFormatClass, jobConf);
 
@@ -161,8 +155,6 @@ public class HiveDFSLinker extends TDFSLinker {
             throw new RuntimeException(e);
         }
     }
-
-
 
 
     @TISExtension
@@ -175,7 +167,7 @@ public class HiveDFSLinker extends TDFSLinker {
                             .getPlugins().stream()
                             .filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
 
-            this.registerSelectOptions(KEY_FIELD_FILE_FORMAT,()-> SupportedFileFormat.supportedFileFormat());
+            this.registerSelectOptions(KEY_FIELD_FILE_FORMAT, () -> SupportedFileFormat.supportedFileFormat());
         }
 
         @Override

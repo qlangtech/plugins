@@ -135,12 +135,17 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         dateTypeMapper.put("decimalv3", (colSize, decimalDigits) -> new DataType(JDBCTypes.DECIMAL, colSize).setDecimalDigits(decimalDigits));
     }
 
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+//                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
+//
+//
+//        return this.wrapColsMeta(inSink, table, columns1, );
+//    }
+
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
-
-
-        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+    protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 DataTypeFixer dateType = null;
@@ -151,7 +156,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                     return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
                 }
             }
-        });
+        };
     }
 
     @FunctionalInterface

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -89,8 +90,15 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
     }
 
     @Override
+    public  List<ColumnMetaData> getTableMetadata(boolean inSink, TableMap tableMapper) throws TableNotFoundException {
+        return this.resMatcher.getTableMetadata(this, tableMapper);
+    }
+
+    @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
-        return this.resMatcher.getTableMetadata(this, table);
+
+
+        throw new UnsupportedOperationException("shall invoke ' List<ColumnMetaData> getTableMetadata(boolean inSink, TableMap tableMapper)'");
     }
 
 

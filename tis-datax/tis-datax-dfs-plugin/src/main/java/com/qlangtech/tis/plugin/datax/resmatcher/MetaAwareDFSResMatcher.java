@@ -22,6 +22,7 @@ import com.alibaba.datax.plugin.ftp.common.FtpHelper;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
@@ -73,9 +74,9 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, TableMap table) throws TableNotFoundException {
         return dfsReader.getDfsLinker().useTdfsSession((dfs) -> {
-            return getDFSFileMetaData(dfsReader, table, dfs);
+            return getDFSFileMetaData(dfsReader, EntityName.parse(table.getFrom()), dfs);
         });
     }
 
@@ -86,7 +87,7 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
         // IDataxReader reader = processor.getReader(null);
         // List<ISelectedTab> selectedTabs = reader.getSelectedTabs();
         String fullMetaPath = IPath.pathConcat(path, FtpHelper.KEY_META_FILE);
-       // String tabName = entityName.orElseThrow(() -> new IllegalStateException(" entitName must present"));
+        // String tabName = entityName.orElseThrow(() -> new IllegalStateException(" entitName must present"));
         DataXDFSReaderWithMeta.TargetResMeta resMeta = DataXDFSReaderWithMeta.getTargetResMeta(fullMetaPath);
         if (resMeta == null) {
             throw new IllegalStateException("resMeta can not be null ,fullMetaPath:" + fullMetaPath);
@@ -116,8 +117,6 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
 //        }
 //        return new SourceColsMeta(result, (col) -> selectedCols.contains(col));
     }
-
-
 
 
     @Override

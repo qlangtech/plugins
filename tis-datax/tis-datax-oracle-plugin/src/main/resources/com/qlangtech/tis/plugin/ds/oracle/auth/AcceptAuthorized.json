@@ -1,6 +1,21 @@
 {
   "schema": {
     "label": "Schema",
-    "help": "可以只包含某一个模式（Schema）下的表"
+    "help": "可以只包含某一个模式（Schema）下的表，请注意大小写"
+  },
+  "excludeSysSchema": {
+    "label": "去除系统保留Schema",
+    "help": "过滤掉系统保留Schema，如：\"ANONYMOUS\", \"APEX_030200\", \"APEX_PUBLIC_USER\", \"APPQOSSYS\", \"BI\", \"CTXSYS\", \"DBSNMP\", \"DIP\", \"EXFSYS\", \"FLOWS_FILES\", \"HR\", \"IX\"等",
+    "dftVal": true,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
   }
 }

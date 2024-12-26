@@ -18,9 +18,13 @@
 
 package com.qlangtech.tis.plugin.datax.common.impl;
 
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 
 /**
  *
@@ -31,6 +35,11 @@ public class AutoCreateTableColCommentSwitchOFF extends AutoCreateTableColCommen
     @Override
     public boolean turnOn() {
         return false;
+    }
+
+    @Override
+    public void addStandardColComment(SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, ColWrapper colWrapper, BlockScriptBuffer ddlScript) {
+
     }
 
     @TISExtension

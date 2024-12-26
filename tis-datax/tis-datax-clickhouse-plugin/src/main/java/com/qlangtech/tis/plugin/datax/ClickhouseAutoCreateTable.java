@@ -67,7 +67,7 @@ public class ClickhouseAutoCreateTable extends ParamsAutoCreateTable<ColWrapper>
 
                     @Override
                     protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                        ClickhouseAutoCreateTable.this.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+                        ClickhouseAutoCreateTable.this.addComment.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
                     }
                 };
             }

@@ -232,7 +232,7 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
                     if (this.isPk()) {
                         ddlScript.append(" NOT NULL");
                     }
-                    addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+                    addComment.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
                 }
             };
         }

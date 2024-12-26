@@ -47,15 +47,6 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
         System.out.println(StringUtils.EMPTY.toCharArray()[0]);
     }
 
-//    @Override
-//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter
-//            , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-//        PGDataSourceFactory ds = this.getDataSourceFactory();
-//
-//        final CreateTableSqlBuilder createTableSqlBuilder = new PostgreSQLCreateTableSqlBuilder(tableMapper, ds, transformers);
-//        return createTableSqlBuilder.build();
-//    }
-
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         PostgreWriterContext writerContext = new PostgreWriterContext(this, tableMap.get(), transformerRules);

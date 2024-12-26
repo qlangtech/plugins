@@ -95,47 +95,48 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     @Override
     public Map<String, ContextParamConfig> getDBContextParams() {
-        ContextParamConfig dbName = new ContextParamConfig("dbName") {
-            @Override
-            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-                return new DbNameContextParamValGetter();
-            }
-
-            @Override
-            public DataType getDataType() {
-                return DataType.createVarChar(50);
-            }
-        };
-
-        ContextParamConfig sysTimestamp = new ContextParamConfig("timestamp") {
-            @Override
-            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-                return new SystemTimeStampContextParamValGetter();
-            }
-
-            @Override
-            public DataType getDataType() {
-                return DataType.getType(JDBCTypes.TIMESTAMP);
-            }
-        };
-
-        ContextParamConfig tableName = new ContextParamConfig("tableName") {
-            @Override
-            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-                return new TableNameContextParamValGetter();
-            }
-
-            @Override
-            public DataType getDataType() {
-                return DataType.createVarChar(50);
-            }
-        };
-
-        return Lists.newArrayList(dbName, tableName, sysTimestamp)
-                .stream().collect(Collectors.toMap((cfg) -> cfg.getKeyName(), (cfg) -> cfg));
-
-//        dbContextParams.put(dbName.getKeyName(), dbName);
-//        return dbContextParams;
+        return ContextParams.defaultContextParams();
+//        ContextParamConfig dbName = new ContextParamConfig("dbName") {
+//            @Override
+//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+//                return new DbNameContextParamValGetter();
+//            }
+//
+//            @Override
+//            public DataType getDataType() {
+//                return DataType.createVarChar(50);
+//            }
+//        };
+//
+//        ContextParamConfig sysTimestamp = new ContextParamConfig("timestamp") {
+//            @Override
+//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+//                return new SystemTimeStampContextParamValGetter();
+//            }
+//
+//            @Override
+//            public DataType getDataType() {
+//                return DataType.getType(JDBCTypes.TIMESTAMP);
+//            }
+//        };
+//
+//        ContextParamConfig tableName = new ContextParamConfig("tableName") {
+//            @Override
+//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
+//                return new TableNameContextParamValGetter();
+//            }
+//
+//            @Override
+//            public DataType getDataType() {
+//                return DataType.createVarChar(50);
+//            }
+//        };
+//
+//        return Lists.newArrayList(dbName, tableName, sysTimestamp)
+//                .stream().collect(Collectors.toMap((cfg) -> cfg.getKeyName(), (cfg) -> cfg));
+//
+////        dbContextParams.put(dbName.getKeyName(), dbName);
+////        return dbContextParams;
     }
 
     @Override

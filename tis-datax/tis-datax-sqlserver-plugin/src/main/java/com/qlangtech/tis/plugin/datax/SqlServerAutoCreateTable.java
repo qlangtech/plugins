@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.qlangtech.tis.plugin.ds.sqlserver.SqlServerCreateColumnMeta.KEY_MS_DESCRIPTION;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-17 10:27
@@ -159,13 +161,13 @@ public class SqlServerAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
 
                         ColumnMetaData colMeta = sourceColMetaGetter.getColMeta(tableMapper, col.getName());
                         if (colMeta != null && StringUtils.isNotEmpty(colMeta.getComment())) {
-                            script.blockBody(true, new String[]{StringUtils.EMPTY, ";"}
+                            script.blockBody(true, new String[]{StringUtils.EMPTY, StringUtils.EMPTY}
                                     , "EXEC sp_addextendedproperty", (buffer) -> {
-                                        buffer.appendLine("@name = N'MS_Description'");
-                                        buffer.appendLine("@value = '" + colMeta.getComment() + "'");
+                                        buffer.appendLine("@name = N'" + KEY_MS_DESCRIPTION + "',");
+                                        buffer.appendLine("@value = N'" + colMeta.getComment() + "',");
                                         buffer.appendLine("@level0type = N'Schema', @level0name = '" + schemaSupported.getDBSchema() + "',");
                                         buffer.appendLine("@level1type = N'Table',  @level1name = '" + tableMapper.getTo() + "',");
-                                        buffer.appendLine("@level2type = N'Column', @level2name = '" + col.getName() + "'");
+                                        buffer.appendLine("@level2type = N'Column', @level2name = '" + col.getName() + "';");
                                     });
                         }
                     }

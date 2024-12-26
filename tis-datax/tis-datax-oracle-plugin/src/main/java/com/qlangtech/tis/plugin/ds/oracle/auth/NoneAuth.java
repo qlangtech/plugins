@@ -20,7 +20,12 @@ package com.qlangtech.tis.plugin.ds.oracle.auth;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.oracle.Authorized;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -43,6 +48,11 @@ public class NoneAuth extends Authorized {
         return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
 
         // }
+    }
+
+    @Override
+    public void addRefectedTable(TableInDB tabs, JDBCConnection conn, ResultSet resultSet) throws SQLException {
+        tabs.add(conn.getUrl(), resultSet.getString(1));
     }
 
     @TISExtension

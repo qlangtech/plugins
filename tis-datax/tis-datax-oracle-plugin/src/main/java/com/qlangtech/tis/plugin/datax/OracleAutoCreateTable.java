@@ -60,7 +60,7 @@ public class OracleAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             @Override
             protected void appendTabMeta(List<String> pks) {
                 super.appendTabMeta(pks);
-                OracleAutoCreateTable.this.addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
+                OracleAutoCreateTable.this.getAddComment().addOracleLikeColComment(this, sourceColMetaGetter, tableMapper, script);
             }
 
             @Override

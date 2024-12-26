@@ -21,19 +21,29 @@ package com.qlangtech.tis.plugin.datax.transformer.impl;
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.alibaba.datax.common.element.Record;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.ThreadCacheTableCols;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ContextParamConfig;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 用于使用虚拟列
@@ -55,6 +65,20 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
     @Override
     public List<OutputParameter> outParameters() {
         return Collections.singletonList(TargetColType.create(this.getTO()));
+    }
+
+    public static List<CMeta> fromColsCandidate() {
+        List<CMeta> colsCandidate = SelectedTab.getSelectedCols();
+        ThreadCacheTableCols threadCacheTabCols = SelectedTab.getContextTableColsStream();
+        IDataxReader reader = threadCacheTabCols.plugin;
+        Map<String, ContextParamConfig> dbContextParams = reader.getDBContextParams();
+        if (MapUtils.isNotEmpty(dbContextParams)) {
+            colsCandidate = Lists.newArrayList(colsCandidate);
+            for (Map.Entry<String, ContextParamConfig> entry : dbContextParams.entrySet()) {
+                colsCandidate.add(CMeta.create(Optional.empty(), entry.getKey(), entry.getValue().getDataType()));
+            }
+        }
+        return colsCandidate;
     }
 
     @Override

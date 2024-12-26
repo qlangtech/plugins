@@ -2,6 +2,7 @@ package com.qlangtech.tis.hive;
 
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
+import com.qlangtech.tis.config.hive.meta.HiveTable.StoredAs;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.hive.meta.PartitionFilter;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -9,6 +10,8 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -16,6 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -82,6 +88,35 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         }
     }
 
+    private static class HiveStoredAs extends StoredAs {
+        private final SerDeInfo serdeInfo;
+
+        public HiveStoredAs(StorageDescriptor storageDesc) {
+            super(storageDesc.getInputFormat(), storageDesc.getOutputFormat());
+            this.serdeInfo = Objects.requireNonNull(storageDesc.getSerdeInfo(), "serdeInfo");
+        }
+
+        @Override
+        public Properties getSerdeProperties(HiveTable table) {
+            Map<String, String> sdParams = serdeInfo.getParameters();
+            Properties props = new Properties();
+            for (Map.Entry<String, String> entry : sdParams.entrySet()) {
+                props.setProperty(entry.getKey(), entry.getValue());
+            }
+            List<HiveTabColType> cols = table.getCols();
+            props.setProperty(serdeConstants.LIST_COLUMNS
+                    , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+            props.setProperty(serdeConstants.LIST_COLUMN_TYPES
+                    , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
+            return props;
+        }
+
+        @Override
+        public String getSerializationLib() {
+            return this.serdeInfo.getSerializationLib();
+        }
+    }
+
     @Override
     public HiveTable getTable(String database, String tableName) {
         try {
@@ -109,7 +144,9 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
                 @Override
                 public StoredAs getStoredAs() {
                     SerDeInfo serdeInfo = storageDesc.getSerdeInfo();
-                    return new StoredAs(storageDesc.getInputFormat(), storageDesc.getOutputFormat(), serdeInfo);
+
+                    return new HiveStoredAs(storageDesc);
+                    // return new StoredAs(storageDesc.getInputFormat(), storageDesc.getOutputFormat(), serdeInfo);
                 }
 
                 @Override

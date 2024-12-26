@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter.IEndType;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
@@ -45,17 +46,22 @@ public class NoneCreateTable extends AutoCreateTable<ColWrapper> {
     }
 
     @Override
+    public AutoCreateTableColCommentSwitch getAddComment() {
+        return new AutoCreateTableColCommentSwitchOFF();
+    }
+
+    @Override
     public CreateTableSqlBuilder<ColWrapper> createSQLDDLBuilder(
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void addStandardColComment(
-            SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, ColWrapper colWrapper, BlockScriptBuffer ddlScript) {
-
-    }
+//    @Override
+//    public void addStandardColComment(
+//            SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, ColWrapper colWrapper, BlockScriptBuffer ddlScript) {
+//
+//    }
 
     @TISExtension
     public static final class DftDesc extends BasicDescriptor {

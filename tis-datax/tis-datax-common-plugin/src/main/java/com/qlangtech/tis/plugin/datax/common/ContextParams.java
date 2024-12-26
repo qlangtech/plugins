@@ -18,31 +18,83 @@
 
 package com.qlangtech.tis.plugin.datax.common;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.ContextParamConfig.ContextParamValGetter;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
+import com.qlangtech.tis.plugin.ds.RunningContext;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-10 23:50
  **/
 public class ContextParams {
-    public static class DbNameContextParamValGetter implements ContextParamValGetter<RdbmsRunningContext> {
+
+
+    public static Map<String, ContextParamConfig> defaultContextParams() {
+        ContextParamConfig dbName = new ContextParamConfig("dbName") {
+            @Override
+            public ContextParamValGetter<RunningContext> valGetter() {
+                return new DbNameContextParamValGetter();
+            }
+
+            @Override
+            public DataType getDataType() {
+                return DataType.createVarChar(50);
+            }
+        };
+
+        ContextParamConfig sysTimestamp = new ContextParamConfig("timestamp") {
+            @Override
+            public ContextParamValGetter<RunningContext> valGetter() {
+                return new SystemTimeStampContextParamValGetter();
+            }
+
+            @Override
+            public DataType getDataType() {
+                return DataType.getType(JDBCTypes.TIMESTAMP);
+            }
+        };
+
+        ContextParamConfig tableName = new ContextParamConfig("tableName") {
+            @Override
+            public ContextParamValGetter<RunningContext> valGetter() {
+                return new TableNameContextParamValGetter();
+            }
+
+            @Override
+            public DataType getDataType() {
+                return DataType.createVarChar(50);
+            }
+        };
+
+        return Lists.newArrayList(dbName, tableName, sysTimestamp)
+                .stream().collect(Collectors.toMap((cfg) -> cfg.getKeyName(), (cfg) -> cfg));
+    }
+
+
+    public static class DbNameContextParamValGetter implements ContextParamValGetter<RunningContext> {
         @Override
-        public Object apply(RdbmsRunningContext runningContext) {
+        public Object apply(RunningContext runningContext) {
             return runningContext.getDbName();
         }
     }
 
-    public static class SystemTimeStampContextParamValGetter implements ContextParamValGetter<RdbmsRunningContext> {
+    public static class SystemTimeStampContextParamValGetter implements ContextParamValGetter<RunningContext> {
         @Override
-        public Object apply(RdbmsRunningContext runningContext) {
+        public Object apply(RunningContext runningContext) {
             return System.currentTimeMillis();
         }
     }
 
-    public static class TableNameContextParamValGetter implements ContextParamValGetter<RdbmsRunningContext> {
+    public static class TableNameContextParamValGetter implements ContextParamValGetter<RunningContext> {
         @Override
-        public Object apply(RdbmsRunningContext runningContext) {
+        public Object apply(RunningContext runningContext) {
             return runningContext.getTable();
         }
     }

@@ -27,11 +27,14 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +55,12 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
             jdbcUrl = jdbcUrl + ";" + this.extraParams;
         }
         return jdbcUrl;
+    }
+
+    @Override
+    protected CreateColumnMeta createColumnMetaBuilder(
+            EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new SqlServerCreateColumnMeta(table, pkCols, columns1, conn);
     }
 
     @Override
@@ -85,7 +94,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
             info.put("password", password);
         }
         info.put("characterEncoding", "UTF-8");
-        return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
+        return new SqlServerJDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl, this.getDbName(), this.getDBSchema());
     }
 
     protected Properties createJdbcProps() {

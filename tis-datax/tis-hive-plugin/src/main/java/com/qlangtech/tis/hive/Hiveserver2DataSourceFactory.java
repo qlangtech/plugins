@@ -140,10 +140,15 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         return this.hms.getConnection(jdbcUrl, this.dbName, usingPool);
     }
 
+//    @Override
+//    public List<ColumnMetaData> wrapColsMeta(
+//            boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException, TableNotFoundException {
+//        return this.wrapColsMeta(inSink, table, columns1, new HiveColumnMetaCreator(pkCols, columns1));
+//    }
+
     @Override
-    public List<ColumnMetaData> wrapColsMeta(
-            boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException, TableNotFoundException {
-        return this.wrapColsMeta(inSink, table, columns1, new HiveColumnMetaCreator(pkCols, columns1));
+    protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new HiveColumnMetaCreator(pkCols, columns1);
     }
 
     @Override

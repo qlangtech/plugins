@@ -18,18 +18,11 @@
 
 package com.qlangtech.tis.plugin.datax.common.impl;
 
-import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
-import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.CreateTableName;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
 
@@ -50,37 +43,13 @@ public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> exte
     }
 
     @Override
-    public final void addStandardColComment(SourceColMetaGetter sourceColMetaGetter
-            , TableMap tableMapper, ColWrapper colWrapper, BlockScriptBuffer ddlScript) {
-        if (!this.enabledColumnComment()) {
-            return;
-        }
-
-        ColumnMetaData columnMetaData = sourceColMetaGetter.getColMeta(tableMapper, colWrapper.getName());
-        if (columnMetaData == null || StringUtils.isEmpty(columnMetaData.getComment())) {
-            return;
-        }
-        ddlScript.append(" COMMENT '" + columnMetaData.getComment() + "'");
+    public AutoCreateTableColCommentSwitch getAddComment() {
+        return Objects.requireNonNull(addComment, "addComment can not be null");
     }
-
-    @Override
-    public void addOracleLikeColComment(CreateTableSqlBuilder<ColWrapper> createTableSqlBuilder
-            , SourceColMetaGetter colMetaGetter, TableMap tableMapper, BlockScriptBuffer script) {
-        ColumnMetaData colMeta = null;
-        CreateTableName createTableName = createTableSqlBuilder.getCreateTableName();
-        for (ColWrapper col : createTableSqlBuilder.getCols()) {
-            colMeta = colMetaGetter.getColMeta(tableMapper, col.getName());
-            if (colMeta != null && StringUtils.isNotEmpty(colMeta.getComment())) {
-                script.appendLine("COMMENT ON COLUMN " + createTableName.getEntityName()
-                        + "." + createTableSqlBuilder.wrapWithEscape(col.getName()) + " IS '" + colMeta.getComment() + "';");
-            }
-        }
-    }
-
 
     @Override
     public boolean enabledColumnComment() {
-        return Objects.requireNonNull( this.addComment ,"addComment can not be null").turnOn();
+        return Objects.requireNonNull(this.addComment, "addComment can not be null").turnOn();
     }
 
     //  @TISExtension
@@ -90,8 +59,8 @@ public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> exte
         }
 
         @Override
-        public final  String getDisplayName() {
-            return "customized";
+        public final String getDisplayName() {
+            return SWITCH_ON;
         }
     }
 }

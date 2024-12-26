@@ -147,7 +147,7 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 return new ColWrapper(c, this.pks) {
                     @Override
                     protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                        addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
+                        addComment.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
                     }
 
                     @Override

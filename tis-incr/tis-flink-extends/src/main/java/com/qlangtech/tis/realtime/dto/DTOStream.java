@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.realtime.dto;
@@ -42,10 +42,6 @@ public abstract class DTOStream<T> {
         return this.stream;
     }
 
-//    public <R> SingleOutputStreamOperator<R> map(MapFunction<T, R> mapper, TypeInformation<R> outputType) {
-//        return this.stream.map(mapper, outputType);
-//    }
-
     public abstract DTOStream<T> addStream(SingleOutputStreamOperator<T> mainStream);
 
     public static DTOStream createDispatched(String table) {
@@ -53,7 +49,7 @@ public abstract class DTOStream<T> {
     }
 
     public static DTOStream createDispatched(String table, boolean startNewChain) {
-        return new DispatchedDTOStream(new OutputTag<DTO>(table) {
+        return new DispatchedDTOStream(DTO.class, new OutputTag<DTO>(table) {
         }, startNewChain);
     }
 
@@ -68,21 +64,21 @@ public abstract class DTOStream<T> {
     /**
      * binlog监听，可将同一个Stream中的不同表重新分区，将每个表成为独立的Stream
      */
-    public static class DispatchedDTOStream extends DTOStream<DTO> {
-        public final OutputTag<DTO> outputTag;
+    public static class DispatchedDTOStream<RECORD_TYPE> extends DTOStream<RECORD_TYPE> {
+        public final OutputTag<RECORD_TYPE> outputTag;
         boolean hasGetStream = false;
 
         private final boolean startNewChain;
 
-        public DispatchedDTOStream(OutputTag<DTO> outputTag, boolean startNewChain) {
-            super(DTO.class);
+        public DispatchedDTOStream(Class<RECORD_TYPE> clazz, OutputTag<RECORD_TYPE> outputTag, boolean startNewChain) {
+            super(clazz);
             this.outputTag = outputTag;
             this.startNewChain = startNewChain;
         }
 
         @Override
-        public DataStream<DTO> getStream() {
-            DataStream<DTO> stream = super.getStream();
+        public DataStream<RECORD_TYPE> getStream() {
+            DataStream<RECORD_TYPE> stream = super.getStream();
             if (this.startNewChain && !hasGetStream) {
                 stream = stream.map(new NoneMapper()).startNewChain();
                 hasGetStream = true;
@@ -90,7 +86,7 @@ public abstract class DTOStream<T> {
             return stream;
         }
 
-        public DTOStream<DTO> addStream(SingleOutputStreamOperator<DTO> mainStream) {
+        public DTOStream<RECORD_TYPE> addStream(SingleOutputStreamOperator<RECORD_TYPE> mainStream) {
             if (stream == null) {
                 stream = mainStream.getSideOutput(outputTag);
             } else {
@@ -100,9 +96,9 @@ public abstract class DTOStream<T> {
         }
     }
 
-    public static class NoneMapper implements MapFunction<DTO, DTO> {
+    public static class NoneMapper<RECORD_TYPE> implements MapFunction<RECORD_TYPE, RECORD_TYPE> {
         @Override
-        public DTO map(DTO o) throws Exception {
+        public RECORD_TYPE map(RECORD_TYPE o) throws Exception {
             // 啥也不做就行了
             return o;
         }

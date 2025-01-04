@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSONResult;

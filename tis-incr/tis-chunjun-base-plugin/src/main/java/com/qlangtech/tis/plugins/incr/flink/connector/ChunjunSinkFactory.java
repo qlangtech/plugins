@@ -55,7 +55,9 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -656,7 +658,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
         @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean validateAll(IControlMsgHandler msgHandler
+                , Context context, PostFormVals postFormVals) {
             return super.validateAll(msgHandler, context, postFormVals);
         }
 

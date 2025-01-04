@@ -1,0 +1,6 @@
+{
+	"topicPartitions":{
+		"label":"topic:partition",
+		"placeholder":"sample.topic:0,sample.topic:1"
+	}
+}

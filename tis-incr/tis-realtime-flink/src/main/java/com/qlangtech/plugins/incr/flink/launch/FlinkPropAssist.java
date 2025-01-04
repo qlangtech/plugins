@@ -69,7 +69,7 @@ public class FlinkPropAssist<T extends Describable> {
     }
 
     public static class Options<T extends Describable> {
-        private final List<Triple<String, ConfigOption, Function<T, Object>>> opts = Lists.newArrayList();
+        private final List<Triple<String, TISFlinkProp, Function<T, Object>>> opts = Lists.newArrayList();
         private Map<String, /*** fieldname*/PropertyType> props;
 
         private FlinkPropAssist<T> propsAssist;
@@ -97,7 +97,10 @@ public class FlinkPropAssist<T extends Describable> {
             PropertyType property = null;
             Function<T, Object> propGetter = null;
             Object val = null;
-            for (Triple<String, ConfigOption, Function<T, Object>> opt : opts) {
+            for (Triple<String, TISFlinkProp, Function<T, Object>> opt : opts) {
+                if (opt.getMiddle().overwriteProp.getDisabled()) {
+                    continue;
+                }
                 propGetter = opt.getRight();
                 if (propGetter != null) {
                     val = propGetter.apply(instance);
@@ -112,7 +115,7 @@ public class FlinkPropAssist<T extends Describable> {
                 if (val == null) {
                     continue;
                 }
-                cfg.set(opt.getMiddle(), val);
+                cfg.set(opt.getMiddle().getConfigOpt(), val);
             }
             return cfg;
         }
@@ -130,7 +133,7 @@ public class FlinkPropAssist<T extends Describable> {
                 this.addFieldDescriptor(fieldName, option.configOption, option.overwriteProp);
 
             }
-            this.opts.add(Triple.of(fieldName, option.configOption, propGetter));
+            this.opts.add(Triple.of(fieldName, option, propGetter));
         }
 
         public Map<String, PropertyType> getProps() {
@@ -160,6 +163,10 @@ public class FlinkPropAssist<T extends Describable> {
             this.configOption = configOption;
         }
 
+        public <T> ConfigOption<T> getConfigOpt() {
+            return (ConfigOption<T>) configOption;
+        }
+
         public TISFlinkProp overwriteDft(Object dftVal) {
             // overwriteProp.setDftVal(dftVal);
             return this.setOverwriteProp(OverwriteProps.dft(dftVal));
@@ -176,6 +183,12 @@ public class FlinkPropAssist<T extends Describable> {
             this.overwriteProp = overwriteProp;
             this.hasSetOverWrite = true;
             return this;
+        }
+
+        public TISFlinkProp disable() {
+            OverwriteProps overwriteProps = new OverwriteProps();
+            overwriteProps.setDisabled();
+            return setOverwriteProp(overwriteProps);
         }
     }
 
@@ -211,8 +224,10 @@ public class FlinkPropAssist<T extends Describable> {
             opts = Lists.newArrayList(new Option("是", true), new Option("否", false));
         }
 
-        descriptor.addFieldDescriptor(fieldName, dftVal, helperContent.toString()
-                , overwriteProps.opts.isPresent() ? overwriteProps.opts : Optional.ofNullable(opts));
+        Optional<List<Option>> optsOp = overwriteProps.opts.isPresent() ? overwriteProps.opts : Optional.ofNullable(opts);
+
+        descriptor.addFieldDescriptor(fieldName, dftVal, null, helperContent.toString()
+                , optsOp, overwriteProps.getDisabled());
     }
 
     private static Method getClazzMethod;

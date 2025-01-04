@@ -1,0 +1,7 @@
+{
+  "tabEntities": {
+    "label": "Table Name",
+    "validators": "require",
+    "help": "导入流实体名称，目标端以此作为表名"
+  }
+}

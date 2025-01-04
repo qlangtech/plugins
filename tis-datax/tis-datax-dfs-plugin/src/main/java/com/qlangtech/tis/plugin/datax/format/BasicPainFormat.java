@@ -19,7 +19,12 @@
 package com.qlangtech.tis.plugin.datax.format;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.BytesColumn;
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
@@ -28,22 +33,34 @@ import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.guesstype.GuessFieldType;
+import com.qlangtech.tis.plugin.datax.format.guesstype.IGuessColTypeFormatConfig;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.util.DescriptorsJSONResult;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,7 +68,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-08-06 13:49
  **/
-public abstract class BasicPainFormat extends FileFormat {
+public abstract class BasicPainFormat extends FileFormat implements IGuessColTypeFormatConfig, AfterPluginSaved {
     private static final Logger logger = LoggerFactory.getLogger(BasicPainFormat.class);
     @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require})
     public String dateFormat;
@@ -154,17 +171,62 @@ public abstract class BasicPainFormat extends FileFormat {
         }
     }
 
-    public static SimpleDateFormat getTimeStampFormat() {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private transient SimpleDateFormat _dateFormat;// = new ThreadLocal<>();
+
+    private transient SimpleDateFormat _timestampFormat;
+
+    @Override
+    public boolean isDateFormat(String literiaVal) {
+
+        try {
+            getDateFormat().parse(literiaVal);
+            return true;
+        } catch (ParseException e) {
+
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isTimeStampFormat(String literiaVal) {
+        try {
+            getTimeStampFormat().parse(literiaVal);
+            return true;
+        } catch (ParseException e) {
+            // throw new RuntimeException(e);
+        }
+        return false;
+    }
+
+    // @Override
+    protected final SimpleDateFormat getDateFormat() {
+        if (_dateFormat == null) {
+            this._dateFormat = parseFormat(this.dateFormat);
+        }
+        return _dateFormat;
+    }
+
+    private final SimpleDateFormat getTimeStampFormat() {
+        if (_timestampFormat == null) {
+            this._timestampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+        return _timestampFormat;
+    }
+
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this._timestampFormat = null;
+        this._dateFormat = null;
+    }
+
+    @Override
+    public String getNullFormat() {
+        return this.nullFormat;
     }
 
     @Override
     public final boolean containHeader() {
         return this.header;
-    }
-
-    public final SimpleDateFormat getDateFormat() {
-        return parseFormat(this.dateFormat);
     }
 
     public static SimpleDateFormat parseFormat(String dateFormat) {
@@ -232,7 +294,8 @@ public abstract class BasicPainFormat extends FileFormat {
 
         // guess all col types
         DataType[] types = new DataType[colCount];
-        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null").processGuess(types, this, textFormat);
+        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null")
+                .processUnStructGuess(types, this, textFormat);
         return new FileHeader(colCount, header == null ? null : Lists.newArrayList(header), Lists.newArrayList(types));
     }
 

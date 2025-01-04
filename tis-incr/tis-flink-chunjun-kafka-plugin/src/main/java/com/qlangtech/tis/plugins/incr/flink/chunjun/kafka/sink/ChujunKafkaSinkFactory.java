@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink;
 
+import com.alibaba.citrus.turbine.Context;
 import com.dtstack.chunjun.conf.FieldConf;
 import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
@@ -46,7 +47,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -54,8 +54,12 @@ import com.qlangtech.tis.plugins.datax.kafka.writer.DataXKafkaWriter;
 import com.qlangtech.tis.plugins.datax.kafka.writer.KafkaSelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory.BasicFormatDescriptor;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
@@ -63,6 +67,7 @@ import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.Preconditions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,8 +82,16 @@ import java.util.stream.Collectors;
  **/
 public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
-    @FormField(ordinal = 2, validate = {Validator.require})
+    @FormField(ordinal = 0, validate = {Validator.require})
     public FormatFactory format;
+
+    public static List<? extends Descriptor> supportedFormats(List<? extends Descriptor> descs) {
+        if (CollectionUtils.isEmpty(descs)) {
+            return Collections.emptyList();
+        }
+        return descs.stream().filter((desc) ->
+                ((BasicFormatDescriptor) desc).getEndType().sinkSupport).collect(Collectors.toList());
+    }
 
     @Override
     protected boolean supportUpsetDML() {
@@ -105,7 +118,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
         kafkaConf.setProducerSettings(dataXWriter.buildKafkaConfig());
 
-        SyncConf syncConf = createSyncConf(selectedTab, targetTabName,() -> {
+        SyncConf syncConf = createSyncConf(selectedTab, targetTabName, () -> {
             Map<String, Object> params = Maps.newHashMap();
             return params;
         }, dataXWriter);
@@ -257,8 +270,30 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         }
 
         @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            ChujunKafkaSinkFactory sinkFactory = postFormVals.newInstance();
+            DataxReader dataxReader
+                    = DataxReader.load((IPluginContext) msgHandler, msgHandler.getCollectionName());
+            // List<ISelectedTab> tabs = dataxReader.getSelectedTabs();
+            if (!sinkFactory.validate(msgHandler, context, FormatFactory.KEY_FIELD_FORMAT, dataxReader)) {
+                return false;
+            }
+            return super.validateAll(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return super.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
         public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
             return null;
         }
+    }
+
+    private boolean validate(IControlMsgHandler msgHandler, Context context, String fieldName, DataxReader dataxReader) {
+        return this.format.validateFormtField(msgHandler, context, fieldName, dataxReader);
     }
 }

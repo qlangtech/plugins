@@ -218,12 +218,12 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             after.put(colNum, colNumValUpdated);
             after.put(updateTime, updateTimeValUpdated);
         });
-        final DTO updateAfter = updateBefore.colone();
+        final DTO updateAfter = updateBefore.clone();
         updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
         List<DTO> dtos = Lists.newArrayList(add, updateAfter);
 
         if (needDelete) {
-            final DTO delete = updateBefore.colone();
+            final DTO delete = updateBefore.clone();
             delete.setBefore(delete.getAfter());
             delete.setEventType(DTO.EventType.DELETE);
             dtos.add(delete);

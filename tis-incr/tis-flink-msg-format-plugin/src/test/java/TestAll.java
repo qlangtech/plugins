@@ -17,7 +17,10 @@
  */
 
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISCanalJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISDebeziumJsonFormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISSinkDebeziumJsonFormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactoryTest;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSinkJsonFormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSourceJsonFormatFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -30,7 +33,10 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses(
         {
                 TestTISCanalJsonFormatFactory.class,
-                TestTISDebeziumJsonFormatFactory.class
+                TestTISSinkDebeziumJsonFormatFactory.class,
+                TestSinkJsonFormatFactory.class,
+                TestSourceJsonFormatFactory.class,
+                TISCanalJsonFormatFactoryTest.class
         })
 public class TestAll {
 }

@@ -7,7 +7,8 @@
   },
   "format": {
     "label": "传输格式",
-    "dftVal": "debezium-json"
+    "dftVal": "json",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.ChujunKafkaSinkFactory.supportedFormats(desc);"
   },
   "semantic": {
     "dftVal": "none",

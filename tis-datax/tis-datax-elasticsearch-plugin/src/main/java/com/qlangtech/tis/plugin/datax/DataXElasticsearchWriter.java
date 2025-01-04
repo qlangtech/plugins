@@ -550,7 +550,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME));
+            this.registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME));
         }
 
         @Override

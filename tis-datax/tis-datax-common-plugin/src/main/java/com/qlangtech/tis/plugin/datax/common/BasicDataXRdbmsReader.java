@@ -86,6 +86,10 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
+
+
+
+
     private transient int preSelectedTabsHash;
     public String dataXName;
 

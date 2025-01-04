@@ -1,0 +1,7 @@
+{
+  "topics": {
+    "label": "Topics",
+    "help": "multiple topics，use common\",\" as separator",
+    "placeholder": "topic-a,topic-b"
+  }
+}

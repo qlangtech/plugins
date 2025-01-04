@@ -26,7 +26,7 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugins.datax.kafka.writer.DataXKafkaWriter;
 import com.qlangtech.tis.plugins.datax.kafka.writer.KafkaSelectedTab;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaPlaintext;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TISCanalJsonFormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.junit.AfterClass;

@@ -58,7 +58,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/datastream/kafka/
+ * https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/datastream/kafka/ <br/>
+ * https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/destination-kafka/src/main/resources/spec.json <br/>
  */
 public class DataXKafkaWriter extends DataxWriter {
 
@@ -148,7 +149,8 @@ public class DataXKafkaWriter extends DataxWriter {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap,Optional<RecordTransformerRules> transformerRules) {
+    public IDataxContext getSubTask(
+            Optional<IDataxProcessor.TableMap> tableMap,Optional<RecordTransformerRules> transformerRules) {
         return null;
     }
 

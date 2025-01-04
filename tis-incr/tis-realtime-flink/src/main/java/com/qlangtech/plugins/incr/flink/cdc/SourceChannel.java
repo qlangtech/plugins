@@ -72,6 +72,10 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         this.sourceFunction = sourceFunction;
     }
 
+    public SourceChannel(ReaderSource sourceFunction) {
+        this(Collections.singletonList(sourceFunction));
+    }
+
     public static List<ReaderSource> getSourceFunction(
             DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
@@ -91,7 +95,6 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             });
         }, tabs, sourceFunctionCreator);
     }
-
 
 
 //    public static class HostDBs {

@@ -98,24 +98,17 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     @Override
     public JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
             , IDataxProcessor dataXProcessor) throws Exception {
+        StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
 
-//        try (DefaultJDBCConnectionPool connectionPool = new DefaultJDBCConnectionPool()) {
-//            JDBCConnection.connectionPool.set(connectionPool);
-            StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
+        if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
+            throw new IllegalArgumentException("focusTabs can not be empty");
+        }
 
-            if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
-                throw new IllegalArgumentException("focusTabs can not be empty");
-            }
+        Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
+        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
 
-            Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
-            Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
-            // CountDownLatch countDown = new CountDownLatch(1);
-
-            this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
-            return executeFlinkJob(dataxName, env);
-//        } finally {
-//            JDBCConnection.connectionPool.remove();
-//        }
+        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
+        return executeFlinkJob(dataxName, env);
     }
 
     protected Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(

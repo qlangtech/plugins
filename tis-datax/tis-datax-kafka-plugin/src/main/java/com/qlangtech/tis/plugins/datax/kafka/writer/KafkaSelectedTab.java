@@ -18,11 +18,17 @@
 
 package com.qlangtech.tis.plugins.datax.kafka.writer;
 
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.impl.AttrVals;
 
 import java.util.List;
 
@@ -36,19 +42,7 @@ public class KafkaSelectedTab extends SelectedTab {
     public List<String> partitionFields;
 
     public static List<Option> getPtCandidateFields() {
-        return SelectedTab.getContextOpts((cols) -> cols.stream()
-                .filter((col) -> {
-                    return true;
-//                    switch (col.getType().getCollapse()) {
-//                        // case STRING:
-//                        case INT:
-//                        case Long:
-//                        case Date:
-//                            return true;
-//                    }
-//                    return false;
-                }));
-
+        return SelectedTab.getContextOpts((cols) -> cols.stream());
     }
 
 
@@ -56,6 +50,18 @@ public class KafkaSelectedTab extends SelectedTab {
     public static class DftDescriptor extends SelectedTab.DefaultDescriptor {
         public DftDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean validateSubFormItems(IControlMsgHandler msgHandler
+                , Context context, BaseSubFormProperties props, SubFormFilter filter, AttrVals formData) {
+            boolean valid = super.validateSubFormItems(msgHandler, context, props, filter, formData);
+
+            if (!valid) {
+                filter.getOwnerPlugin((IPluginContext) msgHandler);
+            }
+
+            return valid;
         }
     }
 }

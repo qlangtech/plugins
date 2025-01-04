@@ -100,7 +100,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
                 out.collect(dto);
             }
             if (containAfterVals) {
-                dto = dto.colone();
+                dto = dto.clone();
                 dto.setEventType(DTO.EventType.UPDATE_AFTER);
                 out.collect(dto);
             }

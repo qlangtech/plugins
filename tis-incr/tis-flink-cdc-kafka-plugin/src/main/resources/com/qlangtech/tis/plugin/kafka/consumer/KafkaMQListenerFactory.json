@@ -1,0 +1,20 @@
+{
+  "startOffset": {
+    "dftVal": "Latest Offset",
+    "label": "Startint Offsets"
+  },
+  "independentBinLogMonitor": {
+    "label": "BinLog独立监听",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  }
+}

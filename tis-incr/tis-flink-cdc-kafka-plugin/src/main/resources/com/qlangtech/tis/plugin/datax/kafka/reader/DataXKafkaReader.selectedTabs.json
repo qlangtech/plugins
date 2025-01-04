@@ -1,0 +1,9 @@
+{
+  "where": {
+    "disable": true
+  },
+  "cols": {
+    "elementCreator": "com.qlangtech.tis.plugin.datax.kafka.reader.KafkaCMetaCreatorFactory",
+    "viewtype": "tuplelist"
+  }
+}

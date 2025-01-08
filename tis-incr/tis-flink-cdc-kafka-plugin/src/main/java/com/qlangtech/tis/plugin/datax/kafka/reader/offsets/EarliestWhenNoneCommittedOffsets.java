@@ -37,7 +37,7 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy;
  **/
 public class EarliestWhenNoneCommittedOffsets extends StartOffset {
     @Override
-    public void setOffset(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setOffset(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         kafkaSourceBuilder.setStartingOffsets(OffsetsInitializer.committedOffsets(OffsetResetStrategy.EARLIEST));
     }
 

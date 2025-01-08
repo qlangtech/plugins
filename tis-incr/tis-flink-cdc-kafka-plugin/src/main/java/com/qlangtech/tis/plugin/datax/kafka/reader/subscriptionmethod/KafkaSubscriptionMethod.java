@@ -20,9 +20,7 @@ package com.qlangtech.tis.plugin.datax.kafka.reader.subscriptionmethod;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 /**
  * https://github.com/airbytehq/airbyte/blob/c5192893f780a8fbe05a4ecac9ea8093d4d8f303/airbyte-integrations/connectors/source-kafka/src/main/java/io/airbyte/integrations/source/kafka/format/JsonFormat.java#L56
@@ -33,13 +31,13 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
  */
 public abstract class KafkaSubscriptionMethod implements Describable<KafkaSubscriptionMethod> {
 
-    public abstract void setSubscription(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder);
+    public abstract void setSubscription(KafkaSourceBuilder<DTO> kafkaSourceBuilder);
 
     /**
      * 用于猜测Kafka对应的Schema结果过程订阅消息用
      *
      * @param consumer
      */
-    public abstract void setSubscription(KafkaConsumer<byte[], byte[]> consumer);
+   // public abstract void setSubscription(KafkaConsumer<byte[], byte[]> consumer);
 
 }

@@ -28,17 +28,13 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.TopicPartition;
-
-import java.util.Set;
-
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
+import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
+import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 /**
  * sample.topic:0, sample.topic:1
@@ -69,13 +65,13 @@ public class KafkaManuallyAssignAListOfPartitions extends KafkaSubscriptionMetho
         return Pair.of(partitionSet.size() > 0, partitionSet);
     }
 
-    @Override
-    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
-        consumer.assign(getTopicPartitions().getRight());
-    }
+//    @Override
+//    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
+//        consumer.assign(getTopicPartitions().getRight());
+//    }
 
     @Override
-    public void setSubscription(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setSubscription(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         Pair<Boolean, Set<TopicPartition>> topicPartitions = getTopicPartitions();
         kafkaSourceBuilder.setPartitions(topicPartitions.getRight());
     }

@@ -27,8 +27,6 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-04 22:09
@@ -98,6 +96,34 @@ public class TISSourceDebeziumJsonFormatFactoryTest {
         Assert.assertEquals(2, afterVals.size());
         Assert.assertEquals("666666666666666666666666", beforeVals.get("order_id"));
         Assert.assertEquals(BigDecimal.valueOf(1111, 2), (BigDecimal) beforeVals.get("price"));
+
+
+        data = " {\n" +
+                "  \"before\": {\n" +
+                "  \t\"order_id\": \"666666666666666666666666\",\n" +
+                "  \t\"price\": 12.11\n" +
+                "   },\n" +
+                "  \"after\": null,\n" +
+                "  \"op\": \"d\",\n" +
+                "  \"source\": {\n" +
+                "  \t\t\"db\": \"order2\",\n" +
+                "  \t\t\"table\": \"orderdetail\"\n" +
+                "  }\n" +
+                " }";
+
+        record = debeziumJsonFormatFactory.parseRecord(reuse, data.getBytes(TisUTF8.get()));
+        Assert.assertNotNull(record);
+        Assert.assertEquals(EventType.DELETE, record.getEventType());
+        Assert.assertEquals(TEST_TABLE_NAME, record.tabName);
+
+        afterVals = record.vals;
+        Assert.assertNull(afterVals);
+
+        beforeVals = record.getOldVals();
+        Assert.assertNotNull("beforeVals can not be null", beforeVals);
+        Assert.assertEquals(2, beforeVals.size());
+        Assert.assertEquals("666666666666666666666666", beforeVals.get("order_id"));
+        Assert.assertEquals(BigDecimal.valueOf(1211, 2), (BigDecimal) beforeVals.get("price"));
 
     }
 }

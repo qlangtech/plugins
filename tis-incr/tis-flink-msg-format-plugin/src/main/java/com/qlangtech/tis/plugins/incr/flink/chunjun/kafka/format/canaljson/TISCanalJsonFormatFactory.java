@@ -119,35 +119,17 @@ import java.util.function.BiFunction;
  **/
 public class TISCanalJsonFormatFactory extends FormatFactory {
 
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = true)
-    public Boolean ignoreParseErrors;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, advance = true, validate = Validator.require)
-    public String timestampFormat;
+
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, advance = true)
     public String dbInclude;
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, advance = true)
     public String tableInclude;
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, advance = true)
-    public String nullKeyMode;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
-    public String nullKeyLiteral;
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
-    public Boolean encodeDecimal;
 
     @Override
     public boolean validateFormtField(IControlMsgHandler msgHandler, Context context, String fieldName, DataxReader dataxReader) {
         return true;
     }
 
-    @Override
-    public String getNullFormat() {
-        return this.nullKeyLiteral;
-    }
-
-    @Override
-    protected String getTimestampFormat() {
-        return this.timestampFormat;
-    }
 
     private static final String FIELD_OLD = "old";
     private static final String OP_INSERT = "INSERT";
@@ -157,29 +139,13 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
 
     @Override
     public KafkaStructuredRecord parseRecord(KafkaStructuredRecord reuse, byte[] record) {
+        reuse.clean();
         HashMap jsonObject = JSON.parseObject(record, HashMap.class);
         List<Map> data = (List<Map>) jsonObject.get("data");
         if (data == null) {
             return null;
         }
         String eventType = (String) jsonObject.get("type");
-        reuse.setOldVals(null);
-        reuse.setVals(null);
-        switch (eventType) {
-            case OP_INSERT:
-            case OP_CREATE:
-                reuse.setEventType(EventType.ADD);
-                break;
-            case OP_UPDATE:
-                reuse.setEventType(EventType.UPDATE_AFTER);
-                break;
-            case OP_DELETE:
-                reuse.setEventType(EventType.DELETE);
-                break;
-            default:
-                return null;
-        }
-        reuse.setTabName((String) jsonObject.get("table"));
 
         if (data != null) {
             for (Map d : data) {
@@ -194,6 +160,24 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
                 break;
             }
         }
+
+        switch (eventType) {
+            case OP_INSERT:
+            case OP_CREATE:
+                reuse.setEventType(EventType.ADD);
+                break;
+            case OP_UPDATE:
+                reuse.setEventType(EventType.UPDATE_AFTER);
+                break;
+            case OP_DELETE:
+                reuse.setOldVals(reuse.vals);
+                reuse.setEventType(EventType.DELETE);
+                break;
+            default:
+                return null;
+        }
+        reuse.setTabName((String) jsonObject.get("table"));
+
 
         return reuse;
     }
@@ -268,12 +252,8 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
 
         @Override
         protected void appendOptionCfgs(Options options) {
-            options.add("ignoreParseErrors", TISFlinkProp.create(CanalJsonFormatOptions.IGNORE_PARSE_ERRORS));
-            options.add("timestampFormat", TISFlinkProp.create(CanalJsonFormatOptions.TIMESTAMP_FORMAT));
             options.add("dbInclude", TISFlinkProp.create(CanalJsonFormatOptions.DATABASE_INCLUDE));
             options.add("tableInclude", TISFlinkProp.create(CanalJsonFormatOptions.TABLE_INCLUDE));
-            addNullKeyOptCfg(options);
-            options.add("encodeDecimal", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
 

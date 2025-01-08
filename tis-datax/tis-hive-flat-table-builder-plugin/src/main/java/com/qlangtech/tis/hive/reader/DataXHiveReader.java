@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.common.ContextParams;
+
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -81,10 +81,10 @@ public class DataXHiveReader extends AbstractDFSReader implements AfterPluginSav
         return IOUtils.loadResourceFromClasspath(DataXHiveReader.class, "DataXHiveReader-tpl.json");
     }
 
-    @Override
-    public Map<String, ContextParamConfig> getDBContextParams() {
-        return ContextParams.defaultContextParams();
-    }
+//    @Override
+//    public Map<String, ContextParamConfig> getDBContextParams() {
+//        return ContextParamConfig.defaultContextParams();
+//    }
 
     @Override
     public List<SelectedTab> fillSelectedTabMeta(List<SelectedTab> tabs) {

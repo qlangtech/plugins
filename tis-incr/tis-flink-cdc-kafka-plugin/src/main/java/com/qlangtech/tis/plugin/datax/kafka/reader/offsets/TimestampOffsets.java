@@ -39,7 +39,7 @@ public class TimestampOffsets extends StartOffset {
     public Long timestamp;
 
     @Override
-    public void setOffset(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setOffset(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         kafkaSourceBuilder.setStartingOffsets(OffsetsInitializer.timestamp(this.timestamp));
     }
 

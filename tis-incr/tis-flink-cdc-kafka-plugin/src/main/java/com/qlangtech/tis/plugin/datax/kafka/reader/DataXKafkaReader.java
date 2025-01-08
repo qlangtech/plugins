@@ -21,10 +21,6 @@ package com.qlangtech.tis.plugin.datax.kafka.reader;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
@@ -39,7 +35,10 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.lang.TisException.ErrMsg;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.KeyedPluginStore.Key;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -51,30 +50,41 @@ import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader;
 import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
 import com.qlangtech.tis.plugin.datax.kafka.reader.subscriptionmethod.KafkaSubscriptionMethod;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.kafka.consumer.KafkaDTODeserializationSchema;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory.BasicFormatDescriptor;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
+import org.apache.flink.connector.kafka.source.enumerator.subscriber.KafkaSubscriber;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -85,13 +95,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.qlangtech.tis.plugin.annotation.Validator.identity;
 import static com.qlangtech.tis.plugin.annotation.Validator.require;
+import static com.qlangtech.tis.plugin.ds.ContextParamConfig.KEY_DB_CONTEXT_PARAM_NAME;
 
 /**
  * reference： https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/source-kafka/src/main/resources/spec.json
@@ -99,22 +113,30 @@ import static com.qlangtech.tis.plugin.annotation.Validator.require;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-03-16 22:25
  **/
-public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
+public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, KeyedPluginStore.IPluginKeyAware {
     private static final Logger logger = LoggerFactory.getLogger(DataXKafkaReader.class);
+    public static final String FIELD_KEY_FORMAT = "format";
+
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {require})
     public String bootstrapServers;
 
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {require})
-//    public String tabEntities;
-
     @FormField(ordinal = 1, validate = {require})
     public KafkaSubscriptionMethod subscription;
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
+    public String testTopic;
+
+
+    @FormField(ordinal = 4, validate = {Validator.require})
+    public GuessFieldType guessFieldType;
 
     @FormField(ordinal = 3, validate = {require})
-    public KafkaProtocol protocol;
-
-    @FormField(ordinal = 2, validate = {require})
     public FormatFactory format;
+
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {require, identity})
+    public String groupId;
+
+    @FormField(ordinal = 6, validate = {require})
+    public KafkaProtocol protocol;
 
     public static List<? extends Descriptor> supportedFormats(List<? extends Descriptor> descs) {
         if (CollectionUtils.isEmpty(descs)) {
@@ -124,21 +146,20 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
                 ((BasicFormatDescriptor) desc).getEndType().sourceSupport).collect(Collectors.toList());
     }
 
-
+    @Override
+    public final Map<String, ContextParamConfig> getDBContextParams() {
+        return ContextParamConfig.defaultContextParams((param) -> !KEY_DB_CONTEXT_PARAM_NAME.equals(param.getKeyName()));
+    }
 
 //    @FormField(ordinal = 5, advance = true, type = FormFieldType.INT_NUMBER, validate = {require})
 //    public Integer inspectRowCount;
 
-    @FormField(ordinal = 5, validate = {Validator.require})
-    public GuessFieldType guessFieldType;
+
 
     final KafkaConsumerFactory createKafkaFactory() {
         return KafkaConsumerFactory.getKafkaConfig(this, true);
     }
 
-
-    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
-    public String testTopic;
 
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {})
     public Boolean enableAutoCommit;
@@ -165,9 +186,6 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
 //    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {}, advance = true)
 //    public String autoOffsetReset;
 
-    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
-    public String groupId;
-
 
     @FormField(ordinal = 16, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer maxPollRecords;
@@ -180,7 +198,7 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
 
     @FormField(ordinal = 19, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer socketConnectionSetupTimeoutMaxMs;
-
+    public transient String dataXName;
     /**
      * 增量执行过程需要的配置参数
      */
@@ -203,6 +221,23 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
     public static List<String> getTablesInDB(SubFormFilter filter) {
         DataXKafkaReader reader = DataxReader.getDataxReader(filter);
         return Lists.newArrayList(reader.getTargetTabsEntities());
+    }
+
+    @Override
+    public void refresh() {
+        super.refresh();
+        if (StringUtils.isEmpty(this.dataXName)) {
+            throw new IllegalStateException("property dataName can not be empty");
+        }
+        this.tableColsTypeCache.invalidate(this.dataXName);
+    }
+
+    //    public  Map<String, ContextParamConfig> getDBContextParams() {
+//        return  ContextParamConfig.defaultContextParams();
+//    }
+    @Override
+    public void setKey(Key key) {
+        this.dataXName = key.keyVal.getVal();
     }
 
     @Override
@@ -259,80 +294,121 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         this._targetTabsEntities = null;
-        this.selectedTabs = null;
         this._tabColsMeta = null;
     }
 
-    private transient LoadingCache<String, Map<String/*tableName*/, List<ColumnMetaData>>> tableColsTypeCache;
-    //   = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
+    private static final Cache<String, Map<String/*tableName*/, List<ColumnMetaData>>> tableColsTypeCache
+            = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
 
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
         //  return super.getTableMetadata(inSink, table);
+        return parseTableMetadataFromKafkaHistoryEvents(table);
+    }
 
-        if (tableColsTypeCache == null) {
-            tableColsTypeCache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES)
-                    .build(new CacheLoader<String, Map<String/*tableName*/, List<ColumnMetaData>>>() {
-                        @Override
-                        public Map<String/*tableName*/, List<ColumnMetaData>> load(String key) throws Exception {
-                            KafkaConsumerFactory kafkaFactory = KafkaConsumerFactory.getKafkaConfig(DataXKafkaReader.this, (props) -> {
-                                Map<String, Object> rewrite = Maps.newHashMap(props);
-                                // 默认从事件流最前开始读
-                                rewrite.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, StringUtils.lowerCase(OffsetResetStrategy.EARLIEST.name()));
-                                rewrite.put(ConsumerConfig.GROUP_ID_CONFIG, "kafka-guess-type");
-                                rewrite.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, (false));
-
-                                return rewrite;
-                            }, true);
-
-                            try (KafkaConsumer<byte[], byte[]> consumer = kafkaFactory.getConsumer()) {
-                                subscription.setSubscription(consumer);
-                                // 确保从最先的地方 开始消费
-//            for (TopicPartition partition : consumer.assignment()) {
-//                consumer.seek(partition, 0);
-//            }
-                                consumer.seekToBeginning(consumer.assignment());
-
-                                // reference:https://github.com/airbytehq/airbyte/blob/fefbb72efa10c695c80ed04cbb564ad85aa39705/airbyte-integrations/connectors/source-kafka/src/main/java/io/airbyte/integrations/source/kafka/format/JsonFormat.java#L118C91-L118C103
-                                GuessStructuredReader consumerRecords = new GuessStructuredReader(consumer.poll(Duration.of(pollingTime, ChronoUnit.MILLIS)));
-//                                int readCount = 0;
-//                                byte[] val = null;
-//                                Map<String, Object> row = null;
-                                // IGuessColTypeFormatConfig formatConfig = null;
-
-                                try {
-
-                                    Set<String> targetTabs = getTargetTabsEntities();
-
-                                    Map<String/*tableName*/, Map<String/*colName*/, DataType>> colMeta = guessFieldType.processStructGuess(format, consumerRecords);
-
-                                    int[] index = new int[1];
-//                                    return colMeta.entrySet().stream().map((entry) -> {
-//                                        return new ColumnMetaData(index[0]++, entry.getKey(), entry.getValue(), false);
-//                                    }).collect(Collectors.toList());
-
-                                    return colMeta.entrySet().stream().filter((e) -> StructuredRecord.DEFAUTL_TABLE_NAME.equals(e.getKey()) || targetTabs.contains(e.getKey()))
-                                            .collect(Collectors.toMap((e) -> {
-                                                        index[0] = 0;
-                                                        return e.getKey();
-                                                    }
-                                                    , (e) -> e.getValue().entrySet().stream()
-                                                            .map((colEntry) -> new ColumnMetaData(index[0]++, colEntry.getKey(), colEntry.getValue(), false))
-                                                            .collect(Collectors.toList())));
-
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        }
-                    });
+    private List<ColumnMetaData> parseTableMetadataFromKafkaHistoryEvents(EntityName table) {
+        if (StringUtils.isEmpty(this.dataXName)) {
+            throw new IllegalStateException("property dataXName can not be null");
         }
-
         try {
-            return tableColsTypeCache.get(StructuredRecord.DEFAUTL_TABLE_NAME).get(table.getTableName());
+
+            Map<String/*tableName*/, List<ColumnMetaData>> tabColMeta = tableColsTypeCache.get(this.dataXName, () -> {
+                KafkaConsumerFactory kafkaFactory = KafkaConsumerFactory.getKafkaConfig(DataXKafkaReader.this, (props) -> {
+                    Map<String, Object> rewrite = Maps.newHashMap(props);
+                    // 默认从事件流最前开始读
+                    rewrite.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, StringUtils.lowerCase(OffsetResetStrategy.EARLIEST.name()));
+                    rewrite.put(ConsumerConfig.GROUP_ID_CONFIG, "kafka-guess-type");
+                    rewrite.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, (false));
+
+                    return rewrite;
+                }, true);
+
+                KafkaSubscriber topicSubscriber = getTopicSubscriber();
+                Set<TopicPartition> topicPartitions = null;
+                try (AdminClient adminClient = AdminClient.create(this.buildKafkaProperties())) {
+                    topicPartitions = topicSubscriber.getSubscribedTopicPartitions(adminClient);
+                }
+                if (CollectionUtils.isEmpty(topicPartitions)) {
+                    throw new IllegalStateException("topicPartitions can not be empty");
+                }
+
+                try (KafkaConsumer<byte[], byte[]> consumer = kafkaFactory.getConsumer()) {
+                    //  subscription.setSubscription(consumer);
+                    consumer.assign(topicPartitions);
+                    // 确保从最先的地方 开始消费
+//                    for (TopicPartition partition : topicPartitions) {
+//                        consumer.seek(partition, 0);
+//                    }
+//                    consumer.listTopics()
+                    consumer.seekToBeginning(topicPartitions);
+
+                    // reference:https://github.com/airbytehq/airbyte/blob/fefbb72efa10c695c80ed04cbb564ad85aa39705/airbyte-integrations/connectors/source-kafka/src/main/java/io/airbyte/integrations/source/kafka/format/JsonFormat.java#L118C91-L118C103
+                    GuessStructuredReader consumerRecords = new GuessStructuredReader(consumer.poll(Duration.of(pollingTime, ChronoUnit.MILLIS)));
+                    //                                int readCount = 0;
+                    //                                byte[] val = null;
+                    //                                Map<String, Object> row = null;
+                    // IGuessColTypeFormatConfig formatConfig = null;
+
+                    try {
+
+                        Set<String> targetTabs = getTargetTabsEntities();
+
+                        Map<String/*tableName*/, Map<String/*colName*/, DataType>> colMeta = guessFieldType.processStructGuess(format, consumerRecords);
+
+                        int[] index = new int[1];
+                        //                                    return colMeta.entrySet().stream().map((entry) -> {
+                        //                                        return new ColumnMetaData(index[0]++, entry.getKey(), entry.getValue(), false);
+                        //                                    }).collect(Collectors.toList());
+
+                        return colMeta.entrySet().stream()//.filter((e) -> StructuredRecord.DEFAUTL_TABLE_NAME.equals(e.getKey()) || targetTabs.contains(e.getKey()))
+                                .collect(Collectors.toMap((e) -> {
+                                            index[0] = 0;
+                                            return e.getKey();
+                                        }
+                                        , (e) -> e.getValue().entrySet().stream()
+                                                .map((colEntry) -> new ColumnMetaData(index[0]++, colEntry.getKey(), colEntry.getValue(), false))
+                                                .collect(Collectors.toList()), (u, v) -> {
+                                            throw new IllegalStateException(String.format("Duplicate key %s", u));
+                                        }, () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)));
+
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+
+            List<ColumnMetaData> cols = tabColMeta.get(table.getTableName());
+            if (CollectionUtils.isEmpty(cols)) {
+                tableColsTypeCache.invalidate(this.dataXName);
+                throw TisException.create("扫描Kafka历史消息，没有发现表：" + table.getTableName()
+                        + "所对应的记录，当前扫描到的表记录为：“" + String.join(",", tabColMeta.keySet()) + "”，请对Topic中导入相应记录再执行此操作");
+            }
+            return cols;
         } catch (ExecutionException e) {
-            throw new RuntimeException("get table:" + table.getTableName() + " relevant cols", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final Method getKafkaSubscriberMethod;
+
+    static {
+        try {
+            getKafkaSubscriberMethod = KafkaSource.class.getDeclaredMethod("getKafkaSubscriber");
+            getKafkaSubscriberMethod.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private KafkaSubscriber getTopicSubscriber() {
+        try {
+            KafkaSourceBuilder<DTO> kafkaSourceBuilder = this.createKafkaSourceBuilder(Collections.emptyMap());
+            subscription.setSubscription(kafkaSourceBuilder);
+            KafkaSource<DTO> kafkaSource = kafkaSourceBuilder.build();
+            return (KafkaSubscriber) getKafkaSubscriberMethod.invoke(kafkaSource);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -377,6 +453,17 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
     public void startScanDependency() {
 
     }
+
+    public KafkaSourceBuilder<DTO> createKafkaSourceBuilder(
+            Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
+        KafkaSourceBuilder<DTO> kafkaSourceBuilder
+                = KafkaSource.<DTO>builder()
+                .setProperties(this.buildKafkaProperties());
+        kafkaSourceBuilder.setValueOnlyDeserializer(
+                new KafkaDTODeserializationSchema(this.format, contextParamValsGetterMapper));
+        return kafkaSourceBuilder;
+    }
+
 
     public Properties buildKafkaProperties() {
         Map<String, Object> props = buildKafkaConfig(false);
@@ -439,18 +526,31 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
         @Override
         protected final boolean validateAll(
                 IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            DataXKafkaReader kafkaReader = postFormVals.newInstance();
+            // DataXKafkaReader kafkaReader = postFormVals.newInstance();
+            DataXKafkaReader kafkaReader = createDataXKafkaReader(msgHandler, postFormVals);
             if (!kafkaReader.format.validateFormtField(msgHandler, context, FormatFactory.KEY_FIELD_FORMAT, kafkaReader)) {
                 return false;
             }
+
+            try {
+                for (String targetTab : kafkaReader.format.parseTargetTabsEntities()) {
+                    kafkaReader.parseTableMetadataFromKafkaHistoryEvents(EntityName.parse(targetTab));
+                }
+            } catch (Exception e) {
+                logger.warn("pipelineName:" + kafkaReader.dataXName, e);
+                ErrMsg errMsg = TisException.getErrMsg(e);
+                msgHandler.addFieldError(context, FIELD_KEY_FORMAT, errMsg.getMessage());
+                return false;
+            }
+
+
             return super.validateAll(msgHandler, context, postFormVals);
         }
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            DataXKafkaReader dataxReader
-                    = postFormVals.newInstance();
+            DataXKafkaReader dataxReader = createDataXKafkaReader(msgHandler, postFormVals);
             if (StringUtils.isEmpty(dataxReader.testTopic)) {
                 msgHandler.addFieldError(context, "testTopic", ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
                 return false;
@@ -469,7 +569,6 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
 //                    return false;
 //                }
 
-                return true;
 
             } catch (final Exception e) {
 
@@ -483,6 +582,18 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved {
                 return false;
             }
 
+
+            return true;
+        }
+
+        private DataXKafkaReader createDataXKafkaReader(IControlMsgHandler msgHandler, PostFormVals postFormVals) {
+            DataXKafkaReader dataxReader
+                    = postFormVals.newInstance();
+            if (!msgHandler.isCollectionAware()) {
+                throw new IllegalStateException("current context must collectionAware");
+            }
+            dataxReader.dataXName = msgHandler.getCollectionName();
+            return dataxReader;
         }
 
 

@@ -83,6 +83,7 @@ public class JarSubmitFlinkRequest {
         programBuilder.setJarFile(jarFile);
 
 
+
         if (CollectionUtils.isNotEmpty(this.getUserClassPaths())) {
             programBuilder.setUserClassPaths(this.getUserClassPaths());
         }

@@ -20,12 +20,16 @@ package com.qlangtech.plugins.incr.flink.common;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.annotation.JSONField;
+import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -34,13 +38,19 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.client.program.rest.retry.ExponentialWaitStrategy;
+import org.apache.flink.client.program.rest.retry.WaitStrategy;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.runtime.client.JobStatusMessage;
+import org.apache.flink.runtime.highavailability.ClientHighAvailabilityServicesFactory;
+import org.apache.flink.runtime.highavailability.DefaultClientHighAvailabilityServicesFactory;
+import org.apache.flink.runtime.rest.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -66,6 +76,12 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     @JSONField(serialize = false)
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
     public String jobManagerAddress;
+
+    @FormField(ordinal = 2, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    public Integer maxRetry;
+
+    @FormField(ordinal = 3, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    public Long retryDelay;
 
 
     @Override
@@ -98,12 +114,19 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             configuration.setString(JobManagerOptions.ADDRESS, managerAddress.host);
             configuration.setInteger(JobManagerOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.PORT, managerAddress.port);
+            configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, this.maxRetry);
+            configuration.setLong(RestOptions.RETRY_DELAY, this.retryDelay);
 
             if (connTimeout.isPresent()) {
                 configuration.setLong(RestOptions.CONNECTION_TIMEOUT, connTimeout.get());
                 configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
                 configuration.setLong(RestOptions.RETRY_DELAY, 0l);
             }
+
+
+            // WaitStrategy waitStrategy = new ExponentialWaitStrategy(10L, 2000L);
+
+
             return new RestClusterClient<>(configuration, clusterId.orElse(this.FLINK_DEFAULT_CLUSTER_ID));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -118,6 +141,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     @TISExtension
     public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
+        protected final Options<FlinkCluster> opts;
 
         // private List<YarnConfig> installations;
         @Override
@@ -128,6 +152,9 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         public DefaultDescriptor() {
             super(KEY_DISPLAY_NAME);
             // this.load();
+            opts = FlinkPropAssist.createOpts(this);
+            opts.addFieldDescriptor("maxRetry", RestOptions.RETRY_MAX_ATTEMPTS, OverwriteProps.dft(1));
+            opts.addFieldDescriptor("retryDelay", RestOptions.RETRY_DELAY);
         }
 
         @Override

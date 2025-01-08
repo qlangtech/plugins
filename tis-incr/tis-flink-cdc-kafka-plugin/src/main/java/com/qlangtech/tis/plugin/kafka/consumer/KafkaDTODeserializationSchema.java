@@ -18,21 +18,25 @@
 
 package com.qlangtech.tis.plugin.kafka.consumer;
 
-import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
+import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
+import com.qlangtech.tis.plugin.ds.RunningContext;
+import com.qlangtech.tis.plugin.ds.RunningContext.RunningContextParamSetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
+import org.apache.commons.lang.StringUtils;
+
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.util.Collector;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * kafka 中获得的消息，需要先经过一次分流，然后再使用 flink 提供的 deserialize解析成rowdata
@@ -45,10 +49,23 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
     private final FormatFactory msgFormat;
 
     private final KafkaStructuredRecord reuseReocrd;
+    private final Map<String /**tableName*/, RunningContextParamSetter> contextParamValsGetterMapper;
 
-    public KafkaDTODeserializationSchema(FormatFactory msgFormat) {
+    public KafkaDTODeserializationSchema(FormatFactory msgFormat
+            , Map<String /**tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
         this.msgFormat = Objects.requireNonNull(msgFormat, "msgFormat can not be null");
         this.reuseReocrd = new KafkaStructuredRecord();
+        this.contextParamValsGetterMapper =
+                Objects.requireNonNull(contextParamValsGetterMapper, "contextParamValsGetterMapper can not be null")
+                        .entrySet().stream().collect(
+                                Collectors.toMap(
+                                        (entry) -> entry.getKey()
+                                        , (entry) -> new RunningContextParamSetter(new RdbmsRunningContext(StringUtils.EMPTY, entry.getKey()), entry.getValue())
+                                        , (u, v) -> {
+                                            throw new IllegalStateException(String.format("Duplicate key %s", u));
+                                        }
+                                        , () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)
+                                ));
     }
 
     @Override
@@ -71,7 +88,7 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
         if (event == null) {
             throw new IllegalStateException("event can not be null");
         }
-        Map<String, Object> afterVals = record.vals;
+        Map<String, Object> afterVals = getAfterVals(record.tabName, record.vals);
         Map<String, Object> beforeVals = record.getOldVals();
         switch (event) {
             case DELETE: {
@@ -103,7 +120,24 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
 //        dto.setAfter(afterVals);
 
         // return Tuple2.of(record.tabName, message);
-      //  return dto;
+        //  return dto;
+    }
+
+    protected Map<String, Object> getAfterVals(String tabName, Map<String, Object> vals) {
+
+        /**==========================
+         * 设置环境绑定参数值
+         ==========================*/
+        RunningContextParamSetter contextParamsGetter = this.contextParamValsGetterMapper.get(tabName);
+        if (contextParamsGetter != null) {
+            // RdbmsRunningContext runningParamsContext = new RdbmsRunningContext(StringUtils.EMPTY, tabName);
+            contextParamsGetter.setContextParam(vals);
+
+//                    .getValue().forEach((contextParamName, getter) -> {
+//                vals.put(contextParamName, getter.apply(contextParamsGetter.getKey()));
+//            });
+        }
+        return vals;
     }
 
     @Override

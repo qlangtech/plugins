@@ -121,7 +121,10 @@ public class TISCanalJsonFormatFactoryTest {
         Assert.assertEquals(BigDecimal.valueOf(91, 1), (BigDecimal) afterVals.get("price"));
 
         beforeVals = record.getOldVals();
-        Assert.assertNull(beforeVals);
+        Assert.assertNotNull(beforeVals);
+        Assert.assertEquals(2, beforeVals.size());
+        Assert.assertEquals("88888888888888888888888888", beforeVals.get("id"));
+        Assert.assertEquals(BigDecimal.valueOf(91, 1), (BigDecimal) beforeVals.get("price"));
 
 
 //        DataType row = DataTypes.ROW(

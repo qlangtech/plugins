@@ -39,6 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -214,6 +216,16 @@ public class GuessOn extends GuessFieldType {
                 return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.FLOAT).getType(), 3);
             } else if (clazz == Double.class) {
                 return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.DOUBLE).getType(), 4);
+            } else if (clazz == BigInteger.class) {
+                return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.BIGINT).getType(), 2);
+            } else if (clazz == BigDecimal.class) {
+                final BigDecimal decimal = (BigDecimal) colVal;
+                try {
+                    DataType decimalType = DataTypeMeta.getDataTypeMeta(JDBCTypes.DECIMAL).getType();
+                    return new PriorityDataType(decimalType.clone().setDecimalDigits(decimal.scale()), 2);
+                } catch (CloneNotSupportedException e) {
+                    throw new RuntimeException("decimalVal:" + decimal.toPlainString(), e);
+                }
             }
 //            else {
 //                throw new UnsupportedOperationException("unsupported type:" + clazz + ",val:" + colVal);

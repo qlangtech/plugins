@@ -116,32 +116,32 @@ public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
 //    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = true)
 //    public Boolean schemaInclude;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
-    public Boolean ignoreParseErrors;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = Validator.require)
-    public String timestampFormat;
+//    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
+//    public Boolean ignoreParseErrors;
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = Validator.require)
+//    public String timestampFormat;
 
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
-    public String nullKeyMode;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
-    public String nullKeyLiteral;
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
-    public Boolean encodeDecimal;
+//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
+//    public String nullKeyMode;
+//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
+//    public String nullKeyLiteral;
+//    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
+//    public Boolean encodeDecimal;
 
     @Override
     public boolean validateFormtField(IControlMsgHandler msgHandler, Context context, String fieldName, DataxReader dataxReader) {
         return true;
     }
 
-    @Override
-    protected String getTimestampFormat() {
-        return this.timestampFormat;
-    }
-
-    @Override
-    public String getNullFormat() {
-        return this.nullKeyLiteral;
-    }
+//    @Override
+//    protected String getTimestampFormat() {
+//        return this.timestampFormat;
+//    }
+//
+//    @Override
+//    public String getNullFormat() {
+//        return this.nullKeyLiteral;
+//    }
 
     @Override
     public KafkaStructuredRecord parseRecord(KafkaStructuredRecord reuse, byte[] record) {
@@ -193,14 +193,6 @@ public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
 
         @Override
         protected void appendOptionCfgs(Options options) {
-            options.add("ignoreParseErrors", TISFlinkProp.create(DebeziumJsonFormatOptions.IGNORE_PARSE_ERRORS));
-            options.add("timestampFormat", TISFlinkProp.create(DebeziumJsonFormatOptions.TIMESTAMP_FORMAT));
-//            options.add("nullKeyMode", TISFlinkProp.create(DebeziumJsonFormatOptions.JSON_MAP_NULL_KEY_MODE));
-//            options.add("nullKeyLiteral", TISFlinkProp.create(DebeziumJsonFormatOptions.JSON_MAP_NULL_KEY_LITERAL));
-
-            addNullKeyOptCfg(options);
-
-            options.add("encodeDecimal", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
         @Override

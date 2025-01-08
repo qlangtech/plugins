@@ -1,7 +1,7 @@
 {
   "maxInspectLine": {
-    "label": "检查行数",
-    "dftVal": 500,
+    "label": "扫描行数",
+    "dftVal": 50000,
     "help": "会遍历该项设定设定值，指定的行数，以判断列类型"
   }
 }

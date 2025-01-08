@@ -31,5 +31,5 @@ import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
  **/
 public abstract class StartOffset implements Describable<StartOffset> {
 
-    public abstract void setOffset(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder);
+    public abstract void setOffset(KafkaSourceBuilder<DTO> kafkaSourceBuilder);
 }

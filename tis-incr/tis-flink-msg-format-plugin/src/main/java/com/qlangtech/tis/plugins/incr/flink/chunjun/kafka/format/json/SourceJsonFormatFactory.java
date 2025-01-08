@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.Structur
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
+import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
@@ -58,17 +59,17 @@ public class SourceJsonFormatFactory extends FormatFactory {
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
     public Boolean failOnMissingField;
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, advance = true)
-    public Boolean ignoreParseErrors;
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
-    public String nullKeyMode;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
-    public String nullKeyLiteral;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
-    public String timestampFormat;
+//    @FormField(ordinal = 2, type = FormFieldType.ENUM, advance = true)
+//    public Boolean ignoreParseErrors;
+//    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
+//    public String nullKeyMode;
+//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
+//    public String nullKeyLiteral;
+//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
+//    public String timestampFormat;
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
-    public Boolean encodeDecimalAsPlanNumber;
+//    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
+//    public Boolean encodeDecimalAsPlanNumber;
 
     @FormField(ordinal = 7, type = FormFieldType.ENUM, advance = true)
     public Boolean encodeJsonParserEnabled;
@@ -81,23 +82,24 @@ public class SourceJsonFormatFactory extends FormatFactory {
         return false;
     }
 
-    @Override
-    public String getNullFormat() {
-        return this.nullKeyLiteral;
-    }
-
-    @Override
-    protected String getTimestampFormat() {
-        return this.timestampFormat;
-    }
+//    @Override
+//    public String getNullFormat() {
+//        return this.nullKeyLiteral;
+//    }
+//
+//    @Override
+//    protected String getTimestampFormat() {
+//        return this.timestampFormat;
+//    }
 
 
     @Override
     public KafkaStructuredRecord parseRecord(KafkaStructuredRecord reuse, byte[] record) {
-
+        reuse.clean();
         HashMap jsonObject = JSON.parseObject(record, HashMap.class);
         reuse.setTabName(StructuredRecord.DEFAUTL_TABLE_NAME);
         reuse.setVals(jsonObject);
+        reuse.setEventType(EventType.ADD);
         return reuse;
     }
 
@@ -179,14 +181,14 @@ public class SourceJsonFormatFactory extends FormatFactory {
         @Override
         protected void appendOptionCfgs(Options options) {
             options.add("failOnMissingField", TISFlinkProp.create(JsonFormatOptions.FAIL_ON_MISSING_FIELD));
-            options.add("ignoreParseErrors", TISFlinkProp.create(JsonFormatOptions.IGNORE_PARSE_ERRORS));
+            // options.add("ignoreParseErrors", TISFlinkProp.create(JsonFormatOptions.IGNORE_PARSE_ERRORS));
 
-            addNullKeyOptCfg(options);
+            //  addNullKeyOptCfg(options);
 
 //            options.add("mapNullKeyMode", TISFlinkProp.create(JsonFormatOptions.MAP_NULL_KEY_MODE));
 //            options.add("mapNullKeyLiteral", TISFlinkProp.create(JsonFormatOptions.MAP_NULL_KEY_LITERAL));
-            options.add("timestampFormat", TISFlinkProp.create(JsonFormatOptions.TIMESTAMP_FORMAT));
-            options.add("encodeDecimalAsPlanNumber", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
+//            options.add("timestampFormat", TISFlinkProp.create(JsonFormatOptions.TIMESTAMP_FORMAT));
+//            options.add("encodeDecimalAsPlanNumber", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
             options.add("encodeJsonParserEnabled", TISFlinkProp.create(JsonFormatOptions.DECODE_JSON_PARSER_ENABLED));
         }
 

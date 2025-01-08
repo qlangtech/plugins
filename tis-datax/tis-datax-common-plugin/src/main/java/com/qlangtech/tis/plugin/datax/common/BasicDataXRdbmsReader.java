@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -32,20 +31,14 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.common.ContextParams.DbNameContextParamValGetter;
-import com.qlangtech.tis.plugin.datax.common.ContextParams.SystemTimeStampContextParamValGetter;
-import com.qlangtech.tis.plugin.datax.common.ContextParams.TableNameContextParamValGetter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
-import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -87,9 +80,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     public transient List<SelectedTab> selectedTabs;
 
 
-
-
-
     private transient int preSelectedTabsHash;
     public String dataXName;
 
@@ -97,9 +87,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return this.fetchSize;
     }
 
-    @Override
-    public Map<String, ContextParamConfig> getDBContextParams() {
-        return ContextParams.defaultContextParams();
+//    @Override
+//    public Map<String, ContextParamConfig> getDBContextParams() {
+//        return ContextParamConfig.defaultContextParams();
 //        ContextParamConfig dbName = new ContextParamConfig("dbName") {
 //            @Override
 //            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
@@ -141,7 +131,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 //
 ////        dbContextParams.put(dbName.getKeyName(), dbName);
 ////        return dbContextParams;
-    }
+    //  }
 
     @Override
     public final void afterSaved(IPluginContext pluginContext, Optional<Context> context) {

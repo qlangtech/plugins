@@ -46,15 +46,15 @@ public class KafkaSubscribeToAllTopicsMatchingSpecifiedPattern extends KafkaSubs
         return Pattern.compile(topicPattern);
     }
 
+//    @Override
+//    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
+//        consumer.subscribe(this.parsePattern());
+//
+//
+//    }
+
     @Override
-    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
-        consumer.subscribe(this.parsePattern());
-
-
-    }
-
-    @Override
-    public void setSubscription(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setSubscription(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         kafkaSourceBuilder.setTopicPattern(this.parsePattern());
     }
 

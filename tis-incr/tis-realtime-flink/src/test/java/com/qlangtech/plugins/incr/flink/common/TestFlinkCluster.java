@@ -1,5 +1,6 @@
 package com.qlangtech.plugins.incr.flink.common;
 
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,11 +18,15 @@ public class TestFlinkCluster {
         flinkCluster.jobManagerAddress = "192.168.28.201:8081";
        // flinkCluster.clusterId = "my-first-flink-cluster";
         flinkCluster.name = "flink200";
-
         JsonUtil.assertJSONEqual(TestFlinkCluster.class, "flink-cluster-serialize.json"
                 , JsonUtil.toString(flinkCluster), (message, expected, actual) -> {
             Assert.assertEquals(message, expected, actual);
         });
+    }
 
+    @Test
+    public void testDescGenerate(){
+
+        PluginDesc.testDescGenerate(FlinkCluster.class, "flink-cluster-descriptor.json");
     }
 }

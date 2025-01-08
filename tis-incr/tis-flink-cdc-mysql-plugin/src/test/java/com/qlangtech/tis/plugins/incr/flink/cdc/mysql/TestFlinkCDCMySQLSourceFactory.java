@@ -36,7 +36,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.datax.common.ContextParams.DbNameContextParamValGetter;
+
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformer;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.datax.transformer.impl.ConcatUDF;
@@ -426,7 +426,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 //                vals.put("multipolygon_c", RowValsExample.RowVal.$("ST_GeomFromText('MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)), ((5 5, 7 5, 7 7, 5 7, 5 5)))')"));
 //                vals.put("geometrycollection_c", RowValsExample.RowVal.$("ST_GeomFromText('GEOMETRYCOLLECTION(POINT(10 10), POINT(30 30), LINESTRING(15 15, 20 20))')"));
 
-                TestRow fullTypeRow = new TestRow(RowKind.INSERT, this.getColMetaMapper() ,new RowValsExample(vals));
+                TestRow fullTypeRow = new TestRow(RowKind.INSERT, this.getColMetaMapper(), new RowValsExample(vals));
                 fullTypeRow.idVal = pk;
 //                fullTypeRow.updateVals.put(colBitC, (statement, index, ovals) -> {
 //
@@ -476,14 +476,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
                 return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
-
-//            @Override
-//            protected String getColEscape() {
-//                return "`";
-//            }
 
             @Override
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
@@ -728,21 +722,21 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
         DataxReader dataxReader = new DataxReader() {
 
-            @Override
-            public Map<String, ContextParamConfig> getDBContextParams() {
-                ContextParamConfig dbName = new ContextParamConfig("dbName") {
-                    @Override
-                    public DbNameContextParamValGetter valGetter() {
-                        return new DbNameContextParamValGetter();
-                    }
-
-                    @Override
-                    public DataType getDataType() {
-                        return DataType.createVarChar(50);
-                    }
-                };
-                return Collections.singletonMap(dbName.getKeyName(), dbName);
-            }
+//            @Override
+//            public Map<String, ContextParamConfig> getDBContextParams() {
+//                ContextParamConfig dbName = new ContextParamConfig("dbName") {
+//                    @Override
+//                    public DbNameContextParamValGetter valGetter() {
+//                        return new DbNameContextParamValGetter();
+//                    }
+//
+//                    @Override
+//                    public DataType getDataType() {
+//                        return DataType.createVarChar(50);
+//                    }
+//                };
+//                return Collections.singletonMap(dbName.getKeyName(), dbName);
+//            }
 
             @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {

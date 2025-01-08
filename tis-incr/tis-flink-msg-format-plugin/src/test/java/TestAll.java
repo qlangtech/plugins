@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactoryTest;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISCanalJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISSinkDebeziumJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactoryTest;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.SourceJsonFormatFactoryTest;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSinkJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSourceJsonFormatFactory;
 import org.junit.runner.RunWith;
@@ -36,7 +38,9 @@ import org.junit.runners.Suite;
                 TestTISSinkDebeziumJsonFormatFactory.class,
                 TestSinkJsonFormatFactory.class,
                 TestSourceJsonFormatFactory.class,
-                TISCanalJsonFormatFactoryTest.class
+                TISCanalJsonFormatFactoryTest.class,
+                SourceJsonFormatFactoryTest.class,
+                FormatFactoryTest.class
         })
 public class TestAll {
 }

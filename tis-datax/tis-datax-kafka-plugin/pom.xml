@@ -32,7 +32,7 @@
     <artifactId>tis-datax-kafka-plugin</artifactId>
 
     <properties>
-        <kafka.version>2.8.0</kafka.version>
+        <kafka.version>3.4.0</kafka.version>
     </properties>
 
 
@@ -67,8 +67,19 @@
         </dependency>
 
 
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <maskClasses>org.apache.kafka.</maskClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 
 </project>

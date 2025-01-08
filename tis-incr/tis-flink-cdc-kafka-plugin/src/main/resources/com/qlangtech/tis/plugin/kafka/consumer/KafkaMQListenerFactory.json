@@ -4,7 +4,7 @@
     "label": "Startint Offsets"
   },
   "independentBinLogMonitor": {
-    "label": "BinLog独立监听",
+    "label": "独立监听",
     "dftVal": false,
     "enum": [
       {

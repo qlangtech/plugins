@@ -24,6 +24,7 @@ import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DBConfig.DBTable;
@@ -222,11 +223,13 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             throw new IllegalArgumentException("param tabAliasMapper can not be null");
         }
         this.focusTabs = tabs.stream().map((t) -> t.getName()).collect(Collectors.toSet());
-        this.tab2OutputTag
-                = new Tab2OutputTag<>(tabs.stream().collect(
+
+        Map<TableAlias, DTOStream> tab2StreamMapper = tabs.stream().collect(
                 Collectors.toMap(
                         (tab) -> (tabAliasMapper.getWithCheckNotNull(tab.getName()))
-                        , (t) -> dtoStreamCreator.apply(t.getName()))));
+                        , (t) -> dtoStreamCreator.apply(t.getName())));
+        this.tab2OutputTag
+                = new Tab2OutputTag<>(tab2StreamMapper);
     }
 
 

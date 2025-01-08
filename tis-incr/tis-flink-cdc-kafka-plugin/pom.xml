@@ -54,6 +54,12 @@
             <artifactId>flink-connector-kafka</artifactId>
             <version>${flink-connector-kafka.version}</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>kafka-clients</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

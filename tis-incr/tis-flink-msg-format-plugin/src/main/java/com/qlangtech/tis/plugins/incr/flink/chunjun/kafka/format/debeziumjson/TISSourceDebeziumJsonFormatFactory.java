@@ -20,12 +20,8 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.debeziumjson;
 
 import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
-import org.apache.flink.api.common.serialization.DeserializationSchema;
-import org.apache.flink.table.connector.format.DecodingFormat;
-import org.apache.flink.table.data.RowData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -94,6 +90,9 @@ public class TISSourceDebeziumJsonFormatFactory extends TISSinkDebeziumJsonForma
         public DftDescriptor() {
             super();
         }
+
+
+
 
         @Override
         public EndType getEndType() {

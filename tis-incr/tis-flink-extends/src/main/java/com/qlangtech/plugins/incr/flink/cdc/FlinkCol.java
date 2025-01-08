@@ -208,7 +208,7 @@ public class FlinkCol implements Serializable {
 
 
     public static class LocalDateProcess extends BiFunction {
-        private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+        public final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
 
         @Override
         public Object apply(Object o) {

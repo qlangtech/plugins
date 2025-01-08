@@ -32,7 +32,7 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
  **/
 public class CommittedOffsets extends StartOffset {
     @Override
-    public void setOffset(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setOffset(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         kafkaSourceBuilder.setStartingOffsets(OffsetsInitializer.committedOffsets());
     }
     @TISExtension

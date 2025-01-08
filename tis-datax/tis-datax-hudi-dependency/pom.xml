@@ -30,7 +30,7 @@
     <packaging>jar</packaging>
     <artifactId>tis-datax-hudi-dependency</artifactId>
     <properties></properties>
-    <build
+    <build>
         <finalName>${project.name}</finalName>
         <plugins>
 

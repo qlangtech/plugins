@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.LocalDateProcess;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
@@ -28,33 +29,34 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.guesstype.IGuessColTypeFormatConfig;
-import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader;
-import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.formats.json.JsonFormatOptions;
 import org.apache.flink.formats.json.JsonFormatOptionsUtil;
 import org.apache.flink.formats.json.canal.CanalJsonFormatOptions;
-import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 
 import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import static com.qlangtech.tis.plugin.annotation.Validator.db_col_name;
 import static com.qlangtech.tis.plugin.annotation.Validator.require;
@@ -70,7 +72,7 @@ import static org.apache.flink.formats.common.TimeFormats.ISO8601_TIMESTAMP_FORM
  * @see com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.debeziumjson.TISSinkDebeziumJsonFormatFactory
  * @see com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.SourceJsonFormatFactory
  **/
-public abstract class FormatFactory implements Describable<FormatFactory>, IGuessColTypeFormatConfig, Serializable {
+public abstract class FormatFactory implements Describable<FormatFactory>, IGuessColTypeFormatConfig, Serializable, AfterPluginSaved {
 
     public static final String KEY_FIELD_FORMAT = "format";
     public static final String KEY_FIELD_TAB_ENTITIES = "tabEntities";
@@ -80,24 +82,65 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
     public String tabEntities;
 
-    private static final ThreadLocal<SimpleDateFormat> dataFormatLocal = new ThreadLocal<>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd");
-        }
-    };
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
+    public Boolean ignoreParseErrors;
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, advance = true, validate = Validator.require)
+    public String timestampFormat;
+
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true)
+    public String nullKeyMode;
+    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, advance = true)
+    public String nullKeyLiteral;
+    @FormField(ordinal = 7, type = FormFieldType.ENUM, advance = true)
+    public Boolean encodeDecimal;
+
+//    private static final ThreadLocal<SimpleDateFormat> dataFormatLocal = new ThreadLocal<>() {
+//        @Override
+//        protected SimpleDateFormat initialValue() {
+//            return new SimpleDateFormat("yyyy-MM-dd");
+//        }
+//    };
+
+    @Override
+    public final String getNullFormat() {
+        return this.nullKeyLiteral;
+    }
 
     @Override
     public boolean isDateFormat(String literiaVal) {
         try {
-            dataFormatLocal.get().parse(literiaVal);
+            // LocalDateProcess.
+            LocalDate.parse(literiaVal, LocalDateProcess.dateFormatter);
+            // dataFormatLocal.get().parse(literiaVal);
             return true;
-        } catch (ParseException e) {
+        } catch (DateTimeParseException e) {
         }
         return false;
     }
 
-    protected abstract String getTimestampFormat();
+    @Override
+    public final void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this.timestampOption = null;
+    }
+
+    protected final String getTimestampFormat() {
+        return this.timestampFormat;
+    }
+
+    private transient org.apache.flink.formats.common.TimestampFormat timestampOption;
+
+    private org.apache.flink.formats.common.TimestampFormat getTimestampOption() {
+        if (timestampOption == null) {
+            final String timestampFormat = getTimestampFormat();
+            if (StringUtils.isEmpty(timestampFormat)) {
+                throw new IllegalStateException("param timestampFormat can not be null");
+            }
+            timestampOption
+                    = JsonFormatOptionsUtil.getTimestampFormat(
+                    Configuration.fromMap(Collections.singletonMap(JsonFormatOptions.TIMESTAMP_FORMAT.key(), timestampFormat)));
+        }
+        return timestampOption;
+    }
 
     /**
      * @param literiaVal
@@ -106,29 +149,35 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
      */
     @Override
     public final boolean isTimeStampFormat(String literiaVal) {
-        final String timestampFormat = getTimestampFormat();
-        org.apache.flink.formats.common.TimestampFormat timestampOption
-                = JsonFormatOptionsUtil.getTimestampFormat(Configuration.fromMap(Collections.singletonMap(JsonFormatOptions.TIMESTAMP_FORMAT.key(), timestampFormat)));
-
         try {
-            switch (timestampOption) {
-                case SQL:
-                    org.apache.flink.formats.common.TimeFormats.SQL_TIMESTAMP_FORMAT.parse(literiaVal);
-                    return true;
-                case ISO_8601:
-                    ISO8601_TIMESTAMP_FORMAT.parse(literiaVal);
-                    return true;
-                default:
-                    throw new IllegalStateException(
-                            String.format(
-                                    "Unsupported timestamp format '%s'. Validator should have checked that.",
-                                    timestampFormat));
-            }
+            parseTimeStamp(literiaVal);
+            return true;
         } catch (Throwable e) {
             // throw new RuntimeException(e);
         }
 
         return false;
+    }
+
+
+    public final LocalDateTime parseTimeStamp(String literiaVal) {
+        TemporalAccessor parsedTimestamp;
+        switch (getTimestampOption()) {
+            case SQL:
+                parsedTimestamp = org.apache.flink.formats.common.TimeFormats.SQL_TIMESTAMP_FORMAT.parse(literiaVal);
+                break;
+            case ISO_8601:
+                parsedTimestamp = ISO8601_TIMESTAMP_FORMAT.parse(literiaVal);
+                break;
+            default:
+                throw new IllegalStateException(
+                        String.format(
+                                "Unsupported timestamp format '%s'. Validator should have checked that.",
+                                timestampFormat));
+        }
+        LocalTime localTime = parsedTimestamp.query(java.time.temporal.TemporalQueries.localTime());
+        LocalDate localDate = parsedTimestamp.query(java.time.temporal.TemporalQueries.localDate());
+        return LocalDateTime.of(localDate, localTime);
     }
 
     /**
@@ -196,6 +245,16 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
         public BasicFormatDescriptor() {
             super();
             this.options = FlinkPropAssist.createOpts(this);
+
+            options.add("ignoreParseErrors", TISFlinkProp.create(CanalJsonFormatOptions.IGNORE_PARSE_ERRORS));
+
+            options.add("timestampFormat"
+                    , TISFlinkProp.create(JsonFormatOptions.TIMESTAMP_FORMAT)
+                            .setOverwriteProp((new OverwriteProps())
+                                    .setEnumOpts(Lists.newArrayList(new Option("SQL"), new Option("ISO-8601")))));
+            addNullKeyOptCfg(options);
+            options.add("encodeDecimal", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
+
             if (this.getEndType().sinkSupport) {
                 // sink端不需要设置targetTable
                 this.options.add(KEY_FIELD_TAB_ENTITIES
@@ -204,9 +263,15 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
             this.appendOptionCfgs(options);
         }
 
-        protected void addNullKeyOptCfg(Options options) {
+        private void addNullKeyOptCfg(Options options) {
+
+
             OverwriteProps nullKeyMode = new OverwriteProps();
-            nullKeyMode.setEnumOpts(Lists.newArrayList(new Option("FAIL"), new Option("DROP"), new Option("LITERAL")));
+            nullKeyMode.setEnumOpts(
+                    Lists.newArrayList(
+                            new Option(JsonFormatOptionsUtil.JSON_MAP_NULL_KEY_MODE_FAIL)
+                            , new Option(JsonFormatOptionsUtil.JSON_MAP_NULL_KEY_MODE_DROP)
+                            , new Option(JsonFormatOptionsUtil.JSON_MAP_NULL_KEY_MODE_LITERAL)));
             options.add("nullKeyMode", TISFlinkProp.create(CanalJsonFormatOptions.JSON_MAP_NULL_KEY_MODE)
                     .setOverwriteProp(nullKeyMode));
             options.add("nullKeyLiteral", TISFlinkProp.create(CanalJsonFormatOptions.JSON_MAP_NULL_KEY_LITERAL));

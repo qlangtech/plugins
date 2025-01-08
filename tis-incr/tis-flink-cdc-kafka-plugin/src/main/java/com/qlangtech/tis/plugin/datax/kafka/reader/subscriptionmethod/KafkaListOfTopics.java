@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.kafka.reader.subscriptionmethod;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -28,9 +27,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.kafka.source.KafkaSourceBuilder;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,14 +42,14 @@ public class KafkaListOfTopics extends KafkaSubscriptionMethod {
     }
 
     @Override
-    public void setSubscription(KafkaSourceBuilder<Tuple2<String, byte[]>> kafkaSourceBuilder) {
+    public void setSubscription(KafkaSourceBuilder<DTO> kafkaSourceBuilder) {
         kafkaSourceBuilder.setTopics(parseTopics());
     }
 
-    @Override
-    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
-        consumer.subscribe(Lists.newArrayList(this.parseTopics()));
-    }
+//    @Override
+//    public void setSubscription(KafkaConsumer<byte[], byte[]> consumer) {
+//        consumer.subscribe(Lists.newArrayList(this.parseTopics()));
+//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<KafkaSubscriptionMethod> {

@@ -104,13 +104,14 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
 
                 DefaultExecutor executor = new DefaultExecutor();
-                executor.setWorkingDirectory(getWorkingDirectory());
+                File workingDir = getWorkingDirectory();
+                executor.setWorkingDirectory(workingDir);
 
                 executor.setStreamHandler(new PumpStreamHandler(System.out));
                 executor.setExitValue(0);
                 executor.setWatchdog(watchdog);
                 String command = Arrays.stream(cmdLine.toStrings()).collect(Collectors.joining(" "));
-                logger.info("command:{}", command);
+                logger.info("workDir:{},command:{}", workingDir.getAbsolutePath(), command);
                 if (DataxUtils.localDataXCommandConsumer != null) {
                     DataxUtils.localDataXCommandConsumer.accept(command);
                 }
@@ -146,7 +147,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                         resultHandler.getExitValue() != 0) {
                     // it was killed on purpose by the watchdog
                     if (resultHandler.getException() != null) {
-                        logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                        logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage(), resultHandler.getException());
                         // throw new RuntimeException(command, resultHandler.getException());
                         throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
                     }

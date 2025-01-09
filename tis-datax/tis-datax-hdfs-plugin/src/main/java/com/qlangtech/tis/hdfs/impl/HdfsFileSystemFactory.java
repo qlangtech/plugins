@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.ClassloaderUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -191,44 +192,55 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     }
 
     private static Configuration getConfiguration(String hdfsSiteContent, Boolean userHostname, Consumer<Configuration> cfgProcess) {
-        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+
+
+//        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+//        try {
+//            Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            Thread.currentThread().setContextClassLoader(contextClassLoader);
+//        }
+
+
         try {
-            Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
-            Configuration conf = new Configuration();
-            try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
-                conf.addResource(input);
-            }
-            // 支持重连？
-            conf.setInt(DFSConfigKeys.DFS_CLIENT_FAILOVER_MAX_ATTEMPTS_KEY, -1);
-            // conf.setBoolean(DFSConfigKeys.DFS_CLIENT_RETRY_POLICY_ENABLED_KEY, false);
-            conf.set(FsPermission.UMASK_LABEL, "000");
-            // fs.defaultFS
-            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
-            // conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
-            //https://segmentfault.com/q/1010000008473574
-            Logger.info("userHostname:{}", userHostname);
-            if (userHostname != null && userHostname) {
-                conf.setBoolean(DFSConfigKeys.DFS_CLIENT_USE_DN_HOSTNAME, true);
-            }
+            return ClassloaderUtils.processByResetThreadClassloader(HdfsFileSystemFactory.class, () -> {
+                Configuration conf = new Configuration();
+                try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
+                    conf.addResource(input);
+                }
+                // 支持重连？
+                conf.setInt(DFSConfigKeys.DFS_CLIENT_FAILOVER_MAX_ATTEMPTS_KEY, -1);
+                // conf.setBoolean(DFSConfigKeys.DFS_CLIENT_RETRY_POLICY_ENABLED_KEY, false);
+                conf.set(FsPermission.UMASK_LABEL, "000");
+                // fs.defaultFS
+                conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+                // conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
+                //https://segmentfault.com/q/1010000008473574
+                Logger.info("userHostname:{}", userHostname);
+                if (userHostname != null && userHostname) {
+                    conf.setBoolean(DFSConfigKeys.DFS_CLIENT_USE_DN_HOSTNAME, true);
+                }
 
-            // conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, hdfsAddress);
-            conf.set("hadoop.job.ugi", "admin");
-            // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
-            conf.setBoolean("fs.hdfs.impl.disable.cache", false);
+                // conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, hdfsAddress);
+                conf.set("hadoop.job.ugi", "admin");
+                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
+                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
 
-//            if (StringUtils.isNotEmpty(this.kerberos)) {
-//                Logger.info("kerberos has been enabled,name:" + this.kerberos);
-//                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
-//                kerberosCfg.setConfiguration(conf);
-//            }
-            cfgProcess.accept(conf);
-            // this.setConfiguration(conf);
-            conf.reloadConfiguration();
-            return conf;
+    //            if (StringUtils.isNotEmpty(this.kerberos)) {
+    //                Logger.info("kerberos has been enabled,name:" + this.kerberos);
+    //                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
+    //                kerberosCfg.setConfiguration(conf);
+    //            }
+                cfgProcess.accept(conf);
+                // this.setConfiguration(conf);
+                conf.reloadConfiguration();
+                return conf;
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 

@@ -24,6 +24,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -34,6 +35,7 @@ import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -53,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -65,7 +68,7 @@ import java.util.regex.Pattern;
  * @date 2020/04/13
  */
 @Public
-public class DefaultK8SImage extends K8sImage {
+public class DefaultK8SImage extends K8sImage implements AfterPluginSaved {
 
     public static final String KEY_FIELD_NAME = "k8sCfg";
     private static final Logger logger = LoggerFactory.getLogger(DefaultK8SImage.class);
@@ -100,6 +103,11 @@ public class DefaultK8SImage extends K8sImage {
     public boolean internalClusterAvailable() {
         this.createApiClient();
         return Objects.requireNonNull(clusterIPAvailable).getClusterIPAvailable();
+    }
+
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this.clusterIPAvailable = null;
     }
 
     /**

@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.alibaba.datax.core.job.IJobContainerContext;
+import com.alibaba.datax.plugin.rdbms.reader.util.QuerySql;
 import com.alibaba.datax.plugin.rdbms.util.DBUtil;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -56,13 +58,14 @@ public class TestMySQLV5DataSourceReader extends TestCase {
             }
         };
 
-
+        IJobContainerContext containerContext = null;
         dataSourceFactory.visitFirstConnection((conn) -> {
             Connection connection = conn.getConnection();
 //com.alibaba.datax.plugin.reader.mysqlreader.MysqlReader
             String querySql = "select * from item";
 
-            Pair<Statement, ResultSet> query = DBUtil.query(connection, querySql, 2000, dsGetter);
+            Pair<Statement, ResultSet> query
+                    = DBUtil.query(connection, new QuerySql(querySql), 2000, dsGetter, containerContext);
             try {
                 int all = 0;
                 int count = 0;

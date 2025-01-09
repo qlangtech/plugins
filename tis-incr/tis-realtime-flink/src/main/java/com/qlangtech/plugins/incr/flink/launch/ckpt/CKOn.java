@@ -120,14 +120,22 @@ public class CKOn extends CheckpointFactory {
             Options<CheckpointFactory> opts = FlinkPropAssist.createOpts(this);
 
             opts.addFieldDescriptor("ckpointInterval"
-                    , ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL, new OverwriteProps().setDftVal(Duration.ofSeconds(200)));
+                    , ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL
+                    , OverwriteProps.dft(Duration.ofSeconds(200)));
+
             opts.addFieldDescriptor("checkpointMode", ExecutionCheckpointingOptions.CHECKPOINTING_MODE);
             opts.addFieldDescriptor("checkpointTimeout", ExecutionCheckpointingOptions.CHECKPOINTING_TIMEOUT);
             opts.addFieldDescriptor("maxConcurrentNum", ExecutionCheckpointingOptions.MAX_CONCURRENT_CHECKPOINTS);
             opts.addFieldDescriptor("minPause", ExecutionCheckpointingOptions.MIN_PAUSE_BETWEEN_CHECKPOINTS);
-            opts.addFieldDescriptor("maxFaildNum", ExecutionCheckpointingOptions.TOLERABLE_FAILURE_NUMBER, new OverwriteProps().setDftVal(0));
-            opts.addFieldDescriptor("enableExternal", ExecutionCheckpointingOptions.EXTERNALIZED_CHECKPOINT
-                    , new OverwriteProps().setDftVal(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION));
+
+            opts.addFieldDescriptor("maxFaildNum"
+                    , ExecutionCheckpointingOptions.TOLERABLE_FAILURE_NUMBER
+                    , OverwriteProps.dft(0));
+
+            opts.addFieldDescriptor("enableExternal"
+                    , ExecutionCheckpointingOptions.EXTERNALIZED_CHECKPOINT
+                    , OverwriteProps.dft(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION));
+
             opts.addFieldDescriptor("enableUnaligned", ExecutionCheckpointingOptions.ENABLE_UNALIGNED);
             opts.addFieldDescriptor("forceUnaligned", ExecutionCheckpointingOptions.FORCE_UNALIGNED);
         }

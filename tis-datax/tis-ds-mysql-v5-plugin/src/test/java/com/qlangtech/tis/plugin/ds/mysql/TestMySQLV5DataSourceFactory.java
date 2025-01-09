@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.mysql.jdbc.ConnectionImpl;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -35,6 +36,7 @@ import java.util.List;
  **/
 public class TestMySQLV5DataSourceFactory extends TestCase {
     public void testGetTableMetadata() {
+        
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
         dataSourceFactory.useCompression = true;
         dataSourceFactory.password = "123456";

@@ -229,6 +229,14 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             this.deserializationSchema = deserializationSchema;
         }
 
+        /**
+         * @param dbHost
+         * @param dbs
+         * @param tbs
+         * @param debeziumProperties
+         * @return
+         * @see org.apache.flink.cdc.connectors.mysql.source.connection.PooledDataSourceFactory jdbcConnection create
+         */
         @Override
         public List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties) {
 
@@ -237,7 +245,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             debeziumProperties.setProperty(
                     CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
-
+           // MySqlConnectorConfig.JDBC_DRIVER
             debeziumProperties.setProperty(
                     MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());

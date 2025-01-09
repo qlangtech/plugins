@@ -86,7 +86,8 @@ public class DataXHiveWriter extends BasicFSWriter
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
-
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String partitionFormat;
 
     //    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
 //    public String hiveConn;
@@ -96,8 +97,7 @@ public class DataXHiveWriter extends BasicFSWriter
     @FormField(ordinal = 7, validate = {Validator.require})
     public TabNameDecorator tabDecorator;
 
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String partitionFormat;
+
 
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少

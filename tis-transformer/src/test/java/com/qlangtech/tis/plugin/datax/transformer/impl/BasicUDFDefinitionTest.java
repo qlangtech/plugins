@@ -18,9 +18,14 @@
 
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
+import com.google.common.collect.Sets;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.extension.util.impl.DefaultGroovyShellFactory;
+import com.qlangtech.tis.manage.biz.dal.pojo.Application;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
@@ -31,9 +36,13 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.easymock.EasyMock;
+import org.easymock.internal.matchers.Any;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -41,6 +50,10 @@ import java.util.List;
  * @create: 2024-06-18 09:59
  **/
 public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements TISEasyMock {
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     @Before
     public void startClearMocks() {
         this.clearMocks();
@@ -52,10 +65,32 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
     public abstract void testEvaluate();
 
+    /**
+     * List<SelectedTab> tabs
+     *
+     * @return
+     */
+    private static List<SelectedTab> matchtabs() {
+        EasyMock.reportMatcher(Any.ANY);
+        return null;
+    }
+
     @Test
     public void testDescJsonGen() throws Exception {
         DefaultGroovyShellFactory.setInConsoleModule();
-        DataSourceMetaPlugin dsMetaPlugin = mock("dataSourceMetaPlugin", DataSourceMetaPlugin.class);
+        MockDataSourceMetaPlugin dsMetaPlugin = mock("dataSourceMetaPlugin", MockDataSourceMetaPlugin.class);
+
+
+        IPluginStore<DataxReader> pluginStore = mock("pluginStore", IPluginStore.class);
+
+        File tmpTabsDir = folder.newFolder("tmpTabs");
+
+
+        EasyMock.expect(pluginStore.getTargetFileParentDir()).andReturn(tmpTabsDir).anyTimes();
+
+        List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1);
+        EasyMock.expect(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).andReturn(selectedTabs);
+
         UploadPluginMeta pluginMeta = UploadPluginMeta.parse("dataxReader:require");
         String testTable = TestSelectedTabs.tabNameOrderDetail;
 
@@ -64,10 +99,13 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
         EasyMock.expect(dsMetaPlugin.getTableMetadata(false, EntityName.parse(testTable))).andReturn(cols);
 
-        SuFormProperties.setSuFormGetterContext(dsMetaPlugin, pluginMeta, testTable);
-
+        SuFormProperties.setSuFormGetterContext(dsMetaPlugin, pluginStore, pluginMeta, testTable);
 
         this.replay();
+
+        SelectedTab.getTmpTableStoreFile(pluginStore, testTable)
+                .write(selectedTabs.get(0), Sets.newHashSet());
+
         Class<T> pluginClass = getPluginClass();
         PluginDesc.testDescGenerate(pluginClass
                 , UnderlineUtils.addUnderline(pluginClass.getSimpleName())
@@ -81,7 +119,6 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
         T cpValueUDF = this.createTransformerUDF();
 
         OutParametersAndLiteriaAssert makeAssert = this.getOutParametersAndLiteriaAssert();
-
 
 
         List<OutputParameter> outParameters = cpValueUDF.outParameters();

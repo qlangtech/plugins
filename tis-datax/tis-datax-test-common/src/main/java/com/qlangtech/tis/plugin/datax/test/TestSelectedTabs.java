@@ -49,13 +49,17 @@ public class TestSelectedTabs {
             new DataType(JDBCTypes.VARCHAR), false, true));
 
     public static List<SelectedTab> createSelectedTabs() {
-         return createSelectedTabs(Integer.MAX_VALUE);
+        return createSelectedTabs(Integer.MAX_VALUE);
     }
 
     public static List<SelectedTab> createSelectedTabs(int count) {
+        return createSelectedTabs(count, (tab) -> {
+        });
+    }
+
+    public static List<SelectedTab> createSelectedTabs(int count, Consumer<SelectedTab> postProcess) {
         try {
-            return createSelectedTabs(count, SelectedTab.class, Optional.empty(), (tab) -> {
-            });
+            return createSelectedTabs(count, SelectedTab.class, Optional.empty(), postProcess);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -100,11 +104,11 @@ public class TestSelectedTabs {
     public static Optional<IDataxProcessor.TableMap> createTableMapper() {
         IDataxProcessor.TableMap tm =
                 new IDataxProcessor.TableMap(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-            CMeta meta = new CMeta();
-            meta.setName(c);
-            meta.setType(DataXReaderColType.STRING.dataType);
-            return meta;
-        }).collect(Collectors.toList()));
+                    CMeta meta = new CMeta();
+                    meta.setName(c);
+                    meta.setType(DataXReaderColType.STRING.dataType);
+                    return meta;
+                }).collect(Collectors.toList()));
         tm.setFrom("orderinfo");
         tm.setTo("orderinfo_new");
 

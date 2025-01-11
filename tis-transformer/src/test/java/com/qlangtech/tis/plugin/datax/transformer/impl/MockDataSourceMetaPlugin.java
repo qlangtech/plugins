@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.transformer.impl.TestCopyValUDF;
-import com.qlangtech.tis.plugin.datax.transformer.impl.TestJSONSplitterUDF;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugin.datax.transformer.impl;
+
+import com.qlangtech.tis.datax.IDataxReader;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-06-17 16:04
+ * @create: 2025-01-11 15:25
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestCopyValUDF.class, TestJSONSplitterUDF.class})
-public class TestAll {
-
+public interface MockDataSourceMetaPlugin extends DataSourceMetaPlugin, IDataxReader {
 }

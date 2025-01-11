@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.alibaba.fastjson2.JSONReader.Feature.AllowUnQuotedFieldNames;
+
 /**
  * 将某列JSON内容拆解成多个字段
  *
@@ -88,6 +90,8 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
         return result;
     }
 
+    public static int jsonParseErrorCount;
+
     @Override
     public void evaluate(ColumnAwareRecord record) {
         String from = this.from;
@@ -96,14 +100,23 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
         }
 
         String jsonCol = record.getString(from);
-        if (jsonCol != null) {
+        if (StringUtils.isNotEmpty(jsonCol)) {
             try {
-                JSONObject json = JSON.parseObject(jsonCol);
+                JSONObject json = null;
+                try {
+                    json = JSON.parseObject(jsonCol, AllowUnQuotedFieldNames);
+                } catch (com.alibaba.fastjson2.JSONException e) {
+                    jsonParseErrorCount++;
+                    // throw new RuntimeException(e);
+                }
+                if (json == null) {
+                    return;
+                }
                 for (TargetColType t : this.to) {
                     Object val = json.get(t.getName());
                     if (val != null) {
                         record.setColumn(getPrefixToFieldName(t), val);
-                      //  record.setColumn();
+                        //  record.setColumn();
                     }
                 }
             } catch (Exception e) {

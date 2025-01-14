@@ -42,7 +42,6 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -118,7 +117,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     public final Optional<String> getEscapeChar() {
-        return Optional.of("`");
+        return BasicDataSourceFactory.MYSQL_ESCAPE_COL_CHAR;
     }
 
     @Override

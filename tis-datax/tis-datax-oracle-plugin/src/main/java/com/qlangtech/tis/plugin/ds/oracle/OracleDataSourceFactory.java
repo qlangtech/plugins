@@ -94,7 +94,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public Optional<String> getEscapeChar() {
-        return Optional.of("\"");
+        return ORACLE_ESCAPE_COL_CHAR;
     }
 
     @Override

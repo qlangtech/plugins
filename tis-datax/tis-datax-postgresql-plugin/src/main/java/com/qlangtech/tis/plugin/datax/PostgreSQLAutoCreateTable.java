@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 
 import java.util.Optional;
 
@@ -42,7 +43,7 @@ public class PostgreSQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper>
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) rdbmsWriter;
-        PGDataSourceFactory ds = (PGDataSourceFactory) dataXWriter.getDataSourceFactory();
+        PGLikeDataSourceFactory ds = (PGLikeDataSourceFactory) dataXWriter.getDataSourceFactory();
 
         final CreateTableSqlBuilder createTableSqlBuilder
                 = new PostgreSQLCreateTableSqlBuilder(this.getAddComment(), sourceColMetaGetter, tableMapper, ds, transformers);

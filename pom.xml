@@ -66,8 +66,6 @@
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
 
-
-
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
     </modules>

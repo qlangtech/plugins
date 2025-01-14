@@ -92,6 +92,7 @@
         <module>executor/dolphinscheduler-task-tis-datasync</module>
         <module>executor/tis-datax-executor</module>
         <module>tis-datax-local-executor-utils</module>
+        <module>tis-datax-kingbase-plugin</module>
 
     </modules>
 

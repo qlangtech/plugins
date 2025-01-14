@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -39,14 +40,14 @@ import java.util.stream.Collectors;
  **/
 public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWrapper> {
     private final boolean multiPk;
-    private final PGDataSourceFactory ds;
+    private final PGLikeDataSourceFactory ds;
     private final TableMap tableMapper;
     private final AutoCreateTableColCommentSwitch colCommentAdd;
     private SourceColMetaGetter sourceColMetaGetter;
 
     public PostgreSQLCreateTableSqlBuilder(
             AutoCreateTableColCommentSwitch colCommentAdd, SourceColMetaGetter sourceColMetaGetter
-            , TableMap tableMapper, PGDataSourceFactory dsMeta, Optional<RecordTransformerRules> transformers) {
+            , TableMap tableMapper, PGLikeDataSourceFactory dsMeta, Optional<RecordTransformerRules> transformers) {
         super(tableMapper, dsMeta, transformers);
         this.multiPk = this.pks.size() > 1;
         this.ds = dsMeta;

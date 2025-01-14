@@ -38,7 +38,7 @@
     </scm>
     <properties>
         <!--https://github.com/ververica/flink-cdc-connectors-->
-<!--        <flink.cdc.version>2.1.0</flink.cdc.version>-->
+        <!--        <flink.cdc.version>2.1.0</flink.cdc.version>-->
         <flink.cdc.version>3.1.0</flink.cdc.version>
         <chunjun.version>1.12.5-${revision}</chunjun.version>
         <debezium-connector.version>1.9.8.Final</debezium-connector.version>
@@ -65,31 +65,32 @@
         <module>tis-flink-cdc-postgresql-plugin</module>
         <module>tis-flink-cdc-oracle-plugin</module>
         <module>tis-flink-cdc-mongdb-plugin</module>
-<!--        <module>tis-sink-clickhouse-plugin</module>-->
+        <!--        <module>tis-sink-clickhouse-plugin</module>-->
 
-<!--    为了编译通过暂时先注释掉    <module>tis-sink-hudi-plugin</module>-->
+        <!--    为了编译通过暂时先注释掉    <module>tis-sink-hudi-plugin</module>-->
 
         <!--        <module>tis-chunjun-dependency</module>-->
         <module>tis-flink-chunjun-mysql-plugin</module>
         <module>tis-flink-chunjun-doris-plugin</module>
 
-<!--   -->     <module>tis-flink-chunjun-postgresql-plugin</module>
+        <!--   -->
+        <module>tis-flink-chunjun-postgresql-plugin</module>
 
         <module>tis-flink-chunjun-oracle-plugin</module>
         <module>tis-chunjun-base-plugin</module>
-<!--        <module>tis-flink-chunjun-greenplum-plugin</module>-->
+        <!--        <module>tis-flink-chunjun-greenplum-plugin</module>-->
 
         <module>tis-flink-chunjun-clickhouse-plugin</module>
         <module>tis-flink-chunjun-starrocks-plugin</module>
         <module>tis-flink-chunjun-kafka-plugin</module>
         <module>tis-flink-cdc-kafka-plugin</module>
-<!--        <module>tis-flink-chunjun-rabbitmq-plugin</module>-->
+        <!--        <module>tis-flink-chunjun-rabbitmq-plugin</module>-->
         <module>tis-flink-chunjun-dameng-plugin</module>
         <module>tis-flink-msg-format-plugin</module>
         <module>tis-flink-cdc-mysql-shade-4-debezium-connector-mysql</module>
         <module>tis-flink-cdc-postgresql-shade-4-debezium-connector-postgresql</module>
-
-
+        <module>tis-flink-chunjun-kingbase-plugin</module>
+        <module>tis-flink-cdc-kingbase-plugin</module>
     </modules>
 
     <dependencyManagement>

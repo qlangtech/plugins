@@ -21,12 +21,13 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 13:15
  **/
-public class PostgresReaderContext extends RdbmsReaderContext<DataXPostgresqlReader, PGDataSourceFactory> {
+public class PostgresReaderContext extends RdbmsReaderContext<DataXPostgresqlReader, PGLikeDataSourceFactory> {
 
     public static final String colEscapeChar = "\\\"";
 

@@ -71,10 +71,10 @@ public class DataXDorisWriter extends BasicDorisWriter {
                 "}";
     }
 
-    @Override
-    public boolean isGenerateCreateDDLSwitchOff() {
-        return !this.autoCreateTable.enabled();
-    }
+//    @Override
+//    public boolean isGenerateCreateDDLSwitchOff() {
+//        return !this.autoCreateTable.enabled();
+//    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {

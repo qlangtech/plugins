@@ -185,10 +185,14 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             , TableMap tableMapper
             , Optional<RecordTransformerRules> transformers) {
         CreateTableSqlBuilder sqlDDLBuilder
-                = Objects.requireNonNull(this.autoCreateTable, "autoCreateTable can not be null")
+                = getAutoCreateTableCanNotBeNull()
                 .createSQLDDLBuilder(
                         this, sourceColMetaGetter, tableMapper, transformers);
         return sqlDDLBuilder.build();
+    }
+
+    protected AutoCreateTable getAutoCreateTableCanNotBeNull() {
+        return Objects.requireNonNull(this.autoCreateTable, "autoCreateTable can not be null");
     }
 
     /**
@@ -197,9 +201,8 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @return
      */
     @Override
-    public boolean isGenerateCreateDDLSwitchOff() {
-        return !Objects.requireNonNull(autoCreateTable, "autoCreateTable can not be null")
-                .enabled();
+    public  boolean isGenerateCreateDDLSwitchOff() {
+        return !getAutoCreateTableCanNotBeNull().enabled();
     }
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})

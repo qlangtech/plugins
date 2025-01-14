@@ -1,0 +1,7 @@
+{
+  "autoCreateTable": {
+    "label": "自动建表",
+    "dftVal": "on",
+    "help": "当该数据源作为目标端，是否支持自动在目标端中创建表？"
+  }
+}

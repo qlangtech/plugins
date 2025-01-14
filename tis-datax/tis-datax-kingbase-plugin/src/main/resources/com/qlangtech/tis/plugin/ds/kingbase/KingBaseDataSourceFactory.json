@@ -1,0 +1,6 @@
+{
+  "dbMode": {
+    "label": "兼容数据库",
+    "dftVal": "Postgres"
+  }
+}

@@ -21,12 +21,11 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
@@ -37,7 +36,7 @@ import java.util.Optional;
  * @see com.alibaba.datax.plugin.writer.postgresqlwriter.PostgresqlWriter
  **/
 @Public
-public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFactory> {
+public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGLikeDataSourceFactory> {
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");

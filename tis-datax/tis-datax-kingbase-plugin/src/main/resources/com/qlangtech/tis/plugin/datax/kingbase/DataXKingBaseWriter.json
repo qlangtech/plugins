@@ -1,0 +1,18 @@
+{
+  "autoCreateTable": {
+    "disable": true,
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"kingbase\");"
+  },
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase\")",
+    "creator": {
+      "plugin": [
+        {
+          "hetero": "datasource",
+          "extraParam": "type_detailed,update_false,disableBizStore_true",
+          "descName": "KingBase"
+        }
+      ]
+    }
+  }
+}

@@ -20,12 +20,8 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.debeziumjson;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
-import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -33,7 +29,6 @@ import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.formats.json.JsonFormatOptions;
 import org.apache.flink.formats.json.debezium.DebeziumJsonFormatFactory;
-import org.apache.flink.formats.json.debezium.DebeziumJsonFormatOptions;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 

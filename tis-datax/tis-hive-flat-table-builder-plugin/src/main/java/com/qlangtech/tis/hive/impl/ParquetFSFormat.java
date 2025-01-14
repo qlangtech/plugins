@@ -24,7 +24,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.plugin.datax.FSFormat;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.commons.lang.NotImplementedException;
 
 /**
  * TODO： 先加着，具体到时候再实现
@@ -37,7 +36,7 @@ public class ParquetFSFormat extends FSFormat {
 
     @Override
     public char getFieldDelimiter() {
-        throw new UnsupportedOperationException("file format parquet is not support field delimiter property");
+        throw new UnsupportedOperationException("file format " + this.getType() + " is not support field delimiter property");
     }
 
     @Override
@@ -50,7 +49,10 @@ public class ParquetFSFormat extends FSFormat {
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             // return super.validateAll(msgHandler, context, postFormVals);
-            throw new NotImplementedException("sorry have not been implement yet, please wait ");
+            //throw new NotImplementedException("sorry have not been implement yet, please wait ");
+            ParquetFSFormat fsFormat = postFormVals.newInstance();
+            fsFormat.getFieldDelimiter();
+            return true;
         }
 
         @Override

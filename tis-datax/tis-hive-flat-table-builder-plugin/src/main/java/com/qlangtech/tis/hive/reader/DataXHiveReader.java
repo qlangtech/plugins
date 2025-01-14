@@ -36,12 +36,10 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -53,7 +51,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -80,11 +77,6 @@ public class DataXHiveReader extends AbstractDFSReader implements AfterPluginSav
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHiveReader.class, "DataXHiveReader-tpl.json");
     }
-
-//    @Override
-//    public Map<String, ContextParamConfig> getDBContextParams() {
-//        return ContextParamConfig.defaultContextParams();
-//    }
 
     @Override
     public List<SelectedTab> fillSelectedTabMeta(List<SelectedTab> tabs) {

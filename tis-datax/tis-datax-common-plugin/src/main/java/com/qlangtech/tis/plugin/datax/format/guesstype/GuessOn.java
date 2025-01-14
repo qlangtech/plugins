@@ -69,6 +69,9 @@ public class GuessOn extends GuessFieldType {
 //        PriorityDataType guessType = null;
         String tabName = null;
         while (reader.hasNext() && lineIndex++ < maxInspectLine) {
+            if (lineIndex % 1000 == 0) {
+                logger.info("has scan rows:{}", lineIndex);
+            }
             row = reader.next();
             if (row == null) {
                 continue;

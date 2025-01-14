@@ -2,6 +2,10 @@
   "path": {
     "disable": true
   },
+  "fileFormat": {
+    "label": "文件存储格式",
+    "help": "目前支持三种存储格式：Text：普通文本，一行一条用分隔符分隔，HFile：HBase使用的存储格式，Parquet：最常用的列存格式文件"
+  },
   "fsName": {
     "help": "描述：Hadoop hdfs文件系统namenode节点地址。格式：hdfs://ip:端口；例如：hdfs://127.0.0.1:9000",
     "creator": {

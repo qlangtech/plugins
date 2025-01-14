@@ -25,21 +25,21 @@ import com.qlangtech.tis.config.hive.meta.IHiveTableContext;
 import com.qlangtech.tis.config.hive.meta.PartitionFilter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.hive.DefaultHiveTableContext;
-import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.hive.PartitionPathPattern;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 
-import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,18 +48,25 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-11-06 12:32
  **/
-public class DefaultPartitionFilter extends PartitionFilter implements IdentityName {
+public class DefaultPartitionFilter extends PartitionFilter {
     public static short maxPtsCount = (short) 999;
     /**
      * 不是必须输入的
      */
-    @FormField(ordinal = 2, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 2, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String ptFilter;
 
-    @Override
-    public String identityValue() {
-        return ptFilter;
-    }
+    /**
+     * 设置partition path的组装逻辑
+     */
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public PartitionPathPattern pathPattern;
+
+
+//    @Override
+//    public String identityValue() {
+//        return ptFilter;
+//    }
 
     public static String getPtDftVal() {
 //        DefaultPartitionFilter dftPartition = new DefaultPartitionFilter();
@@ -82,9 +89,11 @@ public class DefaultPartitionFilter extends PartitionFilter implements IdentityN
                 criteria = DefaultHiveConnGetter.replaceLastestPtCriteria(criteria, (ptKey) -> {
                     int index = 0;
                     int matchedIndex = -1;
+                    final boolean[] matchedPtIsString = new boolean[1];
                     for (FieldSchema pt : tableContext.table.getPartitionKeys()) {
                         if (StringUtils.equals(ptKey, pt.getName())) {
                             matchedIndex = index;
+                            matchedPtIsString[0] = "string".equalsIgnoreCase(pt.getType());
                             break;
                         }
                         index++;
@@ -104,7 +113,9 @@ public class DefaultPartitionFilter extends PartitionFilter implements IdentityN
                         return pt1.compareTo(pt2);
                     });
 
-                    return maxPt.orElseThrow(() -> new IllegalStateException("can not find maxPt latestPts.size()=" + latestPts.size()));
+                    return maxPt
+                            .map((val) -> Pair.of(matchedPtIsString[0], val))
+                            .orElseThrow(() -> new IllegalStateException("can not find maxPt latestPts.size()=" + latestPts.size()));
                 });
             }
 
@@ -121,11 +132,13 @@ public class DefaultPartitionFilter extends PartitionFilter implements IdentityN
 //        List<String> result = pts.stream() //
 //                .map((pt) -> IPath.pathConcat(tableContext.hiveTable.getStorageLocation(), pt)).collect(Collectors.toList());
 
-        return pts.stream().map((pt) -> IPath.pathConcat(
-                        tableContext.hiveTable.getStorageLocation()
-                        , String.join(File.separator, pt.getValues())))
-                .collect(Collectors.toList());
 
+//                for(){
+//                    tableContext.table.getPartitionKeys()
+//                }
+
+        return Objects.requireNonNull(pathPattern, "pathPattern can not be null")
+                .buildStoragePath(tableContext, pts);
     }
 
     @TISExtension()

@@ -6,7 +6,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.alibaba.datax.plugin.writer.mongodbwriter.KeyConstant;
+import com.alibaba.datax.plugin.writer.mongodbwriter.MongoKeyConstant;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -26,8 +26,8 @@ public class OnUpsertSupport extends UpsertSupport {
     public JSONObject getUpsetCfg() {
         // {"isUpsert":true,"upsertKey":"unique_id"}
         JSONObject conf = new JSONObject();
-        conf.put(KeyConstant.IS_REPLACE, true);
-        conf.put(KeyConstant.UNIQUE_KEY, this.upsertKey);
+        conf.put(MongoKeyConstant.IS_REPLACE, true);
+        conf.put(MongoKeyConstant.UNIQUE_KEY, this.upsertKey);
         return conf;
     }
 

@@ -46,6 +46,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.ClassloaderUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -71,12 +72,19 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     private static Pattern latestPattern = Pattern.compile("((_([a-zA-Z0-9]_?)*)|([a-zA-Z0-9](_?[a-zA-Z0-9])*_?))\\s*([=><]{1,2})\\s*" + HiveTable.KEY_PT_LATEST);
 
 
-    public static String replaceLastestPtCriteria(String latestFilter, java.util.function.Function<String, String> latest) {
+    public static String replaceLastestPtCriteria(String latestFilter
+            , java.util.function.Function<String, Pair<Boolean /*值是否是String类型*/, String>> latest) {
         Matcher matcher = latestPattern.matcher(latestFilter);
         if (!matcher.find()) {
             throw new IllegalStateException("param latestFilter:" + latestFilter + " is not match pattern " + latestPattern);
         }
-        return matcher.replaceFirst("$1 $6 '" + latest.apply(matcher.group(1)) + "'");
+        Pair<Boolean /*值是否是String类型*/, String> matchedPt = latest.apply(matcher.group(1));
+        return matcher.replaceFirst("$1 $6 " + createPtVal(matchedPt));
+    }
+
+    private static String createPtVal(Pair<Boolean /*值是否是String类型*/, String> matchedPt) {
+        final String embellish = matchedPt.getKey() ? "'" : StringUtils.EMPTY;
+        return embellish + matchedPt.getValue() + embellish;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultHiveConnGetter.class);

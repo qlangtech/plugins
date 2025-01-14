@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.data.binary.BinaryStringData;
 import org.apache.flink.table.utils.DateTimeUtils;
@@ -55,7 +56,15 @@ public class RowFieldGetterFactory {
 
         @Override
         protected Object getObject(GenericRowData rowData) {
-            return String.valueOf(rowData.getString(colIndex));
+
+            Object val = rowData.getField(colIndex);
+            if (val instanceof StringData) {
+                return ((StringData) val).toString();
+            }
+            if (val instanceof byte[]) {
+                return new String((byte[]) val);
+            }
+            return String.valueOf(val);
         }
     }
 

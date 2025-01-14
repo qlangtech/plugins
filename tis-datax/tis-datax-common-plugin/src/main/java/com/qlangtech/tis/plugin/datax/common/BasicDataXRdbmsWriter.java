@@ -19,17 +19,27 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.plugin.rdbms.writer.util.SelectTable;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.DataXCfgFile;
+import com.qlangtech.tis.datax.IDataXBatchPost;
+import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
+import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
@@ -44,6 +54,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -71,8 +82,9 @@ import java.util.stream.Collectors;
  * @create: 2021-06-23 12:07
  **/
 public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter
-        implements IDataSourceFactoryGetter, IInitWriterTableExecutor, KeyedPluginStore.IPluginKeyAware, IDataXNameAware {
+        implements IDataSourceFactoryGetter, IInitWriterTableExecutor, KeyedPluginStore.IPluginKeyAware, IDataXNameAware, IDataXBatchPost {
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
+    private static String TABLE_NAME_PLACEHOLDER = "@table";
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsWriter.class);
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -100,6 +112,74 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public ExecutePhaseRange getPhaseRange() {
+        return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump);
+    }
+
+    @Override
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+        if (StringUtils.isBlank(this.preSql)) {
+            return null;
+        }
+        return new PreAndPostSQLExecutor(true, execContext, tab);
+    }
+
+    @Override
+    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
+        if (StringUtils.isBlank(this.postSql)) {
+            return null;
+        }
+        return new PreAndPostSQLExecutor(false, execContext, tab);
+    }
+
+
+    private class PreAndPostSQLExecutor implements IRemoteTaskPostTrigger, IRemoteTaskPreviousTrigger {
+        private final boolean preExecute;
+        private final IExecChainContext execContext;
+        private final ISelectedTab tab;
+
+        public PreAndPostSQLExecutor(boolean preExecute, IExecChainContext execContext, ISelectedTab tab) {
+            this.preExecute = preExecute;
+            this.execContext = execContext;
+            this.tab = tab;
+        }
+
+        @Override
+        public String getTaskName() {
+            return "execute_" + (this.preExecute ? "pre" : "post") + "SQL_of_" + tab.getName();// IDataXBatchPost.getPreExecuteTaskName(tab);
+        }
+
+        private String validateSQL(String sql) {
+            if (StringUtils.isBlank(sql)) {
+                throw new IllegalStateException(this.getTaskName() + " relevant SQL can not be empty");
+            }
+            return sql;
+        }
+
+        @Override
+        public void run() {
+
+            final TableAliasMapper tableAliasMapper
+                    = execContext.getAttribute(TableAlias.class.getSimpleName(), () -> {
+                return execContext.getProcessor().getTabAlias(null);
+            });
+
+            BasicDataSourceFactory dsFactory = ((BasicDataSourceFactory) getDataSourceFactory());
+            dsFactory.visitAllConnection((conn) -> {
+                SelectTable toTable = SelectTable.create(tableAliasMapper.get(tab).getTo(), dsFactory);
+                String preSqlStatement = StringUtils.replace(validateSQL(this.preExecute ? preSql : postSql), TABLE_NAME_PLACEHOLDER, toTable.getTabName());
+                try {
+                    conn.execute(preSqlStatement);
+                    logger.info("success " + getTaskName() + ":" + preSqlStatement);
+                } catch (Exception e) {
+                    throw new RuntimeException("execute " + getTaskName() + ":" + preSqlStatement, e);
+                }
+            });
+        }
+    }
+
+
+    @Override
     public final CreateDDL generateCreateDDL(
             SourceColMetaGetter sourceColMetaGetter
             , TableMap tableMapper
@@ -118,7 +198,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      */
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
-        return !Objects.requireNonNull(autoCreateTable,"autoCreateTable can not be null")
+        return !Objects.requireNonNull(autoCreateTable, "autoCreateTable can not be null")
                 .enabled();
     }
 

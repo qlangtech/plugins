@@ -20,6 +20,7 @@ package com.qlangtech.tis.hive;
 
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,12 +37,22 @@ public class TestDefaultHiveConnGetter {
 
         Assert.assertEquals("pt >= '2023110305' "
                 , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " >= " + HiveTable.KEY_PT_LATEST + " "));
+
+        Assert.assertEquals("pt >= 2023110305 "
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " >= " + HiveTable.KEY_PT_LATEST + " ", false));
+
+        Assert.assertEquals("pt = 2023110305 and pmod='1'"
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST + " and pmod='1'", false));
     }
 
     private static String replaceLastestPtCriteria(String latestFilter) {
+        return replaceLastestPtCriteria(latestFilter, true);
+    }
+
+    private static String replaceLastestPtCriteria(String latestFilter, boolean isStrType) {
         String s = DefaultHiveConnGetter.replaceLastestPtCriteria(latestFilter, (ptKey) -> {
             Assert.assertEquals(IDumpTable.PARTITION_PT, ptKey);
-            return replacePt;
+            return Pair.of(isStrType, replacePt);
         });
         return s;
     }

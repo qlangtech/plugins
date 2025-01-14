@@ -4,7 +4,8 @@
   },
   "ptFilter": {
     "label": "目标分区",
-    "dftVal": "on"
+    "dftVal": "on",
+    "help": "如果目标表设置了分区键，请设置该选项"
   },
   "resMatcher": {
     "disable": true

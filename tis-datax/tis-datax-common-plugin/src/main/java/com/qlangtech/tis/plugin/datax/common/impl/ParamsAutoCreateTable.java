@@ -30,7 +30,7 @@ import java.util.Objects;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-14 11:32
  **/
-public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> extends AutoCreateTable<COL_WRAPPER> {
+public abstract class ParamsAutoCreateTable<COL_WRAPPER extends ColWrapper> extends AutoCreateTable<COL_WRAPPER>  {
     /**
      * 添加列注释
      */

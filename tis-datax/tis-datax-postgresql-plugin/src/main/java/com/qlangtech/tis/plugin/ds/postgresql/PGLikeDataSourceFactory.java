@@ -33,7 +33,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
-import org.postgresql.jdbc.PgConnection;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,7 +43,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * https://jdbc.postgresql.org/download.html <br/>
@@ -80,8 +78,7 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         //https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-        String jdbcUrl = "jdbc:" + getDBType() + "://" + ip + ":" + this.port + "/" + dbName + "?ssl=false&stringtype" +
-                "=unspecified";
+        String jdbcUrl = buildJdbcUrl(this.getDBType(), ip, this.port, dbName);
         // boolean hasParam = false;
         if (StringUtils.isNotEmpty(this.encode)) {
             // hasParam = true;
@@ -91,6 +88,11 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
             jdbcUrl = jdbcUrl + "&" + this.extraParams;
         }
         return jdbcUrl;
+    }
+
+    public static String buildJdbcUrl(String dbType, String ip, int port, String dbName) {
+        return "jdbc:" + dbType + "://" + ip + ":" + port + "/" + dbName + "?ssl=false&stringtype" +
+                "=unspecified";
     }
 
     @Override
@@ -124,20 +126,15 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
     }
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> optProps, boolean verify) throws SQLException {
         final java.sql.Driver jdbcDriver = getJDBCDriver();
-        // StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)
-        java.util.Properties props = new Properties();
+
+        java.util.Properties props = optProps.orElseGet(() -> new Properties());
         props.setProperty(PGProperty.CURRENT_SCHEMA.getName(), this.tabSchema);
         props.setProperty(PGProperty.USER.getName(), this.getUserName());
         props.setProperty(PGProperty.PASSWORD.getName(), this.password);
 
-
         return new JDBCConnection(jdbcDriver.connect(jdbcUrl, props), jdbcUrl);
-        //        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
-        //            throw TisException.create("invalid tabSchema:" + this.tabSchema);
-        //        }
-        //  return conn;
     }
 
     private transient java.sql.Driver driver;
@@ -204,33 +201,47 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
             return Collections.emptyList();
         }
 
-
         @Override
-        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context,
-                                            BasicDataSourceFactory dsFactory) {
+        protected boolean validateConnection(JDBCConnection conn, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
             try {
-                AtomicBoolean valid = new AtomicBoolean(true);
                 PGLikeDataSourceFactory ds = (PGLikeDataSourceFactory) dsFactory;
-                dsFactory.visitFirstConnection((c) -> {
-                    String schema = getConnectionSchema(c);
-                    if (!StringUtils.equals(ds.tabSchema, schema)) {
-                        msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");
-                        valid.set(false);
-                    }
-                });
-
-                if (!valid.get()) {
+                String schema = getConnectionSchema(conn);
+                if (!StringUtils.equals(ds.tabSchema, schema)) {
+                    msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");
                     return false;
                 }
-                //  List<String> tables = dsFactory.getTablesInDB();
-                // msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-            } catch (Exception e) {
-                //logger.warn(e.getMessage(), e);
-                msgHandler.addErrorMessage(context, TisException.getErrMsg(e).getMessage());
-                return false;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-            return true;
+            return super.validateConnection(conn, dsFactory, msgHandler, context);
         }
+
+//        @Override
+//        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context,
+//                                            BasicDataSourceFactory dsFactory) {
+//            try {
+//                AtomicBoolean valid = new AtomicBoolean(true);
+//                PGLikeDataSourceFactory ds = (PGLikeDataSourceFactory) dsFactory;
+//                dsFactory.visitFirstConnection((c) -> {
+//                    String schema = getConnectionSchema(c);
+//                    if (!StringUtils.equals(ds.tabSchema, schema)) {
+//                        msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");
+//                        valid.set(false);
+//                    }
+//                });
+//
+//                if (!valid.get()) {
+//                    return false;
+//                }
+//                //  List<String> tables = dsFactory.getTablesInDB();
+//                // msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
+//            } catch (Exception e) {
+//                //logger.warn(e.getMessage(), e);
+//                msgHandler.addErrorMessage(context, TisException.getErrMsg(e).getMessage());
+//                return false;
+//            }
+//            return true;
+//        }
 
         protected abstract String getConnectionSchema(JDBCConnection c) throws SQLException;
 

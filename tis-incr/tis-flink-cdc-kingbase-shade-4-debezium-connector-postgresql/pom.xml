@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--~
+  ~   Licensed to the Apache Software Foundation (ASF) under one
+  ~   or more contributor license agreements.  See the NOTICE file
+  ~   distributed with this work for additional information
+  ~   regarding copyright ownership.  The ASF licenses this file
+  ~   to you under the Apache License, Version 2.0 (the
+  ~   "License"); you may not use this file except in compliance
+  ~   with the License.  You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~   Unless required by applicable law or agreed to in writing, software
+  ~   distributed under the License is distributed on an "AS IS" BASIS,
+  ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~   See the License for the specific language governing permissions and
+  ~   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>tis-incr</artifactId>
+        <groupId>com.qlangtech.tis.plugins</groupId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>tis-flink-cdc-kingbase-shade-4-debezium-connector-postgresql</artifactId>
+
+    <properties>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-kingbase-cdc</artifactId>
+            <version>${flink.cdc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-connector-debezium</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-shaded-guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+    </dependencies>
+
+    <dependencyManagement>
+
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+<!--                            <shaderHint>tis</shaderHint>-->
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <transformers>
+<!--                                <transformer-->
+<!--                                        implementation="com.qlangtech.plugins.incr.flink.cdc.kingbase.plugin.KingBaseMethodCallTransformer"/>-->
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>io.debezium:debezium-connector-kingbase</artifact>
+                                    <excludes>
+                                        <exclude>
+                                            io/debezium/connector/postgresql/connection/PostgresReplicationConnection*
+                                        </exclude>
+                                        <exclude>io/debezium/connector/postgresql/connection/PostgresConnection*
+                                        </exclude>
+                                        <exclude>io/debezium/connector/postgresql/connection/Lsn*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+
+<!--                            <relocations>-->
+
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.PGStatement</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.PGStatement</shadedPattern>-->
+<!--                                </relocation>-->
+
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.core.BaseConnection</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.core.BaseConnection</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.core.Oid</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.core.Oid</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.core.ServerVersion</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.core.ServerVersion</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.core.TypeInfo</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.core.TypeInfo</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGbox</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBbox</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGcircle</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBcircle</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGline</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBline</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGlseg</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBlseg</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGpath</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBpath</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGpoint</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBpoint</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.geometric.PGpolygon</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.geometric.KBpolygon</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.jdbc.PgArray</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.jdbc.KbArray</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.jdbc.PgConnection</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.jdbc.KbConnection</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.jdbc.PgDatabaseMetaData</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.jdbc.KbDatabaseMetaData</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.jdbc.PgStatement</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.jdbc.KbStatement</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.jdbc.TimestampUtils</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.jdbc.TimestampUtils</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.replication.LogSequenceNumber</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.replication.LogSequenceNumber</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.replication.PGReplicationStream</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.replication.KBReplicationStream</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.replication.fluent.logical.ChainedLogicalStreamBuilder-->
+<!--                                    </pattern>-->
+<!--                                    <shadedPattern>-->
+<!--                                        com.kingbase8.replication.fluent.logical.ChainedLogicalStreamBuilder-->
+<!--                                    </shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.HStoreConverter</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.HStoreConverter</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PGInterval</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KBInterval</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PGmoney</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KBmoney</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PGobject</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KBobject</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PGtokenizer</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KBtokenizer</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PSQLException</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KSQLException</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                                <relocation>-->
+<!--                                    <pattern>org.postgresql.util.PSQLState</pattern>-->
+<!--                                    <shadedPattern>com.kingbase8.util.KSQLState</shadedPattern>-->
+<!--                                </relocation>-->
+<!--                            </relocations>-->
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.slf4j:*</exclude>
+                                    <exclude>com.google.guava:guava</exclude>
+                                </excludes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+<!--                <dependencies>-->
+<!--                    <dependency>-->
+<!--                        <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--                        <artifactId>tis-flink-cdc-kingbase-shade-plugin-extends</artifactId>-->
+<!--                        <version>${project.version}</version>-->
+<!--                    </dependency>-->
+<!--                </dependencies>-->
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

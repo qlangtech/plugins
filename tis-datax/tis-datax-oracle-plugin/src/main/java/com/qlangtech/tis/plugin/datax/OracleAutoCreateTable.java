@@ -108,8 +108,9 @@ public class OracleAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                     case SMALLINT:
                         return "SMALLINT";
                     case INTEGER:
-                    case BIGINT:
                         return "INTEGER";
+                    case BIGINT:
+                        return "NUMBER(19)";
                     case FLOAT:
                         return "BINARY_FLOAT";
                     case DOUBLE:

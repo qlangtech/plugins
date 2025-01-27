@@ -85,8 +85,8 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-        Properties props = new Properties();
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
+        Properties props = properties.orElse(new Properties());
         props.put("user", StringUtils.trimToEmpty(this.userName));
         if (StringUtils.isNotEmpty(this.password)) {
             props.put("password", StringUtils.trimToEmpty(this.password));

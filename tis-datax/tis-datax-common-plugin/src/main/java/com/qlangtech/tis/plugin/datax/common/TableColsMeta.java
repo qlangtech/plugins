@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public class TableColsMeta extends Memoizer<String, Map<String, ColumnMetaData>>
         AtomicReference<JDBCConnection> conn = new AtomicReference<>();
         try {
             dbConfig.vistDbName((config, jdbcUrl, ip, dbname) -> {
-                conn.set(datasource.getConnection(jdbcUrl, false));
+                conn.set(datasource.getConnection(jdbcUrl, Optional.empty(), false));
                 return true;
             });
             this.connection = Objects.requireNonNull(conn.get());

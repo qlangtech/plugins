@@ -43,6 +43,7 @@ import java.sql.Types;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -151,7 +152,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 //    }
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
 
         try {
             Class.forName(JDBC_DRIVER);

@@ -1,0 +1,61 @@
+{
+  "replicaIdentity": {
+    "label": "REPLICA IDENTITY",
+    "dftVal": "DEFAULT",
+    "enum": [
+      {
+        "val": "DEFAULT",
+        "label": "DEFAULT"
+      },
+      {
+        "val": "FULL",
+        "label": "FULL"
+      }
+    ]
+  },
+  "decodingPluginName": {
+    "dftVal": "decoderbufs",
+    "label": "解码器",
+    "help": "The name of the Postgres logical decoding plug-in installed on the server. Supported values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming, wal2json_rds_streaming and pgoutput.",
+    "enum": [
+      {
+        "val": "decoderbufs",
+        "label": "decoderbufs"
+      },
+      {
+        "val": "wal2json",
+        "label": "wal2json"
+      },
+      {
+        "val": "wal2json_rds",
+        "label": "wal2json_rds"
+      },
+      {
+        "val": "wal2json_streaming",
+        "label": "wal2json_streaming"
+      },
+      {
+        "val": "wal2json_rds_streaming",
+        "label": "wal2json_rds_streaming"
+      },
+      {
+        "val": "pgoutput",
+        "label": "pgoutput"
+      }
+    ]
+  },
+  "startupOptions": {
+    "label": "起始位点",
+    "dftVal": "latest",
+    "enum": [
+      {
+        "val": "latest",
+        "label": "Latest"
+      },
+      {
+        "val": "initial",
+        "label": "Initial"
+      }
+    ]
+  }
+}

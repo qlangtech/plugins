@@ -10,7 +10,7 @@ import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -98,11 +99,11 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     private transient dm.jdbc.driver.DmDriver driver;
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> props, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new dm.jdbc.driver.DmDriver();
         }
-        java.util.Properties info = new java.util.Properties();
+        java.util.Properties info = props.orElse(new java.util.Properties());
 
         if (this.userName != null) {
             info.put("user", this.userName);
@@ -286,7 +287,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
 
             @Override
             public IDataSourceDumper next() {
-                final String  jdbcUrl = jdbcUrls.get(index.getAndIncrement());
+                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
                 return new MySqlDataSourceDumper(jdbcUrl, table);
             }
         };
@@ -309,7 +310,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     private class MySqlDataSourceDumper implements IDataSourceDumper {
-        private final String  jdbcUrl;
+        private final String jdbcUrl;
         private final TISTable table;
 
         private JDBCConnection connection;
@@ -406,7 +407,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                 throw new IllegalStateException("executeSql can not be null");
             }
             try {
-                this.connection = getConnection(jdbcUrl, false);
+                this.connection = getConnection(jdbcUrl, Optional.empty(), false);
                 this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);

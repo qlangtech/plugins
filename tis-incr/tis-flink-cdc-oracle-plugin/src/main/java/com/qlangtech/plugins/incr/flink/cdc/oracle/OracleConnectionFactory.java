@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,12 +38,13 @@ import java.sql.SQLException;
 public class OracleConnectionFactory implements JdbcConnection.ConnectionFactory {
     @Override
     public Connection connect(JdbcConfiguration jdbcConfiguration) throws SQLException {
-        DataSourceFactory dsFactory = TIS.getDataBasePlugin(PostedDSProp.parse(jdbcConfiguration.getString(DataxUtils.DATASOURCE_FACTORY_IDENTITY)));
+        DataSourceFactory dsFactory = TIS.getDataBasePlugin(
+                PostedDSProp.parse(jdbcConfiguration.getString(DataxUtils.DATASOURCE_FACTORY_IDENTITY)));
         String jdbcUrl = jdbcConfiguration.getString(DataxUtils.DATASOURCE_JDBC_URL);
         if (StringUtils.isEmpty(jdbcUrl)) {
             throw new IllegalArgumentException("param jdbcUrl can not be null, relevant key:" + DataxUtils.DATASOURCE_JDBC_URL);
         }
-        JDBCConnection connection = dsFactory.getConnection(jdbcUrl, false, false);
+        JDBCConnection connection = dsFactory.getConnection(jdbcUrl, Optional.empty(), false, false);
         return connection.getConnection();
     }
 }

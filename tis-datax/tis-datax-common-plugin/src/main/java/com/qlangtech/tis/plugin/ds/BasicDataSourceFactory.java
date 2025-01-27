@@ -249,11 +249,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         return TableInDB.create(this);
     }
 
-//    @Override
-//    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-//        return super.createConnection(jdbcUrl, verify);
-//    }
-
 
     protected String getRefectTablesSql() {
         return "show tables";

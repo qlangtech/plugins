@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -30,13 +31,19 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 15:23
+ * @see com.qlangtech.tis.plugin.datax.kingbase.mode.MySQLMode
+ * @see com.qlangtech.tis.plugin.datax.kingbase.mode.OracleMode
+ * @see com.qlangtech.tis.plugin.datax.kingbase.mode.PGMode
  **/
-public abstract class KingBaseCompatibleMode implements Describable<KingBaseCompatibleMode> {
+public abstract class KingBaseCompatibleMode implements Describable<KingBaseCompatibleMode>, Serializable {
+
+    public abstract EndType getEndType();
 
     public abstract Optional<String> getEscapeChar();
 

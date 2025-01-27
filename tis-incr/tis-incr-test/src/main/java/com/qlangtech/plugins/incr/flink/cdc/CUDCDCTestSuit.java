@@ -630,6 +630,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected final SelectedTab createSelectedTab(String tabName, DataSourceFactory dataSourceFactory) {
+        this.dataSourceFactory = dataSourceFactory;
         return TestSelectedTab.createSelectedTab(EntityName.parse(tabName), dataSourceFactory, createTableMetadataGetter(), (tab) -> {
             if (suitParam.overwriteSelectedTab != null) {
                 suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);

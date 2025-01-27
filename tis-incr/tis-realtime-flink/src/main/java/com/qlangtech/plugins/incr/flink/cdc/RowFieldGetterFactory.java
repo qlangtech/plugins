@@ -231,6 +231,9 @@ public class RowFieldGetterFactory {
             if (val instanceof Boolean) {
                 return (byte) (((Boolean) val) ? 1 : 0);
             }
+            if (val instanceof Short) {
+                return ((Short) val).byteValue();
+            }
             return rowData.getByte(colIndex);
         }
     }

@@ -61,8 +61,8 @@ public class HiveDFSLinker extends TDFSLinker {
     @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
 
-    @FormField(ordinal = 6, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-    public String fileFormat;
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    public List<String> fileFormat;
 
     public transient FileSystemFactory fileSystem;
 
@@ -134,9 +134,12 @@ public class HiveDFSLinker extends TDFSLinker {
 //        for (Map.Entry<String, String> entry : sdParams.entrySet()) {
 //            props.setProperty(entry.getKey(), entry.getValue());
 //        }
+        List<SupportedFileFormat> supportedFileFormat
+                = SupportedFileFormat.getSupportedFileFormat(this.fileFormat);
+        Class<?> inputFormatClass = null;
         try {
             // example: MapredParquetInputFormat for Parquet
-            Class<?> inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
+            inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
             // forExample : LazySimpleSerDe, ParquetHiveSerDe
             AbstractSerDe serde = (AbstractSerDe) Class.forName(
                     storedAs.getSerializationLib()
@@ -148,12 +151,21 @@ public class HiveDFSLinker extends TDFSLinker {
             JobConf jobConf = new JobConf(conf);
             serde.initialize(jobConf, props);
             List<HiveTabColType> cols = table.getCols();
-            SupportedFileFormat supportedFileFormat = SupportedFileFormat.getSupportedFileFormat(this.fileFormat);
-            return supportedFileFormat.createFileFormatReader(entityName, cols, serde, inputFormatClass, jobConf);
 
+//            if (supportedFileFormat.match(inputFormatClass)) {
+//                throw new IllegalStateException("table:" + entityName + " is not support format:" + supportedFileFormat.identityValue() + ",actual formatClass:" + inputFormatClass);
+//            }
+
+            for (SupportedFileFormat format : supportedFileFormat) {
+                if (format.match(inputFormatClass)) {
+                    return format.createFileFormatReader(entityName, cols, serde, inputFormatClass, jobConf);
+                }
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        throw new IllegalStateException("table:" + entityName + " is not support format:"
+                + supportedFileFormat.stream().map((f) -> f.identityValue()).collect(Collectors.joining(",")) + ",actual formatClass:" + inputFormatClass);
     }
 
 

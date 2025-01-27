@@ -33,6 +33,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -81,7 +82,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false).getConnection();
+        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), Optional.empty(), false).getConnection();
     }
 
 

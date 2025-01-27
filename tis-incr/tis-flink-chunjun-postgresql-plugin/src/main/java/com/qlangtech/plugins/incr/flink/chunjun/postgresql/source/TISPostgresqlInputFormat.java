@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -50,7 +51,7 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl(), false).getConnection();
+                .getConnection(jdbcConf.getJdbcUrl(), Optional.empty(), false).getConnection();
     }
 
     @Override

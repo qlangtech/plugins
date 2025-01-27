@@ -30,6 +30,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -43,11 +45,11 @@ public class MariaDBDataSourceFactory extends MySQLDataSourceFactory {
     private transient org.mariadb.jdbc.Driver driver;
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new org.mariadb.jdbc.Driver();
         }
-        java.util.Properties info = new java.util.Properties();
+        java.util.Properties info = properties.orElse(new java.util.Properties());
         if (this.userName != null) {
             info.put("user", this.userName);
         }

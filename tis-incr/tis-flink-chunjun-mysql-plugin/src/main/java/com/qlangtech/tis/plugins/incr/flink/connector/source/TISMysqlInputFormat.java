@@ -34,6 +34,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -52,7 +53,7 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection((jdbcConf.getJdbcUrl()), false).getConnection();
+                .getConnection((jdbcConf.getJdbcUrl()), Optional.empty(), false).getConnection();
     }
 
     @Override

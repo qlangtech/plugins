@@ -1,17 +1,17 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.SourceColMetaGetter;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
-
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -59,17 +59,7 @@ public class TestDataXOdpsWriter extends TestCase {
     }
 
     private DataXOdpsWriter createDataXOdpsWriter() {
-        AuthToken access = new AuthToken() {
-            @Override
-            public String getAccessKeyId() {
-                return "accessIdXXXX";
-            }
-
-            @Override
-            public String getAccessKeySecret() {
-                return "accessKeySecretXXX";
-            }
-        };
+        AccessToken access = new AccessToken();
 
 
         OdpsDataSourceFactory endpoint = new OdpsDataSourceFactory();

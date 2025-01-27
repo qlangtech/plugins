@@ -81,11 +81,11 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     private transient java.sql.Driver driver;
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
         if (driver == null) {
             driver = createDriver();
         }
-        java.util.Properties info = createJdbcProps();
+        java.util.Properties info = properties.orElse(createJdbcProps());
 
         if (this.userName != null) {
             info.put("user", this.userName);

@@ -32,6 +32,7 @@ import org.junit.BeforeClass;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -83,7 +84,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
         StarRocksSourceFactory ds = createSourceFactory();
 
         try (JDBCConnection conn = ds.getConnection(
-                ds.buidJdbcUrl(null, "localhost", null), false)) {
+                ds.buidJdbcUrl(null, "localhost", null), Optional.empty(), false)) {
             try (Statement statement = conn.createStatement()) {
 
                 // statement.execute("ALTER SYSTEM ADD BACKEND \"" + StringUtils.substring(starRocksContainer.getContainerId(), 0, 12) + ":9050\"");

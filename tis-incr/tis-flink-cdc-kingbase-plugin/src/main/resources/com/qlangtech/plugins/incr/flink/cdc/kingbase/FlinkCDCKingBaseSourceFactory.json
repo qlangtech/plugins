@@ -1,0 +1,11 @@
+{
+  "decodingPluginName": {
+    "help": "The name of the KingBase logical decoding plug-in installed on the server. Supported values are decoderbufs",
+    "enum": [
+      {
+        "val": "decoderbufs",
+        "label": "decoderbufs"
+      }
+    ]
+  }
+}

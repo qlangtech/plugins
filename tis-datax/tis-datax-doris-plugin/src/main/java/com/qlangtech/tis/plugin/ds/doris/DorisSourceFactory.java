@@ -34,7 +34,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
@@ -110,8 +110,8 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-        Properties props = new Properties();
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
+        Properties props = properties.orElse(new Properties());
         props.put("useSSL", "false");
         props.put("user", StringUtils.trimToEmpty(this.userName));
         if (StringUtils.isNotEmpty(this.password)) {

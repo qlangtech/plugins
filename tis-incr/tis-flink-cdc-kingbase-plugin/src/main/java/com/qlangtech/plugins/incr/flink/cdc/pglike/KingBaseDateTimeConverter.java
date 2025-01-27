@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.postgresql;
+package com.qlangtech.plugins.incr.flink.cdc.pglike;
 
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 
@@ -28,13 +28,15 @@ import java.time.ZoneId;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-19 15:53
  **/
-public class PGDateTimeConverter extends DateTimeConverter {
+public class KingBaseDateTimeConverter extends DateTimeConverter {
     @Override
     protected String convertDate(Object input) {
         if (input != null) {
+            java.time.Instant i = (java.time.Instant) input;
+
             // System.out.println("convertDate:" + input.getClass());
-            java.time.LocalDate date = (java.time.LocalDate) input;
-            return dateFormatter.format(date);
+            // java.time.LocalDate date = (java.time.LocalDate) input;
+            return dateFormatter.format(i.atZone(timestampZoneId).toLocalDate());
         }
 
 

@@ -93,66 +93,6 @@ public class HiveReader extends TDFSReader {
             inputFormat.iterateReadRecords(col2Index
                     , colsMeta, inputPath, recordSender, this.getTaskPluginCollector());
 
-
-//            try (RecordReader<NullWritable, ArrayWritable> recordReader = inputFormat.getRecordReader(inputPath)) {
-////                LongWritable key = new LongWritable();
-////                Text value = new Text();
-//
-//
-//                Object row = null;
-//                StructObjectInspector inspector = (StructObjectInspector) inputFormat.getSerde().getObjectInspector();
-//                List<ColumnEntry> colsMeta = createColsMeta(Optional.of(inputFormat.getEntityName()));
-//                ColumnEntry columnEntry = null;
-//                Object fieldVal = null;
-//                final String[] parseRows = new String[colsMeta.size()];
-//
-//
-//                NullWritable key = NullWritable.get();
-//                ArrayWritable value = new ArrayWritable(Text.class, new Writable[colsMeta.size()]);
-//
-//                while (recordReader.next(key, value)) {
-//                    //
-//                    row = inputFormat.getSerde().deserialize(value);
-//                    Arrays.fill(parseRows, null);
-//                    for (int i = 0; i < colsMeta.size(); i++) {
-//                        columnEntry = colsMeta.get(i);
-//                        fieldVal = inspector.getStructFieldData(row, inspector.getStructFieldRef(columnEntry.getColName()));
-//                        if (fieldVal != null) {
-//                            parseRows[i] = String.valueOf(fieldVal);
-//                        }
-//                    }
-//
-//                    UnstructuredStorageReaderUtil.transportOneRecord(col2Index, recordSender, colsMeta, parseRows, this.getTaskPluginCollector());
-//                    System.out.println("Key: " + key.get() + ", Value: " + value);
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-
-
-//            // 获取输入分割
-//            InputSplit[] split = inputFormat.getSplits() // FileInputFormat.getSplits(job, 1)[0];
-//
-//            // 创建 RecordReader
-//            RecordReader<LongWritable, Text> recordReader = new LineRecordReader(job, (FileSplit) split);
-//
-//            try {
-//                // 初始化 RecordReader
-//                recordReader.initialize(split, job);
-//
-//                LongWritable key = new LongWritable();
-//                Text value = new Text();
-//
-//                // 遍历所有记录
-//                while (recordReader.next(key, value)) {
-//                    System.out.println("Key: " + key.get() + ", Value: " + value.toString());
-//                }
-//            } finally {
-//                // 关闭 RecordReader
-//                recordReader.close();
-//            }
-
-
         }
 
     }

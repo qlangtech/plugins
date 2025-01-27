@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.ds.JDBCConnection;
 
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.Properties;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -36,8 +37,8 @@ public class StarRocksSourceFactory extends BasicSourceFactory {
     public static final String DISPLAY_NAME = "StarRocks";
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-        return super.createConnection(jdbcUrl, verify);
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
+        return super.createConnection(jdbcUrl, properties, verify);
     }
 
     @Override

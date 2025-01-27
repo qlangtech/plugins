@@ -31,7 +31,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
- 
+
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -131,12 +132,12 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
-        return getConnection((jdbcUrl), false, verify);
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
+        return getConnection((jdbcUrl), properties, false, verify);
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean usingPool, boolean verify) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, Optional<Properties> properties, boolean usingPool, boolean verify) throws SQLException {
         return this.hms.getConnection(jdbcUrl, this.dbName, usingPool);
     }
 
@@ -164,7 +165,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
         final String hiveJdbcUrl = createHiveJdbcUrl();
-        try (JDBCConnection conn = this.getConnection((hiveJdbcUrl), false)) {
+        try (JDBCConnection conn = this.getConnection((hiveJdbcUrl), Optional.empty(), false)) {
             connProcessor.vist(conn);
         } catch (Exception e) {
             throw new RuntimeException(e);

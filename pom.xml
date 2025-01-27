@@ -58,6 +58,7 @@
         <module>tis-plugin-test/tis-testcontainer-oracle</module>
         <module>tis-plugin-test/tis-testcontainer-starrocks</module>
         <module>tis-plugin-test/tis-testcontainer-dameng</module>
+        <module>tis-plugin-test/tis-testcontainer-kingbase</module>
         <module>tis-e2e</module>
         <module>tis-kerberos-plugin</module>
 
@@ -65,6 +66,8 @@
         <module>tis-datax/tis-datax-local-embedded-executor</module>
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
+
+
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->

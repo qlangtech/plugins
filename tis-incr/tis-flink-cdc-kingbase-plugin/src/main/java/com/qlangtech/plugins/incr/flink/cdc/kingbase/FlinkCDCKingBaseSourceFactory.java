@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.kingbase;
 
-import com.qlangtech.plugins.incr.flink.cdc.postgresql.FlinkCDCPostreSQLSourceFactory;
+import com.qlangtech.plugins.incr.flink.cdc.pglike.FlinkCDCPGLikeSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -27,7 +27,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 19:08
  **/
-public class FlinkCDCKingBaseSourceFactory extends FlinkCDCPostreSQLSourceFactory {
+public class FlinkCDCKingBaseSourceFactory extends FlinkCDCPGLikeSourceFactory {
 
     @Override
     public IMQListener create() {
@@ -35,7 +35,7 @@ public class FlinkCDCKingBaseSourceFactory extends FlinkCDCPostreSQLSourceFactor
     }
 
     @TISExtension()
-    public static class KingBaseDescriptor extends FlinkCDCPostreSQLSourceFactory.DefaultDescriptor {
+    public static class KingBaseDescriptor extends BasePGLikeDescriptor {
         @Override
         public String getDisplayName() {
             return "Flink-CDC-KingBase";

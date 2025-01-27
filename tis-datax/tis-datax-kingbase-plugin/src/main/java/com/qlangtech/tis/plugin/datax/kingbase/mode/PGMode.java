@@ -32,10 +32,16 @@ import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.PG_ESCAPE_COL_C
  * @create: 2025-01-14 15:26
  **/
 public class PGMode extends KingBaseCompatibleMode {
+    private static final EndType endType = EndType.Postgres;
 
     @Override
     public Optional<String> getEscapeChar() {
         return PG_ESCAPE_COL_CHAR;
+    }
+
+    @Override
+    public EndType getEndType() {
+        return endType;
     }
 
     @TISExtension

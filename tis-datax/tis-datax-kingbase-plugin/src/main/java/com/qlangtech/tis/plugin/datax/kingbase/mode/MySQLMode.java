@@ -27,10 +27,18 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import java.util.Optional;
 
 /**
+ * KingBase 支持三种数据库兼容模式
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 15:28
  **/
 public class MySQLMode extends KingBaseCompatibleMode {
+    private static final EndType endType = EndType.MySQL;
+
+    @Override
+    public EndType getEndType() {
+        return endType;
+    }
 
     @Override
     public Optional<String> getEscapeChar() {
@@ -45,7 +53,7 @@ public class MySQLMode extends KingBaseCompatibleMode {
 
         @Override
         public String getDisplayName() {
-            return EndType.MySQL.name();
+            return endType.name();
         }
     }
 }

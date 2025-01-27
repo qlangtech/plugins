@@ -98,7 +98,6 @@ public class DataXHiveWriter extends BasicFSWriter
     public TabNameDecorator tabDecorator;
 
 
-
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
     public AutoCreateTable autoCreateTable;
@@ -242,7 +241,7 @@ public class DataXHiveWriter extends BasicFSWriter
         Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            return dsFactory.getConnection((jdbcUrl), false);
+            return dsFactory.getConnection((jdbcUrl), Optional.empty(), false);
         } catch (SQLException e) {
             throw new RuntimeException(jdbcUrl, e);
         }

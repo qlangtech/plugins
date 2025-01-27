@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

@@ -65,6 +65,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -160,7 +162,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    protected JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    protected JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
         // return super.createConnection(jdbcUrl, verify);
         return new MongoJDBCConnection(createMongoClient());
     }

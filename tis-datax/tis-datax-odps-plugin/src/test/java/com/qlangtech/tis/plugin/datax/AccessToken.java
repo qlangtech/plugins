@@ -16,32 +16,31 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.postgresql;
+package com.qlangtech.tis.plugin.datax;
+
+import com.qlangtech.tis.plugin.AuthToken;
+import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-11-11 16:31
+ * @create: 2025-01-24 22:45
  **/
-public enum ReplicaIdentity {
-    FULL(true), DEFAULT(false);
+public class AccessToken extends AuthToken implements IAliyunAccessKey {
+    public String accessKeyId;
+    public String accessKeySecret;
 
-    private boolean shallContainBeforeVals;
-
-    private ReplicaIdentity(boolean shallContainBeforeVals) {
-        this.shallContainBeforeVals = shallContainBeforeVals;
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
     }
 
-    public boolean isShallContainBeforeVals() {
-        return this.shallContainBeforeVals;
+    @Override
+    public String getAccessKeyId() {
+        return this.accessKeyId;
     }
 
-    public static ReplicaIdentity parse(String token) {
-        for (ReplicaIdentity ri : ReplicaIdentity.values()) {
-            if (ri.name().equalsIgnoreCase(token)) {
-                return ri;
-            }
-        }
-        throw new IllegalStateException("token:" + token + " is illegal");
+    @Override
+    public String getAccessKeySecret() {
+        return this.accessKeySecret;
     }
-
 }

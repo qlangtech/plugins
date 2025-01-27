@@ -22,14 +22,16 @@ import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
+import com.qlangtech.plugins.incr.flink.cdc.pglike.ReplicaIdentity;
+import com.qlangtech.plugins.incr.flink.cdc.pglike.StartupOptionUtils;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -44,6 +46,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -64,9 +67,12 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
     @Test
     public void testBinlogConsume() throws Exception {
         FlinkCDCPostreSQLSourceFactory pgCDCFactory = new FlinkCDCPostreSQLSourceFactory();
+        pgCDCFactory.replicaIdentity = ReplicaIdentity.DEFAULT.name();
         pgCDCFactory.decodingPluginName = "decoderbufs";
-        pgCDCFactory.startupOptions = FlinkCDCPostreSQLSourceFactory.KEY_STARTUP_LATEST;
+        pgCDCFactory.startupOptions = StartupOptionUtils.KEY_STARTUP_LATEST;
         final String tabName = "base";
+        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.parallelism = 1;
 
         CDCTestSuitParams suitParam = CDCTestSuitParams.createBuilder().setTabName(tabName).build();
 //        suitParam.overwriteSelectedTab = (cdcTestSuit, tableName, dataSourceFactory, tab) -> {
@@ -121,6 +127,8 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
+                sourceHandle.setStreamFactory(streamFactory);
+                sourceHandle.setSourceFlinkColCreator(pgCDCFactory.createFlinkColCreator());
                 return sourceHandle;
             }
 
@@ -150,7 +158,8 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
                 = pgDataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.getInstance());
 
-        return parseDescribable.getInstance();
+        return Objects.requireNonNull(parseDescribable.getInstance()
+                , "dsFactory instance can not be null");
     }
 
 }

@@ -20,19 +20,25 @@ package com.qlangtech.tis.hive.reader;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
 import com.qlangtech.tis.hive.reader.impl.HadoopHFileInputFormat;
+import com.qlangtech.tis.hive.reader.impl.HadoopOrcInputFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopParquetInputFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopTextInputFormat;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hive.hbase.HiveHBaseTableInputFormat;
+import org.apache.hadoop.hive.ql.io.orc.OrcFileStripeMergeInputFormat;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,6 +59,7 @@ public abstract class SupportedFileFormat implements IdentityName {
         supportedFileFormatBuilder.add(new TextFileFormat());
         supportedFileFormatBuilder.add(new HFileFileFormat());
         supportedFileFormatBuilder.add(new ParquetFileFormat());
+        supportedFileFormatBuilder.add(new OrcFileFormat());
         supportedFileFormat = supportedFileFormatBuilder.build();
     }
 
@@ -61,16 +68,28 @@ public abstract class SupportedFileFormat implements IdentityName {
         return supportedFileFormat;
     }
 
-    public static SupportedFileFormat getSupportedFileFormat(String fileFormat) {
-        if (StringUtils.isEmpty(fileFormat)) {
+    public static List<SupportedFileFormat> getSupportedFileFormat(List<String> fileFormat) {
+        if (CollectionUtils.isEmpty(fileFormat)) {
             throw new IllegalArgumentException("param fileFormat can not be empty");
         }
+        List<SupportedFileFormat> result = Lists.newArrayList();
+        Set<String> targetFileFormat = Sets.newHashSet(fileFormat);
         for (SupportedFileFormat format : supportedFileFormat) {
-            if (StringUtils.equals(format.identityValue(), fileFormat)) {
-                return format;
+
+            if (targetFileFormat.contains(format.identityValue())) {
+                result.add(format);
             }
+//            if (StringUtils.equals(format.identityValue(), fileFormat)) {
+//                return format;
+//            }
         }
-        throw new IllegalArgumentException("illegal fileFormat:" + fileFormat);
+        if (CollectionUtils.isEmpty(result)) {
+            throw new IllegalArgumentException("can not find matched fileFormat:" + String.join(",", targetFileFormat) + " capacity format:"
+                    + supportedFileFormat.stream().map((f) -> f.identityValue()).collect(Collectors.joining(",")));
+        }
+
+        return result;
+
     }
 
     /**
@@ -159,4 +178,26 @@ public abstract class SupportedFileFormat implements IdentityName {
             return "Parquet";
         }
     }
+
+
+    private static class OrcFileFormat extends SupportedFileFormat {
+        @Override
+        public boolean match(Class<?> inputFormatClass) {
+            return OrcFileStripeMergeInputFormat.class == inputFormatClass;
+        }
+
+        @Override
+        public FileFormat createFileFormatReader(
+                String entityName, List<HiveTabColType> cols, AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception {
+            OrcFileStripeMergeInputFormat ocrInputFormat = (OrcFileStripeMergeInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+            return new HadoopOrcInputFormat(entityName, cols.size(), ocrInputFormat, serde, jobConf);
+        }
+
+        @Override
+        public String identityValue() {
+            return "Orc";
+        }
+    }
+
+
 }

@@ -32,9 +32,16 @@ import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.ORACLE_ESCAPE_C
  * @create: 2025-01-14 15:27
  **/
 public class OracleMode extends KingBaseCompatibleMode {
+    private static final EndType endType = EndType.Oracle;
+
     @Override
     public Optional<String> getEscapeChar() {
         return ORACLE_ESCAPE_COL_CHAR;
+    }
+
+    @Override
+    public EndType getEndType() {
+        return endType;
     }
 
     @TISExtension
@@ -45,7 +52,7 @@ public class OracleMode extends KingBaseCompatibleMode {
 
         @Override
         public String getDisplayName() {
-            return EndType.Oracle.name();
+            return endType.name();
         }
     }
 }

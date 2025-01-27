@@ -38,7 +38,7 @@ public class DataXKingBaseWriter extends DataXPostgresqlWriter {
 
 
     @Override
-    protected AutoCreateTable getAutoCreateTableCanNotBeNull() {
+    public AutoCreateTable getAutoCreateTableCanNotBeNull() {
         return Objects.requireNonNull(this.getDataSourceFactory().dbMode.autoCreateTable, "autoCreateTable can not be null");
     }
 

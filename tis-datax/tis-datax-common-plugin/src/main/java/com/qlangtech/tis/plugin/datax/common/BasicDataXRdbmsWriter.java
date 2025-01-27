@@ -191,7 +191,8 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return sqlDDLBuilder.build();
     }
 
-    protected AutoCreateTable getAutoCreateTableCanNotBeNull() {
+    @Override
+    public AutoCreateTable getAutoCreateTableCanNotBeNull() {
         return Objects.requireNonNull(this.autoCreateTable, "autoCreateTable can not be null");
     }
 
@@ -201,7 +202,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @return
      */
     @Override
-    public  boolean isGenerateCreateDDLSwitchOff() {
+    public boolean isGenerateCreateDDLSwitchOff() {
         return !getAutoCreateTableCanNotBeNull().enabled();
     }
 
@@ -268,7 +269,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
-            try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), false)) {
+            try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), Optional.empty(), false)) {
                 process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
             }
         }

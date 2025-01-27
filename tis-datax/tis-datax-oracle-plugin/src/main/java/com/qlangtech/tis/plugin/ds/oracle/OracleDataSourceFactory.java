@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -128,7 +129,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    protected ResultSet getColumnsMeta(EntityName table, DatabaseMetaData metaData1) throws SQLException {
+    protected ResultSet getColumnsMeta(EntityName table, JDBCConnection conn, DatabaseMetaData metaData1) throws SQLException {
         return getColRelevantMeta(table, (tab) -> {
             try {
                 return metaData1.getColumns(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
@@ -299,7 +300,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
 
     @Override
-    public JDBCConnection createConnection(String jdbcUrl, boolean verify) throws SQLException {
+    public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException e) {

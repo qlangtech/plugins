@@ -404,7 +404,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 throw new IllegalStateException("executeSql can not be null");
             }
             try {
-                this.connection = getConnection(jdbcUrl, false);
+                this.connection = getConnection(jdbcUrl, Optional.empty(), false);
                 this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);

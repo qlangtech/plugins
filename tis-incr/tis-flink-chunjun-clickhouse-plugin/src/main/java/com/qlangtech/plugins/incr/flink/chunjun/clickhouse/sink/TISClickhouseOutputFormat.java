@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -56,7 +57,7 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        JDBCConnection connection = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false);
+        JDBCConnection connection = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), Optional.empty(), false);
         return connection.getConnection();
     }
 

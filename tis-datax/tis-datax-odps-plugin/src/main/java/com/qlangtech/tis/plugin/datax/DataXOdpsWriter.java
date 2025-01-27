@@ -264,7 +264,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         OdpsDataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            return dsFactory.getConnection(jdbcUrl, false);
+            return dsFactory.getConnection(jdbcUrl, Optional.empty(), false);
         } catch (SQLException e) {
             throw new RuntimeException(String.valueOf(jdbcUrl), e);
         }

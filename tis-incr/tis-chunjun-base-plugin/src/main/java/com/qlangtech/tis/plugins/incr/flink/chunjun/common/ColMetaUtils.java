@@ -50,13 +50,7 @@ public class ColMetaUtils {
      */
     public static SinkColMetas getColMetasMap(
             IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, JdbcConf conf) {
-
         return getColMetasMap(sinkStreamMetaCreator, conf.getTable());
-
-//        EntityName tab = EntityName.parse(conf.getTable());
-//        IStreamTableMeta tableMeta = sinkStreamMetaCreator.getStreamTableMeta(tab.getTabName());
-//        return new SinkColMetas(tableMeta);
-        // return tableMeta.getColsMeta().stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> c));
     }
 
     public static SinkColMetas getColMetasMap(

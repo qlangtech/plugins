@@ -25,18 +25,25 @@ import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
 
 import java.util.Optional;
 
-import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.ORACLE_ESCAPE_COL_CHAR;
+import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.PG_ESCAPE_COL_CHAR;
+
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2025-01-14 15:27
+ * @create: 2025-01-14 15:26
  **/
-public class OracleMode extends KingBaseCompatibleMode {
-    private static final EndType endType = EndType.Oracle;
+public class PGMode extends KingBaseCompatibleMode {
+    private static final EndType endType = EndType.Postgres;
 
     @Override
     public Optional<String> getEscapeChar() {
-        return ORACLE_ESCAPE_COL_CHAR;
+        return PG_ESCAPE_COL_CHAR;
+    }
+
+    @Override
+    public Class<?> getJdbcDialectClass() {
+        return TISPostgresqlDialect.class;
     }
 
     @Override
@@ -52,7 +59,7 @@ public class OracleMode extends KingBaseCompatibleMode {
 
         @Override
         public String getDisplayName() {
-            return endType.name();
+            return EndType.Postgres.name();
         }
     }
 }

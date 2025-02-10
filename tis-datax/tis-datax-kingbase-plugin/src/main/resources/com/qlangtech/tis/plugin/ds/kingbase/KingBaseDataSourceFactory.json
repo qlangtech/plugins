@@ -2,5 +2,9 @@
   "dbMode": {
     "label": "兼容数据库",
     "dftVal": "Postgres"
+  },
+  "dispatch": {
+    "label": "读写分离",
+    "dftVal": "off"
   }
 }

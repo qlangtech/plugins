@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -37,19 +38,47 @@ import java.util.Optional;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 15:23
- * @see com.qlangtech.tis.plugin.datax.kingbase.mode.MySQLMode
- * @see com.qlangtech.tis.plugin.datax.kingbase.mode.OracleMode
- * @see com.qlangtech.tis.plugin.datax.kingbase.mode.PGMode
+ * // @see com.qlangtech.tis.plugin.datax.kingbase.mode.MySQLMode
+ * // @see com.qlangtech.tis.plugin.datax.kingbase.mode.OracleMode
+ * // @see com.qlangtech.tis.plugin.datax.kingbase.mode.PGMode
  **/
+@TISExtensible
 public abstract class KingBaseCompatibleMode implements Describable<KingBaseCompatibleMode>, Serializable {
 
     public abstract EndType getEndType();
+
+    public boolean isEndTypeMatch(final String dbMode) {
+        // final String dbMode = result.getString("database_mode");
+        EndType expectEndType = null;
+        switch (dbMode) {
+            case "oracle":
+                expectEndType = EndType.Oracle;
+                break;
+            case "mysql":
+                expectEndType = EndType.MySQL;
+                break;
+            case "pg":
+                expectEndType = EndType.Postgres;
+                break;
+            default:
+                throw new IllegalStateException("unsupported dbMode:" + dbMode);
+        }
+        return this.getEndType() == expectEndType;
+    }
+
 
     public abstract Optional<String> getEscapeChar();
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
     public AutoCreateTable autoCreateTable;
+
+    /**
+     * 需要是继承 <b>com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect</b> 的类
+     *
+     * @return
+     */
+    public abstract Class<?> getJdbcDialectClass();
 
     public final CreateTableSqlBuilder<ColWrapper> createSQLDDLBuilder(
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, Optional<RecordTransformerRules> transformers) {

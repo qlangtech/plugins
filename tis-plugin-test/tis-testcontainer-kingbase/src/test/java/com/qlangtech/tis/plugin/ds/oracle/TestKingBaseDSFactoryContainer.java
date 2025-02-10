@@ -12,7 +12,8 @@ public class TestKingBaseDSFactoryContainer {
 
     @Test
     public void testGetConnection() {
-        DataSourceFactory kingBaseFactory = KingBaseDSFactoryContainer.initialize(true);
+        DataSourceFactory kingBaseFactory = KingBaseDSFactoryContainer.initialize((conn) -> {
+        });
         kingBaseFactory.visitFirstConnection((conn) -> {
 
             Assert.assertNotNull(conn);

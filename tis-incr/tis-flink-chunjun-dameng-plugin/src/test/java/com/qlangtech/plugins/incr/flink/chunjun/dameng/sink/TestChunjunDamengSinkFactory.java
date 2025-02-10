@@ -18,13 +18,11 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.dameng.sink;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.writer.DataXDaMengWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.oracle.DamengDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.TISDamengContainer;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -33,9 +31,6 @@ import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpsertType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

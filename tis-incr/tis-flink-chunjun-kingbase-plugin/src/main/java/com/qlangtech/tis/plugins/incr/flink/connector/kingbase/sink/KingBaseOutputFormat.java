@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.kingbase.sink;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -45,5 +46,12 @@ public class KingBaseOutputFormat extends JdbcOutputFormat {
         return dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), Optional.empty(), false).getConnection();
     }
 
+    public static void main(String[] args) {
+        System.out.println(Integer.toBinaryString(0 & 0xFF));
+    }
+    @Override
+    protected void initializeRowConverter() {
+        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
+    }
 
 }

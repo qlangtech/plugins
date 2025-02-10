@@ -27,7 +27,6 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DBConfig.HostDB;
 import com.qlangtech.tis.plugin.ds.DBConfig.IProcess;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory.ISchemaSupported;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;

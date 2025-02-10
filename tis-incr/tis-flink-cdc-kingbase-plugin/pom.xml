@@ -27,7 +27,7 @@
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+    <!--https://www.processon.com/view/link/67a8902f3fa4c316129fd46d?cid=67a872c7ea17e16f3be75080-->
     <artifactId>tis-flink-cdc-kingbase-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
@@ -75,11 +75,11 @@
         <!--            <version>${project.version}</version>-->
         <!--        </dependency>-->
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-flink-cdc-pglike-common</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-flink-cdc-pglike-common</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -94,11 +94,11 @@
 
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.flink</groupId>-->
-<!--            <artifactId>flink-cdc-base</artifactId>-->
-<!--            <version>${flink.cdc.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.flink</groupId>-->
+        <!--            <artifactId>flink-cdc-base</artifactId>-->
+        <!--            <version>${flink.cdc.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

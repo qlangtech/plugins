@@ -30,15 +30,17 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.kingbase.DataXKingBaseWriter;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.kingbase.dialect.KingBaseOracleDialect;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -54,17 +56,19 @@ public class KingBaseSinkFactory extends ChunjunSinkFactory {
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
         DataXKingBaseWriter kingBaseWriter = (DataXKingBaseWriter) DataxWriter.load(null, this.getCollectionName());
         KingBaseDataSourceFactory dsFactory = kingBaseWriter.getDataSourceFactory();
-        EndType endType = dsFactory.dbMode.getEndType();
-        switch (endType) {
-            case MySQL:
-                throw new IllegalStateException(endType.getVal());
-            case Oracle:
-                return KingBaseOracleDialect.class;
-            case Postgres:
-                throw new IllegalStateException(endType.getVal());
-            default:
-                throw new IllegalStateException("illegal dbMode:" + endType);
-        }
+        Class<JdbcDialect> jdbcDialectClass = (Class<JdbcDialect>) dsFactory.dbMode.getJdbcDialectClass();
+        return Objects.requireNonNull(jdbcDialectClass, "jdbcDialectClass can not be null");
+//        EndType endType = dsFactory.dbMode.getEndType();
+//        switch (endType) {
+//            case MySQL:
+//                throw new IllegalStateException(endType.getVal());
+//            case Oracle:
+//                return KingBaseDialect.class;
+//            case Postgres:
+//                throw new IllegalStateException(endType.getVal());
+//            default:
+//                throw new IllegalStateException("illegal dbMode:" + endType);
+//        }
 
         // return KingBaseDialect.class;
     }
@@ -74,6 +78,16 @@ public class KingBaseSinkFactory extends ChunjunSinkFactory {
         KingBaseOutputFormat outputFormat
                 = new KingBaseOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, jdbcConf));
         return outputFormat;
+    }
+
+    @Override
+    protected void setSchema(Map<String, Object> conn, String dbName, BasicDataSourceFactory dsFactory) {
+        if (!(dsFactory instanceof BasicDataSourceFactory.ISchemaSupported)) {
+            throw new IllegalStateException("dsFactory:" + dsFactory.name
+                    + " must be type of " + BasicDataSourceFactory.ISchemaSupported.class);
+        }
+        BasicDataSourceFactory.ISchemaSupported schemaSupported = (BasicDataSourceFactory.ISchemaSupported) dsFactory;
+        super.setSchema(conn, schemaSupported.getDBSchema(), dsFactory);
     }
 
     @Override

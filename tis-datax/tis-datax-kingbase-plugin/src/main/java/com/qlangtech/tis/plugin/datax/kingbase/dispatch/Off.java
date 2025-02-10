@@ -16,44 +16,34 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.kingbase.mode;
+package com.qlangtech.tis.plugin.datax.kingbase.dispatch;
 
+import com.kingbase8.KBProperty;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
-import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.datax.kingbase.KingBaseDispatch;
 
-import java.util.Optional;
+import java.util.Properties;
 
 /**
- * KingBase 支持三种数据库兼容模式
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2025-01-14 15:28
+ * @create: 2025-02-06 18:36
  **/
-public class MySQLMode extends KingBaseCompatibleMode {
-    private static final EndType endType = EndType.MySQL;
-
+public class Off extends KingBaseDispatch {
     @Override
-    public EndType getEndType() {
-        return endType;
-    }
-
-    @Override
-    public Optional<String> getEscapeChar() {
-        return BasicDataSourceFactory.MYSQL_ESCAPE_COL_CHAR;
+    public void extractSetJdbcProps(Properties props) {
+        props.setProperty(KBProperty.USEDISPATCH.getName(), String.valueOf(Boolean.FALSE));
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<KingBaseCompatibleMode> {
+    public static class DftDesc extends Descriptor<KingBaseDispatch> {
         public DftDesc() {
             super();
         }
 
         @Override
         public String getDisplayName() {
-            return endType.name();
+            return SWITCH_OFF;
         }
     }
 }

@@ -155,7 +155,6 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
 //    public Integer inspectRowCount;
 
 
-
     final KafkaConsumerFactory createKafkaFactory() {
         return KafkaConsumerFactory.getKafkaConfig(this, true);
     }
@@ -242,7 +241,7 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
 
     @Override
     public SourceColMetaGetter createSourceColMetaGetter() {
-        return new SourceColMetaGetter(this) {
+        return new SourceColMetaGetter(this, true) {
             @Override
             protected Map<String, ColumnMetaData> getColMetaDataMap(IDataxReader dataXReader, TableMap tableMapper) {
                 // 在生成ddl 时使用的meta信息

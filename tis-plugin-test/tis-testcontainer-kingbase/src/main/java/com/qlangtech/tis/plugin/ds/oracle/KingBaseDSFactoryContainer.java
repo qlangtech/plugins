@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory.IConnProcessor;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.IOUtils;
@@ -111,7 +112,7 @@ public class KingBaseDSFactoryContainer {
     public static final String testTabName = "testTab";
 
     //@BeforeClass
-    public static DataSourceFactory initialize(boolean inSink) {
+    public static DataSourceFactory initialize(IConnProcessor connProcessor) {
         kingBaseContainer = new TISKingBaseContainer();
         // kingBaseContainer.setCommand();
         // oracleContainer.usingSid();
@@ -122,6 +123,8 @@ public class KingBaseDSFactoryContainer {
 
         kingbaseDS.visitAllConnection((c) -> {
             Connection conn = c.getConnection();
+           // c.execute("drop table ");
+            connProcessor.vist(c);
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery("show wal_level")) {
                     Assert.assertTrue(resultSet.next());

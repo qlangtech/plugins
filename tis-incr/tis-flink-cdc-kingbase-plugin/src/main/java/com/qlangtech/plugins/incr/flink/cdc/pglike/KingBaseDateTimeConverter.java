@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc.pglike;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -32,11 +33,16 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
     @Override
     protected String convertDate(Object input) {
         if (input != null) {
-            java.time.Instant i = (java.time.Instant) input;
-
+            java.time.LocalDate date = null;
+            if (input instanceof java.time.Instant) {
+                java.time.Instant i = (java.time.Instant) input;
+                date = i.atZone(timestampZoneId).toLocalDate();
+            } else {
+                date = (java.time.LocalDate) input;
+            }
             // System.out.println("convertDate:" + input.getClass());
             // java.time.LocalDate date = (java.time.LocalDate) input;
-            return dateFormatter.format(i.atZone(timestampZoneId).toLocalDate());
+            return dateFormatter.format(date);
         }
 
 

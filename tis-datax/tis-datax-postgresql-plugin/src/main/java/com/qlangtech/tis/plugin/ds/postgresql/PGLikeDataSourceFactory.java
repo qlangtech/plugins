@@ -134,7 +134,11 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
         props.setProperty(PGProperty.USER.getName(), this.getUserName());
         props.setProperty(PGProperty.PASSWORD.getName(), this.password);
 
-        return new JDBCConnection(jdbcDriver.connect(jdbcUrl, props), jdbcUrl);
+        return new JDBCConnection(jdbcDriver.connect(jdbcUrl, this.extractSetJdbcProps(props)), jdbcUrl);
+    }
+
+    protected java.util.Properties extractSetJdbcProps(java.util.Properties props) {
+        return props;
     }
 
     private transient java.sql.Driver driver;

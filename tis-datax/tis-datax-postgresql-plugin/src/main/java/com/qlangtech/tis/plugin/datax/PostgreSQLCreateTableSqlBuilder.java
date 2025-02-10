@@ -129,6 +129,9 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
 
                     @Override
                     public String varcharType(DataType type) {
+                        if (type.getColumnSize() > Short.MAX_VALUE) {
+                            return "TEXT";
+                        }
                         return "VARCHAR(" + type.getColumnSize() + ")";
                     }
 

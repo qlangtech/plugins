@@ -190,6 +190,9 @@ public class RowFieldGetterFactory {
         @Override
         public Object getObject(GenericRowData rowData) {
             Object val = rowData.getField(colIndex);
+            if (val instanceof DecimalData) {
+                return ((DecimalData) val).toBigDecimal().longValue();
+            }
             return ((Number) val).longValue();
         }
     }

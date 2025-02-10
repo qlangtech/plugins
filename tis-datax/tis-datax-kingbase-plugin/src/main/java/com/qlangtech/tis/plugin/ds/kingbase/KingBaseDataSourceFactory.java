@@ -24,6 +24,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
+import com.qlangtech.tis.plugin.datax.kingbase.KingBaseDispatch;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -40,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Kingbase 数据库DataSource <br>
@@ -57,9 +59,18 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     @FormField(ordinal = 8, validate = {Validator.require})
     public KingBaseCompatibleMode dbMode;
 
+    @FormField(ordinal = 9, validate = {Validator.require})
+    public KingBaseDispatch dispatch;
+
     @Override
     protected java.sql.Driver createDriver() {
         return new com.kingbase8.Driver();
+    }
+
+    @Override
+    protected java.util.Properties extractSetJdbcProps(java.util.Properties props) {
+        Objects.requireNonNull(this.dispatch, "dispatch can not be null").extractSetJdbcProps(props);
+        return props;
     }
 
     @Override
@@ -79,7 +90,7 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
 
                     @Override
                     public DataType timestampType(DataType type) {
-                        if (StringUtils.equalsIgnoreCase(type.typeName, "date") ) {
+                        if (StringUtils.equalsIgnoreCase(type.typeName, "date")) {
                             return DataType.create(Types.DATE, type.typeName, type.getColumnSize());
                         }
                         return null;
@@ -110,7 +121,37 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     @Override
     public JDBCConnection createConnection(
             String jdbcUrl, Optional<Properties> props, boolean verify) throws SQLException {
-        return super.createConnection(jdbcUrl, props, verify);
+        final JDBCConnection conn = super.createConnection(jdbcUrl, props, verify);
+        if (!verify) {
+            validateEndTypeMatch(this, conn, (realDBMode) -> {
+                throw TisException.create("real dbMode is ："
+                        + realDBMode + ",but dbMode in dataSource configuration is " + dbMode.getEndType() + " ,shall be consistent");
+            });
+        }
+        return conn;
+    }
+
+    private static void validateEndTypeMatch(KingBaseDataSourceFactory dataSource, JDBCConnection conn, Consumer<String> notifyNotMatch) {
+        try {
+            // 校验是否
+            boolean hasResult = conn.query("SHOW database_mode", (result) -> {
+                final String dbMode = result.getString("database_mode");
+                if (!dataSource.dbMode.isEndTypeMatch(dbMode)) {
+                    // msgHandler.addFieldError(context, FIELD_DB_MODE, "DB实际模式为：" + dbMode);
+                    notifyNotMatch.accept(dbMode);
+                }
+
+                return false;
+            });
+
+            if (!hasResult) {
+                throw new IllegalStateException(" has not execute 'SHOW database_mode' success");
+            }
+
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @TISExtension
@@ -126,48 +167,27 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
         }
 
         @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            return validateDSFactory(msgHandler, context, postFormVals.newInstance());
+
+            // return super.validateAll(msgHandler, context, postFormVals);
+        }
+
+
+        @Override
         protected boolean validateConnection(JDBCConnection conn
                 , BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
             KingBaseDataSourceFactory dataSource = (KingBaseDataSourceFactory) dsFactory;
             Objects.requireNonNull(dataSource.dbMode, "dbMode can not be null");
-            try {
-                // 校验是否
-                boolean hasResult = conn.query("SHOW database_mode", (result) -> {
-                    final String dbMode = result.getString("database_mode");
-                    EndType expectEndType = null;
-                    switch (dbMode) {
-                        case "oracle":
-                            expectEndType = EndType.Oracle;
-                            break;
-                        case "mysql":
-                            expectEndType = EndType.MySQL;
-                            break;
-                        case "pg":
-                            expectEndType = EndType.Postgres;
-                            break;
-                        default:
-                            throw new IllegalStateException("unsupported dbMode:" + dbMode);
-                    }
 
-                    if (dataSource.dbMode.getEndType() != expectEndType) {
-                        msgHandler.addFieldError(context, FIELD_DB_MODE, "DB实际模式为：" + expectEndType);
-                    }
-
-                    return false;
-                });
-
-                if (!hasResult) {
-                    throw new IllegalStateException(" has not execute 'SHOW database_mode' success");
-                }
-
-                if (context.hasErrors()) {
-                    return false;
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            validateEndTypeMatch(dataSource, conn, (realDBMode) -> {
+                msgHandler.addFieldError(context, FIELD_DB_MODE, "DB实际模式为：" + realDBMode);
+            });
+            
+            if (context.hasErrors()) {
+                return false;
             }
-
-
             return super.validateConnection(conn, dsFactory, msgHandler, context);
         }
 

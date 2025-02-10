@@ -103,8 +103,10 @@ public class DialectUtils {
         return createColumnConverter(jdbcDialect, jdbcConf, colsMeta
                 , internalConverterCreator
                 , (flinkCol) -> {
+                    ;
+
                     return JdbcColumnConverter.createJdbcStatementValConverter(
-                            flinkCol.type.getLogicalType(), flinkCol.getRowDataValGetter());
+                            flinkCol.type.getLogicalType(), flinkCol.colType, flinkCol.getRowDataValGetter());
                 });
 
     }

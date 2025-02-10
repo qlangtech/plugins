@@ -386,7 +386,6 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             if (dataXWriter instanceof BasicDataXRdbmsWriter) {
                 BasicDataXRdbmsWriter rdbmsWriter = (BasicDataXRdbmsWriter) dataXWriter;
                 rdbmsWriter.autoCreateTable = AutoCreateTable.dft();
-                ;
                 rdbmsWriter.dataXName = dataXName;
             }
 

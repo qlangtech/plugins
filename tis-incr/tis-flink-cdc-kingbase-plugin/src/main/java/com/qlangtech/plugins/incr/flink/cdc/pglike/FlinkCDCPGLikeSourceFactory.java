@@ -49,7 +49,7 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
     // REPLICA IDENTITY
-    @FormField(ordinal = 2, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 2, advance = false, type = FormFieldType.ENUM, validate = {Validator.require})
     public String replicaIdentity;
 
 

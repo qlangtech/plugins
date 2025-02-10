@@ -67,7 +67,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
         this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta, JdbcColumnConverter::getRowDataValConverter
                 , (flinkCol) -> {
                     ISerializationConverter<IFieldNamesAttachedStatement> statementSetter
-                            = JdbcColumnConverter.createJdbcStatementValConverter(flinkCol.type.getLogicalType(), flinkCol.getRowDataValGetter());
+                            = JdbcColumnConverter.createJdbcStatementValConverter(flinkCol.type.getLogicalType(), flinkCol.colType ,flinkCol.getRowDataValGetter());
                     // pg 的bit类型设置比较特殊
                     ISerializationConverter<IFieldNamesAttachedStatement> fix = flinkCol.colType.accept(new PGTypeVisitor(flinkCol.getRowDataValGetter()));
                     if (fix != null) {

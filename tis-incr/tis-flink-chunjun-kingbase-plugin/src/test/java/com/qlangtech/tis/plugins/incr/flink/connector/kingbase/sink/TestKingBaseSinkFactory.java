@@ -38,7 +38,7 @@ public class TestKingBaseSinkFactory extends TestFlinkSinkExecutor {
 
 
     @Test
-    public void testMySQLWrite() throws Exception {
+    public void testKingBaseWrite() throws Exception {
         super.testSinkSync();
     }
 
@@ -55,9 +55,17 @@ public class TestKingBaseSinkFactory extends TestFlinkSinkExecutor {
     public static void initialize() throws Exception {
         //  MySqlSourceTestBase.startContainers();
 
-        kingBaseDSFactory = (KingBaseDataSourceFactory)KingBaseDSFactoryContainer.initialize(true);
-
-       // kingBaseDSFactory = (KingBaseDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(new TargetResName(dataXName));
+        kingBaseDSFactory = (KingBaseDataSourceFactory) KingBaseDSFactoryContainer.initialize((conn) -> {
+        });
+        // tableName
+        kingBaseDSFactory.visitAllConnection((conn) -> {
+            try {
+                conn.execute("drop table " + kingBaseDSFactory.getEscapedEntity(tableName));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        // kingBaseDSFactory = (KingBaseDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(new TargetResName(dataXName));
     }
 
     @Override

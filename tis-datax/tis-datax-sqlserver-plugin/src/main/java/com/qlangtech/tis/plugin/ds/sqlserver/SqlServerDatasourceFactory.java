@@ -20,18 +20,23 @@ package com.qlangtech.tis.plugin.ds.sqlserver;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -47,6 +52,11 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String tabSchema;
+    /**
+     * 分表策略
+     */
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public SplitTableStrategy splitTableStrategy;
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
@@ -55,6 +65,35 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
             jdbcUrl = jdbcUrl + ";" + this.extraParams;
         }
         return jdbcUrl;
+    }
+
+    @Override
+    protected TableInDB createTableInDB() {
+        return Objects.requireNonNull(this.splitTableStrategy, "SqlServer DataSourceFactory:" + this.identityValue() + " "
+                + "relevant prop splitTableStrategy can not be null").createTableInDB(this);
+    }
+
+    @Override
+    public List<String> getAllPhysicsTabs(DataXJobSubmit.TableDataXEntity tabEntity) {
+        // return super.getAllPhysicsTabs(tabEntity);
+        return this.splitTableStrategy.getAllPhysicsTabs(this, tabEntity);
+    }
+
+    @Override
+    protected EntityName logicTable2PhysicsTable(String jdbcUrl, EntityName table) {
+        if (table.isPhysics()) {
+            return table;
+        }
+        // return super.logicTable2PhysicsTable(table);
+        SplitTableStrategy.DBPhysicsTable physicsTable = Objects.requireNonNull(this.splitTableStrategy,
+                "splitTableStrategy can not be null").getMatchedPhysicsTable(this, jdbcUrl, table);
+        return physicsTable.getPhysicsTab();
+    }
+
+    @Override
+    protected String getNodeDesc() {
+        return Objects.requireNonNull(
+                this.splitTableStrategy, "splitTableStrategy can not be null").getNodeDesc();
     }
 
     @Override

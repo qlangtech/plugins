@@ -14,10 +14,17 @@
             "jdbcUrl": [
                 "${reader.jdbcUrl}"
              ],
+#if($reader.splitTable)
+   "table": [${reader.splitTabs}]
+#else
            "querySql": [
              "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
             ]
+#end
         }
  ]
+#if($reader.splitTable)
+   ,"column": [${reader.colsQuotes}]
+#end
 }
 }

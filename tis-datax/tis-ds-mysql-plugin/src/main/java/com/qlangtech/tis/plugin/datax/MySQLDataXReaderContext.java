@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext.ISplitTableContext;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
@@ -30,7 +31,7 @@ import java.util.Objects;
  * @author: baisui 百岁
  * @create: 2021-04-20 17:42
  **/
-public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader, MySQLDataSourceFactory> {
+public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader, MySQLDataSourceFactory> implements ISplitTableContext {
     private final RdbmsDataxContext rdbmsContext;
     private final SplitTableStrategy splitTableStrategy;
 
@@ -45,6 +46,7 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
      *
      * @return
      */
+    @Override
     public boolean isSplitTable() {
         // this.splitTableStrategy.getAllPhysicsTabs(this.dsFactory, this.getJdbcUrl(), this.sourceTableName);
         // return !(this.splitTableStrategy instanceof NoneSplitTableStrategy);
@@ -56,6 +58,7 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
      *
      * @return
      */
+    @Override
     public String getSplitTabs() {
         List<String> allPhysicsTabs = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
         return getEntitiesWithQuotation(allPhysicsTabs);

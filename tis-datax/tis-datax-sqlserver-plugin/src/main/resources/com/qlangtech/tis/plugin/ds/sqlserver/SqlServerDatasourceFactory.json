@@ -19,5 +19,12 @@
     "label": "schema",
     "dftVal": "dbo",
     "help": "Specify the schema (or several schema separated by commas) to be set in the search-path. This schema will be used to resolve unqualified object names used in statements over this connection."
+  },
+  "splitTableStrategy": {
+    "label": "分库分表",
+    "dftVal": "off"
+  },
+  "nodeDesc": {
+    "disable": true
   }
 }

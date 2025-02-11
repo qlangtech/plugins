@@ -70,72 +70,11 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
 
         CreateTableSqlBuilder directBuilderByMySQLMeta
-                = this.directCreateByMySQLMeta(tableMapper, transformers);
+                = this.directCreateByMySQLMeta(rdbmsWriter, sourceColMetaGetter, tableMapper, transformers);
 
         if (directBuilderByMySQLMeta != null) {
             return directBuilderByMySQLMeta;
         }
-
-//        final StringBuffer ddlScript = new StringBuffer();
-//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-//        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-//        AtomicBoolean usingMySqlCreateDDLDirectly = new AtomicBoolean(false);
-//        try {
-//            if (threadBingDataXReader instanceof DataxMySQLReader //
-//                    // 没有使用别名
-//                    // && tableMapper.hasNotUseAlias() //
-//                    && !transformers.isPresent()) {
-//                DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-//                MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-//                List<ColumnMetaData> tableColsMeta = mySQLReader.getTableMetadata(EntityName.parse(tableMapper.getFrom()));
-//                ISelectedTab selectedTab = mySQLReader.getSelectedTab(tableMapper.getFrom());
-//
-//                if (StringUtils.equalsIgnoreCase(
-//                        selectedTab.getCols().stream().map((col) -> col.getName()).collect(Collectors.joining())
-//                        , tableColsMeta.stream().map((col) -> col.getName()).collect(Collectors.joining()))) {
-//                    // 确保没有导出列
-//                    dsFactory.visitFirstConnection((c) -> {
-//                        Connection conn = c.getConnection();
-//                        DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
-//                                DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()), false);
-//                        Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
-//                        if (physicsTabNames.isPresent()) {
-//                            try (Statement statement = conn.createStatement()) {
-//                                // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
-//                                try (ResultSet resultSet =
-//                                             statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
-//                                    if (!resultSet.next()) {
-//                                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
-//                                                "exec" + " show create table script");
-//                                    }
-//                                    final String ddl = CreateDDL.replaceDDLTableName(resultSet.getString(2)
-//                                            , dsFactory.getEscapedEntity(tableMapper.getTo()));
-//                                    ddlScript.append(ddl);
-//                                }
-//                            }
-//                        } else {
-//                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
-//                                    "physicsTabs" + " in datasource:" + dsFactory.identityValue());
-//                        }
-//
-//                    });
-//                    usingMySqlCreateDDLDirectly.set(true);
-//                }
-//            }
-//        } catch (TableNotFoundException e) {
-//            throw new RuntimeException(e);
-//        } catch (RuntimeException e) {
-//            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
-//                throw e;
-//            } else {
-//                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
-//                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
-//            }
-//        }
-
-        // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
-       // BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) rdbmsWriter;
-
         return new MySQLCreateTableSqlBuilder(sourceColMetaGetter, tableMapper, rdbmsWriter, transformers);
     }
 
@@ -166,7 +105,7 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
         }
 
         @Override
-        protected ColWrapper createColWrapper(IColMetaGetter c) {
+        protected final ColWrapper createColWrapper(IColMetaGetter c) {
             return new ColWrapper(c, this.pks) {
                 @Override
                 protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
@@ -250,21 +189,6 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                     return "TINYTEXT";
             }
         }
-
-//            @Override
-//            public CreateDDL build() {
-//                if (usingMySqlCreateDDLDirectly.get()) {
-//                    return new CreateTableSqlBuilder.CreateDDL(ddlScript, null) {
-//                        @Override
-//                        public String getSelectAllScript() {
-//                            //return super.getSelectAllScript();
-//                            throw new UnsupportedOperationException();
-//                        }
-//                    };
-//                } else {
-//                    return super.build();
-//                }
-//            }
     }
 
     /**
@@ -274,7 +198,8 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
      * @param transformers
      * @return
      */
-    protected CreateTableSqlBuilder directCreateByMySQLMeta(TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+    protected CreateTableSqlBuilder directCreateByMySQLMeta(
+            DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         final StringBuffer ddlScript = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
@@ -336,13 +261,8 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             return null;
         }
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder<>(tableMapper,
-                null, transformers) {
-            @Override
-            protected ColWrapper createColWrapper(IColMetaGetter c) {
-                throw new UnsupportedOperationException();
-            }
-
+        final CreateTableSqlBuilder createTableSqlBuilder = new MySQLCreateTableSqlBuilder(sourceColMetaGetter, tableMapper,
+                rdbmsWriter, transformers) {
             @Override
             public CreateDDL build() {
                 return new CreateTableSqlBuilder.CreateDDL(ddlScript, null) {

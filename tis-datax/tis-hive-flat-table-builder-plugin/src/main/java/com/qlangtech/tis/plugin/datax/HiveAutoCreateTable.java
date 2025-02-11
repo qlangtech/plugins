@@ -51,6 +51,11 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
         final ITISFileSystem fileSystem = hiveWriter.getFs().getFileSystem();
         final CreateTableSqlBuilder createTableSqlBuilder
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, hiveWriter.getDataSourceFactory(), transformers) {
+            @Override
+            protected String createTargetTableName(TableMap tableMapper) {
+                Optional<String> mapperTabPrefix = getMapperTabPrefix();
+                return mapperTabPrefix.map((prefix) -> prefix + tableMapper.getTo()).orElse(tableMapper.getTo());
+            }
 
             @Override
             public CreateTableName getCreateTableName() {
@@ -63,13 +68,13 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
                 HdfsFormat fsFormat = parseFSFormat();
 
-                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
+                script.appendLine("COMMENT 'tis_tmp_" + targetTableName
                         + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
                 script.appendLine(fsFormat.getRowFormat());
                 script.appendLine("STORED AS " + fsFormat.getFileType().getType());
 
                 script.appendLine("LOCATION '").append(
-                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), hiveWriter.getDumpTab(tableMapper.getTo()))
+                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), hiveWriter.getDumpTab(targetTableName))
                 ).append("'");
             }
 

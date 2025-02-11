@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -30,7 +29,6 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
-import com.qlangtech.tis.plugin.datax.impl.TabPrefixDecorator;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -85,9 +83,9 @@ public class TestDataXHiveWriter extends BasicTest {
         TextFSFormat fsFormat = new TextFSFormat();
         fsFormat.fieldDelimiter = Delimiter.Tab.token;
         hiveWriter.fileType = fsFormat;// "text";
-        TabPrefixDecorator prefixDecorator = new TabPrefixDecorator();
-        prefixDecorator.prefix = "ods_";
-        hiveWriter.tabDecorator = prefixDecorator;// "ods_";
+//        TabPrefixDecorator prefixDecorator = new TabPrefixDecorator();
+//        prefixDecorator.prefix = "ods_";
+//        hiveWriter.tabDecorator = prefixDecorator;// "ods_";
         hiveWriter.writeMode = "nonConflict";
         //  hiveWriter.fieldDelimiter = "\t";
         hiveWriter.compress = "gzip";

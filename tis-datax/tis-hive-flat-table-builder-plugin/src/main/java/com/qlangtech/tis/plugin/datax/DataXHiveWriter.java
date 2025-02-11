@@ -94,8 +94,8 @@ public class DataXHiveWriter extends BasicFSWriter
     @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
-    @FormField(ordinal = 7, validate = {Validator.require})
-    public TabNameDecorator tabDecorator;
+//    @FormField(ordinal = 7, validate = {Validator.require})
+//    public TabNameDecorator tabDecorator;
 
 
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -280,8 +280,11 @@ public class DataXHiveWriter extends BasicFSWriter
         }
 
         @Override
-        public String getTableName() {
-            return tabDecorator.decorate(super.getTableName());
+        public final String getTableName() {
+            final String tabName = super.getTableName();
+            Optional<String> tabPrefix = autoCreateTable.getMapperTabPrefix();
+            return tabPrefix.map((prefix) -> (prefix + tabName)).orElse(tabName);
+            //  return super.getTableName();// tabDecorator.decorate();
         }
 
         public String getDataxPluginName() {

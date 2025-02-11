@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext.ISplitTableContext;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import org.apache.commons.lang.StringUtils;
@@ -90,4 +91,9 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     }
 
 
+    public interface ISplitTableContext {
+        public boolean isSplitTable();
+
+        public String getSplitTabs();
+    }
 }

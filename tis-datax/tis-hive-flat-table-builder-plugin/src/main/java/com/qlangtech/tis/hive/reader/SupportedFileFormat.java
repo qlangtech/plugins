@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
+import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
+import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import com.qlangtech.tis.hive.reader.impl.HadoopHFileInputFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopOrcInputFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopParquetInputFormat;
@@ -30,12 +32,17 @@ import com.qlangtech.tis.hive.reader.impl.HadoopTextInputFormat;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.hbase.HiveHBaseTableInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcFileStripeMergeInputFormat;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.OutputFormat;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,11 +53,24 @@ import java.util.stream.Collectors;
  **/
 public abstract class SupportedFileFormat implements IdentityName {
 
+    public static final String KEY_SUPPORTED_FORMAT_TEXT = "Text";
+    public static final String KEY_SUPPORTED_FORMAT_HFILE = "HFile";
+    public static final String KEY_SUPPORTED_FORMAT_PARQUET = "Parquet";
+
     public abstract boolean match(Class<?> inputFormatClass);
 
-    //public abstract com.qlangtech.tis.plugin.datax.format.FileFormat createFileFormatReader();
+
+    /**
+     * 创建对应文件格式的读/写器
+     *
+     * @param entityName
+     * @param cols
+     * @param storedAs
+     * @return
+     * @throws Exception
+     */
     public abstract FileFormat createFileFormatReader(
-            String entityName, List<HiveTabColType> cols, AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception;
+            String entityName, List<HiveTabColType> cols, HiveStoredAs storedAs, IHiveTableParams tableParams) throws Exception;
 
     private static final List<SupportedFileFormat> supportedFileFormat;
 
@@ -66,6 +86,21 @@ public abstract class SupportedFileFormat implements IdentityName {
     public static List<SupportedFileFormat> supportedFileFormat() {
         // SupportedFileFormat.
         return supportedFileFormat;
+    }
+
+    /**
+     * 在write中使用
+     *
+     * @param format
+     * @return
+     */
+    public static SupportedFileFormat parse(IdentityName format) {
+        List<SupportedFileFormat> formats = getSupportedFileFormat(Collections.singletonList(format.identityValue()));
+        for (SupportedFileFormat supportFormat : formats) {
+            return supportFormat;
+        }
+        throw new IllegalStateException("can not find format:" + format.identityValue() + " in "
+                + supportedFileFormat.stream().map((f) -> f.identityValue()).collect(Collectors.joining(",")));
     }
 
     public static List<SupportedFileFormat> getSupportedFileFormat(List<String> fileFormat) {
@@ -121,18 +156,21 @@ public abstract class SupportedFileFormat implements IdentityName {
             return org.apache.hadoop.mapred.TextInputFormat.class.isAssignableFrom(inputFormatClass);
         }
 
+        // HiveStoredAs storedAs
         @Override
         public FileFormat createFileFormatReader(String entityName, List<HiveTabColType> cols
-                , AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception {
-            org.apache.hadoop.mapred.TextInputFormat inputFormat
-                    = (org.apache.hadoop.mapred.TextInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-            inputFormat.configure(jobConf);
-            return new HadoopTextInputFormat(entityName, cols.size(), inputFormat, serde, jobConf);
+                , HiveStoredAs serde, IHiveTableParams tableParams) throws Exception {
+//            org.apache.hadoop.mapred.TextInputFormat inputFormat
+//                    = (org.apache.hadoop.mapred.TextInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+//            inputFormat.configure(jobConf);
+//
+//            FileOutputFormat outputFormat = (FileOutputFormat) outputFormatClass.getDeclaredConstructor().newInstance();
+            return new HadoopTextInputFormat(entityName, cols.size(), serde, tableParams);
         }
 
         @Override
         public String identityValue() {
-            return "Text";
+            return KEY_SUPPORTED_FORMAT_TEXT;
         }
     }
 
@@ -148,15 +186,16 @@ public abstract class SupportedFileFormat implements IdentityName {
 
         @Override
         public FileFormat createFileFormatReader(
-                String entityName, List<HiveTabColType> cols, AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception {
-            HiveHBaseTableInputFormat hfileInputFormat
-                    = (HiveHBaseTableInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-            return new HadoopHFileInputFormat(entityName, cols.size(), hfileInputFormat, serde, jobConf);
+                String entityName, List<HiveTabColType> cols, HiveStoredAs serde, IHiveTableParams tableParams) throws Exception {
+//            HiveHBaseTableInputFormat hfileInputFormat
+//                    = (HiveHBaseTableInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+//            FileOutputFormat outputFormat = (FileOutputFormat) outputFormatClass.getDeclaredConstructor().newInstance();
+            return new HadoopHFileInputFormat(entityName, cols.size(), serde, tableParams);
         }
 
         @Override
         public String identityValue() {
-            return "HFile";
+            return KEY_SUPPORTED_FORMAT_HFILE;
         }
     }
 
@@ -168,14 +207,15 @@ public abstract class SupportedFileFormat implements IdentityName {
 
         @Override
         public FileFormat createFileFormatReader(
-                String entityName, List<HiveTabColType> cols, AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception {
-            MapredParquetInputFormat pqInputFormat = (MapredParquetInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-            return new HadoopParquetInputFormat(entityName, cols.size(), pqInputFormat, serde, jobConf);
+                String entityName, List<HiveTabColType> cols, HiveStoredAs serde, IHiveTableParams tableParams) throws Exception {
+//            MapredParquetInputFormat pqInputFormat = (MapredParquetInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+//            FileOutputFormat outputFormat = (FileOutputFormat) outputFormatClass.getDeclaredConstructor().newInstance();
+            return new HadoopParquetInputFormat(entityName, cols.size(), serde, tableParams);
         }
 
         @Override
         public String identityValue() {
-            return "Parquet";
+            return KEY_SUPPORTED_FORMAT_PARQUET;
         }
     }
 
@@ -188,9 +228,11 @@ public abstract class SupportedFileFormat implements IdentityName {
 
         @Override
         public FileFormat createFileFormatReader(
-                String entityName, List<HiveTabColType> cols, AbstractSerDe serde, Class<?> inputFormatClass, JobConf jobConf) throws Exception {
-            OrcFileStripeMergeInputFormat ocrInputFormat = (OrcFileStripeMergeInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
-            return new HadoopOrcInputFormat(entityName, cols.size(), ocrInputFormat, serde, jobConf);
+                String entityName, List<HiveTabColType> cols
+                , HiveStoredAs serde, IHiveTableParams tableParams) throws Exception {
+//            OrcFileStripeMergeInputFormat ocrInputFormat = (OrcFileStripeMergeInputFormat) inputFormatClass.getDeclaredConstructor().newInstance();
+//            FileOutputFormat outputFormat = (FileOutputFormat) outputFormatClass.getDeclaredConstructor().newInstance();
+            return new HadoopOrcInputFormat(entityName, cols.size(), serde, tableParams);
         }
 
         @Override

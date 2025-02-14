@@ -18,28 +18,70 @@
 
 package com.qlangtech.tis.hive.reader.impl;
 
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
+import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-11-08 14:06
  **/
 public class HadoopTextInputFormat extends HadoopInputFormat<LongWritable, Text> {
-    public HadoopTextInputFormat(String entityName, int colSize, FileInputFormat inputFormat, AbstractSerDe serde, JobConf conf) {
-        super(entityName, colSize, inputFormat, serde, conf);
+
+    private static final String KEY_COMRESSION_CODEC = "compression.codec";
+
+    public HadoopTextInputFormat(String entityName, int colSize
+                                 //  , FileInputFormat inputFormat, FileOutputFormat outputFormat,
+            , HiveStoredAs serde, IHiveTableParams tableParams) {
+        super(entityName, colSize, serde, tableParams, serde.getJobConf());
+    }
+
+    /**
+     * <pre>
+     * CREATE TABLE employee (
+     *     id INT,
+     *     name STRING,
+     *     position STRING,
+     *     hire_date STRING
+     * )
+     * ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
+     * WITH SERDEPROPERTIES (
+     *   'field.delim'='\001',
+     *   'serialization.format'='\001'
+     * )
+     * STORED AS TEXTFILE
+     * LOCATION '/user/hive/warehouse/mydb/employee_gzip'
+     * TBLPROPERTIES ('compression.codec'='org.apache.hadoop.io.compress.GzipCodec');
+     * </pre>
+     * @return
+     */
+    @Override
+    protected boolean isCompressed() {
+
+//        try {
+//            String codecClass = this.tableProperties.getTabParameter(KEY_COMRESSION_CODEC);
+//            if (StringUtils.isNotEmpty(codecClass)) {
+//                org.apache.hadoop.mapred.FileOutputFormat.setOutputCompressorClass(this.conf
+//                        , (Class<? extends CompressionCodec>) HadoopTextInputFormat.class.getClassLoader().loadClass(codecClass));
+//                return true;
+//            }
+//        } catch (ClassNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+
+        return false;
     }
 
     @Override
-    protected LongWritable createKey() {
+    public LongWritable createKey() {
         return new LongWritable();
     }
 
     @Override
-    protected Text createValue(int colSize) {
+    public Text createValue(int colSize) {
         return new Text();
     }
 }

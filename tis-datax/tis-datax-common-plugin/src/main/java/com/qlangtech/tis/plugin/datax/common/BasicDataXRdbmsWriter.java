@@ -112,41 +112,49 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public final EntityName parseEntity(ISelectedTab tab) {
+        // return EntityName.parse(ta);
+        return EntityName.create(this.getDataSourceFactory().getDbConfig().getName(), tab.getName());
+    }
+
+    @Override
     public ExecutePhaseRange getPhaseRange() {
         return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump);
     }
 
     @Override
-    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
         if (StringUtils.isBlank(this.preSql)) {
             return null;
         }
-        return new PreAndPostSQLExecutor(true, execContext, tab);
+        return new PreAndPostSQLExecutor(true, execContext, entity, tab);
     }
 
     @Override
-    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
+    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, EntityName entity, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
         if (StringUtils.isBlank(this.postSql)) {
             return null;
         }
-        return new PreAndPostSQLExecutor(false, execContext, tab);
+        return new PreAndPostSQLExecutor(false, execContext, entity, tab);
     }
 
 
     private class PreAndPostSQLExecutor implements IRemoteTaskPostTrigger, IRemoteTaskPreviousTrigger {
         private final boolean preExecute;
         private final IExecChainContext execContext;
+        private final EntityName entity;
         private final ISelectedTab tab;
 
-        public PreAndPostSQLExecutor(boolean preExecute, IExecChainContext execContext, ISelectedTab tab) {
+        public PreAndPostSQLExecutor(boolean preExecute, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
             this.preExecute = preExecute;
             this.execContext = execContext;
+            this.entity = entity;
             this.tab = tab;
         }
 
         @Override
         public String getTaskName() {
-            return "execute_" + (this.preExecute ? "pre" : "post") + "SQL_of_" + tab.getName();// IDataXBatchPost.getPreExecuteTaskName(tab);
+            return "execute_" + (this.preExecute ? "pre" : "post") + "SQL_of_" + entity.getTabName();// IDataXBatchPost.getPreExecuteTaskName(tab);
         }
 
         private String validateSQL(String sql) {

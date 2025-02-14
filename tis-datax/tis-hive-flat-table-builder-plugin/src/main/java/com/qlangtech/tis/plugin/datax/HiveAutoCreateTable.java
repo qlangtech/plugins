@@ -43,6 +43,16 @@ import java.util.Optional;
  **/
 public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
+    private final Optional<String> tabProperties;
+
+    public HiveAutoCreateTable() {
+        this(Optional.empty());
+    }
+
+    public HiveAutoCreateTable(Optional<String> tabProperties) {
+        this.tabProperties = tabProperties;
+    }
+
     @Override
     public CreateTableSqlBuilder createSQLDDLBuilder(
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter
@@ -53,8 +63,9 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, hiveWriter.getDataSourceFactory(), transformers) {
             @Override
             protected String createTargetTableName(TableMap tableMapper) {
-                Optional<String> mapperTabPrefix = getMapperTabPrefix();
-                return mapperTabPrefix.map((prefix) -> prefix + tableMapper.getTo()).orElse(tableMapper.getTo());
+                return appendTabPrefix(tableMapper.getTo());
+//                Optional<String> mapperTabPrefix = getMapperTabPrefix();
+//                return mapperTabPrefix.map((prefix) -> prefix + tableMapper.getTo()).orElse(tableMapper.getTo());
             }
 
             @Override
@@ -76,6 +87,10 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 script.appendLine("LOCATION '").append(
                         FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), hiveWriter.getDumpTab(targetTableName))
                 ).append("'");
+
+                tabProperties.ifPresent((tabProps) -> {
+                    script.appendLine("TBLPROPERTIES (" + tabProps + ")");
+                });
             }
 
             private HdfsFormat parseFSFormat() {

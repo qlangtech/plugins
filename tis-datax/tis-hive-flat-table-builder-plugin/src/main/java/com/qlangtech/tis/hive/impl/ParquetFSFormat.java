@@ -32,11 +32,11 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
  * @create: 2024-11-09 12:13
  **/
 public class ParquetFSFormat extends FSFormat {
-    private final static HdfsFileType parquetType = HdfsFileType.PARQUET;
+    public final static HdfsFileType parquetType = HdfsFileType.PARQUET;
 
     @Override
     public char getFieldDelimiter() {
-        throw new UnsupportedOperationException("file format " + this.getType() + " is not support field delimiter property");
+        return ' ';
     }
 
     @Override

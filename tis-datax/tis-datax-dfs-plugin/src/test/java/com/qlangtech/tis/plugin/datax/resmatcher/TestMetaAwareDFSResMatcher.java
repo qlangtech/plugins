@@ -19,9 +19,12 @@
 package com.qlangtech.tis.plugin.datax.resmatcher;
 
 import com.alibaba.datax.plugin.ftp.common.FtpHelper;
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
@@ -86,7 +89,7 @@ public class TestMetaAwareDFSResMatcher implements TISEasyMock {
 
 
         this.replay();
-        List<ColumnMetaData> cols = resMatcher.getTableMetadata(dfsReader, table);
+        List<ColumnMetaData> cols = resMatcher.getTableMetadata(dfsReader, TableMap.create(table.getTabName(), Lists.newArrayList()));
         Assert.assertNotNull("cols can not be null", cols);
         Assert.assertEquals(59, cols.size());
         this.verifyAll();

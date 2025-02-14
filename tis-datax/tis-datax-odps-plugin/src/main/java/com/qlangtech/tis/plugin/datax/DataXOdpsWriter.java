@@ -79,11 +79,11 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     @Override
-    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
         return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
-                return IDataXBatchPost.getPreExecuteTaskName(tab);
+                return IDataXBatchPost.getPreExecuteTaskName(entity);
             }
 
             @Override
@@ -91,7 +91,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
                 // 负责初始化表
                 OdpsDataSourceFactory ds = DataXOdpsWriter.this.getDataSourceFactory();
-                EntityName dumpTable = getDumpTab(tab);
+                //  EntityName dumpTable = getDumpTab(tab);
                 // ITISFileSystem fs = getFs().getFileSystem();
                 // Path tabDumpParentPath = getTabDumpParentPath(tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
                 ds.visitFirstConnection((conn) -> {
@@ -111,7 +111,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
                         try {
                             BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXOdpsWriter.this
-                                    , DataXOdpsWriter.this, conn, tab.getName());
+                                    , DataXOdpsWriter.this, conn, entity.getTabName());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -124,13 +124,14 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         };
     }
 
-    private EntityName getDumpTab(ISelectedTab tab) {
-        return getDumpTab(tab.getName());
-    }
+//    @Override
+//    public EntityName parseEntity(ISelectedTab tab) {
+//        return getDumpTab(tab.getName());
+//    }
 
-    private EntityName getDumpTab(String tabName) {
-        return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
-    }
+//    private EntityName getDumpTab(String tabName) {
+//        return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
+//    }
 
 
     @Override
@@ -140,24 +141,24 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
     @Override
     public IRemoteTaskPostTrigger createPostTask(
-            IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
+            IExecChainContext execContext, EntityName entity, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
 
         return new IRemoteTaskPostTrigger() {
             @Override
             public String getTaskName() {
-                return "odps_" + tab.getName() + "_bind";
+                return "odps_" + entity.getTabName() + "_bind";
             }
 
             @Override
             public void run() {
-                bindHiveTables(execContext, tab);
+                bindHiveTables(execContext, entity);
             }
         };
     }
 
-    private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
+    private void bindHiveTables(IExecChainContext execContext, EntityName tab) {
         String dumpTimeStamp = this.getPsFormat().format(execContext.getPartitionTimestampWithMillis());
-        recordPt(execContext, getDumpTab(tab.getName()), dumpTimeStamp);
+        recordPt(execContext, tab, dumpTimeStamp);
     }
 
 

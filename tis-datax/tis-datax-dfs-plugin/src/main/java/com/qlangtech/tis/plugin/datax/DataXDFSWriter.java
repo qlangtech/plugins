@@ -44,6 +44,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +61,7 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public TDFSLinker dfsLinker;
+
 
     /**
      * 写入数据过程中会在ftp目录中写一份source的元数据
@@ -79,6 +81,11 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
     }
 
     @Override
+    public EntityName parseEntity(ISelectedTab tab) {
+        return EntityName.parse(tab.getName());
+    }
+
+    @Override
     public void startScanDependency() {
         try (ITDFSSession itdfsSession = dfsLinker.createTdfsSession()) {
 
@@ -88,12 +95,12 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
     }
 
     @Override
-    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
-        return writeMetaData.createMetaDataWriteTask(this.dfsLinker, execContext, tab);
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
+        return writeMetaData.createMetaDataWriteTask(this.dfsLinker, execContext, entity, tab);
     }
 
     @Override
-    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
+    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, EntityName entity, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
         return null;
     }
 

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.common;
 
 import com.alibaba.datax.common.element.ColumnCast;
+import com.alibaba.datax.common.statistics.PerfTrace;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.JarLoader;
@@ -184,6 +185,7 @@ public class WriterTemplate {
     }
 
     public static void realExecuteDump(String dataXName, final DataXCfgJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+        PerfTrace.getInstance(false, -1111, -1111, 0, false);
         final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
             @Override
             public DataXMeta getDataxMeta() {
@@ -200,8 +202,8 @@ public class WriterTemplate {
                         "          \"parameter\": {\n" +
                         "            \"column\": [\n" +
                         "              {\n" +
-                        "                \"random\": \"3,4\",\n" +
-                        "                \"type\": \"string\"\n" +
+                        "                \"random\": \"3,99999\",\n" +
+                        "                \"type\": \"long\"\n" +
                         "              },\n" +
                         "              {\n" +
                         "                \"random\": \"10,10\",\n" +
@@ -218,6 +220,10 @@ public class WriterTemplate {
                         "              {\n" +
                         "                \"random\": \"4,999\",\n" +
                         "                \"type\": \"long\"\n" +
+                        "              },\n" +
+                        "              {\n" +
+                        "                \"random\": \"10,10\",\n" +
+                        "                \"type\": \"string\"\n" +
                         "              }\n" +
                         "            ],\n" +
                         "            \"sliceRecordCount\": 30\n" +

@@ -3,9 +3,6 @@
     "parameter": {
         "password": "${reader.password}",
         "username": "${reader.userName}",
-#if($reader.containSplitPk)
-        "splitPk": ${reader.splitPk},
-#end
 #if($reader.containFetchSize)
        "fetchSize": ${reader.fetchSize},
 #end

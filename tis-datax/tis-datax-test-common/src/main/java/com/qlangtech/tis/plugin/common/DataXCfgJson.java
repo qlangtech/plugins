@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -47,15 +48,22 @@ public abstract class DataXCfgJson {
     }
 
     public static DataXCfgJson path(Class ownerClazz, String path) {
+        return path(ownerClazz, path, (c) -> {
+        });
+    }
+
+    public static DataXCfgJson path(Class ownerClazz, String path, Consumer<Configuration> postSet) {
+        Configuration conf = IOUtils.loadResourceFromClasspath(
+                ownerClazz, path, true
+                , (writerJsonInput) -> {
+                    Configuration c = Configuration.from(writerJsonInput);
+                    return c;
+                });
+        postSet.accept(conf);
         return new DataXCfgJson(path, true) {
             @Override
             public Configuration getConfiguration() {
-                return IOUtils.loadResourceFromClasspath(
-                        ownerClazz, path, true
-                        , (writerJsonInput) -> {
-                            Configuration c = Configuration.from(writerJsonInput);
-                            return c;
-                        });
+                return conf;
             }
         };
     }
@@ -67,8 +75,8 @@ public abstract class DataXCfgJson {
         return new DataXCfgJson(content, false) {
             @Override
             public Configuration getConfiguration() {
-
-                return Configuration.from(content);
+                Configuration conf = Configuration.from(content);
+                return conf;
             }
         };
     }

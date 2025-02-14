@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
@@ -146,7 +147,7 @@ public class TestDataXDFSReader {
         // ftpLinker.path = "/admin/tis";
         reader.dfsLinker = ftpLinker;
         MetaAwareDFSResMatcher resMatcher = new MetaAwareDFSResMatcher();
-        List<ColumnMetaData> cols = resMatcher.getTableMetadata(reader, EntityName.parse(tabName));
+        List<ColumnMetaData> cols = resMatcher.getTableMetadata(reader, TableMap.create(tabName, Lists.newArrayList()));
         SelectedTab tab = new SelectedTab();
 
 

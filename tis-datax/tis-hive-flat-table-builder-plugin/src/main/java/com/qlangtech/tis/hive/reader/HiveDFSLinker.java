@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -126,46 +127,38 @@ public class HiveDFSLinker extends TDFSLinker {
 
         Hiveserver2DataSourceFactory dfFactory = getDataSourceFactory();
         org.apache.hadoop.conf.Configuration conf = getFs().getConfiguration();
-        HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
-        HiveTable.StoredAs storedAs = table.getStoredAs();
-//        SerDeInfo sdInfos = storedAs.getSerdeInfo();
-//        Map<String, String> sdParams = sdInfo.getParameters();
-        final Properties props = storedAs.getSerdeProperties(table);// new Properties();
-//        for (Map.Entry<String, String> entry : sdParams.entrySet()) {
-//            props.setProperty(entry.getKey(), entry.getValue());
-//        }
+        HiveTable table = dfFactory.getHiveTableMeta(entityName);
+
+        HiveStoredAs storedAs = (HiveStoredAs) table.getStoredAs(conf, HiveDFSLinker.class.getClassLoader());
+        // final Properties props = storedAs.getSerdeProperties(table);
         List<SupportedFileFormat> supportedFileFormat
                 = SupportedFileFormat.getSupportedFileFormat(this.fileFormat);
-        Class<?> inputFormatClass = null;
+        // Class<?> inputFormatClass = null;
+//        Class<?> outputFormatClass = null;
         try {
             // example: MapredParquetInputFormat for Parquet
-            inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
-            // forExample : LazySimpleSerDe, ParquetHiveSerDe
-            AbstractSerDe serde = (AbstractSerDe) Class.forName(
-                    storedAs.getSerializationLib()
-                    , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
-//            props.setProperty(serdeConstants.LIST_COLUMNS
-//                    , cols.stream().map((col) -> col.getColName()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
-//            props.setProperty(serdeConstants.LIST_COLUMN_TYPES
-//                    , cols.stream().map((col) -> col.getType()).collect(Collectors.joining(String.valueOf(SerDeUtils.COMMA))));
-            JobConf jobConf = new JobConf(conf);
-            serde.initialize(jobConf, props);
+
+            //   inputFormatClass = Class.forName(storedAs.inputFormat, false, HiveDFSLinker.class.getClassLoader());
+//            outputFormatClass = Class.forName(storedAs.outputFormat, false, HiveDFSLinker.class.getClassLoader());
+//            // forExample : LazySimpleSerDe, ParquetHiveSerDe
+//            AbstractSerDe serde = (AbstractSerDe) Class.forName(
+//                    storedAs.getSerializationLib()
+//                    , false, HiveDFSLinker.class.getClassLoader()).getDeclaredConstructor().newInstance();
+
+//            JobConf jobConf = new JobConf(conf);
+//            serde.initialize(jobConf, props);
             List<HiveTabColType> cols = table.getCols();
-
-//            if (supportedFileFormat.match(inputFormatClass)) {
-//                throw new IllegalStateException("table:" + entityName + " is not support format:" + supportedFileFormat.identityValue() + ",actual formatClass:" + inputFormatClass);
-//            }
-
             for (SupportedFileFormat format : supportedFileFormat) {
-                if (format.match(inputFormatClass)) {
-                    return format.createFileFormatReader(entityName, cols, serde, inputFormatClass, jobConf);
+                if (format.match(storedAs.getInputFormatClass())) {
+                    return format.createFileFormatReader(entityName, cols, storedAs, table);
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         throw new IllegalStateException("table:" + entityName + " is not support format:"
-                + supportedFileFormat.stream().map((f) -> f.identityValue()).collect(Collectors.joining(",")) + ",actual formatClass:" + inputFormatClass);
+                + supportedFileFormat.stream().map((f) -> f.identityValue())
+                .collect(Collectors.joining(",")) + ",actual formatClass:" + storedAs.getInputFormatClass());
     }
 
 

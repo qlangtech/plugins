@@ -18,6 +18,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.statistics.PerfTrace;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
@@ -37,15 +40,19 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.HiveMeta;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.hive.Hms;
+import com.qlangtech.tis.hive.impl.ParquetFSFormat;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.common.impl.AutoCreateTableColCommentSwitchOFF;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.TabPartitions;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -101,15 +108,25 @@ public class TestDataXHiveWriterDump {
         Hiveserver2DataSourceFactory ds = dataxWriter.getDataSourceFactory();
         try (IHiveMetaStore metaStoreClient = ds.createMetaStoreClient()) {
             metaStoreClient.dropTable(ds.dbName, applicationTab.getTo());
-
         }
 
-        TextFSFormat txtFormat = new TextFSFormat();
-        txtFormat.fieldDelimiter = Delimiter.Char001.token;
-        dataxWriter.fileType = txtFormat;
+//        TextFSFormat format = new TextFSFormat();
+//        format.fieldDelimiter = Delimiter.Char001.token;
+
+        ParquetFSFormat format = new ParquetFSFormat();
+        dataxWriter.fileType = format;
         dataxWriter.dataXName = TestDataXHiveWriter.mysql2hiveDataXName;
         dataxWriter.partitionRetainNum = 1;
         dataxWriter.partitionFormat = (TimeFormat.yyyyMMddHHmmss.name());
+
+
+//        HiveAutoCreateTable autoCreateTable
+//                = new HiveAutoCreateTable(Optional.of("'compression.codec'='org.apache.hadoop.io.compress.GzipCodec'"));
+
+        HiveAutoCreateTable autoCreateTable = new HiveAutoCreateTable();
+
+        autoCreateTable.addComment = new AutoCreateTableColCommentSwitchOFF();
+        dataxWriter.autoCreateTable = autoCreateTable;
 
         DataxWriter.dataxWriterGetter = (name) -> {
             Assert.assertEquals(TestDataXHiveWriter.mysql2hiveDataXName, name);
@@ -118,6 +135,7 @@ public class TestDataXHiveWriterDump {
         TabPartitions partitions = new TabPartitions(Maps.newHashMap());
 
         IExecChainContext execContext = EasyMock.mock("execContext", IExecChainContext.class);
+        EasyMock.expect(execContext.isDryRun()).andReturn(false);
 
         EasyMock.expect(execContext.getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS))
                 .andReturn(partitions);
@@ -136,18 +154,29 @@ public class TestDataXHiveWriterDump {
         EasyMock.expect(execContext.getProcessor()).andReturn(processor);
 
         EasyMock.expect(execContext.getPartitionTimestampWithMillis()).andReturn(currentTimeStamp).anyTimes();
-
-        IRemoteTaskTrigger preExec = dataxWriter.createPreExecuteTask(execContext, applicationTab.getSourceTab());
+        final EntityName entryName = EntityName.create(hiveDbName, applicationTab.getSourceTab().getName());
+        IRemoteTaskTrigger preExec = dataxWriter.createPreExecuteTask(execContext, entryName, applicationTab.getSourceTab());
 
         EasyMock.replay(execContext, processor);
 
         preExec.run();
 
+
         WriterTemplate.realExecuteDump(TestDataXHiveWriter.mysql2hiveDataXName
                 , DataXCfgJson.path(TestDataXHiveWriterDump.class
-                        , "hive-datax-writer-assert-without-option-val.json"), dataxWriter);
+                        , "hive-datax-writer-assert-without-option-val.json", (cfg) -> {
+                            JSONArray colsArray = new JSONArray();
+                            JSONObject c = null;
+                            for (CMeta col : applicationTab.getSourceCols()) {
+                                c = new JSONObject();
+                                c.put("name", col.getName());
+                                c.put("type", col.getType().getS());
+                                colsArray.add(c);
+                            }
+                            cfg.set("parameter.column", colsArray);
+                        }), dataxWriter);
 
-        IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, applicationTab.getSourceTab(), null);
+        IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, entryName, applicationTab.getSourceTab(), null);
         postExec.run();
 
         Assert.assertEquals(1, partitions.size());
@@ -162,7 +191,7 @@ public class TestDataXHiveWriterDump {
                             + " where " + IDumpTable.PARTITION_PT + "='" + pt + "'"
                     , (result) -> {
                         int rowCount = result.getInt(1);
-                        Assert.assertEquals("table:" + applicationTab.getTo() + ",pt:" + IDumpTable.PARTITION_PT, 30, rowCount);
+                        Assert.assertEquals("table:" + applicationTab.getTo() + ",pt:" + IDumpTable.PARTITION_PT + "=" + pt, 30, rowCount);
                         return false;
                     });
         }

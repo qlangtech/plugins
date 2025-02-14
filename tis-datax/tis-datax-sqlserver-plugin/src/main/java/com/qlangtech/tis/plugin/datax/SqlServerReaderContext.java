@@ -36,7 +36,8 @@ public class SqlServerReaderContext
         extends RdbmsReaderContext<DataXSqlserverReader, SqlServerDatasourceFactory> implements ISplitTableContext {
     private final SplitTableStrategy splitTableStrategy;
 
-    public SqlServerReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXSqlserverReader reader) {
+    public SqlServerReaderContext(String jobName
+            , String sourceTableName, IDataSourceDumper dumper, DataXSqlserverReader reader) {
         super(jobName, sourceTableName, dumper, reader);
         this.splitTableStrategy = Objects.requireNonNull(dsFactory.splitTableStrategy, "splitTableStrategy can not be null");
     }
@@ -79,7 +80,7 @@ public class SqlServerReaderContext
     @Override
     public String getSplitTabs() {
         List<String> allPhysicsTabs = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
-        return getEntitiesWithQuotation(allPhysicsTabs);
+        return getEntitiesWithQuotation(false, allPhysicsTabs);
     }
 
     public static void main(String[] args) {

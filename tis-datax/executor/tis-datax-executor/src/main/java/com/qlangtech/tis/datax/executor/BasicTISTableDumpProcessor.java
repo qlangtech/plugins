@@ -44,12 +44,11 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
-import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -379,13 +378,15 @@ public class BasicTISTableDumpProcessor {
 
         if (TisAppLaunch.isTestMock()) {
             IDataXBatchPost dataXBatchPost = getDataXBatchPost(execContext.getProcessor());
+            DefaultTab tab = new DefaultTab(tableName);
+            EntityName entityName = dataXBatchPost.parseEntity(tab);
             IDataXBatchPost.LifeCycleHook cycleHook = lifeCycleHookInfo.getRight();
             if (cycleHook == IDataXBatchPost.LifeCycleHook.Post) {
                 //IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames
-                return dataXBatchPost.createPostTask(execContext, new DefaultTab(tableName),
+                return dataXBatchPost.createPostTask(execContext, entityName, tab,
                         processor.getDataxCfgFileNames(null, Optional.empty()));
             } else if (cycleHook == IDataXBatchPost.LifeCycleHook.Prep) {
-                return dataXBatchPost.createPreExecuteTask(execContext, new DefaultTab(tableName));
+                return dataXBatchPost.createPreExecuteTask(execContext, entityName, tab);
             } else {
                 throw new IllegalArgumentException("cycleHook:" + cycleHook);
             }

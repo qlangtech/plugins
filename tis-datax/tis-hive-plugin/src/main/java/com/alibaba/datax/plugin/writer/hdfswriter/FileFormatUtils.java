@@ -38,6 +38,8 @@ import java.util.stream.Collectors;
  * @create: 2022-03-11 14:15
  **/
 public class FileFormatUtils {
+
+
     /**
      * 写orcfile类型文件
      *
@@ -177,12 +179,12 @@ public class FileFormatUtils {
 //        return valsGetter;
 //    }
 
-    static class ColumnTypeValInspectors {
+    public static class ColumnTypeValInspectors {
 
         private final List<IColMetaGetter> colsMeta;
 
         private final List<ObjectInspector> columnTypeInspectors = Lists.newArrayList();
-        private final List<Function<Column, Object>> columnValGetters = Lists.newArrayList();
+        public final List<Function<Column, Object>> columnValGetters = Lists.newArrayList();
 
         private void add(ObjectInspector objInspect, Function<Column, Object> colValGetter) {
             this.columnTypeInspectors.add(objInspect);

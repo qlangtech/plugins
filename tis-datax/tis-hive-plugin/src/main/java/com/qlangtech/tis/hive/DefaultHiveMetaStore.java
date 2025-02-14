@@ -10,9 +10,13 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,9 +60,15 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
             // storeClient.getAllDatabases();
             // storeClient.createTable();
             List<String> tables = storeClient.getTables(database, ".*");
-            return tables.stream().map((tab) -> new HiveTable(tab) {
+            return tables.stream().map((tab) -> new HiveTable(tab, Collections.emptyMap()) {
+//                @Override
+//                public StoredAs getStoredAs() {
+//                    throw new UnsupportedOperationException();
+//                }
+
+
                 @Override
-                public StoredAs getStoredAs() {
+                public <CONFIG> StoredAs getStoredAs(CONFIG conf, ClassLoader classLoader) {
                     throw new UnsupportedOperationException();
                 }
 
@@ -76,6 +86,7 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
                 public List<String> listPaths(PartitionFilter filter) {
                     throw new UnsupportedOperationException();
                 }
+
                 @Override
                 public String getStorageLocation() {
                     throw new UnsupportedOperationException();
@@ -86,12 +97,65 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         }
     }
 
-    private static class HiveStoredAs extends StoredAs {
+    public static class HiveStoredAs extends StoredAs {
         private final SerDeInfo serdeInfo;
+        private final FileInputFormat inputFormat;
+        private final Class inputFormatClass;
+        private final HiveOutputFormat outputFormat;
+        private final AbstractSerDe serde;
+        private final JobConf jobConf;
+        private final Properties tabStoreProps;
 
-        public HiveStoredAs(StorageDescriptor storageDesc) {
-            super(storageDesc.getInputFormat(), storageDesc.getOutputFormat());
+        public HiveStoredAs(HiveTable table, StorageDescriptor storageDesc
+                , org.apache.hadoop.conf.Configuration conf, ClassLoader classLoader) {
+            super();
             this.serdeInfo = Objects.requireNonNull(storageDesc.getSerdeInfo(), "serdeInfo");
+            this.tabStoreProps = this.getSerdeProperties(table);
+
+            try {
+                this.inputFormatClass = Class.forName(storageDesc.getInputFormat()
+                        , false, Objects.requireNonNull(classLoader, "classLoader can not be null"));
+                Class outputFormatClass = Class.forName(storageDesc.getOutputFormat(), false, classLoader);
+                // forExample : LazySimpleSerDe, ParquetHiveSerDe
+                AbstractSerDe serde = (AbstractSerDe) Class.forName(
+                        serdeInfo.getSerializationLib()
+                        , false, classLoader).getDeclaredConstructor().newInstance();
+
+                this.jobConf = new JobConf(conf);
+                serde.initialize(jobConf, tabStoreProps);
+
+                this.inputFormat = (FileInputFormat) inputFormatClass.getConstructor().newInstance();
+                this.outputFormat = (HiveOutputFormat) outputFormatClass.getConstructor().newInstance();
+                this.serde = serde;
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
+        public Properties getTabStoreProps() {
+            return this.tabStoreProps;
+        }
+
+        public FileInputFormat getInputFormat() {
+            return inputFormat;
+        }
+
+        public HiveOutputFormat getOutputFormat() {
+            return outputFormat;
+        }
+
+        public AbstractSerDe getSerde() {
+            return serde;
+        }
+
+        public JobConf getJobConf() {
+            return jobConf;
+        }
+
+        public Class getInputFormatClass() {
+            return this.inputFormatClass;
         }
 
         @Override
@@ -119,12 +183,13 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
     public HiveTable getTable(String database, String tableName) {
         try {
             final Table table = storeClient.getTable(database, tableName);
+            final Map<String, String> tabParameters = table.getParameters();
             StorageDescriptor storageDesc = table.getSd();
 
             final List<HiveTabColType> cols = storageDesc.getCols()
                     .stream().map((col) -> new HiveTabColType(col.getName(), col.getType())).collect(Collectors.toUnmodifiableList());
 
-            return new HiveTable(table.getTableName()) {
+            return new HiveTable(table.getTableName(), tabParameters) {
 
                 @Override
                 public List<HiveTabColType> getCols() {
@@ -135,13 +200,14 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
                 public List<String> getPartitionKeys() {
                     return table.getPartitionKeys().stream().map((pt) -> pt.getName()).collect(Collectors.toList());
                 }
+
                 /**
                  * @see LazySimpleSerDe
                  * @return
                  */
                 @Override
-                public StoredAs getStoredAs() {
-                    return new HiveStoredAs(storageDesc);
+                public <CONFIG> StoredAs getStoredAs(CONFIG conf, ClassLoader classLoader) {
+                    return new HiveStoredAs(this, storageDesc, (org.apache.hadoop.conf.Configuration) conf, classLoader);
                 }
 
                 @Override

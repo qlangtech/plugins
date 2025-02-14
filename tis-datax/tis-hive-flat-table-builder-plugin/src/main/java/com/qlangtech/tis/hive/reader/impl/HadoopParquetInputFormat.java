@@ -18,30 +18,34 @@
 
 package com.qlangtech.tis.hive.reader.impl;
 
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
+import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import org.apache.hadoop.io.ArrayWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.JobConf;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-11-08 14:15
  **/
 public class HadoopParquetInputFormat extends HadoopInputFormat<NullWritable, ArrayWritable> {
-    public HadoopParquetInputFormat(String entityName, int colSize, FileInputFormat inputFormat, AbstractSerDe serde, JobConf conf) {
-        super(entityName, colSize, inputFormat, serde, conf);
+    public HadoopParquetInputFormat(String entityName, int colSize, HiveStoredAs serde, IHiveTableParams tableParams) {
+        super(entityName, colSize, serde, tableParams, serde.getJobConf());
     }
 
     @Override
-    protected NullWritable createKey() {
+    protected boolean isCompressed() {
+        return false;
+    }
+
+    @Override
+    public NullWritable createKey() {
         return NullWritable.get();
     }
 
     @Override
-    protected ArrayWritable createValue(int colSize) {
+    public ArrayWritable createValue(int colSize) {
         ArrayWritable value = new ArrayWritable(Text.class, new Writable[colSize]);
         return value;
     }

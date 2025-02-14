@@ -25,10 +25,15 @@ import com.alibaba.datax.plugin.unstructuredstorage.reader.ColumnEntry;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
+import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
+import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
+import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.io.Writable;
@@ -36,6 +41,7 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 
 import java.io.BufferedReader;
@@ -43,6 +49,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -52,32 +59,54 @@ import java.util.Objects;
  **/
 public abstract class HadoopInputFormat<K, V extends Writable> extends TextFormat {
     private final org.apache.hadoop.mapred.InputFormat inputFormat;
-    private final JobConf conf;
+    private final HiveOutputFormat outputFormat;
+    protected final JobConf conf;
     private final String entityName;
-    private final AbstractSerDe serde;
+    private final HiveStoredAs serde;
+    protected final IHiveTableParams tableProperties;
 
     private final K key;
     private final V value;
 
     public HadoopInputFormat(String entityName, int colSize
-            , org.apache.hadoop.mapred.InputFormat inputFormat
-            , AbstractSerDe serde, JobConf conf) {
+            , HiveStoredAs serde, IHiveTableParams tableProperties, JobConf conf) {
         super();
+        this.tableProperties = Objects.requireNonNull(tableProperties, "tableProperties can not be null");
         this.dateFormat = BasicPainFormat.defaultNullFormat();
         this.entityName = entityName;
-        this.inputFormat = Objects.requireNonNull(inputFormat, "inputFormat can not be null");
+        this.inputFormat = Objects.requireNonNull(serde.getInputFormat(), "inputFormat can not be null");
+        this.outputFormat = Objects.requireNonNull(serde.getOutputFormat(), "outputFormat can not be null");
         this.conf = Objects.requireNonNull(conf, "conf can not be null");
         this.serde = Objects.requireNonNull(serde, "serde can not be null");
         this.key = this.createKey();
         this.value = this.createValue(colSize);
     }
 
+    public final FileSinkOperator.RecordWriter createRecordsWriter(FileSystem fs, String path) {
+        try {
 
-    protected abstract K createKey();
+            FileSinkOperator.RecordWriter recordWriter = outputFormat.getHiveRecordWriter(conf, new Path(path), this.value.getClass(), isCompressed(), this.serde.getTabStoreProps(), Reporter.NULL);
 
-    protected abstract V createValue(int colSize);
+            //  RecordWriter<K, V> recordWriter = outputFormat.getRecordWriter(fs, this.conf, path, Reporter.NULL);
+            return recordWriter;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public void iterateReadRecords(DataXCol2Index col2Index, List<ColumnEntry> colsMeta, Path inputPath, RecordSender recordSender, TaskPluginCollector taskPluginCollector) {
+    /**
+     * TODO 在建表语句中设置了压缩开启的相关属性，在hdfs上导入使用压缩的文本，最终通过hive sql 添加了对应的分区，从在hive控制台上读取时，记录条数不一致且还有乱码
+     *
+     * @return
+     */
+    protected abstract boolean isCompressed();
+
+    public abstract K createKey();
+
+    public abstract V createValue(int colSize);
+
+    public void iterateReadRecords(DataXCol2Index col2Index
+            , List<ColumnEntry> colsMeta, Path inputPath, RecordSender recordSender, TaskPluginCollector taskPluginCollector) {
         //  Path inputPath = new Path(fileName);
         // FileInputFormat.addInputPath(job, inputPath);
         Objects.requireNonNull(colsMeta, "colsMeta can not be null");
@@ -135,7 +164,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
     }
 
     public AbstractSerDe getSerde() {
-        return this.serde;
+        return this.serde.getSerde();
     }
 
     /**
@@ -145,7 +174,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
      * @return
      * @throws IOException
      */
-    public RecordReader<K, V> getRecordReader(Path inputPath) throws IOException {
+    private RecordReader<K, V> getRecordReader(Path inputPath) throws IOException {
         FileInputFormat.addInputPath(conf, inputPath);
         InputSplit[] splits = this.getSplits();
         if (splits.length < 1) {

@@ -52,22 +52,26 @@ public abstract class BasicRdbmsContext<PLUGIN, DS extends DataSourceFactory> {
     }
 
     public String getCols() {
-        return getEntitiesWith(this.cols, (val) -> val);
+        return getEntitiesWith(this.cols, true, (val) -> val);
     }
 
     protected String colEscapeChar() {
-        return dsFactory.getEscapeChar().map((escape)-> StringEscapeUtils.escapeJava(escape)).orElse(StringUtils.EMPTY);
+        return dsFactory.getEscapeChar().map((escape) -> StringEscapeUtils.escapeJava(escape)).orElse(StringUtils.EMPTY);
     }
 
     protected String getEntitiesWithQuotation(List<String> cols) {
-        return getEntitiesWith(cols, (val) -> "\"" + val + "\"");
+        return getEntitiesWithQuotation(true, cols);
     }
 
-    private String getEntitiesWith(List<String> cols, Function<String, String> wrapper) {
+    protected String getEntitiesWithQuotation(boolean escapeEntity, List<String> cols) {
+        return getEntitiesWith(cols, escapeEntity, (val) -> "\"" + val + "\"");
+    }
+
+    private String getEntitiesWith(List<String> cols, boolean escapeEntity, Function<String, String> wrapper) {
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalStateException("cols can not be empty");
         }
-        return cols.stream().map(r -> (escapeEntity(r))).map(wrapper).collect(Collectors.joining(","));
+        return cols.stream().map(r -> (escapeEntity ? escapeEntity(r) : r)).map(wrapper).collect(Collectors.joining(","));
     }
 
     protected String escapeEntity(String e) {

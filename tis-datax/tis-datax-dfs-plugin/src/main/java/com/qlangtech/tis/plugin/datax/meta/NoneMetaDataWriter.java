@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -32,7 +33,7 @@ import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 public class NoneMetaDataWriter extends MetaDataWriter {
 
     @Override
-    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
         return null;
     }
 

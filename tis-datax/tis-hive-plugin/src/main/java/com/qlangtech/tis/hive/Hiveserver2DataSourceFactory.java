@@ -51,6 +51,7 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -88,10 +89,15 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         return this.dbName;
     }
 
+    public HiveTable getHiveTableMeta(String tabEntityName) {
+        HiveTable table = this.metadata.createMetaStoreClient().getTable(this.dbName, tabEntityName);
+        return Objects.requireNonNull(table, "table:" + tabEntityName + " relevant table can not be null");
+    }
+
     @Override
     protected HashSet<String> createAddedCols(EntityName table) throws TableNotFoundException {
         // 去除表的pt键
-        HiveTable t = metadata.createMetaStoreClient().getTable(this.dbName, table.getTableName());
+        HiveTable t = getHiveTableMeta(table.getTableName());// metadata.createMetaStoreClient().getTable(this.dbName, table.getTableName());
         if (t == null) {
             throw new TableNotFoundException(this, "table:" + table.getTableName() + " is not exist");
         }

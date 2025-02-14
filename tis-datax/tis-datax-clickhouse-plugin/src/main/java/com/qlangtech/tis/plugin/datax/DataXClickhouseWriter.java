@@ -29,7 +29,9 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
@@ -183,6 +185,8 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //    public void setKey(KeyedPluginStore.Key key) {
 //        this.dataXName = key.keyVal.getVal();
 //    }
+
+
 
     @Override
     public ClickHouseDataSourceFactory getDataSourceFactory() {

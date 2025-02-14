@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.io.IOUtils;
 
@@ -77,14 +78,20 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
      * @return
      */
     @Override
-    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
         if (dfsLinker == null) {
             throw new IllegalArgumentException("param dfsLinker can not be null");
+        }
+        if (entity == null) {
+            throw new IllegalArgumentException("param entity can not be null");
+        }
+        if (tab == null) {
+            throw new IllegalArgumentException("param tab can not be null");
         }
         return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
-                return tab.getName() + "_metadata_write";
+                return entity.getTabName() + "_metadata_write";
             }
 
             @Override
@@ -95,7 +102,7 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
                 // FTPServer ftp = FTPServer.getServer(ftpWriter.dfsLinker);
 
                 dfsLinker.useTdfsSession((ftpHelper) -> {
-                    String ftpDir = IPath.pathConcat(dfsLinker.getRootPath(), tab.getName());
+                    String ftpDir = IPath.pathConcat(dfsLinker.getRootPath(), entity.getTabName());
 
                     ftpHelper.mkDirRecursive(ftpDir);
 

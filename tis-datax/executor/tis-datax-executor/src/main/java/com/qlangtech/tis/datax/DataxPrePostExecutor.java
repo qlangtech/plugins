@@ -27,6 +27,7 @@ import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
@@ -70,7 +71,8 @@ public class DataxPrePostExecutor {
 
         final String lifecycleHookName = args[3];
         final ISelectedTab tab = new DefaultTab(args[4]);
-        if (StringUtils.isEmpty(tab.getName())) {
+        final EntityName entity = EntityName.parse(tab.getName());
+        if (StringUtils.isEmpty(entity.getTabName())) {
             throw new IllegalStateException("param table name can not be empty");
         }
 
@@ -95,7 +97,8 @@ public class DataxPrePostExecutor {
             IDataXBatchPost batchPost =
                     IDataxWriter.castBatchPost(Objects.requireNonNull(dataxProcessor.getWriter(null), "dataXName" +
                             ":" + dataXName + " relevant dataXWriter can not be null"));
-            DefaultExecContext execContext = new DefaultExecContext(dataXName, execEpochMilli){
+            //  final EntityName tabEntity = batchPost.parseEntity(tab);
+            DefaultExecContext execContext = new DefaultExecContext(dataXName, execEpochMilli) {
                 @Override
                 public IDataxProcessor getProcessor() {
                     return dataxProcessor;
@@ -105,9 +108,9 @@ public class DataxPrePostExecutor {
 
             if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
                 hookTrigger = batchPost.createPostTask(
-                        execContext, tab, dataxProcessor.getDataxCfgFileNames(null,Optional.empty()));
+                        execContext, entity, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
             } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
-                hookTrigger = batchPost.createPreExecuteTask(execContext, tab);
+                hookTrigger = batchPost.createPreExecuteTask(execContext, entity, tab);
             } else {
                 throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
             }

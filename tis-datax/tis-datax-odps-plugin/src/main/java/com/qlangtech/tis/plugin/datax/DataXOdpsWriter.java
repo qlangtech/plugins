@@ -111,7 +111,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
                         try {
                             BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXOdpsWriter.this
-                                    , DataXOdpsWriter.this, conn, entity.getTabName());
+                                    , DataXOdpsWriter.this, conn, entity, entity.getTabName());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }

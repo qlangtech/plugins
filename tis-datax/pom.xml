@@ -62,7 +62,7 @@
         <module>tis-datax-doris-plugin</module>
         <module>tis-datax-starrocks-plugin</module>
         <!--        <module>tis-ds-tidb-plugin</module>-->
-        <module>tis-hive-plugin</module>
+<!--        <module>tis-hive-plugin</module>-->
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-ds-mysql-plugin</module>
         <module>tis-ds-mysql-v5-plugin</module>

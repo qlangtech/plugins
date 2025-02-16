@@ -43,7 +43,7 @@
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-hive-plugin</artifactId>
+            <artifactId>tis-hive-flat-table-builder-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
 

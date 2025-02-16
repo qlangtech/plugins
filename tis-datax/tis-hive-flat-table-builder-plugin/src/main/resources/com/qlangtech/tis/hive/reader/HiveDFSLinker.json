@@ -3,7 +3,7 @@
     "disable": true
   },
   "fileFormat": {
-    "label": "文件存储格式",
+    "label": "文件格式",
     "enumMode": "multiple",
     "help": "目前支持三种存储格式：Text：普通文本，一行一条用分隔符分隔，HFile：HBase使用的存储格式，Parquet：最常用的列存格式文件，ORC文件格式",
     "dftVal": "com.qlangtech.tis.hive.reader.SupportedFileFormat.supportedFileFormat():uncache_true",

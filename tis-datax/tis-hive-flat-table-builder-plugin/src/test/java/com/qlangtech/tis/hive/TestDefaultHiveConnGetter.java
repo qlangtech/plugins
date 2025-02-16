@@ -19,31 +19,42 @@
 package com.qlangtech.tis.hive;
 
 import com.qlangtech.tis.config.hive.meta.HiveTable;
-import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
-import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import junit.framework.TestCase;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-07-09 16:01
- **/
 public class TestDefaultHiveConnGetter extends TestCase {
-    public void testDescGenerate() {
+    static final String replacePt = "2023110305";
 
-        PluginDesc.testDescGenerate(DefaultHiveConnGetter.class, "DefaultHiveConnGetter_desc.json");
+    @Test
+    public void testReplaceLatestPattern() {
+        Assert.assertEquals("pt = '2023110305' and pmod='1'"
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST + " and pmod='1'"));
+
+        Assert.assertEquals("pt > '2023110305' and pmod='1'"
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " > " + HiveTable.KEY_PT_LATEST + " and pmod='1'"));
+
+        Assert.assertEquals("pt >= '2023110305' "
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " >= " + HiveTable.KEY_PT_LATEST + " "));
+
+        Assert.assertEquals("pt >= 2023110305 "
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " >= " + HiveTable.KEY_PT_LATEST + " ", false));
+
+        Assert.assertEquals("pt = 2023110305 and pmod='1'"
+                , replaceLastestPtCriteria(IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST + " and pmod='1'", false));
     }
 
+    private static String replaceLastestPtCriteria(String latestFilter) {
+        return replaceLastestPtCriteria(latestFilter, true);
+    }
 
-    public void testTableGetter() throws Exception {
-        DefaultHiveConnGetter connGetter = new DefaultHiveConnGetter();
-        connGetter.dbName = "default";
-        connGetter.metaStoreUrls = "thrift://192.168.28.201:9083";
-
-        try (IHiveMetaStore metaStore = connGetter.createMetaStoreClient()) {
-            HiveTable table = metaStore.getTable(connGetter.dbName, "instancedetail");
-            Assert.assertNotNull(table);
-        }
-
+    private static String replaceLastestPtCriteria(String latestFilter, boolean isStrType) {
+        String s = DefaultHiveConnGetter.replaceLastestPtCriteria(latestFilter, (ptKey) -> {
+            Assert.assertEquals(IDumpTable.PARTITION_PT, ptKey);
+            return Pair.of(isStrType, replacePt);
+        });
+        return s;
     }
 }

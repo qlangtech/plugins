@@ -34,7 +34,7 @@ import static com.qlangtech.tis.hive.HdfsFormat.KEY_LINE_DELIM;
 public enum HdfsFileType {
 
     TEXTFILE("text", "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='" + StringEscapeUtils.escapeJava(HdfsFormat.TEXT_FORMAT_NULL_FORMAT) + "', 'line.delim' ='${" + KEY_LINE_DELIM + "}','field.delim'='${" + KEY_FIELD_DELIM + "}')") //
-    , ORC("orc", StringUtils.EMPTY) //
+    , ORC("orc", "ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.orc.OrcSerde'") //
     , PARQUET("parquet", "ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'"
 //            "STORED AS\n" +
 //            "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'\n" +

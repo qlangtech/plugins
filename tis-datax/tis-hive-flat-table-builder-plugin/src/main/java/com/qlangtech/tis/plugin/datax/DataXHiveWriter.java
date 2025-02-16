@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
@@ -49,6 +50,7 @@ import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
 import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
+import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -56,9 +58,12 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -70,9 +75,11 @@ import org.apache.hadoop.fs.Path;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -109,9 +116,81 @@ public class DataXHiveWriter extends BasicFSWriter
     }
 
     @Override
-    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
-        return new HiveDataXContext("tishivewriter", tableMap, this.dataXName);
+    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules) {
+
+        return new HiveDataXContext("tishivewriter", convertTableMapper(tableMap), this.dataXName, transformerRules);
     }
+
+    /**
+     * // PARQUET 不支持date类型 需要将date类型转成timestamp类型
+     * <p>
+     * Caused by: java.lang.IllegalArgumentException: Unsupported primitive data type: DATE
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.createWriter(DataWritableWriter.java:135)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.access$000(DataWritableWriter.java:58)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter$GroupDataWriter.<init>(DataWritableWriter.java:184)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter$MessageDataWriter.<init>(DataWritableWriter.java:208)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.createMessageWriter(DataWritableWriter.java:93)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.write(DataWritableWriter.java:80)
+     * </p>
+     *
+     * @param tableMap
+     * @return
+     */
+    private TableMap convertTableMapper(TableMap tableMap) {
+        return new HiveTableMap(tableMap);
+    }
+
+    /**
+     * <p>
+     * Caused by: java.lang.IllegalArgumentException: Unsupported primitive data type: DATE
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.createWriter(DataWritableWriter.java:135)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.access$000(DataWritableWriter.java:58)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter$GroupDataWriter.<init>(DataWritableWriter.java:184)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter$MessageDataWriter.<init>(DataWritableWriter.java:208)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.createMessageWriter(DataWritableWriter.java:93)
+     * at org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter.write(DataWritableWriter.java:80)
+     * </p>
+     *
+     * @see org.apache.hadoop.hive.ql.io.parquet.write.DataWritableWriter #createWriter
+     */
+    private class HiveTableMap extends IDataxProcessor.TableMap {
+        public HiveTableMap(IDataxProcessor.TableMap tableMap) {
+            super(Optional.of(tableMap.getFrom()), tableMap.getSourceCols());
+            this.setFrom(tableMap.getFrom());
+            this.setTo(tableMap.getTo());
+        }
+
+        @Override
+        protected List<CMeta> rewriteCols(final List<CMeta> cmetas) {
+
+            return cmetas.stream().map((col) -> {
+                DataType type = col.getType();
+                if (type.getJdbcType() == JDBCTypes.DECIMAL) {
+                    /**
+                     * hive的精度不能大于38
+                     * Caused by: java.lang.IllegalArgumentException: Decimal precision out of allowed range [1,38]
+                     * 	at org.apache.hadoop.hive.serde2.typeinfo.HiveDecimalUtils.validateParameter(HiveDecimalUtils.java:43)
+                     * 	at org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo.<init>(DecimalTypeInfo.java:36)
+                     * 	at com.alibaba.datax.plugin.writer.hdfswriter.FileFormatUtils$1.decimalType(FileFormatUtils.java:249)
+                     */
+                    DataType fixType = DataType.create(type.getJdbcType().getType(), type.typeName, Math.min(type.getColumnSize(), 38));
+                    fixType.setDecimalDigits(type.getDecimalDigits());
+                    col.setType(fixType);
+                    return col;
+                }
+
+                if (fileType.getType() == HdfsFileType.PARQUET) {
+                    if (type.getJdbcType() == JDBCTypes.DATE
+                            || type.getJdbcType() == JDBCTypes.TIME) {
+                        col.setType(DataType.getType(JDBCTypes.TIMESTAMP));
+                    }
+                }
+
+                return col;
+            }).collect(Collectors.toList());
+        }
+    }
+
 
     @Override
     public TimeFormat getPsFormat() {
@@ -176,7 +255,7 @@ public class DataXHiveWriter extends BasicFSWriter
             , IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 
         return Objects.requireNonNull(autoCreateTable, "autoCreateTable can not be null")
-                .createSQLDDLBuilder(this, sourceColMetaGetter, tableMapper, transformers).build();
+                .createSQLDDLBuilder(this, sourceColMetaGetter, convertTableMapper(tableMapper), transformers).build();
 
 
 //        final ITISFileSystem fileSystem = this.getFs().getFileSystem();
@@ -274,8 +353,8 @@ public class DataXHiveWriter extends BasicFSWriter
 
         private final String dataxPluginName;
 
-        public HiveDataXContext(String dataxPluginName, IDataxProcessor.TableMap tabMap, String dataXName) {
-            super(tabMap, dataXName);
+        public HiveDataXContext(String dataxPluginName, IDataxProcessor.TableMap tabMap, String dataXName, Optional<RecordTransformerRules> transformerRules) {
+            super(tabMap, dataXName, transformerRules);
             this.dataxPluginName = dataxPluginName;
         }
 
@@ -327,14 +406,14 @@ public class DataXHiveWriter extends BasicFSWriter
             public void run() {
 
                 // 负责初始化表
-                Hiveserver2DataSourceFactory ds = DataXHiveWriter.this.getDataSourceFactory();
+                final Hiveserver2DataSourceFactory dsFactory = DataXHiveWriter.this.getDataSourceFactory();
 
                 ITISFileSystem fs = getFs().getFileSystem();
                 Path tabDumpParentPath = getTabDumpParentPath(execContext, dumpTable);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
-                ds.visitFirstConnection((conn) -> {
+                dsFactory.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
-                        Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
+                        // Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
                         final IPath parentPath = fs.getPath(new HdfsPath(tabDumpParentPath), "..");
                         JoinHiveTask.initializeTable(dsFactory
                                 , conn, dumpTable,
@@ -349,7 +428,9 @@ public class DataXHiveWriter extends BasicFSWriter
                                     // 建新表
                                     try {
                                         BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor()
-                                                , DataXHiveWriter.this, DataXHiveWriter.this, conn, tab.getName());
+                                                , DataXHiveWriter.this, DataXHiveWriter.this, conn, dumpTable, tab.getName());
+                                        // 需要将缓存失效
+                                        dsFactory.refresh();
                                     } catch (Exception e) {
                                         throw new RuntimeException(e);
                                     }

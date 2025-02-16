@@ -85,9 +85,11 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
     public final FileSinkOperator.RecordWriter createRecordsWriter(FileSystem fs, String path) {
         try {
 
-            FileSinkOperator.RecordWriter recordWriter = outputFormat.getHiveRecordWriter(conf, new Path(path), this.value.getClass(), isCompressed(), this.serde.getTabStoreProps(), Reporter.NULL);
-
+            FileSinkOperator.RecordWriter recordWriter
+                    = outputFormat.getHiveRecordWriter(conf, new Path(path)
+                    , this.value.getClass(), isCompressed(), this.serde.getTabStoreProps(), Reporter.NULL);
             //  RecordWriter<K, V> recordWriter = outputFormat.getRecordWriter(fs, this.conf, path, Reporter.NULL);
+
             return recordWriter;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -115,9 +117,8 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
         RecordReader<K, V> recordReader = null;
         try {
             recordReader = this.getRecordReader(inputPath);
-//                LongWritable key = new LongWritable();
-//                Text value = new Text();
-
+            V rowVal = recordReader.createValue();
+            K rowKey = recordReader.createKey();
 
             Object row = null;
             StructObjectInspector inspector = (StructObjectInspector) this.getSerde().getObjectInspector();
@@ -129,9 +130,9 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
 //            NullWritable key = NullWritable.get();
 //            ArrayWritable value = new ArrayWritable(Text.class, new Writable[colsMeta.size()]);
 
-            while (recordReader.next(this.key, this.value)) {
+            while (recordReader.next(rowKey, rowVal)) {
                 //
-                row = this.getSerde().deserialize(value);
+                row = this.getSerde().deserialize(rowVal);
                 Arrays.fill(parseRows, null);
                 for (int i = 0; i < colsMeta.size(); i++) {
                     columnEntry = colsMeta.get(i);
@@ -163,7 +164,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
         return inputFormat.getSplits(conf, 1);
     }
 
-    public AbstractSerDe getSerde() {
+    public  org.apache.hadoop.hive.serde2.SerDe getSerde() {
         return this.serde.getSerde();
     }
 

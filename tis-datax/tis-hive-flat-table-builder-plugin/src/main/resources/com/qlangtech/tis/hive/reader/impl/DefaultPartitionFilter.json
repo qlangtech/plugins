@@ -1,0 +1,9 @@
+{
+  "ptFilter": {
+    "dftVal": "com.qlangtech.tis.hive.reader.impl.DefaultPartitionFilter.getPtDftVal()"
+  },
+  "pathPattern": {
+    "label": "路径格式",
+    "dftVal": "WithPtKeys"
+  }
+}

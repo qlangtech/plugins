@@ -16,42 +16,34 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax;
+package com.qlangtech.tis.hive.reader.impl;
 
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.hive.PartitionPathPattern;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Partition;
 
-import java.util.Optional;
+import java.util.List;
 
 /**
+ * /user/hive/warehouse/sales_data/2023/1
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-23 14:48
+ * @create: 2025-01-13 11:34
  **/
-@Public
-public class DataXSparkWriter extends DataXHiveWriter {
-    private static final String DATAX_NAME = "Spark";
-
-    public MREngine getEngineType() {
-        return MREngine.SPARK;
-    }
+public class PartitionPathPatternWithoutPtKeys extends PartitionPathPattern {
 
     @Override
-    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules) {
-        return new HiveDataXContext("tissparkwriter", tableMap, this.dataXName, transformerRules);
+    protected List<String> createPTPaths(List<FieldSchema> ptKeys, Partition pt) {
+        return pt.getValues();
     }
 
-    @TISExtension()
-    public static class DataXSparkWriterDescriptor extends DataXHiveWriter.DefaultDescriptor {
-        @Override
-        public EndType getEndType() {
-            return EndType.Spark;
-        }
-
+    @TISExtension
+    public static class Desc extends Descriptor<PartitionPathPattern> {
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return "WithoutPtKeys";
         }
     }
 }

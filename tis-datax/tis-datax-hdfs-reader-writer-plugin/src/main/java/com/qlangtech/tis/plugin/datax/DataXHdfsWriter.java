@@ -26,6 +26,9 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.hdfs.HdfsTDFDLinker;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+
+import java.util.Optional;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/hdfswriter/doc/hdfswriter.md
@@ -54,13 +57,13 @@ public class DataXHdfsWriter extends BasicFSWriter {
     }
 
     @Override
-    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
-        return new HdfsDataXContext(tableMap, this.dataXName);
+    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules) {
+        return new HdfsDataXContext(tableMap, this.dataXName, transformerRules);
     }
 
     public class HdfsDataXContext extends FSDataXContext {
-        public HdfsDataXContext(IDataxProcessor.TableMap tabMap, String dataxName) {
-            super(tabMap, dataxName);
+        public HdfsDataXContext(IDataxProcessor.TableMap tabMap, String dataxName, Optional<RecordTransformerRules> transformerRules) {
+            super(tabMap, dataxName, transformerRules);
         }
 
         public String getPath() {
@@ -68,7 +71,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
         }
     }
 
-  //  @TISExtension()
+    //  @TISExtension()
     public static class DefaultDescriptor extends HdfsWriterDescriptor {
         public DefaultDescriptor() {
             super();

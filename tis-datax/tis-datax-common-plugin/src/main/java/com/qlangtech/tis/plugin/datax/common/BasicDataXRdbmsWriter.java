@@ -278,7 +278,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
             try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), Optional.empty(), false)) {
-                process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
+                process(dataXName, processor, dataXWriter, dataXWriter, conn, EntityName.parse(tableName), tableName);
             }
         }
     }
@@ -289,12 +289,12 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @param dsGetter
      * @param dataXWriter
      * @param jdbcConn
-     * @param tableName
+     * @param tableSqlFileName
      * @return tableExist 表是否存在
      */
     public static void process(String dataXName, IDataxProcessor processor
             , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, JDBCConnection jdbcConn
-            , String tableName) {
+            , EntityName tab, String tableSqlFileName) {
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalArgumentException("param dataXName can not be null");
         }
@@ -303,17 +303,17 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         //  try {
         if (autoCreateTable) {
 
-            jdbcConn.initializeSinkTab(tableName, () -> {
+            jdbcConn.initializeSinkTab(tableSqlFileName, () -> {
                 try {
                     File createDDL = new File(processor.getDataxCreateDDLDir(null)
-                            , tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+                            , tableSqlFileName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
                     if (!createDDL.exists()) {
                         throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
                     }
                     Connection conn = jdbcConn.getConnection();
                     DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
                     String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-                    final EntityName tab = EntityName.parse(tableName);
+                    //  final EntityName tab = EntityName.parse(tableSqlFileName);
 
                     boolean tableExist = false;
                     List<ColumnMetaData> cols = Lists.newArrayList();

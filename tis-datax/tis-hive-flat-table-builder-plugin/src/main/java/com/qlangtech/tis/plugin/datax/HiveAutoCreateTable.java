@@ -108,7 +108,8 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 return new ColWrapper(c, this.pks) {
                     @Override
                     public String getMapperType() {
-                        return c.getType().accept(HiveColumn.hiveTypeVisitor);
+                        String hiveType = c.getType().accept(HiveColumn.hiveTypeVisitor);
+                        return hiveType;// StringUtils.defaultIfEmpty(fixType, );
                     }
 
                     @Override

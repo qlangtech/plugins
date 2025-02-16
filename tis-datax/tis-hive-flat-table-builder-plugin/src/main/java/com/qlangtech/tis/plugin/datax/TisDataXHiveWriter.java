@@ -29,7 +29,6 @@ import com.alibaba.datax.plugin.writer.hdfswriter.FileFormatUtils.ColumnTypeValI
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
-import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.alibaba.datax.plugin.writer.hdfswriter.TextFileUtils;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
@@ -38,7 +37,6 @@ import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.hive.reader.SupportedFileFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopInputFormat;
-import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -47,20 +45,13 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
-import org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat;
-import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobContext;
-import org.apache.hadoop.mapred.RecordWriter;
-import org.apache.hadoop.mapred.Reporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Objects;
@@ -68,6 +59,7 @@ import java.util.Objects;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-27 16:55
+ * @see DataXHiveWriter
  **/
 public class TisDataXHiveWriter extends Writer {
 
@@ -144,6 +136,10 @@ public class TisDataXHiveWriter extends Writer {
                 }
                 case PARQUET: {
                     fileFormat = SupportedFileFormat.parse(() -> SupportedFileFormat.KEY_SUPPORTED_FORMAT_PARQUET);
+                    break;
+                }
+                case ORC: {
+                    fileFormat = SupportedFileFormat.parse(() -> SupportedFileFormat.KEY_SUPPORTED_FORAMT_ORC);
                     break;
                 }
                 default:

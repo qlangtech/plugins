@@ -35,15 +35,16 @@
     <properties>
         <classifier>hive_${hive.version};hadoop_${hadoop-version}</classifier>
     </properties>
+
     <build>
         <plugins>
-<!--            <plugin>-->
-<!--                <groupId>com.qlangtech.tis</groupId>-->
-<!--                <artifactId>maven-tpi-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <maskClasses>org.apache.hadoop.hive.</maskClasses>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <maskClasses>org.apache.hadoop.hive.</maskClasses>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -144,15 +145,38 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-hive-plugin</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>
         </dependency>
+
+
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-serde</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>commons-dbcp</groupId>-->
+<!--            <artifactId>commons-dbcp</artifactId>-->
+<!--            <version>1.4</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+        </dependency>
+
+
 
     </dependencies>
 

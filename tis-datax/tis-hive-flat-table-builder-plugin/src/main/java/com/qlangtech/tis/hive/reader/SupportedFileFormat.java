@@ -35,6 +35,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.hbase.HiveHBaseTableInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcFileStripeMergeInputFormat;
+import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
+import org.apache.hadoop.hive.ql.io.orc.OrcNewInputFormat;
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -56,6 +58,7 @@ public abstract class SupportedFileFormat implements IdentityName {
     public static final String KEY_SUPPORTED_FORMAT_TEXT = "Text";
     public static final String KEY_SUPPORTED_FORMAT_HFILE = "HFile";
     public static final String KEY_SUPPORTED_FORMAT_PARQUET = "Parquet";
+    public static final String KEY_SUPPORTED_FORAMT_ORC = "Orc";
 
     public abstract boolean match(Class<?> inputFormatClass);
 
@@ -223,7 +226,9 @@ public abstract class SupportedFileFormat implements IdentityName {
     private static class OrcFileFormat extends SupportedFileFormat {
         @Override
         public boolean match(Class<?> inputFormatClass) {
-            return OrcFileStripeMergeInputFormat.class == inputFormatClass;
+            return OrcFileStripeMergeInputFormat.class == inputFormatClass
+                    || OrcInputFormat.class == inputFormatClass
+                    || OrcNewInputFormat.class == inputFormatClass;
         }
 
         @Override
@@ -237,7 +242,7 @@ public abstract class SupportedFileFormat implements IdentityName {
 
         @Override
         public String identityValue() {
-            return "Orc";
+            return KEY_SUPPORTED_FORAMT_ORC;
         }
     }
 

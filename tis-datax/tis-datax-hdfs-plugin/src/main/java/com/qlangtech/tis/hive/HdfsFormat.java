@@ -23,6 +23,7 @@ package com.qlangtech.tis.hive;
  * @create: 2021-05-28 12:53
  **/
 public class HdfsFormat {
+   // public static final String TEXT_FORMAT_NULL_FORMAT = "\\N";
     public static final String TEXT_FORMAT_NULL_FORMAT = "\\N";
     static final String KEY_LINE_DELIM = "lineDelim";
     static final String KEY_FIELD_DELIM = "fieldDelim";

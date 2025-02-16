@@ -1,0 +1,9 @@
+{
+
+
+  "dbName": {
+    "help": "Hive 数据库使用的库名，请在执行任务前先创建完成",
+    "dftVal": "default"
+  }
+
+}

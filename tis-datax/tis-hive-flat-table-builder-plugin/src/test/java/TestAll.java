@@ -45,6 +45,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestHiveDBUtils.class);
         suite.addTestSuite(TestHiveTableBuilder.class);
         suite.addTestSuite(TestTEXTFormat.class);
+       // suite.addTestSuite(TestDefaultHiveConnGetter.class);
         // suite.addTestSuite(TestYarnTableDumpFactory.class);
         return suite;
     }

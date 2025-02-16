@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -105,23 +105,26 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         if (StringUtils.isBlank(this.dataXName)) {
             throw new IllegalStateException("param 'dataXName' can not be null");
         }
-        FSDataXContext dataXContext = getDataXContext(tableMap.get());
+        FSDataXContext dataXContext = getDataXContext(tableMap.get(), transformerRules);
 
         return dataXContext;
         //  throw new RuntimeException("dbName:" + dbName + " relevant DS is empty");
     }
 
-    protected abstract FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap);
+    protected abstract FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules);
 
     public class FSDataXContext implements IDataxContext {
 
         final IDataxProcessor.TableMap tabMap;
         private final String dataxName;
+        private final List<IColMetaGetter> cols;
 
-        public FSDataXContext(IDataxProcessor.TableMap tabMap, String dataxName) {
+        public FSDataXContext(IDataxProcessor.TableMap tabMap, String dataxName, Optional<RecordTransformerRules> transformerRules) {
             Objects.requireNonNull(tabMap, "param tabMap can not be null");
             this.tabMap = tabMap;
             this.dataxName = dataxName;
+            this.cols = tabMap.appendTransformerRuleCols(transformerRules);
+            // IDataxProcessor.TabCols.create(dsFactory, tabMap, transformerRules);
         }
 
         public String getDataXName() {
@@ -136,8 +139,8 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return tabName;
         }
 
-        public List<CMeta> getCols() {
-            return this.tabMap.getSourceCols();
+        public final List<IColMetaGetter> getCols() {
+            return this.cols;
         }
 
 

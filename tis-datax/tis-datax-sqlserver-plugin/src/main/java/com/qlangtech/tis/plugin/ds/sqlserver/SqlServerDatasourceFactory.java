@@ -50,6 +50,8 @@ import java.util.regex.Pattern;
 @Public
 public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory implements BasicDataSourceFactory.ISchemaSupported {
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
+
+    public static final String SQL_SERVER_VERSION_2019 = "2019";
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String tabSchema;
     /**
@@ -150,7 +152,11 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
 
         @Override
         protected final String getDataSourceName() {
-            return DS_TYPE_SQL_SERVER + "-" + getVersion();
+            return dataSourceName(getVersion());
+        }
+
+        protected static String dataSourceName(String version) {
+            return DS_TYPE_SQL_SERVER + "-" + version;
         }
 
         protected abstract String getVersion();

@@ -18,9 +18,17 @@
 
 package com.qlangtech.tis.plugin.ds.sqlserver;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
+import java.sql.DatabaseMetaData;
 import java.sql.Driver;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,6 +46,36 @@ public class SqlServer2008DatasourceFactory extends SqlServerDatasourceFactory {
         @Override
         protected String getVersion() {
             return "2008";
+        }
+
+        @Override
+        protected boolean validateConnection(JDBCConnection conn, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
+
+            try {
+                DatabaseMetaData metaData = conn.getConnection().getMetaData();
+                try (ResultSet typeInfo = metaData.getTypeInfo()) {
+                    boolean supportsSqlVariant = false;
+                    final String jdbcTypeSqlVariant = "sql_variant";
+                    // 遍历结果集，检查是否存在 sql_variant 类型
+                    while (typeInfo.next()) {
+                        String typeName = typeInfo.getString("TYPE_NAME");
+                        if (jdbcTypeSqlVariant.equalsIgnoreCase(typeName)) {
+                            supportsSqlVariant = true;
+                            break;
+                        }
+                    }
+
+                    if (supportsSqlVariant) {
+                        // 服务端支持sql_variant，则说明现在使用的JDBC驱动太低
+                        throw TisException.create("侦测到当前连接的服务端支持" + jdbcTypeSqlVariant
+                                + " 请尝试使用高版本" + this.getEndType().name() + "驱动，例如：" + dataSourceName(SQL_SERVER_VERSION_2019));
+                    }
+                }
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            return super.validateConnection(conn, dsFactory, msgHandler, context);
         }
     }
 }

@@ -248,7 +248,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     public static <DS extends DataSourceFactory> DS getDs(String dbName) {
-        return TIS.getDataBasePlugin(PostedDSProp.parse((dbName)));
+        return getDs(dbName, true);
+    }
+
+    public static <DS extends DataSourceFactory> DS getDs(String dbName, boolean validateNull) {
+        return TIS.getDataBasePlugin(PostedDSProp.parse((dbName)), validateNull);
         // return (DS) dsStore.getPlugin();
     }
 
@@ -447,7 +451,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
 
         public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {
-            BasicDataSourceFactory ds = getDs(dbName);
+            BasicDataSourceFactory ds = getDs(dbName, false);
+            if (ds == null) {
+                msgHandler.addFieldError(context, fieldName, "请确认该数据源是否存在");
+                return false;
+            }
             if (ds.getJdbcUrls().size() > 1) {
                 msgHandler.addFieldError(context, fieldName, "不支持分库数据源，目前无法指定数据路由规则，请选择单库数据源");
                 return false;

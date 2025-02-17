@@ -31,9 +31,9 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.ContextParamConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -289,6 +288,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                 }
             } catch (Throwable e) {
                 msgHandler.addFieldError(context, fieldName, e.getMessage());
+            }
+            return true;
+        }
+
+        public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {
+            DataSourceFactory ds = TIS.getDataBasePlugin(PostedDSProp.parse(dbName), false);
+            if (ds == null) {
+                msgHandler.addFieldError(context, fieldName, "请确认该数据源是否存在");
+                return false;
             }
             return true;
         }

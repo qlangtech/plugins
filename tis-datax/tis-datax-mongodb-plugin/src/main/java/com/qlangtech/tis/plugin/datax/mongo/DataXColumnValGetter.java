@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.mongo;
 
 import com.alibaba.datax.common.element.Column;
 import org.bson.BsonDocument;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 
 import java.time.ZoneId;
@@ -35,7 +36,7 @@ class DataXColumnValGetter extends MongoColValGetter<Column> {
     @Override
     public Column apply(BsonDocument document) {
         BsonValue val = cmeta.getBsonVal(document);
-        if (val == null) {
+        if (val == null || val.getBsonType() == BsonType.NULL) {
             return Column.NULL;
         }
         return (Column) MongoDataXColUtils.createCol(cmeta, val, true, zone);

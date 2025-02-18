@@ -59,12 +59,15 @@ import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureH
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.flink.table.api.TableException;
 import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.elasticsearch.action.ActionRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,7 +208,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 return null;
             }
         });
-       // final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+        // final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
 
         Optional<SelectedTableTransformerRules> transformerOpt
@@ -252,6 +255,19 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         }
 
         private IndexRequest createIndexRequest(RowData element) {
+            Map<String, Object> json = getESVals(element);
+            Object pkVal = json.get(this.pkName);
+            IndexRequest request = Requests.indexRequest()
+                    .index(this.targetIndexName)
+                    //.type("my-type")
+                    .source(json);
+            if (pkVal != null) {
+                request.id(String.valueOf(pkVal));
+            }
+            return request;
+        }
+
+        private Map<String, Object> getESVals(RowData element) {
             Map<String, Object> json = new HashMap<>();
 
             Object val = null;
@@ -267,20 +283,43 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 }
                 json.put(get.name, val);
             }
-            Object pkVal = json.get(this.pkName);
-            IndexRequest request = Requests.indexRequest()
-                    .index(this.targetIndexName)
-                    //.type("my-type")
-                    .source(json);
-            if (pkVal != null) {
-                request.id(String.valueOf(pkVal));
-            }
-            return request;
+            return json;
         }
 
+        /**
+         * // @see org.apache.flink.streaming.connectors.elasticsearch.table.RowElasticsearchSinkFunction
+         *
+         * @param element
+         * @param ctx
+         * @param indexer
+         */
         @Override
         public void process(RowData element, RuntimeContext ctx, RequestIndexer indexer) {
-            indexer.add(createIndexRequest(element));
+            switch (element.getRowKind()) {
+                case INSERT:
+                case UPDATE_AFTER:
+                    indexer.add(createIndexRequest(element));
+                    break;
+                // case UPDATE_BEFORE:
+                case DELETE:
+                    this.processDelete(element, indexer);
+                    break;
+                default:
+                    throw new TableException("Unsupported message kind: " + element.getRowKind());
+            }
+        }
+
+        private void processDelete(RowData row, RequestIndexer indexer) {
+            Map<String, Object> esVals = getESVals(row);
+            Object pkVal = esVals.get(this.pkName);
+            if (pkVal == null) {
+                throw new IllegalStateException("indexer:" + this.targetIndexName
+                        + " relevant pk:" + this.pkName
+                        + " can not be null, esVals:"
+                        + esVals.entrySet().stream().map((entry) -> entry.getKey() + ":" + entry.getValue()).collect(Collectors.joining(",")));
+            }
+            //    DeleteRequest deleteRequest = this.requestFactory.createDeleteRequest(this.indexGenerator.generate(row), this.docType, key);
+            indexer.add(new DeleteRequest[]{Requests.deleteRequest(this.targetIndexName).id(String.valueOf(pkVal))});
         }
     }
 

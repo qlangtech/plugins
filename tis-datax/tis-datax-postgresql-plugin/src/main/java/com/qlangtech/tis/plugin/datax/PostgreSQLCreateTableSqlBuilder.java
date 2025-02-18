@@ -147,7 +147,11 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
 
                     @Override
                     public String decimalType(DataType type) {
-                        return "DECIMAL";
+                        if (type.getColumnSize() > 0) {
+                            return "DECIMAL(" + Math.min(type.getColumnSize(), 38) + "," + type.getDecimalDigits() + ")";
+                        } else {
+                            return "DECIMAL";
+                        }
                     }
 
                     @Override

@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESColumn;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -32,7 +31,6 @@ import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -58,7 +56,6 @@ import org.junit.Test;
 import org.junit.rules.TestRule;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -142,7 +139,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         //  ESTableAlias esTableAlias = new ESTableAlias();
 
-        ESTableAlias esTableAlias = new ESTableAlias() {
+        ESTableAlias esTableAlias = new ESTableAlias(null) {
             @Override
             public List<CMeta> getSourceCols() {
                 return cols;

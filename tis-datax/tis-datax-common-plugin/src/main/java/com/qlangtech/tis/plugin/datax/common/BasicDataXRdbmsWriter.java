@@ -75,6 +75,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -112,7 +113,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
-    public final EntityName parseEntity(ISelectedTab tab) {
+    public EntityName parseEntity(ISelectedTab tab) {
         // return EntityName.parse(ta);
         return EntityName.create(this.getDataSourceFactory().getDbConfig().getName(), tab.getName());
     }
@@ -176,11 +177,27 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             dsFactory.visitAllConnection((conn) -> {
                 SelectTable toTable = SelectTable.create(tableAliasMapper.get(tab).getTo(), dsFactory);
                 String preSqlStatement = StringUtils.replace(validateSQL(this.preExecute ? preSql : postSql), TABLE_NAME_PLACEHOLDER, toTable.getTabName());
+                String checkTabExist = "select 1 from " + toTable.getTabName();
+                final AtomicBoolean tabExist = new AtomicBoolean(false);
                 try {
-                    conn.execute(preSqlStatement);
-                    logger.info("success " + getTaskName() + ":" + preSqlStatement);
+                    conn.query(checkTabExist
+                            , (result) -> {
+                                tabExist.set(true);
+                                return false;
+                            });
                 } catch (Exception e) {
-                    throw new RuntimeException("execute " + getTaskName() + ":" + preSqlStatement, e);
+                    // throw new RuntimeException("execute " + getTaskName() + ":" + preSqlStatement, e);
+                    logger.warn("checkTabExist sql:" + checkTabExist, e.getMessage());
+                }
+
+                if (tabExist.get()) {
+                    try {
+                        // 数据库表存在的情况下才进行删除
+                        conn.execute(preSqlStatement);
+                        logger.info("success " + getTaskName() + ":" + preSqlStatement);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
         }

@@ -279,7 +279,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
          * 初始化索引Schema
          *******************************************************/
         AtomicReference<List<ESColumn>> colsRef = new AtomicReference<>();
-        JSONArray schemaCols = esSchema.getSchemaCols();
+        JSONArray schemaCols = ESTableAlias.getSchemaCols(esSchema.getSchemaContent());
         ESClient esClient = (token.createESClient());
         String type = null;
         try {

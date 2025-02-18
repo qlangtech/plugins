@@ -243,8 +243,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
                 if (_col2Comment == null) {
                     _col2Comment = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
                     try (PreparedStatement statement = conn.preparedStatement(TABLE_COLUMN_COMMENT_SQL)) {
-
-                        statement.setString(1, StringUtils.defaultString(removeEscapeChar(table.getDbName()), conn.getSchema()));
+                        String db = table.getDbName();
+                        if (StringUtils.isEmpty(db)) {
+                            db = conn.getSchema();
+                        }
+                        statement.setString(1, removeEscapeChar(db));
                         statement.setString(2, removeEscapeChar(table.getTableName()));
                         try (ResultSet result = statement.executeQuery()) {
                             while (result.next()) {

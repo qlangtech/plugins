@@ -95,7 +95,7 @@ public class ESContext implements IDataxContext {
 //    }
 
     public String getColumn() {
-        JSONArray cols = this.mapper.getSchemaCols();
+        JSONArray cols = ESTableAlias.getSchemaCols(mapper.getSchemaContent());
         Objects.requireNonNull(cols, "prop cols of mapper can not be null");
         return cols.toJSONString();
     }

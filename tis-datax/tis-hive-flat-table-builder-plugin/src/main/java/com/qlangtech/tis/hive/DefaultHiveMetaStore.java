@@ -48,11 +48,12 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
 
     @Override
     public String getServerVersion() {
-        try {
-            return this.storeClient.getServerVersion();
-        } catch (TException e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//           // return this.storeClient.getServerVersion();
+//        } catch (TException e) {
+//            throw new RuntimeException(e);
+//        }a
+        return null;
     }
 
     @Override

@@ -27,6 +27,7 @@ import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageRe
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
 import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
+import com.qlangtech.tis.hive.shim.IHiveSerDe;
 import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -164,7 +165,7 @@ public abstract class HadoopInputFormat<K, V extends Writable> extends TextForma
         return inputFormat.getSplits(conf, 1);
     }
 
-    public  org.apache.hadoop.hive.serde2.SerDe getSerde() {
+    public IHiveSerDe getSerde() {
         return this.serde.getSerde();
     }
 

@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.hive.shim.HiveContextConfig;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -255,6 +256,9 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             if (valid) {
                 Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;
                 try (IHiveMetaStore meta = ds.createMetaStoreClient()) {
+                    // 暂且不知道如何校验
+                    HiveContextConfig hiveConfig = HiveContextConfig.get();
+                    logger.info("hiveServerVer:{}", meta.getServerVersion());
                     meta.getTables(ds.getDbName());
                 } catch (IOException e) {
                     logger.warn(e.getMessage(), e);

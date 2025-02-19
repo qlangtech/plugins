@@ -5,6 +5,7 @@ import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
 import com.qlangtech.tis.config.hive.meta.HiveTable.StoredAs;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.hive.meta.PartitionFilter;
+import com.qlangtech.tis.hive.shim.IHiveSerDe;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
@@ -43,6 +44,15 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
     public DefaultHiveMetaStore(IMetaStoreClient storeClient, String metaStoreUrls) {
         this.storeClient = storeClient;
         this.metaStoreUrls = metaStoreUrls;
+    }
+
+    @Override
+    public String getServerVersion() {
+        try {
+            return this.storeClient.getServerVersion();
+        } catch (TException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -102,7 +112,10 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         private final InputFormat inputFormat;
         private final Class inputFormatClass;
         private final HiveOutputFormat outputFormat;
-        private final org.apache.hadoop.hive.serde2.SerDe serde;
+        //  private final org.apache.hadoop.hive.serde2.SerDe serde;
+
+        private final IHiveSerDe serDe;
+
         private final JobConf jobConf;
         private final Properties tabStoreProps;
 
@@ -117,18 +130,22 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
                         , false, Objects.requireNonNull(classLoader, "classLoader can not be null"));
                 Class outputFormatClass = Class.forName(storageDesc.getOutputFormat(), false, classLoader);
                 // forExample : LazySimpleSerDe, ParquetHiveSerDe
-                org.apache.hadoop.hive.serde2.SerDe serde = (org.apache.hadoop.hive.serde2.SerDe) Class.forName(
-                        serdeInfo.getSerializationLib()
-                        , false, classLoader).getDeclaredConstructor().newInstance();
+                serDe = IHiveSerDe.create(classLoader);
+
+
+//                org.apache.hadoop.hive.serde2.SerDe serde = (org.apache.hadoop.hive.serde2.SerDe) Class.forName(
+//                        serdeInfo.getSerializationLib()
+//                        , false, classLoader).getDeclaredConstructor().newInstance();
 
                 this.jobConf = new JobConf(conf);
-                serde.initialize(jobConf, tabStoreProps);
+                // serde.initialize(serdeInfo.getSerializationLib(),jobConf, tabStoreProps);
 
-                serde.getObjectInspector();
+                serDe.initialize(serdeInfo.getSerializationLib(), jobConf, tabStoreProps, classLoader);
+
 
                 this.inputFormat = (InputFormat) inputFormatClass.getConstructor().newInstance();
                 this.outputFormat = (HiveOutputFormat) outputFormatClass.getConstructor().newInstance();
-                this.serde = serde;
+                //   this.serde = serde;
 
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -148,8 +165,8 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
             return outputFormat;
         }
 
-        public org.apache.hadoop.hive.serde2.SerDe getSerde() {
-            return serde;
+        public IHiveSerDe getSerde() {
+            return serDe;
         }
 
         public JobConf getJobConf() {

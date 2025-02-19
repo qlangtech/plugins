@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.common.statistics.PerfTrace;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
@@ -26,7 +25,6 @@ import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.DataXCfgFile;
-import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -47,9 +45,7 @@ import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.impl.AutoCreateTableColCommentSwitchOFF;
-import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;

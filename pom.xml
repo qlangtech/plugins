@@ -66,7 +66,7 @@
         <module>tis-datax/tis-datax-local-embedded-executor</module>
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
-
+        <module>tis-datax/tis-hive-shim-common</module>
 
 
         <!--        <module>tis-solr-plugin</module>
@@ -109,12 +109,13 @@
                 <scala.binary.version>2.12</scala.binary.version>
                 <scala.version>2.12.9</scala.version>
                 <appname>all</appname>
+                <profile.token>aliyun-emr</profile.token>
             </properties>
             <dependencies>
 
             </dependencies>
             <modules>
-
+                <module>tis-datax/tis-hive-shim-aliyun-emr</module>
             </modules>
         </profile>
 
@@ -122,6 +123,7 @@
 
             <id>cdh</id>
             <properties>
+                <profile.token>cdh</profile.token>
                 <spark2.version>3.2.1</spark2.version>
 
                 <hadoop3-version>3.0.0-cdh6.3.2</hadoop3-version>
@@ -144,7 +146,7 @@
                 </repository>
             </repositories>
             <modules>
-
+                <module>tis-datax/tis-hive-shim-cdh</module>
             </modules>
         </profile>
     </profiles>

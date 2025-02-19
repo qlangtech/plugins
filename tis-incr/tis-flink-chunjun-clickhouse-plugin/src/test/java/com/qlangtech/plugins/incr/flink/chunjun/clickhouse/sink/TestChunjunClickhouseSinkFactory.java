@@ -208,7 +208,8 @@ public class TestChunjunClickhouseSinkFactory
                 }
             };
             dataXWriter.dataXName = testDataX;
-            dataXWriter.autoCreateTable = AutoCreateTable.dft();;
+            dataXWriter.autoCreateTable = AutoCreateTable.dft();
+            ;
 
             //EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 
@@ -277,7 +278,7 @@ public class TestChunjunClickhouseSinkFactory
             });
 
             try {
-                try (JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0], false)) {
+                try (JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0], Optional.empty(), false)) {
                     Statement statement = conn.createStatement();
                     //+ " where id='" + colIdVal + "'"
                     ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName);

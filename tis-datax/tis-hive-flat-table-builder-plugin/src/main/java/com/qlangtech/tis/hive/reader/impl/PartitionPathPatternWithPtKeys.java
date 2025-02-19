@@ -18,7 +18,8 @@
 
 package com.qlangtech.tis.hive.reader.impl;
 
-import com.beust.jcommander.internal.Lists;
+
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hive.PartitionPathPattern;

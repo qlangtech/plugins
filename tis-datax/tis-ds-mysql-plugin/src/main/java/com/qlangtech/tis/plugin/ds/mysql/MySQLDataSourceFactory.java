@@ -187,7 +187,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
                     @Override
                     public DataType bitType(DataType type) {
-                        if (type.getColumnSize() > 1) {
+                        if (!"boolean".equalsIgnoreCase(type.typeName) && type.getColumnSize() > 1) {
                             return DataType.create(Types.BINARY, type.typeName, type.getColumnSize());
                         }
                         return null;

@@ -114,8 +114,9 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
     @Override
     public EntityName parseEntity(ISelectedTab tab) {
-        // return EntityName.parse(ta);
-        return EntityName.create(this.getDataSourceFactory().getDbConfig().getName(), tab.getName());
+        return EntityName.create(
+                this.getDataSourceFactory().getDbConfig().getName()
+                , tab.getEntityName().getTabName());
     }
 
     @Override

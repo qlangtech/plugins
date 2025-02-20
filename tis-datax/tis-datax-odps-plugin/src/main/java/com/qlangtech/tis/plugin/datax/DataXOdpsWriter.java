@@ -81,7 +81,8 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public EntityName parseEntity(ISelectedTab tab) {
         // return EntityName.parse(ta);
-        return EntityName.create(this.getDataSourceFactory().getDbConfig().getName(), this.autoCreateTable.appendTabPrefix(tab.getName()));
+        return EntityName.create(this.getDataSourceFactory().getDbConfig().getName()
+                , this.autoCreateTable.appendTabPrefix(tab.getEntityName().getTabName()));
     }
 
     @Override

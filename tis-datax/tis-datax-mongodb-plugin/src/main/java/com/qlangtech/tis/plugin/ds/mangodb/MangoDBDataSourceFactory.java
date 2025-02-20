@@ -294,6 +294,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         MongoClientSettings.Builder setting = MongoClientSettings.builder();
         setting.applyToClusterSettings((builder) -> builder.hosts(serverAddresses));
 
+
         if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
             MongoCredential credential = null;
 

@@ -199,7 +199,7 @@ public class DataXHiveWriter extends BasicFSWriter
 
     @Override
     public EntityName parseEntity(ISelectedTab tab) {
-        return getDumpTab(this.autoCreateTable.appendTabPrefix(tab.getName()));
+        return getDumpTab(this.autoCreateTable.appendTabPrefix(tab.getEntityName().getTabName()));
     }
 
     /**

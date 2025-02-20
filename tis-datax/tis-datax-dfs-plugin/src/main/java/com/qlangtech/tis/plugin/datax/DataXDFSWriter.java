@@ -48,6 +48,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -82,7 +83,8 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
     @Override
     public EntityName parseEntity(ISelectedTab tab) {
-        return EntityName.parse(tab.getName());
+        return Objects.requireNonNull(tab, "tab can not be null").getEntityName();
+        //return EntityName.parse(tab.getName());
     }
 
     @Override

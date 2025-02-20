@@ -36,11 +36,15 @@
         <dependency>
             <groupId>io.debezium</groupId>
             <artifactId>debezium-connector-postgres</artifactId>
-            <version>1.9.7.Final</version>
+            <version>${debezium-connector.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.postgresql</groupId>
                     <artifactId>postgresql</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

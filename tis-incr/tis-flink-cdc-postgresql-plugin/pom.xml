@@ -55,29 +55,32 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.qlangtech.tis</groupId>-->
-        <!--            <artifactId>tis-dag</artifactId>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-
-
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-flink-cdc-pglike-common</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
-
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-incr-test</artifactId>
+
         </dependency>
 
 
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-postgres-cdc</artifactId>
+            <version>${flink.cdc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-connector-debezium</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-connector-postgres</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

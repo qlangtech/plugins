@@ -95,5 +95,16 @@ public class Standalone extends AbstractClusterType {
             }
             return true;
         }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return this.verify(msgHandler, context, postFormVals);
+        }
+
+        //        @Override
+//        public boolean secondVerify(IControlMsgHandler msgHandler
+//                , Context context, PostFormVals postFormVals, PostFormVals parentPostFormVals) {
+//            return super.secondVerify(msgHandler, context, postFormVals, parentPostFormVals);
+//        }
     }
 }

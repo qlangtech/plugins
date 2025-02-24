@@ -44,6 +44,8 @@ import org.apache.flink.runtime.client.JobStatusMessage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -76,8 +78,12 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
                 Collection<JobStatusMessage> jobStatus = status.get();
             }
         } catch (Throwable e) {
+            Map<String, Object> payload = Collections.emptyMap();
+            if (collection != null) {
+                payload = Collections.singletonMap(IFullBuildContext.KEY_APP_NAME, collection.getName());
+            }
             throw TisException.create(
-                    ErrorValue.create(ErrorCode.FLINK_INSTANCE_LOSS_OF_CONTACT, IFullBuildContext.KEY_APP_NAME, collection.getName())
+                    ErrorValue.create(ErrorCode.FLINK_INSTANCE_LOSS_OF_CONTACT, payload)
                     , ExceptionUtils.getRootCauseMessage(e), e);
         }
     }

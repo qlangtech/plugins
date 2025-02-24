@@ -167,7 +167,7 @@
                 </property>
             </activation>
             <modules>
-                <module>tis-datax-hudi-common-shade</module>
+<!--                <module>tis-datax-hudi-common-shade</module>-->
             </modules>
         </profile>
     </profiles>

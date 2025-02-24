@@ -42,6 +42,7 @@ import org.apache.kafka.common.config.ConfigDef.Width;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 /**
@@ -58,12 +59,24 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
 //            opts.addFieldDescriptor("poolInterval", OracleConnectorConfig.POLL_INTERVAL_MS);
 //            opts.addFieldDescriptor("failureHandle", OracleConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE);
 
+    private static Field createLobField() {
+        Field old = OracleConnectorConfig.LOB_ENABLED;
+        //  String name, String displayName, String description, String defaultValue
+        return Field.create(old.name(), "Supports mining LOB fields and operations", old.description(), new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return (Boolean) old.defaultValue();
+            }
+        });
+    }
+
     public static List<Triple<String, Field, Function<FlinkCDCOracleSourceFactory, Object>>> debeziumProps
             = Lists.newArrayList(
-            Triple.of("lob", OracleConnectorConfig.LOB_ENABLED, (sf) -> sf.lob)
+            Triple.of("lob", createLobField(), (sf) -> sf.lob)
             , Triple.of("poolInterval", OracleConnectorConfig.POLL_INTERVAL_MS, (sf) -> sf.poolInterval)
             , Triple.of("failureHandle", OracleConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE, (sf) -> sf.failureHandle)
             , Triple.of("miningStrategy", OracleConnectorConfig.LOG_MINING_STRATEGY, (sf) -> sf.miningStrategy));
+
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;

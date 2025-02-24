@@ -22,6 +22,7 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
@@ -43,7 +44,7 @@ import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import org.apache.flink.annotation.Public;
+
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -261,6 +262,12 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         @Override
         public String getDisplayName() {
             return NAME_FLINK_CDC;
+        }
+
+        @Override
+        protected boolean verify(
+                IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return super.verify(msgHandler, context, postFormVals);
         }
 
         @Override

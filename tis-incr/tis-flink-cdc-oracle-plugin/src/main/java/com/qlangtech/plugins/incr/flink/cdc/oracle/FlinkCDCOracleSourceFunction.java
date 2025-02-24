@@ -141,14 +141,17 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .serverTimeZone(sourceFactory.timeZone)
                                             .startupOptions(sourceFactory.getStartupOptions())
                                             .databaseList((dsFactory.getDbName())) // monitor XE database
-                                            // .schemaList("") // monitor inventory schema
-                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            // .schemaList("FLINKUSER") // monitor inventory schema
+                                             .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                           // .tableList("FLINKUSER.employees")
                                             .username(dsFactory.getUserName())
                                             .password(dsFactory.getPassword())
                                             .deserializer(deserializationSchema); // converts SourceRecord to JSON String
 
                                     if (dsFactory instanceof DataSourceFactory.ISchemaSupported) {
                                         builder.schemaList(((DataSourceFactory.ISchemaSupported) dsFactory).getDBSchema());
+                                    } else {
+                                        throw new IllegalStateException("dsFactory must be " + DataSourceFactory.ISchemaSupported.class.getSimpleName());
                                     }
 
                                     JdbcIncrementalSource<DTO> sourceFunction = builder.build();

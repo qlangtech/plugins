@@ -55,7 +55,10 @@ public class NoneAuth extends Authorized {
         tabs.add(conn.getUrl(), resultSet.getString(1));
     }
 
-    @TISExtension
+    /**
+     * 先不用，由于增量cdc 环境中必须要使用schema
+     */
+    // @TISExtension
     public static class DefaultDesc extends Descriptor<Authorized> {
         @Override
         public String getDisplayName() {

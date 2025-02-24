@@ -42,7 +42,7 @@ public class AcceptAuthorized extends Authorized {
             , "DIP", "EXFSYS", "FLOWS_FILES", "HR", "IX", "MDDATA", "MDSYS", "MGMT_VIEW", "OE", "OLAPSYS"
             , "ORACLE_OCM", "ORDDATA", "ORDPLUGINS", "ORDSYS", "OUTLN", "OWBSYS", "OWBSYS_AUDIT"
             , "PM", "SCOTT", "SH", "SI_INFORMTN_SCHEMA", "SPATIAL_CSW_ADMIN_USR", "SPATIAL_WFS_ADMIN_USR", "SYS", "SYSMAN", "SYSTEM", "WMSYS", "XDB", "XS$NULL");
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name,Validator.require})
     public String schema;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})

@@ -42,7 +42,7 @@ import org.apache.flink.util.FlinkUserCodeClassLoaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -77,7 +77,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     public BlobLibraryCacheManager.ClassLoaderFactory buildClientLoaderFactory(
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
             , String[] alwaysParentFirstPatterns
-            , @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
+            ,  Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
         this.makeDataDirUseable();
         TIS tis = TIS.get();
         PluginManager pluginManager = tis.getPluginManager();
@@ -152,7 +152,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildServerLoaderFactory(
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
-            , String[] alwaysParentFirstPatterns, @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
+            , String[] alwaysParentFirstPatterns,  Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
 
         if (Boolean.getBoolean(SKIP_CLASSLOADER_FACTORY_CREATION)) {
 

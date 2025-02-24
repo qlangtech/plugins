@@ -40,7 +40,6 @@ import org.apache.flink.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -129,7 +128,7 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
     private static PackagedProgramRetriever getPackagedProgramRetriever(
             final Configuration configuration,
             final String[] programArguments,
-            @Nullable final String jobClassName)
+           final String jobClassName)
             throws IOException {
 
         final File userLibDir = ClusterEntrypointUtils.tryFindUserLibDirectory().orElse(null);

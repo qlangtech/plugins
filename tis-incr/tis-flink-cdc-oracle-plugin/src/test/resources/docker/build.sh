@@ -1,0 +1,1 @@
+docker build -t goodboy008/oracle-19.3.0-ee:non-cdb .

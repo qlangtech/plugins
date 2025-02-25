@@ -59,8 +59,8 @@ import java.util.Objects;
  * @see com.qlangtech.tis.hive.reader.HiveDFSLinker#getInputFileFormat Create By
  **/
 public abstract class HadoopInputFormat<K, V extends Writable> extends TextFormat {
-    private final org.apache.hadoop.mapred.InputFormat inputFormat;
-    private final HiveOutputFormat outputFormat;
+    protected final org.apache.hadoop.mapred.InputFormat inputFormat;
+    protected final HiveOutputFormat outputFormat;
     protected final JobConf conf;
     private final String entityName;
     private final HiveStoredAs serde;

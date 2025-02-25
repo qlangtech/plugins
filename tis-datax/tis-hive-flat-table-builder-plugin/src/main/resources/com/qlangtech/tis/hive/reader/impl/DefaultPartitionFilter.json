@@ -4,6 +4,6 @@
   },
   "pathPattern": {
     "label": "路径格式",
-    "dftVal": "WithPtKeys"
+    "dftVal": "WithoutPtKeys"
   }
 }

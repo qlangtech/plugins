@@ -20,10 +20,8 @@ package com.qlangtech.tis.hive.reader.impl;
 
 import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
 import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.compress.CompressionCodec;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,6 +35,9 @@ public class HadoopTextInputFormat extends HadoopInputFormat<LongWritable, Text>
                                  //  , FileInputFormat inputFormat, FileOutputFormat outputFormat,
             , HiveStoredAs serde, IHiveTableParams tableParams) {
         super(entityName, colSize, serde, tableParams, serde.getJobConf());
+        if (this.inputFormat instanceof org.apache.hadoop.mapred.TextInputFormat) {
+            ((org.apache.hadoop.mapred.TextInputFormat) this.inputFormat).configure(conf);
+        }
     }
 
     /**
@@ -56,6 +57,7 @@ public class HadoopTextInputFormat extends HadoopInputFormat<LongWritable, Text>
      * LOCATION '/user/hive/warehouse/mydb/employee_gzip'
      * TBLPROPERTIES ('compression.codec'='org.apache.hadoop.io.compress.GzipCodec');
      * </pre>
+     *
      * @return
      */
     @Override

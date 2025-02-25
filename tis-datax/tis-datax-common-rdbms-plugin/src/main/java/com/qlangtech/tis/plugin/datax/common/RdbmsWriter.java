@@ -25,6 +25,7 @@ import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

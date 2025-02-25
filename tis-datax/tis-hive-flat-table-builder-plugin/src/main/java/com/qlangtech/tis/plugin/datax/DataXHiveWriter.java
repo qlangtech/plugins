@@ -428,7 +428,7 @@ public class DataXHiveWriter extends BasicFSWriter
                                     // 建新表
                                     try {
                                         BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor()
-                                                , DataXHiveWriter.this, DataXHiveWriter.this, conn, dumpTable, tab.getName());
+                                                , DataXHiveWriter.this, DataXHiveWriter.this, conn, dumpTable, tab.getEntityName().getTabName());
                                         // 需要将缓存失效
                                         dsFactory.refresh();
                                     } catch (Exception e) {

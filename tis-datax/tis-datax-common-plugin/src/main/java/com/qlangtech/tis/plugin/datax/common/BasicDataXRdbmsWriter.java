@@ -281,11 +281,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
-    public final void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+    public final void initWriterTable(String sinkTargetTabName, List<String> jdbcUrls) throws Exception {
 //        if (RobustReflectionConverter2.usedPluginInfo.get().isDryRun()) {
 //            return;
 //        }
-        process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);
+        process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, sinkTargetTabName, jdbcUrls);
     }
 
     /**
@@ -295,12 +295,13 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @throws Exception
      */
     private static void process(String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
-            , String tableName, List<String> jdbcUrls) throws Exception {
+            , String sinkTableName, List<String> jdbcUrls) throws Exception {
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
             try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), Optional.empty(), false)) {
-                process(dataXName, processor, dataXWriter, dataXWriter, conn, EntityName.parse(tableName), tableName);
+                EntityName sinkTab = EntityName.parse(sinkTableName);
+                process(dataXName, processor, dataXWriter, dataXWriter, conn, sinkTab, sinkTab.getTabName());
             }
         }
     }
@@ -311,12 +312,14 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @param dsGetter
      * @param dataXWriter
      * @param jdbcConn
+     * @param sinkTab
      * @param tableSqlFileName
      * @return tableExist 表是否存在
      */
     public static void process(String dataXName, IDataxProcessor processor
             , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, JDBCConnection jdbcConn
-            , EntityName tab, String tableSqlFileName) {
+            , EntityName sinkTab, final String tableSqlFileName) {
+        //final String tableSqlFileName = sourceTab.getTabName();
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalArgumentException("param dataXName can not be null");
         }
@@ -325,7 +328,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         //  try {
         if (autoCreateTable) {
 
-            jdbcConn.initializeSinkTab(tableSqlFileName, () -> {
+            jdbcConn.initializeSinkTab(sinkTab.getFullName(), () -> {
                 try {
                     File createDDL = new File(processor.getDataxCreateDDLDir(null)
                             , tableSqlFileName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
@@ -340,7 +343,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                     boolean tableExist = false;
                     List<ColumnMetaData> cols = Lists.newArrayList();
                     try {
-                        cols = dsFactory.getTableMetadata(jdbcConn, true, tab);
+                        cols = dsFactory.getTableMetadata(jdbcConn, true, sinkTab);
                         tableExist = true;
                     } catch (TableNotFoundException e) {
                         logger.warn(e.toString());
@@ -353,7 +356,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                         try {
                             List<String> statements = parseStatements(createScript); // Lists.newArrayList(StringUtils.split(createScript, ";"));
                             try (Statement statement = conn.createStatement()) {
-                                logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
+                                logger.info("create table:{}\n   script:{}", sinkTab.getFullName(), createScript);
                                 for (String execSql : statements) {
                                     currentExecSql = execSql;
                                     success = statement.execute(execSql);
@@ -364,7 +367,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                             throw new RuntimeException("currentExecSql:" + currentExecSql, e);
                         }
                     } else {
-                        logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
+                        logger.info("table:{},cols:{} already exist ,skip the create table step", sinkTab.getFullName()
                                 , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
                     }
                     // return tableExist;

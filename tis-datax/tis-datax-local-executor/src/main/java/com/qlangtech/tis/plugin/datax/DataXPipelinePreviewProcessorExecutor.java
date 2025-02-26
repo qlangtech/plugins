@@ -76,7 +76,12 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
 
     public DataXPipelinePreviewProcessorExecutor(int newGrpcPort) {
         this.newGrpcPort = newGrpcPort;
+    }
 
+    //  useRuntimePropEnvProps
+    @Override
+    protected boolean useRuntimePropEnvProps() {
+        return false;
     }
 
     private DataXRecordsPreviewBlockingStub blockingStub;

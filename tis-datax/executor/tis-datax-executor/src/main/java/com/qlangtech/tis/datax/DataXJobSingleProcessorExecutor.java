@@ -86,7 +86,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 cmdLine.addArgument("-D" + Config.KEY_RUNTIME + "=daily");
                 cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
                 cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
-                cmdLine.addArgument("-D" + Config.KEY_ASSEMBLE_HOST + "=" + Config.getAssembleHost());
+              //  cmdLine.addArgument("-D" + Config.KEY_ASSEMBLE_HOST + "=" + Config.getAssembleHost());
                 File localLoggerPath = null;
                 if ((localLoggerPath = msg.getSpecifiedLocalLoggerPath()) != null) {
                     cmdLine.addArgument("-D" + Config.EXEC_LOCAL_LOGGER_FILE_PATH + "=" + localLoggerPath.getAbsolutePath());

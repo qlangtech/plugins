@@ -119,6 +119,11 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     }
 
     @Override
+    protected String getCharSetKeyName() {
+        return "characterEncoding";
+    }
+
+    @Override
     public JDBCConnection createConnection(
             String jdbcUrl, Optional<Properties> props, boolean verify) throws SQLException {
         final JDBCConnection conn = super.createConnection(jdbcUrl, props, verify);
@@ -184,7 +189,7 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
             validateEndTypeMatch(dataSource, conn, (realDBMode) -> {
                 msgHandler.addFieldError(context, FIELD_DB_MODE, "DB实际模式为：" + realDBMode);
             });
-            
+
             if (context.hasErrors()) {
                 return false;
             }

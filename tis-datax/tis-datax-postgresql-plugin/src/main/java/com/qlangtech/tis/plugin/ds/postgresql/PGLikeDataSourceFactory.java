@@ -82,12 +82,16 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
         // boolean hasParam = false;
         if (StringUtils.isNotEmpty(this.encode)) {
             // hasParam = true;
-            jdbcUrl = jdbcUrl + "&charSet=" + this.encode;
+            jdbcUrl = jdbcUrl + "&" + getCharSetKeyName() + "=" + this.encode;
         }
         if (StringUtils.isNotEmpty(this.extraParams)) {
             jdbcUrl = jdbcUrl + "&" + this.extraParams;
         }
         return jdbcUrl;
+    }
+
+    protected String getCharSetKeyName() {
+        return "charSet";
     }
 
     public static String buildJdbcUrl(String dbType, String ip, int port, String dbName) {

@@ -20,6 +20,7 @@ package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import org.apache.commons.exec.CommandLine;
@@ -86,6 +87,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 cmdLine.addArgument("-D" + Config.KEY_RUNTIME + "=daily");
                 cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
                 cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
+                cmdLine.addArgument("-Dfile.encoding=" + TisUTF8.getName());
               //  cmdLine.addArgument("-D" + Config.KEY_ASSEMBLE_HOST + "=" + Config.getAssembleHost());
                 File localLoggerPath = null;
                 if ((localLoggerPath = msg.getSpecifiedLocalLoggerPath()) != null) {

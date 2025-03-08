@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax.server;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.ftp.common.FtpHelper;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -97,9 +96,15 @@ public class FTPServer extends ParamsConfig {
         public DefaultDesc() {
             super(FTP_SERVER);
         }
+
         @Override
         public String getDisplayName() {
             return FTP_SERVER;
+        }
+
+        @Override
+        public PluginVender getVender() {
+            return PluginVender.TIS;
         }
 
         @Override

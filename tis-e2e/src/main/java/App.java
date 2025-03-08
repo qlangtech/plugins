@@ -20,6 +20,7 @@ import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.options.ScreenshotAnimations;
 
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
@@ -41,7 +42,8 @@ public class App {
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().launch();
             Page page = browser.newPage();
-            page.navigate("http://192.168.28.200:8080/");
+            page.setViewportSize(800,600);
+            page.navigate("http://192.168.28.201:8080/");
             System.out.println(page.title());
 
             // Expect a title "to contain" a substring.
@@ -51,7 +53,7 @@ public class App {
             getStarted.click();
 
 
-            page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("example.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get("example.png")).setAnimations(ScreenshotAnimations.DISABLED));
         }
     }
 }

@@ -118,7 +118,6 @@ public class DolphinSchedulerURLBuilder {
 
             @Override
             public void error(int status, InputStream errstream, IOException e) throws Exception {
-                //streamProcess.error(status, errstream, e);
                 if (streamErrorProcess.isPresent()) {
                     streamErrorProcess.get().error(status, errstream, e);
                 } else {
@@ -130,12 +129,6 @@ public class DolphinSchedulerURLBuilder {
             public DolphinSchedulerResponse p(int status
                     , InputStream stream, Map<String, List<String>> headerFields) throws IOException {
                 return parseDolphinSchedulerResponse(applyURL, stream);
-//                if (!) {
-//                    msgHandler.addFieldError(context, FIELD_PROCESS_NAME, result.getString("msg"));
-//                    return null;
-//                }
-//
-//                return streamProcess.p(status, stream, headerFields);
             }
         });
     }

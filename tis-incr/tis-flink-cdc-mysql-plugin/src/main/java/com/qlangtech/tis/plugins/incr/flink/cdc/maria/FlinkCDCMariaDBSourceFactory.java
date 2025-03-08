@@ -45,6 +45,7 @@ public class FlinkCDCMariaDBSourceFactory extends FlinkCDCMySQLSourceFactory {
             super();
         }
 
+
         @Override
         public EndType getEndType() {
             return EndType.MariaDB;

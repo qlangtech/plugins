@@ -73,7 +73,7 @@ public class ElasticEndpoint extends HttpEndpoint {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements  IEndTypeGetter {
+    public static class DefaultDescriptor extends BasicParamsConfigDescriptor implements IEndTypeGetter {
         public DefaultDescriptor() {
             super(KEY_ELASTIC_SEARCH_DISPLAY_NAME);
         }
@@ -81,6 +81,11 @@ public class ElasticEndpoint extends HttpEndpoint {
         @Override
         public EndType getEndType() {
             return EndType.ElasticSearch;
+        }
+
+        @Override
+        public PluginVender getVender() {
+            return PluginVender.TIS;
         }
 
         /**
@@ -140,8 +145,7 @@ public class ElasticEndpoint extends HttpEndpoint {
 //            notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));
 //            FileUtils.write(notebookToken, notebookId, TisUTF8.get(), false);
 //            return notebookId;
-      //  }
-
+        //  }
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ElasticEndpoint cfg = (ElasticEndpoint) postFormVals.newInstance();

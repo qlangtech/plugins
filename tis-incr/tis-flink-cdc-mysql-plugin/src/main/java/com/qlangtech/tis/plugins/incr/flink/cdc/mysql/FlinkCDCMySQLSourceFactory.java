@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * https://nightlies.apache.org/flink/flink-cdc-docs-release-3.2/docs/connectors/flink-sources/mysql-cdc/
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:15
  **/
@@ -68,20 +69,6 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String timeZone;
-
-//    public static String dftZoneId() {
-//      //  return BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId();
-//        return MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId();
-//    }
-
-//    public static List<Option> availableZoneIds() {
-//        List<Option> opts = Lists.newArrayList();
-//        ZoneId.SHORT_IDS.forEach((key, val) -> {
-//            opts.add(new Option(val, val));
-//        });
-//        return opts;
-//    }
-
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
@@ -120,8 +107,8 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
-        public String getDisplayName() {
-            return "Flink-CDC-MySQL";
+        public final String getDisplayName() {
+            return "Flink-CDC-" + getEndType().name();
         }
 
         @Override

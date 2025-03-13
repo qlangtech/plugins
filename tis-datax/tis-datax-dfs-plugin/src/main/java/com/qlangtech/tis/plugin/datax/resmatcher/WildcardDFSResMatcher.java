@@ -87,7 +87,7 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
         if (findMapper.isPresent()) {
             IDataxProcessor.TableMap tabMapper = (IDataxProcessor.TableMap) findMapper.get();
             return Collections.singletonList(
-                    new IDataxProcessor.TableMap(Optional.of(DataXDFSReaderContext.FTP_TASK)
+                    new IDataxProcessor.TableMap( Optional.of(tabMapper.getTo()) //Optional.of(DataXDFSReaderContext.FTP_TASK)
                             , tabMapper.getSourceCols()).getSourceTab());
         }
 

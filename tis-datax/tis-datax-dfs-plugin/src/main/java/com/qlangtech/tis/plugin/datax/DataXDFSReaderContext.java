@@ -106,7 +106,8 @@ public class DataXDFSReaderContext implements IDataxReaderContext {
 
     @Override
     public String getTaskName() {
-        return FTP_TASK;
+        //  return FTP_TASK;
+        return this.getSourceTableName();
     }
 
     @Override

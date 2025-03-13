@@ -32,6 +32,7 @@
       "plugin": [
         {
           "hetero": "datasource",
+          "extraParam": "type_detailed,update_false,disableBizStore_true",
           "descName": "Hiveserver2"
         }
       ]

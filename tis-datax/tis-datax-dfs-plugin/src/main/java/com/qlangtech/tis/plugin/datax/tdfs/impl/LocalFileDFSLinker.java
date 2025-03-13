@@ -85,8 +85,8 @@ public class LocalFileDFSLinker extends TDFSLinker {
             }
             Descriptor currentRootPluginValidator = AttrValMap.getCurrentRootPluginValidator();
             if (IDFSReader.class.isAssignableFrom(currentRootPluginValidator.clazz)) {
-                if (dirPath.list().length < 1) {
-                    msgHandler.addFieldError(context, fieldName, "该路径为空，没有发现资源文件");
+                if (dirPath.list() == null || dirPath.list().length < 1) {
+                    msgHandler.addFieldError(context, fieldName, "该路径为空，没有发现资源文件,确保当前进程对该路径有权限");
                     return false;
                 }
             }

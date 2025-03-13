@@ -197,6 +197,11 @@ public class ParseColsResult {
         }
 
         @Override
+        public List<String> getPrimaryKeys() {
+            return Collections.emptyList();
+        }
+
+        @Override
         @JSONField(serialize = false)
         public String getName() {
             return this.name;

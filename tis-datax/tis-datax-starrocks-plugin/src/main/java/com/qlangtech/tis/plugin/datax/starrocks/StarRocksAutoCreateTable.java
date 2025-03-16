@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -42,6 +43,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.isJSONColumnType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -104,11 +107,16 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
         @Override
         public StarRocksType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
+            if (isJSONColumnType(type)) {
+                return new StarRocksType(type, "JSON");
+            }
+
             int colSize = type.getColumnSize();
             if (colSize < 1 || colSize > 1500) {
                 // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/STRING/
                 return new StarRocksType(type, "STRING");
             }
+
             return new StarRocksType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
         }
 

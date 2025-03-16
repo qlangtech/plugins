@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -146,6 +147,24 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     @Override
     protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
         return new CreateColumnMeta(pkCols, columns1) {
+
+            @Override
+            protected DataType getDataType(String colName) throws SQLException {
+                DataType type = super.getDataType(colName);
+                DataType fixType = type.accept(new DefaultTypeVisitor<DataType>() {
+                    @Override
+                    public DataType varcharType(DataType type) {
+                        // 支持Doris的json类型
+                        if (isJSONColumnType(type)) {
+                            DataType jsonType = DataType.create(JDBCTypes.VARCHAR.getType(), type.typeName, 1000); //.createVarChar(1000);
+                            return jsonType;
+                        }
+                        return null;
+                    }
+                });
+                return fixType != null ? fixType : type;
+            }
+
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 DataTypeFixer dateType = null;

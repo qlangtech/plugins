@@ -61,10 +61,15 @@ import java.util.stream.Collectors;
  **/
 public abstract class BasicDataSourceFactory extends DataSourceFactory
         implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable, IDBAuthorizeTokenGetter {
+    private static String TYPE_NAME_JSON = "json";
+
     public static Optional<String> MYSQL_ESCAPE_COL_CHAR = Optional.of("`");
     public static Optional<String> ORACLE_ESCAPE_COL_CHAR = Optional.of("\"");
     public static Optional<String> PG_ESCAPE_COL_CHAR = ORACLE_ESCAPE_COL_CHAR;
 
+    public static boolean isJSONColumnType(DataType type) {
+        return TYPE_NAME_JSON.equalsIgnoreCase(type.typeName);
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
     public static final String KEY_FIELD_DB_NAME = "dbName";

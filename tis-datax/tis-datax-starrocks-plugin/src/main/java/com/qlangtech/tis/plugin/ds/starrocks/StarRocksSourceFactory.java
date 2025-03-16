@@ -20,12 +20,19 @@ package com.qlangtech.tis.plugin.ds.starrocks;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -39,6 +46,29 @@ public class StarRocksSourceFactory extends BasicSourceFactory {
     @Override
     public JDBCConnection createConnection(String jdbcUrl, Optional<Properties> properties, boolean verify) throws SQLException {
         return super.createConnection(jdbcUrl, properties, verify);
+    }
+
+    @Override
+    protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new CreateColumnMeta(pkCols, columns1) {
+            @Override
+            protected DataType getDataType(String colName) throws SQLException {
+                DataType type = super.getDataType(colName);
+                DataType fixType = type.accept(new DefaultTypeVisitor<DataType>() {
+                    @Override
+                    public DataType varcharType(DataType type) {
+                        // 支持StarRocks的json类型
+                        if (isJSONColumnType(type)) {
+                            DataType jsonType = DataType.create(JDBCTypes.VARCHAR.getType(), type.typeName, 1000); //.createVarChar(1000);
+                            return jsonType;
+                        }
+                        return null;
+                    }
+                });
+                return fixType != null ? fixType : type;
+            }
+        };
+
     }
 
     @Override
@@ -59,3 +89,6 @@ public class StarRocksSourceFactory extends BasicSourceFactory {
         }
     }
 }
+
+
+

@@ -33,6 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 
+import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.isJSONColumnType;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 14:46
@@ -151,6 +153,9 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         public DorisType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N)
             // 三倍，doris中是按照utf-8字节数计算的
+            if (isJSONColumnType(type)) {
+                return new DorisType(type, "JSON");
+            }
             int colSize = type.getColumnSize();
             if (colSize < 1 || colSize > 1500) {
                 // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/STRING/

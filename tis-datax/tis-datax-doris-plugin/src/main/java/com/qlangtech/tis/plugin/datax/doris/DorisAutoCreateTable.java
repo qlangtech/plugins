@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
@@ -84,6 +85,17 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
         return true;
     }
 
+    private static class DorisCreateTableName extends CreateTableSqlBuilder.CreateTableName {
+        public DorisCreateTableName(String tabName, AbstractCreateTableSqlBuilder sqlBuilder) {
+            super(tabName, sqlBuilder);
+        }
+
+        @Override
+        public String createTablePredicate() {
+            return super.createTablePredicate() + " IF NOT EXISTS";
+        }
+    }
+
     @Override
     public final CreateTableSqlBuilder<DorisColWrapper> createSQLDDLBuilder(
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter
@@ -95,7 +107,13 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
                 , dorisWriter.getDataSourceFactory(), columnTokenRecognise, transformers) {
             @Override
             protected String getUniqueKeyToken() {
-                return Objects.requireNonNull(createTableModel,"createTableModel").getKeyToken();
+                return Objects.requireNonNull(createTableModel, "createTableModel").getKeyToken();
+            }
+
+            @Override
+            public CreateTableName getCreateTableName() {
+                //return super.getCreateTableName();
+                return new DorisCreateTableName(this.targetTableName, this);
             }
 
             @Override

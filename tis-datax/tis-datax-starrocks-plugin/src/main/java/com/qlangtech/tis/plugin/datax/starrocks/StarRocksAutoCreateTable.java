@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
@@ -103,6 +104,11 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
         @Override
         public StarRocksType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
+            int colSize = type.getColumnSize();
+            if (colSize < 1 || colSize > 1500) {
+                // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/STRING/
+                return new StarRocksType(type, "STRING");
+            }
             return new StarRocksType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
         }
 
@@ -149,6 +155,17 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
         }
     }
 
+    private static class StarRocksCreateTableName extends CreateTableSqlBuilder.CreateTableName {
+        public StarRocksCreateTableName(String tabName, AbstractCreateTableSqlBuilder sqlBuilder) {
+            super(tabName, sqlBuilder);
+        }
+
+        @Override
+        public String createTablePredicate() {
+            return super.createTablePredicate() + " IF NOT EXISTS";
+        }
+    }
+
     public abstract class BasicCreateTableSqlBuilder<T extends ColWrapper> extends CreateTableSqlBuilder<T> {
         private final SourceColMetaGetter sourceColMetaGetter;
         //private final AutoCreateTable autoCreateTable;
@@ -162,6 +179,12 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
             //   this.autoCreateTable = autoCreateTable;
             this.sourceColMetaGetter = Objects.requireNonNull(sourceColMetaGetter, "sourceColMetaGetter can not be null");
             this.tableMapper = tableMapper;
+        }
+
+        @Override
+        public CreateTableName getCreateTableName() {
+            //return super.getCreateTableName();
+            return new StarRocksCreateTableName(this.targetTableName, this);
         }
 
         @Override

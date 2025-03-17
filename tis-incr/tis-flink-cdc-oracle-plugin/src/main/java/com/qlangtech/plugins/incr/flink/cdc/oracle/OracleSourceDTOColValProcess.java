@@ -35,6 +35,10 @@ import java.util.Map;
 public class OracleSourceDTOColValProcess implements ISourceValConvert, Serializable {
     final Map<String, FlinkColMapper> tabColsMapper;
 
+    /**
+     *
+     * @param tabColsMapper <key:tableName,val>
+     */
     public OracleSourceDTOColValProcess(Map<String, FlinkColMapper> tabColsMapper) {
         if (MapUtils.isEmpty(tabColsMapper)) {
             throw new IllegalArgumentException("tabColsMapper can not be null");
@@ -47,7 +51,7 @@ public class OracleSourceDTOColValProcess implements ISourceValConvert, Serializ
         FlinkColMapper colMapper = tabColsMapper.get(dto.getTableName());
         if (colMapper == null) {
             throw new IllegalStateException("tableName:" + dto.getTableName()
-                    + " relevant colMapper can not be null, exist cols:"
+                    + " relevant colMapper can not be null, exist tabs:"
                     + String.join(",", tabColsMapper.keySet()));
         }
         BiFunction process = colMapper.getSourceDTOColValProcess(field.name());

@@ -94,13 +94,6 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     @FormField(ordinal = 7, type = FormFieldType.ENUM, advance = true)
     public Boolean encodeDecimal;
 
-//    private static final ThreadLocal<SimpleDateFormat> dataFormatLocal = new ThreadLocal<>() {
-//        @Override
-//        protected SimpleDateFormat initialValue() {
-//            return new SimpleDateFormat("yyyy-MM-dd");
-//        }
-//    };
-
     @Override
     public final String getNullFormat() {
         return this.nullKeyLiteral;

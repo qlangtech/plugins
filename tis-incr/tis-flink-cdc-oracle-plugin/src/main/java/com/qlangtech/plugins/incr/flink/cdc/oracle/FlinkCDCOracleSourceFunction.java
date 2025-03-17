@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import io.debezium.config.Field;
 import io.debezium.connector.oracle.OracleConnectorConfig;
@@ -88,10 +89,12 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) reader.getDataSourceFactory();
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
             IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            EntityName entity = null;
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
-                tabColsMapper.put(tab.getName(), colsMapper);
+                entity = tab.getEntityName();
+                tabColsMapper.put(entity.getTableName(), colsMapper);
             }
             TableInDB tablesInDB = dsFactory.getTablesInDB();
             IPluginContext pluginContext = IPluginContext.namedContext(channalName.getName());
@@ -142,8 +145,8 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .startupOptions(sourceFactory.getStartupOptions())
                                             .databaseList((dsFactory.getDbName())) // monitor XE database
                                             // .schemaList("FLINKUSER") // monitor inventory schema
-                                             .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
-                                           // .tableList("FLINKUSER.employees")
+                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            // .tableList("FLINKUSER.employees")
                                             .username(dsFactory.getUserName())
                                             .password(dsFactory.getPassword())
                                             .deserializer(deserializationSchema); // converts SourceRecord to JSON String

@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -92,6 +93,10 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
                     .orElseGet(() -> Lists.newArrayList(tab.getTabName()));
 
             return physicsTabNames.stream().map((t) -> {
+                EntityName entity = EntityName.parse(t, true);
+                if (!entity.useDftDbName()) {
+                    return entity.getFullName();
+                }
                 return schemaSupport.map((schema) -> schema.getDBSchema()).orElse(tab.dbNanme) + "." + t;
             });
         }, tabs, sourceFunctionCreator);

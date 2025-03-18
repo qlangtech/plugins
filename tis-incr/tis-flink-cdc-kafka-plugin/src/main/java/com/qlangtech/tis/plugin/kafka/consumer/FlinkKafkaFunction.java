@@ -28,6 +28,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.kafka.reader.DataXKafkaReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -83,7 +84,7 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
 //            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
         //  Map<String, DeserializationSchema<RowData>> tabColsMapper = Maps.newHashMap();
 //            TableInDB tablesInDB = dsFactory.getTablesInDB();
-         IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+        IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
 //            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
 //        DataType physicalDataType = null;
 //        DeserializationSchema<RowData> deserializeSchema = null;
@@ -103,7 +104,8 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
         //}
         IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
         Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, kafkaReader, tabs);
+                = RecordTransformerRules.contextParamValsGetterMapper(
+                        StoreResourceType.DataApp, pluginContext.getCollectionName(), pluginContext, kafkaReader, tabs);
 
         KafkaSourceBuilder<DTO> kafkaSourceBuilder = kafkaReader.createKafkaSourceBuilder(contextParamValsGetterMapper);
 //        kafkaSourceBuilder.setValueOnlyDeserializer(

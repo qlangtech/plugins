@@ -30,6 +30,7 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -99,7 +100,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             TableInDB tablesInDB = dsFactory.getTablesInDB();
             IPluginContext pluginContext = IPluginContext.namedContext(channalName.getName());
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, reader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(StoreResourceType.DataApp, pluginContext.getCollectionName(), pluginContext, reader, tabs);
 
             final TISDeserializationSchema deserializationSchema
                     = new TISDeserializationSchema(

@@ -28,6 +28,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -83,7 +84,8 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
             final IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
 
             final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(
+                            StoreResourceType.DataApp,dataxName.getName(),IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
 
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {

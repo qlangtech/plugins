@@ -135,6 +135,11 @@ public class WriterTemplate {
             }
 
             @Override
+            public boolean isSupportBatch() {
+                return true;
+            }
+
+            @Override
             public void startScanDependency() {
             }
 

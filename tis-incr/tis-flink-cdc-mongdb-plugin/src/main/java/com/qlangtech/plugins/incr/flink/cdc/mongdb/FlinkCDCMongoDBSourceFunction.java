@@ -32,6 +32,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -76,7 +77,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
             IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, mongoReader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(StoreResourceType.DataApp,pluginContext.getCollectionName(),pluginContext, mongoReader, tabs);
             Map<String, Pair<FlinkColMapper, List<MongoCMeta>>> tabColsMapper = Maps.newHashMap();
 
 

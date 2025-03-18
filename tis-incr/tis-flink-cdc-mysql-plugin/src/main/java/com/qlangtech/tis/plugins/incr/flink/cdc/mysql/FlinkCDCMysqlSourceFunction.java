@@ -33,6 +33,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -190,7 +191,8 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             }
 
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(pluginContext, rdbmsReader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(
+                            StoreResourceType.DataApp, pluginContext.getCollectionName(), pluginContext, rdbmsReader, tabs);
             //
             TISDeserializationSchema deserializationSchema
                     = new TISDeserializationSchema(
@@ -245,7 +247,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             debeziumProperties.setProperty(
                     CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
-           // MySqlConnectorConfig.JDBC_DRIVER
+            // MySqlConnectorConfig.JDBC_DRIVER
             debeziumProperties.setProperty(
                     MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());

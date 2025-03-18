@@ -117,7 +117,8 @@ public class DataXRealExecutor {
             Optional<IDataxProcessor.TableMap> tableMap = this.dataXCfgGenerator.buildTabMapper(this.getDataxReader(), readerContext);
 
             Optional<RecordTransformerRules> transformerRules
-                    = RecordTransformerRules.loadTransformerRules(pluginCtx, readerContext.getSourceTableName());
+                    = RecordTransformerRules.loadTransformerRules(
+                            pluginCtx, StoreResourceType.DataApp, pluginCtx.getCollectionName(), readerContext.getSourceTableName());
 
             Configuration readerCfg
                     = Configuration.from(this.dataXCfgGenerator.generateDataxConfig(readerContext

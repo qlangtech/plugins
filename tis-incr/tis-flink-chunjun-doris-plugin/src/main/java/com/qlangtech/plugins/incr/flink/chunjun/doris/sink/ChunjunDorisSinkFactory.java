@@ -199,7 +199,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
             @Override
             protected DorisHttpOutputFormatBuilder createDorisHttpOutputFormatBuilder() {
                 DorisHttpOutputFormatBuilder builder = super.createDorisHttpOutputFormatBuilder();
-                List<String> cols = sinkTabCols.getColKeys();// options.getColumn().stream().map((field) -> field.getName()).collect(Collectors.toList());
+                List<String> cols = sinkTabCols.getColKeys();
                 builder.setColumns(cols);
                 TISDorisColumnConverter columnConverter = TISDorisColumnConverter.create(sinkTabCols);
                 columnConverter.setColumnNames(cols);

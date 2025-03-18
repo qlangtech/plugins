@@ -81,11 +81,14 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     public static List<ReaderSource> getSourceFunction(
             DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
-        final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
+        final Optional<DataSourceFactory.ISchemaSupported>
+                schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
 
         return getSourceFunction(dsFactory, (tab) -> {
             TableInDB tabsInDB = dsFactory.getTablesInDB();
-            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
+            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(
+                    DataXJobSubmit.TableDataXEntity
+                    .createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
             Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
 
             List<String> physicsTabNames = targetTableNames

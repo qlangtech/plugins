@@ -6,7 +6,7 @@ import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -20,6 +20,7 @@ import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
@@ -120,7 +121,7 @@ public class DataXJoinProcessExecutor {
         AssembleSvcCompsite.statusRpc = (statusRpc);
 
         try {
-            DefaultExecContext execContext = createDftExecContent(line);
+            AbstractExecContext execContext = createDftExecContent(line);
             JobCommon.setMDC(execContext.getTaskId(), null);
 
             //        cmdLine.addArgument(sqlTskJson.getString(KEY_ID));
@@ -169,11 +170,13 @@ public class DataXJoinProcessExecutor {
         //        return execChainContext;
     }
 
-    private static DefaultExecContext createDftExecContent(CommandLine line) {
+    private static AbstractExecContext createDftExecContent(CommandLine line) {
+        JSONObject instanceParams = deserializeInstanceParams(line);
 
-        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(deserializeInstanceParams(line));
-        execContext.setResType(StoreResourceType.DataFlow);
-        execContext.setWorkflowName(execContext.getIndexName());
+        TriggersConfig triggersConfig = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
+        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggersConfig, instanceParams);
+//        execContext.setResType(StoreResourceType.DataFlow);
+//        execContext.setWorkflowName(execContext.getIndexName());
         execContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
 
         Properties pts = line.getOptionProperties(DataXJoinProcessConsumer.Command.KEY_TABLE_GROUP);
@@ -185,7 +188,7 @@ public class DataXJoinProcessExecutor {
     }
 
     public static void executeJoin(RpcServiceReference feedback,
-                                   DefaultExecContext execContext, SqlTaskNodeMeta sqlTask) {
+                                   AbstractExecContext execContext, SqlTaskNodeMeta sqlTask) {
         RpcUtils.setJoinStatus(execContext.getTaskId(), false, false, feedback, sqlTask.getExportName());
         IDataxProcessor dataxProc = execContext.getProcessor();
         // DataxProcessor.load(null, StoreResourceType.DataFlow,

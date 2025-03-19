@@ -54,6 +54,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
+import com.qlangtech.tis.powerjob.SelectedTabTriggersConfig;
 import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -186,7 +187,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         BasicWorkflowInstance spiWorkflowId = workflowInitializer.initialize();
 
         List<IWorkflowNode> wfNodes = Objects.requireNonNull(spiWorkflowId, "spiWorkflowId can not be null").getWorkflowNodes();// getDAGNodes(spiWorkflowId);
-        final List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
+        final List<SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
         final List<ISqlTask.SqlTaskCfg> joinNodeCfgs = Lists.newArrayList();
         vistWorkflowNodes(this.dataxProcessor.identityValue(), wfNodes, new WorkflowNodeVisit() {
             @Override
@@ -463,7 +464,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
     }
 
     private PhaseStatusCollection createPhaseStatus(BasicWorkflowInstance spiWorkflowId
-            , List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs //
+            , List<SelectedTabTriggersConfig> triggerCfgs //
             , List<ISqlTask.SqlTaskCfg> joinNodeCfgs //
             , Integer tisTaskId) {
         PhaseStatusCollection statusCollection = new PhaseStatusCollection(tisTaskId, spiWorkflowId.getExecutePhaseRange());
@@ -472,7 +473,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         statusCollection.setDumpPhase(dumpPhase);
         statusCollection.setJoinPhase(joinPhase);
 
-        for (SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg : triggerCfgs) {
+        for (SelectedTabTriggersConfig triggerCfg : triggerCfgs) {
 
             if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
                 setInitStatus(dumpPhase.getTable(triggerCfg.getPreTrigger()));

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.datax.executor;
@@ -29,12 +29,14 @@ import com.qlangtech.tis.datax.join.DataXJoinProcessConsumer;
 import com.qlangtech.tis.datax.join.DataXJoinProcessExecutor;
 import com.qlangtech.tis.datax.join.WorkflowHookMsg;
 import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
+import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -80,10 +82,10 @@ public class BasicTISTableJoinProcessor {
 
     protected void process(ITaskExecutorContext context) throws Exception {
         RpcServiceReference feedback = createRpcServiceReference();
-       // StatusRpcClientFactory.AssembleSvcCompsite feedback = rpcRef.get();
+        // StatusRpcClientFactory.AssembleSvcCompsite feedback = rpcRef.get();
         SqlTaskNodeMeta sqlTask =
                 SqlTaskNodeMeta.deserializeTaskNode(ISqlTask.toCfg((context.getJobParams())));
-        DefaultExecContext execContext = createDftExecContent(context);
+        AbstractExecContext execContext = createDftExecContent(context);
         try {
 
             if (TisAppLaunch.isTestMock()) {
@@ -99,7 +101,7 @@ public class BasicTISTableJoinProcessor {
             BasicTISTableDumpProcessor.addSuccessPartition(context, execContext, sqlTask.getExportName());
 
         } catch (StatusRuntimeException e) {
-           // rpcRef.reConnect();
+            // rpcRef.reConnect();
             throw e;
         } catch (Exception e) {
             Throwable rootCause = ExceptionUtils.getRootCause(e);
@@ -112,12 +114,14 @@ public class BasicTISTableJoinProcessor {
         }
     }
 
-    private DefaultExecContext createDftExecContent(ITaskExecutorContext context) {
+    private AbstractExecContext createDftExecContent(ITaskExecutorContext context) {
         JSONObject instanceParams = (context.getInstanceParams());
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
-        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, (ctx) -> {
-            ctx.setResType(StoreResourceType.DataFlow);
-            ctx.setWorkflowName(ctx.getIndexName());
+        TriggersConfig triggerCfg = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
+        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
+//            ctx.setResType(StoreResourceType.DataFlow);
+//            ctx.setWorkflowName(ctx.getIndexName());
+//            ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
             ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
         }, snapshotConsumer);
 

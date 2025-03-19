@@ -20,7 +20,9 @@ package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
+import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
+import com.qlangtech.tis.exec.impl.WorkflowExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
@@ -98,13 +100,29 @@ public class DataxPrePostExecutor {
                     IDataxWriter.castBatchPost(Objects.requireNonNull(dataxProcessor.getWriter(null), "dataXName" +
                             ":" + dataXName + " relevant dataXWriter can not be null"));
             //  final EntityName tabEntity = batchPost.parseEntity(tab);
-            DefaultExecContext execContext = new DefaultExecContext(dataXName, execEpochMilli) {
-                @Override
-                public IDataxProcessor getProcessor() {
-                    return dataxProcessor;
-                }
-            };
-            execContext.setResType(resType);
+            AbstractExecContext execContext = null;
+            switch (resType) {
+                case DataApp:
+                    execContext = new DataXPipelineExecContext(dataXName, execEpochMilli) {
+                        @Override
+                        public IDataxProcessor getProcessor() {
+                            return dataxProcessor;
+                        }
+                    };
+                    break;
+                case DataFlow:
+                    execContext = new WorkflowExecContext(null, execEpochMilli) {
+                        @Override
+                        public IDataxProcessor getProcessor() {
+                            return dataxProcessor;
+                        }
+                    };
+                    break;
+                default:
+                    throw new IllegalStateException("illegal resType:" + resType);
+            }
+
+            // execContext.setResType(resType);
 
             if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
                 hookTrigger = batchPost.createPostTask(

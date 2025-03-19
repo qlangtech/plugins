@@ -5,7 +5,7 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.datax.powerjob.impl.PowerJobTaskContext;
 import com.qlangtech.tis.exec.DefaultExecContext;
-import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
+import com.qlangtech.tis.powerjob.SelectedTabTriggersConfig;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;

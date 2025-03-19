@@ -31,9 +31,11 @@ import com.qlangtech.tis.datax.RpcUtils;
 import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
 import com.qlangtech.tis.datax.powerjob.ExecPhase;
 import com.qlangtech.tis.datax.powerjob.SplitTabSync;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
+
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -42,7 +44,7 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
+import com.qlangtech.tis.powerjob.SelectedTabTriggersConfig;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -98,10 +100,10 @@ public class BasicTISTableDumpProcessor {
 
         RpcServiceReference svc = getRpcServiceReference();
         // StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
+        Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
 
-        DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
-        SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
+        AbstractExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
+        SelectedTabTriggersConfig triggerCfg = pair.getRight();
         // execContext.putTablePt( );
         //  IDataxProcessor processor = execContext.getProcessor(); // DataxProcessor.load(null, triggerCfg
         // .getDataXName());
@@ -140,7 +142,7 @@ public class BasicTISTableDumpProcessor {
      * @param context
      * @return //@throws com.qlangtech.tis.datax.powerjob.InstanceParamsException
      */
-    public static Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>
+    public static Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>
     createExecContext(ITaskExecutorContext context, ExecPhase execPhase) {
         JSONObject instanceParams = null;
         Pair<Boolean, JSONObject> instanceParamsGetter = getInstanceParams(context);
@@ -152,7 +154,7 @@ public class BasicTISTableDumpProcessor {
         }
 
         Integer taskId = BasicTISInitializeProcessor.parseTaskId(instanceParams);
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair
+        Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair
                 = createExecContext(context, taskId, instanceParams);
 
         SelectedTabTriggersConfig triggerCfg = pair.getRight();
@@ -163,7 +165,7 @@ public class BasicTISTableDumpProcessor {
         return pair;
     }
 
-    private static Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>  //
+    private static Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>  //
     createExecContext(ITaskExecutorContext context, Integer taskId, JSONObject instanceParams) {
         if (taskId == null) {
             throw new IllegalArgumentException("param taskId can not be null");
@@ -172,9 +174,7 @@ public class BasicTISTableDumpProcessor {
         SelectedTabTriggersConfig triggerCfg = getTriggerCfg(context);
 
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
-        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, (ctx) -> {
-
-
+        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
             ctx.setLatestPhaseStatusCollection(cacheSnaphsot.getPreviousStatus(ctx.getTaskId(), () -> {
                 Integer prevTaskId = instanceParams.getInteger(JobParams.KEY_PREVIOUS_TASK_ID);
                 if (prevTaskId == null) {
@@ -189,10 +189,10 @@ public class BasicTISTableDumpProcessor {
         execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
         execContext.setDisableGrpcRemoteServerConnect(context.isDisableGrpcRemoteServerConnect());
 
-        execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
-        if (triggerCfg.getResType() == StoreResourceType.DataFlow) {
-            execContext.setWorkflowName(triggerCfg.getDataXName());
-        }
+//        execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
+//        if (triggerCfg.getResType() == StoreResourceType.DataFlow) {
+//            execContext.setWorkflowName(triggerCfg.getDataXName());
+//        }
 
 
         snapshotConsumer.synchronizTpisAndConfs(execContext, cacheSnaphsot);
@@ -234,7 +234,7 @@ public class BasicTISTableDumpProcessor {
         return DataXJobRunEnvironmentParamsSetter.createSysPramsSuppiler();
     }
 
-    public static void addSuccessPartition(ITaskExecutorContext context, DefaultExecContext execContext, String entityName) {
+    public static void addSuccessPartition(ITaskExecutorContext context, AbstractExecContext execContext, String entityName) {
 
         Objects.requireNonNull(context, "workflowContext can not be null")
                 .appendData2WfContext(ExecChainContextUtils.PARTITION_DATA_PARAMS + "_" + entityName, execContext.getPartitionTimestampWithMillis());
@@ -256,13 +256,13 @@ public class BasicTISTableDumpProcessor {
         /**
          * 同步远端resource 资源
          */
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
+        Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
 
         //  StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
 
-        final DefaultExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
+        final AbstractExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
                 "execChainContext can " + "not be null");
-        final SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
+        final SelectedTabTriggersConfig triggerCfg = pair.getRight();
 
         ISelectedTab tab = new DefaultTab(triggerCfg.getTabName());
 
@@ -334,7 +334,7 @@ public class BasicTISTableDumpProcessor {
     }
 
     protected void executeSplitTabSync(ITaskExecutorContext context, RpcServiceReference statusRpc
-            , RpcServiceReference svc, DefaultExecContext execChainContext, SplitTabSync tabSync) {
+            , RpcServiceReference svc, AbstractExecContext execChainContext, SplitTabSync tabSync) {
         try {
 
             tabSync.execSync(execChainContext, statusRpc);
@@ -348,9 +348,8 @@ public class BasicTISTableDumpProcessor {
         }
     }
 
-    private static SelectedTabTriggers.SelectedTabTriggersConfig getTriggerCfg(ITaskExecutorContext context) {
-        SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg =
-                SelectedTabTriggers.deserialize((context.getJobParams()));
+    private static SelectedTabTriggersConfig getTriggerCfg(ITaskExecutorContext context) {
+        SelectedTabTriggersConfig triggerCfg = SelectedTabTriggers.deserialize((context.getJobParams()));
         return triggerCfg;
     }
 
@@ -369,7 +368,7 @@ public class BasicTISTableDumpProcessor {
         return statusRpc;
     }
 
-    protected IRemoteTaskTrigger createDataXJob(DefaultExecContext execContext, Pair<String,
+    protected IRemoteTaskTrigger createDataXJob(AbstractExecContext execContext, Pair<String,
             IDataXBatchPost.LifeCycleHook> lifeCycleHookInfo, String tableName) {
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not be null");
@@ -416,7 +415,7 @@ public class BasicTISTableDumpProcessor {
         };
     }
 
-    private static void reportError(Exception e, DefaultExecContext execChainContext, RpcServiceReference svc) {
+    private static void reportError(Exception e, AbstractExecContext execChainContext, RpcServiceReference svc) {
 
         Throwable rootCause = ExceptionUtils.getRootCause(e);
         svc.appendLog(LogLevel.ERROR, execChainContext.getTaskId(), Optional.empty(),

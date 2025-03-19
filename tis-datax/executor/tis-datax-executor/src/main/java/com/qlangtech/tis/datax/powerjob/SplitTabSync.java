@@ -7,7 +7,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -28,7 +28,7 @@ public class SplitTabSync {
         this.tskMsg = tskMsg;
     }
 
-    public void execSync(final DefaultExecContext execChainContext, RpcServiceReference statusRpc) {
+    public void execSync(final AbstractExecContext execChainContext, RpcServiceReference statusRpc) {
 
         DataXJobSubmit dataXJobSubmit = getDataXJobSubmit(execChainContext);
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
@@ -49,7 +49,7 @@ public class SplitTabSync {
         tskTrigger.run();
     }
 
-    private static DataXJobSubmit getDataXJobSubmit(DefaultExecContext execChainContext) {
+    private static DataXJobSubmit getDataXJobSubmit(AbstractExecContext execChainContext) {
         DataXJobSubmit.InstanceType instanceType = TisAppLaunch.isTestMock() ? DataXJobSubmit.InstanceType.EMBEDDED :
                 DataXJobSubmit.InstanceType.LOCAL;
 

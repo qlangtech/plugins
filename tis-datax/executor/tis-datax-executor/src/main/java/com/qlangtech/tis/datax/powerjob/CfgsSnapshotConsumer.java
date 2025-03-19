@@ -3,7 +3,7 @@ package com.qlangtech.tis.datax.powerjob;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
     }
 
 
-    public void synchronizTpisAndConfs(DefaultExecContext execContext, PluginAndCfgSnapshotLocalCache snapshotLocalCache) {
+    public void synchronizTpisAndConfs(AbstractExecContext execContext, PluginAndCfgSnapshotLocalCache snapshotLocalCache) {
         try {
             synchronized (processTaskIds) {
                 final long current = System.currentTimeMillis();

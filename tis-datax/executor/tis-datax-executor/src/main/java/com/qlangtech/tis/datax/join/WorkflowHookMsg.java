@@ -1,7 +1,7 @@
 package com.qlangtech.tis.datax.join;
 
 import com.qlangtech.tis.datax.JobHookMsg;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -20,7 +20,7 @@ public class WorkflowHookMsg extends JobHookMsg {
     private TabPartitions dptPts;
 
 
-    public static WorkflowHookMsg create(ISqlTask sqlTask, DefaultExecContext execContext, String jobName) {
+    public static WorkflowHookMsg create(ISqlTask sqlTask, AbstractExecContext execContext, String jobName) {
         //        String resName,
         //        StoreResourceType resType,
         //        Integer taskId, String jobName,

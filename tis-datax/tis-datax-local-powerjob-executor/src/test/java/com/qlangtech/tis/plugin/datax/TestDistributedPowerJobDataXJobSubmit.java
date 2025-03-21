@@ -123,7 +123,8 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
 //        IControlMsgHandler module, Context context,
 //                IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt
 
-        powerJobDataXJobSubmit.triggerWorkflowJob(module, context, workflow, false, powerJobWorkflowInstanceIdOpt);
+        powerJobDataXJobSubmit.triggerWorkflowJob(
+                module, context, workflow, false, powerJobWorkflowInstanceIdOpt, Optional.empty());
         verifyAll();
     }
 
@@ -200,7 +201,8 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         HttpUtils.addMockApply(0, "do_create_new_task"
                 , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
 
-        powerJobDataXJobSubmit.triggerJob(module, context, testDataXName, Optional.empty());
+        powerJobDataXJobSubmit.triggerJob(
+                module, context, testDataXName, Optional.empty(), Optional.empty());
 
         this.verifyAll();
     }

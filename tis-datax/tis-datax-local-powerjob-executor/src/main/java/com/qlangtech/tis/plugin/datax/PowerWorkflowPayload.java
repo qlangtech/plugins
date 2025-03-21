@@ -151,40 +151,6 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
                 , (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topology.getName()), jobIdMaintainer);
     }
 
-//    @Override
-//    protected PowerJobWorkflow loadWorkflowSPI() {
-//        return this.loadWorkflowSPI(false);
-//    }
-
-//    /**
-//     * @param validateWorkflowId 是否校验证
-//     * @return
-//     */
-//    public PowerJobWorkflow loadWorkflowSPI(boolean validateWorkflowId) {
-//        JSONObject payload = getAppPayload();
-//        Long spiWorkflowId = payload.getLong(KEY_WORKFLOW_ID);
-//        if (validateWorkflowId) {
-//            Objects.requireNonNull(spiWorkflowId
-//                    , "param " + KEY_WORKFLOW_ID + " can not be null");
-//        }
-//
-//        if (spiWorkflowId == null) {
-//            return null;
-//        }
-//
-//        JSONArray execRange = Objects.requireNonNull(payload.getJSONArray(EXEC_RANGE)
-//                , "key:" + EXEC_RANGE + " relevant props can not be null");
-//
-//        if (execRange.size() != 2) {
-//            throw new IllegalStateException("execRange.size() must be 2 ,but now is " + JsonUtil.toString(execRange));
-//        }
-//
-//        return new PowerJobWorkflow(this.getTargetEntityName(), spiWorkflowId
-//                , new ExecutePhaseRange( //
-//                FullbuildPhase.parse(execRange.getString(0)) //
-//                , FullbuildPhase.parse(execRange.getString(1))));
-//    }
-
     /**
      * 保存powerjob workflow
      *

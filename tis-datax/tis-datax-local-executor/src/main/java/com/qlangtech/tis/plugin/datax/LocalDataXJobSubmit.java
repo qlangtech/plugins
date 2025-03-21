@@ -48,6 +48,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -60,6 +61,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+
+import static com.qlangtech.tis.fullbuild.IFullBuildContext.KEY_LASTEST_WORKFLOW_HISTORY_ID;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -83,76 +86,50 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
     @Override
     public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module
-            , Context context, IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
-        return DataXJobUtils.getTriggerWorkflowBuildResult(module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt);
+            , Context context, IWorkflow workflow, Boolean dryRun
+            , Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+        return DataXJobUtils.getTriggerWorkflowBuildResult(
+                module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt, latestSuccessWorkflowHistory);
+    }
+
+    /**
+     * 由Console节点调用
+     *
+     * @param module
+     * @param context
+     * @param appName
+     * @return
+     */
+    @Override
+    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
+            , String appName, Optional<Long> powerjobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
+        if (StringUtils.isEmpty(appName)) {
+            throw new IllegalArgumentException("param appName can not be empty");
+        }
+        if (powerjobWorkflowInstanceIdOpt.isPresent()) {
+            throw new UnsupportedOperationException("must processed by pwoerJob");
+        }
+        try {
+            List<HttpUtils.PostParam> params = Lists.newArrayList();
+            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
+            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
+
+            partialTrigger.ifPresent((partial) -> {
+                params.add(partial.getHttpPostSelectedTabsAsParam());
+            });
+            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
+            return TriggerBuildResult.triggerBuild(module, context, params);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private final ConcurrentMap<String, DataXPipelinePreviewProcessorExecutor> tabSynchronizeCache = Maps.newConcurrentMap();
 
     @Override
     public PreviewRowsData previewRowsData(String dataXName, String tableName, QueryCriteria queryCriteria) {
-
-
         DataXPipelinePreviewProcessorExecutor previewProcessorExecutor = getPipelinePreviewProcessor(dataXName);
-
         return previewProcessorExecutor.previewRowsData(dataXName, tableName, queryCriteria);
-
-//        } catch (ExecutionException e) {
-//            throw new RuntimeException(e);
-//        }
-//=========================================================================
-//        // return Collections.emptyList();
-//        IPluginContext pluginCtx = IPluginContext.namedContext(dataXName);
-//        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginCtx, dataXName);
-//        DataXCfgGenerator dataXCfgGenerator = new DataXCfgGenerator(pluginCtx, dataXName, dataxProcessor) {
-//            @Override
-//            protected String getTemplateContent(IDataxReaderContext readerContext
-//                    , IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
-//                return reader.getTemplate();
-//            }
-//
-//            @Override
-//            public void validatePluginName(IDataxWriter writer, IDataxReader reader, JSONObject cfg) {
-//                // super.validatePluginName(writer, reader, cfg);
-//            }
-//        };
-//
-//        IDataxReader reader = dataxProcessor.getReader(pluginCtx);
-//
-//        IGroupChildTaskIterator subTasks = reader.getSubTasks((tab) -> StringUtils.equals(tab.getName(), tableName));
-//
-//        try {
-//            while (subTasks.hasNext()) {
-//                IDataxReaderContext readerContext = subTasks.next();
-//
-//                Optional<IDataxProcessor.TableMap> tableMap = dataXCfgGenerator.buildTabMapper(reader, readerContext);
-//
-//                RecordTransformerRules transformerRules
-//                        = RecordTransformerRules.loadTransformerRules(pluginCtx, readerContext.getSourceEntityName());
-//
-//                Configuration readerCfg
-//                        = Configuration.from(dataXCfgGenerator.generateDataxConfig(readerContext
-//                        , dataxProcessor.getWriter(pluginCtx), reader, transformerRules, tableMap));
-//
-//                Map<String, Object> writerConf = Maps.newHashMap();
-//                final String wirterPluginName = "datagridwriter";
-//                writerConf.put("name", wirterPluginName);
-//                WriterPluginMeta writerPluginMeta = new WriterPluginMeta("plugin.writer." + wirterPluginName
-//                        , "com.qlangtech.tis.plugin.datax.writer.DataGridWriter", Configuration.from(writerConf));
-//                ThreadLocalRows rows = new ThreadLocalRows();
-//                TISJarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager(), LocalDataXJobSubmit.class.getClassLoader());
-//                WriterPluginMeta.realExecute(dataXName, reader
-//                        , writerPluginMeta //
-//                        , Optional.of(uberClassLoader), (jobContainer) -> {
-//                            jobContainer.setAttr(ThreadLocalRows.class, rows);
-//                        }).startPipeline(readerCfg, Optional.of(Pair.of(tableName, transformerRules.relevantColKeys())));
-//                return rows.getRows();
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        throw new IllegalStateException("table:" + tableName + " has not find any sub task");
     }
 
     private DataXPipelinePreviewProcessorExecutor getPipelinePreviewProcessor(String dataXName) {
@@ -187,36 +164,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
         return previewProcessorExecutor;
     }
 
-    /**
-     * 由Console节点调用
-     *
-     * @param module
-     * @param context
-     * @param appName
-     * @return
-     */
-    @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName, Optional<Long> powerjobWorkflowInstanceIdOpt) {
-        if (StringUtils.isEmpty(appName)) {
-            throw new IllegalArgumentException("param appName can not be empty");
-        }
-        if (powerjobWorkflowInstanceIdOpt.isPresent()) {
-            throw new UnsupportedOperationException("must processed by pwoerJob");
-        }
-        try {
-            List<HttpUtils.PostParam> params = Lists.newArrayList();
-            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
-            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
 
-            partialTrigger.ifPresent((partial) -> {
-                params.add(partial.getHttpPostSelectedTabsAsParam());
-            });
-
-            return TriggerBuildResult.triggerBuild(module, context, params);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @Override
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {

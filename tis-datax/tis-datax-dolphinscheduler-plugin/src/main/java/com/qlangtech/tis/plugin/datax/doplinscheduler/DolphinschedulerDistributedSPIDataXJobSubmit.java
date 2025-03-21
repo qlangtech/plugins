@@ -39,6 +39,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta.SqlDataFlowTopology;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -64,17 +65,18 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
     }
 
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName, Optional<Long> workflowInstanceIdOpt) {
-        return super.triggerJob(module, context, appName, workflowInstanceIdOpt);
+    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
+            , String appName, Optional<Long> workflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+        return super.triggerJob(module, context, appName, workflowInstanceIdOpt, latestSuccessWorkflowHistory);
     }
 
     @Override
-    protected BasicWorkflowPayload createWorkflowPayload(IControlMsgHandler module, SqlDataFlowTopology topology) {
+    protected BasicWorkflowPayload createWorkflowPayload(IControlMsgHandler module, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory, SqlDataFlowTopology topology) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    protected BasicWorkflowPayload<DSWorkflowInstance> createApplicationPayload(IControlMsgHandler module, String appName) {
+    protected BasicWorkflowPayload<DSWorkflowInstance> createApplicationPayload(IControlMsgHandler module, String appName, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
         return createPayload(this, module, appName);
     }
 

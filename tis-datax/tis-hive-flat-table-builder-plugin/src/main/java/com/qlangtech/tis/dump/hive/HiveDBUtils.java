@@ -27,6 +27,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.hive.Hms;
 import com.qlangtech.tis.job.common.JobCommon;
+import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -112,22 +113,6 @@ public class HiveDBUtils {
     public static String createHiveJdbcUrl(String hiveHost, String defaultDbName) {
         StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
         return jdbcUrl.toString();
-//        return userToken.accept(new IUserTokenVisitor<String>() {
-//            @Override
-//            public String visit(IUserNamePasswordUserToken ut) {
-//                return jdbcUrl.toString();
-//            }
-//
-//            @Override
-//            public String visit(IKerberosUserToken token) {
-//                IKerberos kerberosCfg = token.getKerberosCfg();
-//                jdbcUrl.append(";principal=")
-//                        .append(kerberosCfg.getPrincipal())
-//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-//                return jdbcUrl.toString();
-//            }
-//        });
-        // return jdbcUrl.toString();
     }
 
 
@@ -171,27 +156,6 @@ public class HiveDBUtils {
         if (StringUtils.isBlank(hiveHost)) {
             throw new IllegalStateException("hivehost can not be null");
         }
-        // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        // new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
-
-        // if (userToken.isPresent()) {
-//        userToken.accept(new IUserTokenVisitor() {
-//            @Override
-//            public void visit(IUserNamePasswordUserToken ut) {
-//                hiveDatasource.setUsername(ut.getUserName());
-//                hiveDatasource.setPassword(ut.getPassword());
-//            }
-//
-//            @Override
-//            public void visit(IKerberosUserToken token) {
-////                IKerberos kerberosCfg =  token.getKerberosCfg();
-////                jdbcUrl.append(";principal=")
-////                        .append(kerberosCfg.principal)
-////                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-//            }
-//        });
-
-        //}
         // 测试空闲的连接是否有效
         hiveDatasource.setTestWhileIdle(true);
         if (StringUtils.isBlank(hiveHost)) {
@@ -287,10 +251,10 @@ public class HiveDBUtils {
     }
 
     private static Runnable createLogRunnable(Statement statement, IJoinTaskStatus joinTaskStatus) {
-        final String collection = MDC.get("app");
-        if (StringUtils.isNotEmpty(collection)) {
-            throw new IllegalArgumentException("collection has not been set in MDC context");
-        }
+        final String collection = MDC.get(JobParams.KEY_COLLECTION);
+//        if (StringUtils.isNotEmpty(collection)) {
+//            throw new IllegalArgumentException("collection has not been set in MDC context");
+//        }
         final Integer taskId;
         try {
             taskId = Integer.parseInt(MDC.get(JobCommon.KEY_TASK_ID));

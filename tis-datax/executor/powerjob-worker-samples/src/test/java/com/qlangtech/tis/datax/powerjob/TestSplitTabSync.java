@@ -4,7 +4,7 @@ import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.datax.powerjob.impl.PowerJobTaskContext;
-import com.qlangtech.tis.exec.DefaultExecContext;
+import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.powerjob.SelectedTabTriggersConfig;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -37,7 +37,7 @@ public class TestSplitTabSync implements TISEasyMock {
 
 
         this.replay();
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair =
+        Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair =
                 BasicTISTableDumpProcessor.createExecContext(new PowerJobTaskContext(tskContext), ExecPhase.Prepare);
 
         RpcServiceReference rpcSvc = StatusRpcClientFactory.getService(ITISCoordinator.create());

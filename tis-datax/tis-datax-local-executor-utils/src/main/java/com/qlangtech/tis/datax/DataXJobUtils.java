@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
+import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
@@ -31,8 +32,10 @@ import com.qlangtech.tis.manage.common.ConfigFileContext.Header;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IParamContext;
+import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 
 import java.net.MalformedURLException;
 import java.util.Collections;
@@ -58,7 +61,7 @@ public class DataXJobUtils {
     }
 
     public static TriggerBuildResult getTriggerWorkflowBuildResult(IControlMsgHandler module, Context context
-            , IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
+            , IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
         if (powerJobWorkflowInstanceIdOpt.isPresent()) {
             throw new IllegalStateException("powerJobWorkflowInstanceIdOpt is not support ");
         }
@@ -71,7 +74,7 @@ public class DataXJobUtils {
         params.add(new HttpUtils.PostParam(IFullBuildContext.KEY_APP_SHARD_COUNT, IFullBuildContext.KEY_APP_SHARD_COUNT_SINGLE));
         params.add(new HttpUtils.PostParam(IParamContext.COMPONENT_START, FullbuildPhase.FullDump.getName()));
         params.add(new HttpUtils.PostParam(IParamContext.COMPONENT_END, FullbuildPhase.JOIN.getName()));
-
+        JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
         try {
             return TriggerBuildResult.triggerBuild(module, context, params);
         } catch (MalformedURLException e) {

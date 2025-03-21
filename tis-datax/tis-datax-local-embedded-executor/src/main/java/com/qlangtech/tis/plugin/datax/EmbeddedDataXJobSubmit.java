@@ -19,13 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.common.element.Record;
-import com.alibaba.datax.common.element.ThreadLocalRows;
-import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.util.container.JarLoader;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
@@ -36,35 +31,22 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXJobUtils;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.IDataxWriter;
-import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.TISJarLoader;
-import com.qlangtech.tis.datax.common.WriterPluginMeta;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -94,10 +76,9 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     }
 
 
-
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , String appName, Optional<Long> powerJobWorkflowInstanceIdOpt) {
+            , String appName, Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
         if (StringUtils.isEmpty(appName)) {
             throw new IllegalArgumentException("param appName can not be empty");
         }
@@ -113,7 +94,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
             partialTrigger.ifPresent((partial) -> {
                 params.add(partial.getHttpPostSelectedTabsAsParam());
             });
-
+            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
             return TriggerBuildResult.triggerBuild(module, context, params);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
@@ -122,14 +103,10 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module, Context context
-            , IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
-        return DataXJobUtils.getTriggerWorkflowBuildResult(module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt);
-
-//        if (!TriggerBuildResult.triggerBuild(module, context, params).success) {
-//            // throw new IllegalStateException("dataflowid:" + id + " trigger faild");
-//        }
-
-
+            , IWorkflow workflow, Boolean dryRun
+            , Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+        return DataXJobUtils.getTriggerWorkflowBuildResult(
+                module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt, latestSuccessWorkflowHistory);
     }
 
 

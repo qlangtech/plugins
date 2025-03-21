@@ -19,6 +19,7 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
+import com.beust.jcommander.internal.Sets;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
@@ -97,6 +98,10 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
     @Override
     protected HashSet<String> createAddedCols(EntityName table) throws TableNotFoundException {
+        if (table == null) {
+            // 当hive执行 join执行逻辑需要取得下游的类型，会先执行一下join sql 此时没有表传入
+            return new HashSet<>();
+        }
         // 去除表的pt键
         HiveTable t = getHiveTableMeta(table.getTableName());// metadata.createMetaStoreClient().getTable(this.dbName, table.getTableName());
         if (t == null) {

@@ -40,6 +40,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta.SqlDataFlowTopology;
 import com.qlangtech.tis.sql.parser.meta.NodeType;
 import com.qlangtech.tis.sql.parser.meta.NodeType.NodeTypeParseException;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -76,12 +77,14 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
     }
 
     @Override
-    protected PowerWorkflowPayload createWorkflowPayload(IControlMsgHandler module, SqlDataFlowTopology topology) {
+    protected PowerWorkflowPayload createWorkflowPayload(
+            IControlMsgHandler module, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory, SqlDataFlowTopology topology) {
         return PowerWorkflowPayload.createTISWorkflowPayload(this, module, topology);
     }
 
     @Override
-    protected PowerWorkflowPayload createApplicationPayload(IControlMsgHandler module, String appName) {
+    protected PowerWorkflowPayload createApplicationPayload(
+            IControlMsgHandler module, String appName, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
         return PowerWorkflowPayload.createApplicationPayload(this, module, appName);
     }
 

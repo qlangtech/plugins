@@ -81,8 +81,8 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+//    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timeZone;
 
 //    public static final Field LOG_MINING_STRATEGY = Field.create("log.mining.strategy")
 //            .withDisplayName("Log Mining Strategy")

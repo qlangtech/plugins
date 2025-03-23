@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -88,6 +89,9 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     @FormField(ordinal = 8, validate = {Validator.require})
     public Authorized allAuthorized;
 
+    @FormField(ordinal = 14, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String timeZone;
+
     @Override
     public String getDBSchema() {
         return StringUtils.trimToNull(allAuthorized.getSchema());
@@ -110,9 +114,6 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        //        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") +
-        //        dbName;
-        //        return jdbcUrl;
         return this.connEntity.buidJdbcUrl(ip, this.port);
     }
 
@@ -309,9 +310,15 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+        Properties props = properties.orElse(new Properties());
+        props.setProperty("user", StringUtils.trimToNull(this.userName));
+        props.setProperty("password", StringUtils.trimToNull(password));
 
-        Connection conn = DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName),
-                StringUtils.trimToNull(password));
+        props.setProperty("oracle.jdbc.timezoneAsRegion", "false");
+        props.setProperty("oracle.jdbc.defaultTimeZone"
+                , Objects.requireNonNull(this.timeZone, "timeZone can not be null"));
+
+        Connection conn = DriverManager.getConnection(jdbcUrl, props);
 
         String dbSchema = null;
         if (StringUtils.isNotEmpty(dbSchema = getDBSchema())) {

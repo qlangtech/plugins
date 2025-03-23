@@ -37,6 +37,7 @@ import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.MemorySpecification;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -94,7 +95,6 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         return appAndRuntime.getAppName() + "_pipeline_from_tis";
     }
 
-
     /**
      * 目标表选择
      */
@@ -108,6 +108,9 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
 
     @FormField(ordinal = 203, advance = true, validate = {Validator.require})
     public DSTaskGroup taskGroup;
+
+    @FormField(ordinal = 204, advance = true, validate = {Validator.require})
+    public MemorySpecification memorySpec;
 
 
     /**

@@ -123,7 +123,9 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected ReplicasSpec getResourceSeplicasSpec() {
-        return ReplicasSpec.createDftPowerjobServerReplicasSpec();
+       //  return ReplicasSpec.createDftPowerjobServerReplicasSpec();
+        ExportTISPipelineToDolphinscheduler dsExport = Objects.requireNonNull(this.exportCfg, "exportCfg can not be null");
+        return Objects.requireNonNull(dsExport.memorySpec, "memorySpec can not be null").getMemorySpec();
     }
 
     @Override

@@ -58,5 +58,10 @@
         "val": false
       }
     ]
+  },
+  "memorySpec": {
+    "label": "内存规格",
+    "help": "执行DataX任务申请内存规格,默认为1024兆，如执行大表同步任务请按照实际需求量设置自定义规格",
+    "dftVal": "default"
   }
 }

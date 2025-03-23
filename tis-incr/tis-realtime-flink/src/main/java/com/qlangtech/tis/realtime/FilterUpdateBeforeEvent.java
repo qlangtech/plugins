@@ -22,11 +22,15 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.RichFilterFunction;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.metrics.Counter;
 
 import java.util.List;
 import java.util.Set;
+
+import static com.qlangtech.tis.realtime.BasicTISSinkFactory.KEY_SKIP_UPDATE_BEFORE_EVENT;
 
 /**
  * 由于Sink端支持upset更新方式，需要将source中update_before事件类型去除掉
@@ -36,16 +40,25 @@ import java.util.Set;
  **/
 public class FilterUpdateBeforeEvent {
 
-    private static abstract class BasicFilter<T> implements FilterFunction<T> {
+    private static abstract class BasicFilter<T> extends RichFilterFunction<T> {
 
         private final Set<EventType> filterRowKinds;
         private final boolean shallFilterRowKinds;
         private final boolean supportUpset;
+        private transient Counter filteredRecordsCounter;
 
         public BasicFilter(boolean supportUpset, List<EventType> filterRowKinds) {
             this.filterRowKinds = Sets.newHashSet(filterRowKinds);
             this.shallFilterRowKinds = CollectionUtils.isNotEmpty(filterRowKinds);
             this.supportUpset = supportUpset;
+        }
+
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            // 注册或获取名为 "filteredRecords" 的计数器
+            this.filteredRecordsCounter = getRuntimeContext()
+                    .getMetricGroup()
+                    .counter(KEY_SKIP_UPDATE_BEFORE_EVENT + "Count");
         }
 
         protected abstract DTO.EventType getRowKind(T row);
@@ -54,10 +67,12 @@ public class FilterUpdateBeforeEvent {
         public final boolean filter(T dto) throws Exception {
             DTO.EventType eventType = getRowKind(dto);
             if (this.supportUpset && (eventType == EventType.UPDATE_BEFORE)) {
+                this.filteredRecordsCounter.inc();
                 return false;
             }
 
             if (this.shallFilterRowKinds && filterRowKinds.contains(eventType)) {
+                this.filteredRecordsCounter.inc();
                 return false;
             }
 

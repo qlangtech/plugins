@@ -53,7 +53,7 @@ import java.util.Optional;
  * @create: 2022-05-13 23:01
  **/
 public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
-    private static final String KEY_SKIP_UPDATE_BEFORE_EVENT = "skipUpdateBeforeEvent";
+    public static final String KEY_SKIP_UPDATE_BEFORE_EVENT = "skipUpdateBeforeEventOrSpecEvent";
 
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
@@ -102,7 +102,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                            dataXContext, StoreResourceType.DataApp, dataXContext.getCollectionName(), tabAlias.getFrom());
+                    dataXContext, StoreResourceType.DataApp, dataXContext.getCollectionName(), tabAlias.getFrom());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));

@@ -142,7 +142,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .hostname(dbHost)
                                             .debeziumProperties(debeziumProperties)
                                             .port(dsFactory.port)
-                                            .serverTimeZone(sourceFactory.timeZone)
+                                            .serverTimeZone(dsFactory.getTimeZone().get())
                                             .startupOptions(sourceFactory.getStartupOptions())
                                             .databaseList((dsFactory.getDbName())) // monitor XE database
                                             // .schemaList("FLINKUSER") // monitor inventory schema

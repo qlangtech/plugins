@@ -108,6 +108,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
+    public Optional<String> getTimeZone() {
+        return Optional.of(this.timeZone);
+    }
+
+    @Override
     protected void addRefectedTable(TableInDB tabs, JDBCConnection conn, ResultSet resultSet) throws SQLException {
         allAuthorized.addRefectedTable(tabs, conn, resultSet);
     }

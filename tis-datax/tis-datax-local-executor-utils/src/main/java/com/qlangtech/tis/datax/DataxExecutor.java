@@ -78,61 +78,7 @@ import java.util.Set;
  * @date 2021-04-20 12:38
  */
 public class DataxExecutor {
-
     private static final Logger logger = LoggerFactory.getLogger(DataxExecutor.class);
-
-//    public static RpcServiceReference statusRpc;// = new AtomicReference<>();
-//
-//    static {
-//        AtomicReference<ITISRpcService> ref = new AtomicReference<>();
-//        ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
-//        statusRpc = new RpcServiceReference(ref, () -> {
-//        });
-//    }
-
-
-//    public static void synchronizeDataXPluginsFromRemoteRepository(String dataxName, StoreResourceType resType,
-//                                                                   DataXJobInfo jobName) {
-//
-//        if (CenterResource.notFetchFromCenterRepository()) {
-//            return;
-//        }
-//
-//        TIS.permitInitialize = false;
-//        try {
-//            if (StringUtils.isBlank(dataxName)) {
-//                throw new IllegalArgumentException("param dataXName can not be null");
-//            }
-//            Objects.requireNonNull(jobName, "param jobName can not be null");
-//            //            if (StringUtils.isBlank(jobName)) {
-//            //                throw new IllegalArgumentException("param jobName can not be null");
-//            //            }
-//
-//            KeyedPluginStore<DataxProcessor> processStore = IAppSource.getPluginStore(null, resType, dataxName);
-//            List<IRepositoryResource> keyedPluginStores = Lists.newArrayList();
-//            keyedPluginStores.add(TIS.getPluginStore(ParamsConfig.class));
-//            keyedPluginStores.add(processStore);
-//
-//            if (resType == StoreResourceType.DataFlow) {
-//                //   SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(dataxName);
-//            }
-//
-//
-//            keyedPluginStores.add(DataxReader.getPluginStore(null, false, dataxName));
-//            keyedPluginStores.add(DataxWriter.getPluginStore(null, resType, dataxName));
-//
-//            ComponentMeta dataxComponentMeta = new ComponentMeta(keyedPluginStores);
-//            dataxComponentMeta.synchronizePluginsFromRemoteRepository();
-//
-//            CenterResource.copyFromRemote2Local(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CFG_DIR_NAME + "/" + jobName.jobFileName, true);
-//
-//            CenterResource.synchronizeSubFiles(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CREATE_DDL_DIR_NAME);
-//
-//        } finally {
-//            TIS.permitInitialize = true;
-//        }
-//    }
-
     /**
      * 当使用dolphinscheduler运行数据同步任务希望在本地记录一份完整的dataX执行日志，而不是都要通过grpc的方式传输到assemble节点查看
      *

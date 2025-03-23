@@ -90,6 +90,10 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
 
+    public Optional<String> getTimeZone() {
+        return Optional.empty();
+    }
+
     /**
      * 数据库编码
      */

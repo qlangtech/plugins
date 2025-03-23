@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -88,7 +89,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
                 cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
                 cmdLine.addArgument("-Dfile.encoding=" + TisUTF8.getName());
-              //  cmdLine.addArgument("-D" + Config.KEY_ASSEMBLE_HOST + "=" + Config.getAssembleHost());
+                //  cmdLine.addArgument("-D" + Config.KEY_ASSEMBLE_HOST + "=" + Config.getAssembleHost());
                 File localLoggerPath = null;
                 if ((localLoggerPath = msg.getSpecifiedLocalLoggerPath()) != null) {
                     cmdLine.addArgument("-D" + Config.EXEC_LOCAL_LOGGER_FILE_PATH + "=" + localLoggerPath.getAbsolutePath());
@@ -122,8 +123,8 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
 
                 runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());
 
-                waitForTerminator(jobId, dataxName, resultHandler);
-
+                logger.info("waitForTerminator jobId:{},dataxName:{},taskExpireHours:{}", jobId, dataxName, jobSubmitParams.taskExpireHours);
+                waitForTerminator(jobId, dataxName, jobSubmitParams.taskExpireHours, resultHandler);
 
             }
         });
@@ -139,11 +140,12 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
      * @throws InterruptedException
      * @throws DataXJobSingleProcessorException
      */
-    protected void waitForTerminator(Integer jobId, String dataxName, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
-        int timeout = 5;
+    protected void waitForTerminator(Integer jobId, String dataxName, final Integer taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
+
+        int timeout = Objects.requireNonNull(taskExpireHours, "taskExpireHours can not be null");
         try {
             // 等待5个小时
-            resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
+            resultHandler.waitFor(TimeUnit.HOURS.toMillis(timeout));
 
             if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
                 if ( //resultHandler.hasResult() &&

@@ -30,7 +30,9 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -39,7 +41,6 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
-import org.apache.flink.table.types.utils.TypeConversions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,8 @@ import java.util.Optional;
  * @create: 2022-05-13 23:01
  **/
 public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
+    private static final String KEY_SKIP_UPDATE_BEFORE_EVENT = "skipUpdateBeforeEvent";
+
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
@@ -69,10 +72,11 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
          * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
          */
         public DTOSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<DTO> sinkFunction
-                , boolean supportUpset, List<FlinkCol> colsMeta, int sinkTaskParallelism) {
+                , boolean supportUpset, List<EventType> filterRowKinds, List<FlinkCol> colsMeta, int sinkTaskParallelism) {
             super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
-            if (supportUpset) {
-                this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent.DTOFilter());
+            if (supportUpset || CollectionUtils.isNotEmpty(filterRowKinds)) {
+                this.setSourceFilter(KEY_SKIP_UPDATE_BEFORE_EVENT
+                        , new FilterUpdateBeforeEvent.DTOFilter(supportUpset, filterRowKinds));
             }
         }
 
@@ -97,7 +101,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         createTransformerRules(String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
             final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
             Optional<RecordTransformerRules> transformerRules
-                    = RecordTransformerRules.loadTransformerRules(dataXContext, StoreResourceType.DataApp, dataXContext.getCollectionName(), tabAlias.getFrom());
+                    = RecordTransformerRules.loadTransformerRules(
+                            dataXContext, StoreResourceType.DataApp, dataXContext.getCollectionName(), tabAlias.getFrom());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));
@@ -106,7 +111,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
 
         private static List<FlinkCol> createSourceCols(IPluginContext pluginContext
-                , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator, Optional<SelectedTableTransformerRules> transformerOpt) {
+                , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
+                , Optional<SelectedTableTransformerRules> transformerOpt) {
             List<FlinkCol> sourceColsMeta = null;
             if (transformerOpt.isPresent()) {
                 SelectedTableTransformerRules rules = transformerOpt.get();
@@ -125,15 +131,18 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                 , final ISelectedTab selectedTab //List<FlinkCol> sourceColsMeta
                 , IFlinkColCreator<FlinkCol> sourceFlinkColCreator
                 , List<FlinkCol> sinkColsMeta //
-                , boolean supportUpset, int sinkTaskParallelism
+                , boolean supportUpset
+                , List<EventType> filterRowKinds
+                , int sinkTaskParallelism
                 , Optional<SelectedTableTransformerRules> transformerOpt) {
-            super(tab, primaryKeys, sinkFunction, createSourceCols(pluginContext, selectedTab, sourceFlinkColCreator, transformerOpt), sinkColsMeta, sinkTaskParallelism
+            super(tab, primaryKeys, sinkFunction
+                    , createSourceCols(pluginContext, selectedTab, sourceFlinkColCreator, transformerOpt), sinkColsMeta, sinkTaskParallelism
                     , transformerOpt);
 
             //this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
-            if (supportUpset) {
-                this.setSourceFilter("skipUpdateBeforeEvent"
-                        , new FilterUpdateBeforeEvent.RowDataFilter());
+            if (supportUpset || CollectionUtils.isNotEmpty(filterRowKinds)) {
+                this.setSourceFilter(KEY_SKIP_UPDATE_BEFORE_EVENT
+                        , new FilterUpdateBeforeEvent.RowDataFilter(supportUpset, filterRowKinds));
             }
         }
 

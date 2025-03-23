@@ -18,10 +18,15 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.transfer.DTO.EventType;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.types.RowKind;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * 由于Sink端支持upset更新方式，需要将source中update_before事件类型去除掉
@@ -31,23 +36,69 @@ import org.apache.flink.types.RowKind;
  **/
 public class FilterUpdateBeforeEvent {
 
-    public static class DTOFilter implements FilterFunction<DTO> {
+    private static abstract class BasicFilter<T> implements FilterFunction<T> {
+
+        private final Set<EventType> filterRowKinds;
+        private final boolean shallFilterRowKinds;
+        private final boolean supportUpset;
+
+        public BasicFilter(boolean supportUpset, List<EventType> filterRowKinds) {
+            this.filterRowKinds = Sets.newHashSet(filterRowKinds);
+            this.shallFilterRowKinds = CollectionUtils.isNotEmpty(filterRowKinds);
+            this.supportUpset = supportUpset;
+        }
+
+        protected abstract DTO.EventType getRowKind(T row);
+
         @Override
-        public boolean filter(DTO dto) throws Exception {
-            if (dto.getEventType() == DTO.EventType.UPDATE_BEFORE) {
+        public final boolean filter(T dto) throws Exception {
+            DTO.EventType eventType = getRowKind(dto);
+            if (this.supportUpset && (eventType == EventType.UPDATE_BEFORE)) {
                 return false;
             }
+
+            if (this.shallFilterRowKinds && filterRowKinds.contains(eventType)) {
+                return false;
+            }
+
             return true;
         }
     }
 
-    public static class RowDataFilter implements  FilterFunction<RowData>{
+
+    public static class DTOFilter extends BasicFilter<DTO> {
+        public DTOFilter(boolean supportUpset, List<EventType> filterRowKinds) {
+            super(supportUpset, filterRowKinds);
+        }
+
         @Override
-        public boolean filter(RowData dto) throws Exception {
-            if (dto.getRowKind() == RowKind.UPDATE_BEFORE) {
-                return false;
+        protected DTO.EventType getRowKind(DTO row) {
+            return row.getEventType();
+        }
+
+    }
+
+    public static class RowDataFilter extends BasicFilter<RowData> {
+
+
+        public RowDataFilter(boolean supportUpset, List<EventType> filterRowKinds) {
+            super(supportUpset, filterRowKinds);
+        }
+
+        @Override
+        protected EventType getRowKind(RowData row) {
+            switch (row.getRowKind()) {
+                case UPDATE_AFTER:
+                    return EventType.UPDATE_AFTER;
+                case DELETE:
+                    return EventType.DELETE;
+                case INSERT:
+                    return EventType.ADD;
+                case UPDATE_BEFORE:
+                    return EventType.UPDATE_BEFORE;
+                default:
+                    throw new IllegalStateException("illegal event type:" + row.getRowKind());
             }
-            return true;
         }
     }
 

@@ -26,6 +26,7 @@ import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -50,6 +51,7 @@ import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
@@ -113,7 +115,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
-
+        MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
 
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         ElasticEndpoint token = dataXWriter.getToken();
@@ -220,7 +222,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                         , sourceFlinkColCreator
                         //, sourceColsMeta
                         , sinkColsMeta
-                        , true, DEFAULT_PARALLELISM, transformerOpt));
+                        , true, sourceListener.getFilterRowKinds(), DEFAULT_PARALLELISM, transformerOpt));
     }
 
 

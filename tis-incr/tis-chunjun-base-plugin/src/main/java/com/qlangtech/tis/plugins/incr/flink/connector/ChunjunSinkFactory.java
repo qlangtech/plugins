@@ -55,9 +55,7 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -68,11 +66,8 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -83,8 +78,8 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
-import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
+import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -226,7 +221,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator();
         //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
-
+        List<EventType> filterRowKinds = sourceListenerFactory.getFilterRowKinds();
         //  Optional<SelectedTableTransformerRules> transformerRules = ;
 
 //        if(transformerRules.isPresent()){
@@ -241,9 +236,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , IPluginContext.namedContext(dataxProcessor.identityValue())
                 , tab
                 , sourceFlinkColCreator
-                // , sourceColsMeta
-                , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
+                , AbstractRowDataMapper.getAllTabColsMeta(
+                        Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
+                , filterRowKinds
                 , this.parallelism
                 , RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue()
                 , tabName

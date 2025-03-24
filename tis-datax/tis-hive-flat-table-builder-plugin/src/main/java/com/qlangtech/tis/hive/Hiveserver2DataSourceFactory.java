@@ -19,7 +19,6 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
-import com.beust.jcommander.internal.Sets;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
@@ -31,9 +30,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;

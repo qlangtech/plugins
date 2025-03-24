@@ -231,7 +231,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
     }
 
     @Override
-    protected void waitForTerminator(Integer jobId, String dataxName, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
+    protected void waitForTerminator(Integer jobId, String dataxName, Integer taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
         // super.waitForTerminator(jobId, dataxName, resultHandler);
     }
 

@@ -46,6 +46,8 @@ public class PluginItems {
     public static final String DB_SQL_DORIS = "DorisDB1";
     public static final String DB_SQL_StarRocks = "StarRocksDB1";
 
+    public static final String DB_SQL_DEFAULT = "defaultDB1";
+
 
     public static List<Option> getExistDbs(String... extendClass) {
 
@@ -125,6 +127,7 @@ public class PluginItems {
             }
         }
 
+        return Collections.singletonList(new Option(DB_SQL_DEFAULT, DB_SQL_DEFAULT));
 
 //        String expectExtendClass = com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory.class.getName();
 //        if (!expectExtendClass.equals(extendClass)) {
@@ -132,7 +135,7 @@ public class PluginItems {
 //        }
 
 
-        throw new IllegalStateException("param:" + Arrays.stream(extendClass).collect(Collectors.joining(",")) + " must contain is illegal");
+       // throw new IllegalStateException("param:" + Arrays.stream(extendClass).collect(Collectors.joining(",")) + " must contain is illegal");
     }
 
 

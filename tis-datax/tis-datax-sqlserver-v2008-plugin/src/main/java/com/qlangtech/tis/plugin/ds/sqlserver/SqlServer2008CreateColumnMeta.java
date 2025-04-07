@@ -25,7 +25,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.sql.ResultSet;
 import java.util.Set;
-Time
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-04-07 09:36

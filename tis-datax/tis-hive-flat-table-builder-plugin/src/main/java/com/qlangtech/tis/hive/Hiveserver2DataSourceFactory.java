@@ -27,7 +27,9 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hive.shim.HiveContextConfig;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -54,6 +56,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -65,6 +69,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     private static final Logger logger = LoggerFactory.getLogger(Hiveserver2DataSourceFactory.class);
     //public static final String NAME_HIVESERVER2 = "Hiveserver2";
     private static final String FIELD_META_STORE_URLS = "metaStoreUrls";
+    private static final String FIELD_ALTERNATIVE_HDFS_SUB_PATH = "alternativeHdfsSubPath";
     //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
     //    Validator.identity})
     //    public String name;
@@ -80,8 +85,25 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @FormField(ordinal = 3, validate = {Validator.require})
     public Hms hms;
 
-    //    @FormField(ordinal = 5, validate = {Validator.require})
-    //    public UserToken userToken;
+    /**
+     * 假设当前数据库名称为 ‘dezhou’，有一张名称为 ‘test_0401‘的表，默认hdfs上的路径为，<br/>
+     * ‘hdfs://10.8.0.10:9000/user/hive/warehouse/dezhou/test_0401’ 而用户的应用场景需要为：<br/>
+     * ‘hdfs://10.8.0.10:9000/user/hive/warehouse/dezhou.db/test_0401’
+     */
+    @FormField(ordinal = 4, advance = true, type = FormFieldType.INPUTTEXT, validate = {})
+    public String alternativeHdfsSubPath;
+
+    public String getAlternativeHdfsSubPath() {
+        if (StringUtils.isEmpty(this.alternativeHdfsSubPath)) {
+            return this.dbName;
+        }
+        Pattern matchAll = ValidatorCommons.pattern_identity;
+        Matcher matcher = matchAll.matcher(this.dbName);
+        if (!matcher.matches()) {
+            throw new IllegalStateException("dbName:" + this.dbName);
+        }
+        return matcher.replaceAll(alternativeHdfsSubPath);
+    }
 
     @Override
     public String getDBSchema() {
@@ -233,7 +255,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
 
         @Override
-        protected boolean validateConnection(JDBCConnection c, BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
+        protected boolean validateConnection(JDBCConnection c, BasicDataSourceFactory dsFactory
+                , IControlMsgHandler msgHandler, Context context) throws TisException {
             Connection conn = c.getConnection();
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet result = statement.executeQuery("select 1")) {
@@ -257,6 +280,11 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
             if (valid) {
                 Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;
+                String hdfsSubPath = ds.getAlternativeHdfsSubPath();
+                if (StringUtils.isEmpty(hdfsSubPath)) {
+                    msgHandler.addFieldError(context, FIELD_ALTERNATIVE_HDFS_SUB_PATH, "填写有误，请查看帮助");
+                    return false;
+                }
                 try (IHiveMetaStore meta = ds.createMetaStoreClient()) {
                     // 暂且不知道如何校验
                     HiveContextConfig hiveConfig = HiveContextConfig.get();

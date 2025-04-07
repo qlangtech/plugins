@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 
 /**
@@ -38,7 +39,7 @@ public class MySQLSourceFactory extends ChunjunSourceFactory {
     }
 
     @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         throw new UnsupportedOperationException();
     }
 

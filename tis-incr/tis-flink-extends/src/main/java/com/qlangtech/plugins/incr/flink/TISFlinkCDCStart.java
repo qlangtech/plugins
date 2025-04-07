@@ -99,7 +99,7 @@ public class TISFlinkCDCStart {
         tableStreamHandle.setSourceStreamTableMeta(reader);
 
         MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataxName.getName());
-        tableStreamHandle.setSourceFlinkColCreator(mqFactory.createFlinkColCreator());
+        tableStreamHandle.setSourceFlinkColCreator(mqFactory.createFlinkColCreator(reader));
         mqFactory.setConsumerHandle(tableStreamHandle);
 
 

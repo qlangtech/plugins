@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMysqlSourceFunction.MySQLCDCTypeVisitor;
@@ -71,7 +72,7 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     public String timeZone;
 
     @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         final IFlinkColCreator flinkColCreator = (meta, colIndex) -> {
             return meta.getType().accept(new MySQLCDCTypeVisitor(meta, colIndex));
         };

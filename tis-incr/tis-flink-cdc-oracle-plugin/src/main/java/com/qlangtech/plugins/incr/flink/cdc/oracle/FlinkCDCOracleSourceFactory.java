@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import io.debezium.config.Field;
 import io.debezium.connector.oracle.OracleConnectorConfig;
 import io.debezium.connector.oracle.OracleConnectorConfig.LogMiningStrategy;
@@ -115,7 +116,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
     public boolean independentBinLogMonitor;
 
     @Override
-    public final IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public final IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         return (meta, colIndex) -> {
             return meta.getType().accept(new OracleCDCTypeVisitor(meta, colIndex));
         };

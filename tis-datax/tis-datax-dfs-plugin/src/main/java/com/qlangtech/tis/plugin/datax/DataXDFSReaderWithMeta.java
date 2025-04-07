@@ -44,6 +44,7 @@ import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -123,7 +124,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext context, EntityName table) throws TableNotFoundException {
         return this.dfsLinker.useTdfsSession((dfs) -> {
             return getFTPFileMetaData(table, dfs);
         });

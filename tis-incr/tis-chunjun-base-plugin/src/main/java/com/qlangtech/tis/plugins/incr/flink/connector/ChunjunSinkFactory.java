@@ -219,7 +219,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
 //String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
         MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
-        IFlinkColCreator<FlinkCol> sourceFlinkColCreator = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator();
+        IFlinkColCreator<FlinkCol> sourceFlinkColCreator
+                = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator(reader);
         //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
         List<EventType> filterRowKinds = sourceListenerFactory.getFilterRowKinds();
         //  Optional<SelectedTableTransformerRules> transformerRules = ;
@@ -237,7 +238,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , tab
                 , sourceFlinkColCreator
                 , AbstractRowDataMapper.getAllTabColsMeta(
-                        Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
+                Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
                 , filterRowKinds
                 , this.parallelism
@@ -606,7 +607,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                             final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
                             // 初始化表RDBMS的表，如果表不存在就创建表
                             DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
-                            final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, EntityName.parse(tableName))
+                            final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, null, EntityName.parse(tableName))
                                     .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                                     .collect(Collectors.toList());
                             return new IStreamTableMeta() {

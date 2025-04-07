@@ -24,11 +24,13 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.sql.DatabaseMetaData;
 import java.sql.Driver;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -39,6 +41,12 @@ public class SqlServer2008DatasourceFactory extends SqlServerDatasourceFactory {
     @Override
     protected Driver createDriver() {
         return new com.microsoft.sqlserver.jdbc.SQLServerDriver();
+    }
+
+    @Override
+    protected CreateColumnMeta createColumnMetaBuilder(
+            EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
+        return new SqlServer2008CreateColumnMeta(table, pkCols, columns1, conn);
     }
 
     @TISExtension

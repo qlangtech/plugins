@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 
 /**
  * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/
@@ -49,8 +50,6 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     public UpdateRecordComplete updateRecordComplete;
 
 
-
-
     @FormField(ordinal = 10, advance = true, type = FormFieldType.INPUTTEXT)
     public String connectionOptions;
 
@@ -60,7 +59,7 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     private transient IConsumerHandle consumerHandle;
 
     @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         return (meta, colIndex) -> {
             return meta.getType().accept(new MongoDBCDCTypeVisitor(meta, colIndex));
         };

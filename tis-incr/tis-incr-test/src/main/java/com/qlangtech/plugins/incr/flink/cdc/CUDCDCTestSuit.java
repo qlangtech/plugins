@@ -622,7 +622,7 @@ public abstract class CUDCDCTestSuit {
     protected Function<EntityName, List<ColumnMetaData>> createTableMetadataGetter() {
         return (tab) -> {
             try {
-                return dataSourceFactory.getTableMetadata(false, tab);
+                return dataSourceFactory.getTableMetadata(false, null, tab);
             } catch (TableNotFoundException e) {
                 throw new RuntimeException(e);
             }

@@ -26,6 +26,7 @@ import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.ThreadCacheTableCols;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
@@ -50,7 +51,8 @@ import java.util.List;
  * @create: 2024-06-18 09:59
  **/
 public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements TISEasyMock {
-
+    public static final String addedField = "new_field_added";
+    protected static final String userId = "user_id";
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
@@ -89,15 +91,22 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
         EasyMock.expect(pluginStore.getTargetFileParentDir()).andReturn(tmpTabsDir).anyTimes();
 
         List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1);
-        EasyMock.expect(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).andReturn(selectedTabs);
+        //  EasyMock.expect(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).andReturn(selectedTabs);
+
+        List<ColumnMetaData> selectableCols = ColumnMetaData.convert(selectedTabs.get(0).getCols());
+        ThreadCacheTableCols cacheTableCols = new ThreadCacheTableCols(dsMetaPlugin, () -> {
+            return selectedTabs.get(0).getCols();
+        }, selectableCols);
+
+        EasyMock.expect(dsMetaPlugin.getContextTableColsStream(EasyMock.anyObject(SuFormProperties.SuFormGetterContext.class))).andReturn(cacheTableCols);
 
         UploadPluginMeta pluginMeta = UploadPluginMeta.parse("dataxReader:require");
         String testTable = TestSelectedTabs.tabNameOrderDetail;
 
-        List<ColumnMetaData> cols = TestSelectedTabs.tabColsMetaOrderDetail;
+        // List<ColumnMetaData> cols = TestSelectedTabs.tabColsMetaOrderDetail;
 
 
-        EasyMock.expect(dsMetaPlugin.getTableMetadata(false, EntityName.parse(testTable))).andReturn(cols);
+        //  EasyMock.expect(dsMetaPlugin.getTableMetadata(false, null, EntityName.parse(testTable))).andReturn(cols);
 
         SuFormProperties.setSuFormGetterContext(dsMetaPlugin, pluginStore, pluginMeta, testTable);
 

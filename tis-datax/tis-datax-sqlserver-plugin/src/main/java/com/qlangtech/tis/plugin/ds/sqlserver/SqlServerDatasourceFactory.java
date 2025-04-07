@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -59,6 +60,9 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
      */
     @FormField(ordinal = 1, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
+
+    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String timeZone;
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
@@ -134,8 +138,17 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         if (password != null) {
             info.put("password", password);
         }
+        if (StringUtils.isEmpty(this.timeZone)) {
+            throw new IllegalStateException("property timeZone can not be null");
+        }
+        info.put("serverTimezone", this.timeZone);
         info.put("characterEncoding", "UTF-8");
         return new SqlServerJDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl, this.getDbName(), this.getDBSchema());
+    }
+
+    @Override
+    public Optional<ZoneId> getTimeZone() {
+        return Optional.of(ZoneId.of(this.timeZone));
     }
 
     protected Properties createJdbcProps() {

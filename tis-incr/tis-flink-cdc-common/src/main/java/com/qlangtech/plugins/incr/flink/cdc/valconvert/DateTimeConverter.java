@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -55,24 +56,30 @@ import java.util.function.Consumer;
  **/
 public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
+    public static final String KEY_DATETIME = "datetime";
+
     private static final Logger logger = LoggerFactory.getLogger(DateTimeConverter.class);
     protected DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
     protected DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
     public DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     protected DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    public static ZoneId timestampZoneId = ZoneId.systemDefault();
-
+    public ZoneId timestampZoneId = ZoneId.systemDefault();
 
     public static void setDatetimeConverters(String convertType, Properties debeziumProperties) {
-        debeziumProperties.put("converters", "datetime");
-        debeziumProperties.put("datetime.type", convertType);
-        debeziumProperties.put("datetime.format.date", "yyyy-MM-dd");
-        debeziumProperties.put("datetime.format.time", "HH:mm:ss");
-        debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
-        debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
-        debeziumProperties.put("datetime.format.timestamp.zone"
-                , MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId());
+        setDatetimeConverters(convertType, debeziumProperties, Optional.empty());
+    }
+
+
+    public static void setDatetimeConverters(String convertType, Properties debeziumProperties, Optional<String> sysZoneId) {
+        debeziumProperties.put("converters", KEY_DATETIME);
+        debeziumProperties.put(KEY_DATETIME + ".type", convertType);
+        debeziumProperties.put(KEY_DATETIME + ".format.date", "yyyy-MM-dd");
+        debeziumProperties.put(KEY_DATETIME + ".format.time", "HH:mm:ss");
+        debeziumProperties.put(KEY_DATETIME + ".format.datetime", "yyyy-MM-dd HH:mm:ss");
+        debeziumProperties.put(KEY_DATETIME + ".format.timestamp", "yyyy-MM-dd HH:mm:ss");
+        debeziumProperties.put(KEY_DATETIME + ".format.timestamp.zone"
+                , sysZoneId.orElse(MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId()));
     }
 
 
@@ -85,7 +92,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
         readProps(props, "format.timestamp.zone", z -> timestampZoneId = ZoneId.of(z));
     }
 
-    private void readProps(Properties properties, String settingKey, Consumer<String> callback) {
+    protected void readProps(Properties properties, String settingKey, Consumer<String> callback) {
         String settingValue = (String) properties.get(settingKey);
         if (settingValue == null || settingValue.length() == 0) {
             return;

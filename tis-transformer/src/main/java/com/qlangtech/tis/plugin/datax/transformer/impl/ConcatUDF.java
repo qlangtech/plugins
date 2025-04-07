@@ -54,6 +54,9 @@ public class ConcatUDF extends UDFDefinition implements AfterPluginSaved {
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public String separator;
 
+    @FormField(ordinal = 3, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    public TargetColType to;
+
     private transient Separator _separator;
 
     private Separator getSeparator() {
@@ -68,8 +71,7 @@ public class ConcatUDF extends UDFDefinition implements AfterPluginSaved {
         this._separator = null;
     }
 
-    @FormField(ordinal = 3, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
-    public TargetColType to;
+
 
     @Override
     public List<InParamer> inParameters() {

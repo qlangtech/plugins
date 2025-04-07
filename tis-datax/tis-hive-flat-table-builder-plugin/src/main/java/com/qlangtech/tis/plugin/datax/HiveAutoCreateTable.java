@@ -28,6 +28,9 @@ import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -44,6 +47,8 @@ import java.util.Optional;
 public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
     private final Optional<String> tabProperties;
+
+
 
     public HiveAutoCreateTable() {
         this(Optional.empty());

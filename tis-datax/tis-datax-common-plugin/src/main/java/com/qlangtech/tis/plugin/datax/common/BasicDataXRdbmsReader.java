@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -235,6 +236,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public final Optional<ZoneId> getTimeZone() {
+        return getDataSourceFactory().getTimeZone();
+    }
+
+    @Override
     public final void refresh() {
         getDataSourceFactory().refresh();
     }
@@ -250,13 +256,13 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
-        return this.getTableMetadata(false, table);
+        return this.getTableMetadata(false, null, table);
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
         DataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTableMetadata(inSink, table);
+        return plugin.getTableMetadata(inSink, pluginContext, table);
     }
 
 

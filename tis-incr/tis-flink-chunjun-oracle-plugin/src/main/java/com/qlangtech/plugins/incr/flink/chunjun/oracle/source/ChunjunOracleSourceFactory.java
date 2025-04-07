@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -35,7 +36,7 @@ public class ChunjunOracleSourceFactory extends ChunjunSourceFactory {
     }
 
     @Override
-    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator() {
+    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator(DataSourceMeta sourceMeta) {
         throw new UnsupportedOperationException();
     }
 

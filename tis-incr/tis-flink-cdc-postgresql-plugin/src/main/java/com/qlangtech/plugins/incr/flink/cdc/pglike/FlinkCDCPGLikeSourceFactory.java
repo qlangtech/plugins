@@ -26,11 +26,11 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 
 import java.util.Objects;
 
 /**
- *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-19 18:14
  **/
@@ -64,8 +64,8 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
      * @return
      * @see org.apache.flink.cdc.connectors.base.config.JdbcSourceConfigFactory #startupOptions()
      */
-  //  public StartupOptions getStartupOptions() {
-     //   return StartupOptionUtils.getStartupOptions(this.startupOptions);
+    //  public StartupOptions getStartupOptions() {
+    //   return StartupOptionUtils.getStartupOptions(this.startupOptions);
 //        switch (startupOptions) {
 //            case StartupOptionUtils.KEY_STARTUP_LATEST:
 //                return StartupOptions.latest();
@@ -76,7 +76,7 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
 //            default:
 //                throw new IllegalStateException("illegal startupOptions:" + startupOptions);
 //        }
-   // }
+    // }
 
 
 //    @Override
@@ -84,7 +84,6 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
 //        FlinkCDCPostgreSQLSourceFunction sourceFunctionCreator = new FlinkCDCPostgreSQLSourceFunction(this);
 //        return sourceFunctionCreator;
 //    }
-
     public IConsumerHandle getConsumerHander() {
         Objects.requireNonNull(this.consumerHandle, "prop consumerHandle can not be null");
         return this.consumerHandle;
@@ -96,7 +95,7 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
     }
 
     @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
             return meta.getType().accept(new PGCDCTypeVisitor(meta, colIndex));
         };

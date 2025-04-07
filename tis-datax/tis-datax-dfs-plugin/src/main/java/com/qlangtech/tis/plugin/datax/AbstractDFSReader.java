@@ -19,9 +19,14 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -33,12 +38,14 @@ import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -90,15 +97,34 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
     }
 
     @Override
-    public  List<ColumnMetaData> getTableMetadata(boolean inSink, TableMap tableMapper) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, TableMap tableMapper) throws TableNotFoundException {
         return this.resMatcher.getTableMetadata(this, tableMapper);
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
 
+        Optional<TableMap> tabAlia = getTableMap(pluginContext);
+        return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
+    }
 
-        throw new UnsupportedOperationException("shall invoke ' List<ColumnMetaData> getTableMetadata(boolean inSink, TableMap tableMapper)'");
+    private Optional<TableMap> getTableMap(IPluginContext pluginContext) {
+        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, this.dataXName);
+        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext);
+        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
+        return tabAlia;
+    }
+
+    @Override
+    public ThreadCacheTableCols getContextTableColsStream(SuFormProperties.SuFormGetterContext context) {
+        return getContextTableColsStream(context, () -> {
+            //Supplier<List<CMeta>>
+            Optional<List<CMeta>> cmetas = getTableMap(context.param.getPluginContext()).map((tab) -> tab.getSourceCols());
+            if (!cmetas.isPresent()) {
+                throw new IllegalStateException("cmetas can not be empty");
+            }
+            return cmetas.get();
+        });
     }
 
 
@@ -109,7 +135,7 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
-        return Objects.requireNonNull( this.resMatcher).getSubTasks(filter, this);
+        return Objects.requireNonNull(this.resMatcher).getSubTasks(filter, this);
     }
 
 

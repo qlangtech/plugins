@@ -271,6 +271,11 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         }
 
         @Override
+        public String helpPath() {
+            return "docs/install/flink-cluster";
+        }
+
+        @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             TISFlinkCDCStreamFactory plugin = postFormVals.newInstance();

@@ -104,7 +104,7 @@ public class TestTISFlinkCDCOracleSourceFunction extends OracleSourceTestBase {
         streamFactory.parallelism = 1;
         FlinkCDCOracleSourceFactory oracleCDCFactory = new FlinkCDCOracleSourceFactory();
         oracleCDCFactory.startupOptions = "latest";
-        oracleCDCFactory.timeZone = MQListenerFactory.dftZoneId();
+       // oracleCDCFactory.timeZone = MQListenerFactory.dftZoneId();
         oracleCDCFactory.independentBinLogMonitor = false;
         // debezium
         // final String tabName = "base";
@@ -159,7 +159,7 @@ public class TestTISFlinkCDCOracleSourceFunction extends OracleSourceTestBase {
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(oracleCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(oracleCDCFactory.createFlinkColCreator(dataxReader));
                 return sourceHandle;
             }
 

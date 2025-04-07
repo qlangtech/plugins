@@ -182,7 +182,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
             TableInDB tablesInDB = dsFactory.getTablesInDB();
-            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator(rdbmsReader);
             IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper

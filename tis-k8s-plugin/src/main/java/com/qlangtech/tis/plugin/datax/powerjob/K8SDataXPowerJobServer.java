@@ -319,7 +319,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                         this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
                         , this.appName, this.password);
             } catch (ServiceNotDefinedException e) {
-              throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+                throw throwPowerJobClusterLossOfContactException(Optional.of(e));
             }
         }
         return powerJobClient;
@@ -336,8 +336,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             // throwPowerJobClusterLossOfContactException();
             return payloads;
         } catch (ServiceNotDefinedException e) {
-           // throw new RuntimeException(e);
-            throw throwPowerJobClusterLossOfContactException(Optional.of( e));
+            // throw new RuntimeException(e);
+            throw throwPowerJobClusterLossOfContactException(Optional.of(e));
         }
     }
 
@@ -626,11 +626,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         // return getK8SController().getRCDeployment(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
     }
 
-    private static TisException throwPowerJobClusterLossOfContactException( Optional< ServiceNotDefinedException> e) {
+    private static TisException throwPowerJobClusterLossOfContactException(Optional<ServiceNotDefinedException> e) {
         return TisException.create(
                 ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
                         , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
-                , e.map((except)-> except.getMessage()).orElse("the powerJob has been loss of communication"));
+                , e.map((except) -> except.getMessage()).orElse("the powerJob has been loss of communication"));
     }
 
     @Override
@@ -1002,6 +1002,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         public DescriptorImpl() {
             super();
             //  this.addFieldDescriptor("serverPortExport.serverPort", 7700, null);
+        }
+
+        @Override
+        public String helpPath() {
+            return "docs/install/powerjob/k8s";
         }
 
         @Override

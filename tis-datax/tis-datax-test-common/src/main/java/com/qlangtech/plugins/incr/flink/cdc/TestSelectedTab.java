@@ -63,7 +63,7 @@ public class TestSelectedTab extends SelectedTab {
             , DataSourceFactory dataSourceFactory) throws TableNotFoundException {
         return createSelectedTab(tabName, dataSourceFactory, (tab) -> {
             try {
-                return dataSourceFactory.getTableMetadata(false, tab);
+                return dataSourceFactory.getTableMetadata(false, null, tab);
             } catch (TableNotFoundException e) {
                 throw new RuntimeException(e);
             }

@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -81,13 +82,13 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
             throw new IllegalStateException("reader.dataXName can not be empty");
         }
 
-        IDataxProcessor processor = DataxProcessor.load(null, reader.dataXName);
-        TableAliasMapper tabAlias = processor.getTabAlias(null);
+        IDataxProcessor processor = DataxProcessor.load(IPluginContext.getThreadLocalInstance(), reader.dataXName);
+        TableAliasMapper tabAlias = processor.getTabAlias(IPluginContext.getThreadLocalInstance());
         Optional<TableAlias> findMapper = tabAlias.findFirst();
         if (findMapper.isPresent()) {
             IDataxProcessor.TableMap tabMapper = (IDataxProcessor.TableMap) findMapper.get();
             return Collections.singletonList(
-                    new IDataxProcessor.TableMap( Optional.of(tabMapper.getTo()) //Optional.of(DataXDFSReaderContext.FTP_TASK)
+                    new IDataxProcessor.TableMap(Optional.of(tabMapper.getTo()) //Optional.of(DataXDFSReaderContext.FTP_TASK)
                             , tabMapper.getSourceCols()).getSourceTab());
         }
 

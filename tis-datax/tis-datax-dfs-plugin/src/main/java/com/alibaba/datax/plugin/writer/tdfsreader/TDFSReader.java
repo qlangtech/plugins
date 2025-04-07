@@ -88,9 +88,11 @@ public class TDFSReader extends FtpReader {
             this.reader = getDfsReader(this.containerContext);
             super.init();
         }
+
         protected TDFSLinker getDFSLinker() {
             return Objects.requireNonNull(reader.dfsLinker, "reader.dfsLinker can not be null");
         }
+
         /**
          * @param paths     value of Key.PATH
          * @param processor
@@ -118,13 +120,6 @@ public class TDFSReader extends FtpReader {
 
                 DFSResMatcher.SourceColsMeta sourceCols = this.getSourceColsMeta(this.hdfsSession, entityName, getPaths(this.getPluginJobConf()), processor);
 
-
-//                TableAliasMapper tabAlias = processor.getTabAlias(null);
-//                Optional<TableAlias> findMapper = tabAlias.findFirst();
-//                IDataxProcessor.TableMap tabMapper
-//                        = (IDataxProcessor.TableMap) findMapper.orElseThrow(() -> new NullPointerException("TableAlias can not be null"));
-//                // BasicPainFormat fileFormat = (BasicPainFormat) reader.fileFormat;
-//                List<CMeta> sourceCols = tabMapper.getSourceCols();
                 this.cols = Lists.newArrayList();
                 ColumnEntry ce = null;
                 this.fileFormat = reader.getFileFormat(entityName);
@@ -136,7 +131,8 @@ public class TDFSReader extends FtpReader {
                             // source 表选择了部分列的情况下
                             continue;
                         }
-                        ce = new ColumnEntry();
+
+                        ce = new ColumnEntry(c instanceof CMeta.VirtualCMeta);
                         ce.setIndex(index);
                         colValCreator = this.fileFormat.buildColValCreator(c);
                         ce.setColName(c.getName());

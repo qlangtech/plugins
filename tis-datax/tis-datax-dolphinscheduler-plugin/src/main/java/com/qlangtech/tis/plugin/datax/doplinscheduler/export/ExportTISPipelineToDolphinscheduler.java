@@ -321,6 +321,11 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         }
 
         @Override
+        public String helpPath() {
+            return "docs/guide/integer-dolphinscheduler";
+        }
+
+        @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return this.validateAll(msgHandler, context, postFormVals);
         }

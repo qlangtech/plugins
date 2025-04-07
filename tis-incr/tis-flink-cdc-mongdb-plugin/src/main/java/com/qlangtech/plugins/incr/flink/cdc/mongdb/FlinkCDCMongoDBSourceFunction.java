@@ -77,11 +77,12 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
             IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(StoreResourceType.DataApp,pluginContext.getCollectionName(),pluginContext, mongoReader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(
+                            StoreResourceType.DataApp,pluginContext.getCollectionName(),pluginContext, mongoReader, tabs);
             Map<String, Pair<FlinkColMapper, List<MongoCMeta>>> tabColsMapper = Maps.newHashMap();
 
 
-            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator(mongoReader);
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);

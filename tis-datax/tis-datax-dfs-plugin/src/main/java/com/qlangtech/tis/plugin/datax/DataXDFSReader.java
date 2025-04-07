@@ -24,9 +24,11 @@ import com.qlangtech.tis.datax.impl.DataXBasicProcessMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -75,6 +77,8 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
             return ftpFiles;
         });
     }
+
+
 
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {

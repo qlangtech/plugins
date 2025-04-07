@@ -463,7 +463,7 @@ public class DataXHiveWriter extends BasicFSWriter
 
 
     public EntityName getDumpTab(String tabName) {
-        return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
+        return EntityName.create(this.getDataSourceFactory().getAlternativeHdfsSubPath(), tabName);
     }
 
     private String getHdfsSubPath(IExecChainContext execContext, EntityName dumpTable) {

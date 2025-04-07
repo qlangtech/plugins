@@ -89,7 +89,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) reader.getDataSourceFactory();
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
-            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+            IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator(reader);
             EntityName entity = null;
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
@@ -142,7 +142,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .hostname(dbHost)
                                             .debeziumProperties(debeziumProperties)
                                             .port(dsFactory.port)
-                                            .serverTimeZone(dsFactory.getTimeZone().get())
+                                            .serverTimeZone(dsFactory.getTimeZone().get().getId())
                                             .startupOptions(sourceFactory.getStartupOptions())
                                             .databaseList((dsFactory.getDbName())) // monitor XE database
                                             // .schemaList("FLINKUSER") // monitor inventory schema

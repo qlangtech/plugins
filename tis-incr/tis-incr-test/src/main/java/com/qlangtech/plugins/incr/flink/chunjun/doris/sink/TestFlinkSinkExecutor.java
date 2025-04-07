@@ -47,6 +47,7 @@ import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
@@ -358,7 +359,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
                 MQListenerFactory mockIncrSourceFactory = new MQListenerFactory() {
                     @Override
-                    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+                    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
                         return AbstractRowDataMapper::mapFlinkCol;
                     }
 

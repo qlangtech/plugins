@@ -58,6 +58,7 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.util.impl.AttrVals;
 import org.apache.commons.collections.CollectionUtils;
@@ -110,28 +111,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
         MangoDBDataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTableMetadata(inSink, table);
-//        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
-//        try {
-//            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
-//                    + "be null ");
-//
-//            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
-//            final CodecRegistry codecRegistry = database.getCodecRegistry();
-//            MongoCollection<Document> user = database.getCollection(table.getTableName());
-//
-//            for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
-//                    "inspectRowCount can not " + "be" + " null"))) {
-//                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc, codecRegistry);
-//            }
-//
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//        List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
-//        return result;
+        return plugin.getTableMetadata(inSink, pluginContext, table);
     }
 
     @Override

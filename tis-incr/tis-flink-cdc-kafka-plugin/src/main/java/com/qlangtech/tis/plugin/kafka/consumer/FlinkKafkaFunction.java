@@ -84,7 +84,7 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
 //            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
         //  Map<String, DeserializationSchema<RowData>> tabColsMapper = Maps.newHashMap();
 //            TableInDB tablesInDB = dsFactory.getTablesInDB();
-        IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator();
+        IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator(kafkaReader);
 //            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
 //        DataType physicalDataType = null;
 //        DeserializationSchema<RowData> deserializeSchema = null;

@@ -304,7 +304,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(mongoDBCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(mongoDBCDCFactory.createFlinkColCreator(dataxReader));
                 return sourceHandle;
             }
 

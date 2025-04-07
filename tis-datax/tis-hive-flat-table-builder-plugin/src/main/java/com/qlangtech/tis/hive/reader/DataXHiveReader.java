@@ -150,9 +150,9 @@ public class DataXHiveReader extends AbstractDFSReader implements AfterPluginSav
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
         Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
-        return dsFactory.getTableMetadata(false, table);
+        return dsFactory.getTableMetadata(false, pluginContext, table);
     }
 
 
@@ -167,7 +167,7 @@ public class DataXHiveReader extends AbstractDFSReader implements AfterPluginSav
         List<HiveTable> tabs = msClient.getTables(dsFactory.dbName);
         for (HiveTable tab : tabs) {
             resMeta = new DataXDFSReaderWithMeta.TargetResMeta(tab.getTableName(), (session) -> {
-                return dsFactory.getTableMetadata(false, EntityName.parse(tab.getTableName()));
+                return dsFactory.getTableMetadata(false, null, EntityName.parse(tab.getTableName()));
             });
             result.add(resMeta);
         }

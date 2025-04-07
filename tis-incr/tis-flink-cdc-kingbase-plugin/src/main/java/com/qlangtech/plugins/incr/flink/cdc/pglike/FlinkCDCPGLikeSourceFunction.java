@@ -81,7 +81,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
                 throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
             }
 
-            final IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
+            final IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator(rdbmsReader);
 
             final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(

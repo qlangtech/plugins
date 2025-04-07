@@ -46,6 +46,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -108,8 +109,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    public Optional<String> getTimeZone() {
-        return Optional.of(this.timeZone);
+    public Optional<ZoneId> getTimeZone() {
+        return Optional.of(ZoneId.of(this.timeZone));
     }
 
     @Override

@@ -41,7 +41,7 @@ public class HiveDFSSession extends HdfsTDFSSession {
 
     public List<ColumnMetaData> parseColsMeta(String tabName) {
         Hiveserver2DataSourceFactory dsFactory = dfsLinker.getDataSourceFactory();
-        return dsFactory.getTableMetadata(false, EntityName.parse(tabName));
+        return dsFactory.getTableMetadata(false, null, EntityName.parse(tabName));
 
 //        HiveMeta metadata = dsFactory.metadata;
 //        HiveTable table = metadata.createMetaStoreClient().getTable(dsFactory.dbName, tabName);

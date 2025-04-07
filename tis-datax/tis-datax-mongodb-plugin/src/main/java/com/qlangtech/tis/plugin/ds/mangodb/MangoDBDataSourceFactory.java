@@ -50,6 +50,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
@@ -254,7 +255,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public final List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
         try (MongoClient mongoClient = Objects.requireNonNull(this.unwrap(MongoClient.class), " mongoClient can not "
                 + "be null ")) {
             return getMongoColumnMetaData(mongoClient, table);

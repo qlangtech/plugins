@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.dameng.source;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 
 /**
@@ -34,7 +35,7 @@ public class ChunjunDamengSourceFactory extends ChunjunSourceFactory {
     }
 
     @Override
-    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator() {
+    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator(DataSourceMeta sourceMeta) {
         throw new UnsupportedOperationException();
     }
 

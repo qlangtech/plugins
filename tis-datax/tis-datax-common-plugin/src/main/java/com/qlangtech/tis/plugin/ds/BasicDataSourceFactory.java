@@ -44,6 +44,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -90,9 +91,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
 
-    public Optional<String> getTimeZone() {
-        return Optional.empty();
-    }
+
+
 
     /**
      * 数据库编码
@@ -119,7 +119,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, final EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, final EntityName table) {
         if (table == null) {
             throw new IllegalArgumentException("param table can not be null");
         }

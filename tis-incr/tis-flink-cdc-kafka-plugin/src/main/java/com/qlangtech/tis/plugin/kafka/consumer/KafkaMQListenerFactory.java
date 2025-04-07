@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.kafka.reader.DataXKafkaReader;
 import com.qlangtech.tis.plugin.datax.kafka.reader.StartOffset;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -115,7 +116,7 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
 
 
     @Override
-    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
 
         if (StringUtils.isEmpty(this.dataXName)) {
             throw new IllegalStateException("pipeline name can not be null");

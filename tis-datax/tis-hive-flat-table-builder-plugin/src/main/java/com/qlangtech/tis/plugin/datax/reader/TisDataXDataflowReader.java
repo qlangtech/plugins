@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class TisDataXDataflowReader extends DataxReader {
         this.getTablesInDB();
         DataFlowDataXProcessor processor = this.getProcessor();
         for (IDataxReader reader : processor.getReaders(null)) {
-          reader.startScanDependency();
+            reader.startScanDependency();
         }
         processor.getWriter(null).startScanDependency();
     }
@@ -77,7 +78,7 @@ public class TisDataXDataflowReader extends DataxReader {
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
 
         SqlTaskNodeMeta.SqlDataFlowTopology topology = this.getTopology();
         Map<String, SqlTaskNodeMeta> finalNodes = topology.getFinalNodes();
@@ -94,7 +95,7 @@ public class TisDataXDataflowReader extends DataxReader {
 
 
         // try {
-        return writerDS.getTableMetadata(false, table);
+        return writerDS.getTableMetadata(false, pluginContext, table);
 //        } catch (TableNotFoundException e) {
 //
 //            nodeMeta.getSql();

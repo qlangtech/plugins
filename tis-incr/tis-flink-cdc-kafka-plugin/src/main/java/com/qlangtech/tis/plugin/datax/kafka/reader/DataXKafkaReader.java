@@ -301,7 +301,7 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
         //  return super.getTableMetadata(inSink, table);
         return parseTableMetadataFromKafkaHistoryEvents(table);
     }

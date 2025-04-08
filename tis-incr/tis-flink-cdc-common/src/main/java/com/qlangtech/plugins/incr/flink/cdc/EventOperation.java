@@ -47,7 +47,7 @@ public class EventOperation {
     }
 
     public boolean isInsert() {
-        return op == Operation.CREATE;
+        return op == Operation.CREATE || op == Operation.READ;
     }
 
     public boolean isUpdate() {

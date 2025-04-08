@@ -30,7 +30,7 @@
   "processName": {
     "label": "工作流名称",
     "help": "对应的dolphinscheduler中工作流名称，确保同一项目下工作流名称唯一，不能重复",
-    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftProcessName()"
+    "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftProcessName():uncache_true"
   },
   "processDescription": {
     "label": "描述",

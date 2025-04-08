@@ -18,6 +18,7 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 //
 
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
@@ -94,8 +96,8 @@ public class JoinHiveTask extends HiveTask {
     protected void initializeTable(DataSourceMeta ds
             , ColsParser insertParser
             , JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
-
-        final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable);
+        INameWithPathGetter tablePath = ((Hiveserver2DataSourceFactory) ds).getSubTablePath(dumpTable);
+        final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), tablePath);
         if (fileSystem == null) {
             throw new IllegalStateException("fileSys can not be null");
         }
@@ -118,7 +120,7 @@ public class JoinHiveTask extends HiveTask {
                     }
                 }, () -> {
                     insertParser.reflectColsType();
-                    createHiveTable(fileSystem, fsFormat, ds, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
+                    createHiveTable(fileSystem, fsFormat, ds, dumpTable, tablePath, insertParser.getColsExcludePartitionCols(), conn);
                 });
     }
 
@@ -144,12 +146,12 @@ public class JoinHiveTask extends HiveTask {
      * 创建hive表
      */
     public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat
-            , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, JDBCConnection conn) {
+            , DataSourceMeta sourceMeta, EntityName dumpTable, INameWithPathGetter tabPath, List<HiveColumn> cols, JDBCConnection conn) {
         try {
             HiveTableBuilder tableBuilder = new HiveTableBuilder("0", fsFormat);
             tableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, dumpTable, cols, (hiveSQl) -> {
                 hiveSQl.append("\n LOCATION '").append(
-                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)
+                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), tabPath)
                 ).append("'");
             });
         } catch (Exception e) {

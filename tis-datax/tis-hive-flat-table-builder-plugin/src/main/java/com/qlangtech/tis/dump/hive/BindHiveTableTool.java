@@ -20,8 +20,10 @@ package com.qlangtech.tis.dump.hive;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
@@ -51,7 +53,7 @@ import java.util.concurrent.Callable;
 public class BindHiveTableTool {
     private static final Logger logger = LoggerFactory.getLogger(HiveTableBuilder.class);
 
-    public static void bindHiveTables(DataSourceMeta engine, JDBCConnection hiveConn,
+    public static void bindHiveTables(Hiveserver2DataSourceFactory engine, JDBCConnection hiveConn,
                                       ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables
             , String timestamp) {
 
@@ -68,7 +70,7 @@ public class BindHiveTableTool {
     }
 
 
-    public static void bindHiveTables(DataSourceMeta engine, JDBCConnection hiveConn,
+    public static void bindHiveTables(Hiveserver2DataSourceFactory engine, JDBCConnection hiveConn,
                                       ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables
             , String timestamp, HiveTableBuilder.IsTableSchemaSame isTableSchemaSame,
                                       HiveTableBuilder.CreateHiveTableAndBindPartition createHiveTableAndBindPartition) {
@@ -86,7 +88,7 @@ public class BindHiveTableTool {
     }
 
     @SuppressWarnings("all")
-    public static List<HiveColumn> getColumns(ITISFileSystem fs, EntityName hiveTable, String timestamp) throws IOException {
+    public static List<HiveColumn> getColumns(ITISFileSystem fs, INameWithPathGetter hiveTable, String timestamp) throws IOException {
         String hivePath = hiveTable.getNameWithPath();
         InputStream input = null;
         List<HiveColumn> cols = new ArrayList<>();

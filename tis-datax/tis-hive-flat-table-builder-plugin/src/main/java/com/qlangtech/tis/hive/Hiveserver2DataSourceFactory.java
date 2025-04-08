@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hive.shim.HiveContextConfig;
@@ -93,16 +94,21 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @FormField(ordinal = 4, advance = true, type = FormFieldType.INPUTTEXT, validate = {})
     public String alternativeHdfsSubPath;
 
-    public String getAlternativeHdfsSubPath() {
+    String getAlternativeHdfsSubPath() {
         if (StringUtils.isEmpty(this.alternativeHdfsSubPath)) {
             return this.dbName;
         }
-        Pattern matchAll = ValidatorCommons.pattern_identity;
+        Pattern matchAll = Pattern.compile("([A-Z\\da-z_\\-]+)");
         Matcher matcher = matchAll.matcher(this.dbName);
         if (!matcher.matches()) {
             throw new IllegalStateException("dbName:" + this.dbName);
         }
         return matcher.replaceAll(alternativeHdfsSubPath);
+    }
+
+    public INameWithPathGetter getSubTablePath(EntityName dumpTable) {
+        INameWithPathGetter tabPath = INameWithPathGetter.create(Optional.of(this.getAlternativeHdfsSubPath()), dumpTable.getTabName());
+        return tabPath;
     }
 
     @Override
@@ -280,9 +286,14 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
             if (valid) {
                 Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;
-                String hdfsSubPath = ds.getAlternativeHdfsSubPath();
-                if (StringUtils.isEmpty(hdfsSubPath)) {
-                    msgHandler.addFieldError(context, FIELD_ALTERNATIVE_HDFS_SUB_PATH, "填写有误，请查看帮助");
+                try {
+                    String hdfsSubPath = ds.getAlternativeHdfsSubPath();
+                    if (StringUtils.isEmpty(hdfsSubPath)) {
+                        msgHandler.addFieldError(context, FIELD_ALTERNATIVE_HDFS_SUB_PATH, "填写有误，请查看帮助");
+                        return false;
+                    }
+                } catch (Exception e) {
+                    msgHandler.addFieldError(context, FIELD_ALTERNATIVE_HDFS_SUB_PATH, e.getMessage());
                     return false;
                 }
                 try (IHiveMetaStore meta = ds.createMetaStoreClient()) {

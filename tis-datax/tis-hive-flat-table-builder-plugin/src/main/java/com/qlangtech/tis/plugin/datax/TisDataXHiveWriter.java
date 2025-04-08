@@ -32,6 +32,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.TextFileUtils;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.HiveTable.HiveTabColType;
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
@@ -69,7 +70,10 @@ public class TisDataXHiveWriter extends Writer {
     static final Logger logger = LoggerFactory.getLogger(TisDataXHiveWriter.class);
 
     public static class Job extends BasicEngineJob<DataXHiveWriter> {
-
+        @Override
+        protected INameWithPathGetter createDumpTablePath(EntityName dumpTable) {
+            return this.getWriterPlugin().getDataSourceFactory().getSubTablePath(dumpTable);
+        }
     }
 
     public static class Task extends BasicDataXHdfsWriter.Task {

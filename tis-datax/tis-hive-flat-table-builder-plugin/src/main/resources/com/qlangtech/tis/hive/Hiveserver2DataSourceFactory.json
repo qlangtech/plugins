@@ -12,7 +12,7 @@
     "dftVal": "default"
   },
   "alternativeHdfsSubPath": {
-    "label": "hdfsSubPath",
+    "label": "AliasOfSubPath",
     "placeholder": "$1.db"
   },
   "userName": {

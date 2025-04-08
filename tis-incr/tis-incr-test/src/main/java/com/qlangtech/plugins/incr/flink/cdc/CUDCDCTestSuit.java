@@ -398,7 +398,8 @@ public abstract class CUDCDCTestSuit {
                 throw new UnsupportedOperationException();
             }
         };
-        processor.setTableMaps(Lists.newArrayList(new TableAlias(this.tabName)));
+        TableAlias.testTabAlias = Lists.newArrayList(new TableAlias(this.tabName));
+       // processor.setTableMaps();
         return processor;
     }
 

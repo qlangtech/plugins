@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
@@ -407,9 +408,9 @@ public class DataXHiveWriter extends BasicFSWriter
 
                 // 负责初始化表
                 final Hiveserver2DataSourceFactory dsFactory = DataXHiveWriter.this.getDataSourceFactory();
-
+                INameWithPathGetter tabPath = dsFactory.getSubTablePath(dumpTable);// INameWithPathGetter.create(Optional.of(dsFactory.getAlternativeHdfsSubPath()), dumpTable.getTabName());
                 ITISFileSystem fs = getFs().getFileSystem();
-                Path tabDumpParentPath = getTabDumpParentPath(execContext, dumpTable);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tabPath);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
                 dsFactory.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
@@ -463,17 +464,17 @@ public class DataXHiveWriter extends BasicFSWriter
 
 
     public EntityName getDumpTab(String tabName) {
-        return EntityName.create(this.getDataSourceFactory().getAlternativeHdfsSubPath(), tabName);
+        return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
     }
 
-    private String getHdfsSubPath(IExecChainContext execContext, EntityName dumpTable) {
+    private String getHdfsSubPath(IExecChainContext execContext, INameWithPathGetter dumpTable) {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
         // return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
         return dumpTable.getNameWithPath() + "/"
                 + this.getPsFormat().format(execContext.getPartitionTimestampWithMillis());
     }
 
-    private Path getTabDumpParentPath(IExecChainContext execContext, EntityName dumpTable) {
+    private Path getTabDumpParentPath(IExecChainContext execContext, INameWithPathGetter dumpTable) {
         // EntityName dumpTable = getDumpTab(tab);
         ITISFileSystem fs = getFs().getFileSystem();
         Path tabDumpParentPath = new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(execContext, dumpTable));
@@ -488,8 +489,10 @@ public class DataXHiveWriter extends BasicFSWriter
             String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
 
             if (!execContext.isDryRun()) {
-                Path tabDumpParentPath = getTabDumpParentPath(execContext, dumpTable);
                 Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
+                INameWithPathGetter tabPath = dsFactory.getSubTablePath(dumpTable); // INameWithPathGetter.create(Optional.of(dsFactory.getAlternativeHdfsSubPath()), dumpTable.getTabName());
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tabPath);
+
                 try (JDBCConnection hiveConn = this.getConnection()) {
                     final Path dumpParentPath = tabDumpParentPath;
                     BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
@@ -526,30 +529,6 @@ public class DataXHiveWriter extends BasicFSWriter
         dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
     }
 
-
-//    /**
-//     * https://cwiki.apache.org/confluence/display/hive/languagemanual+ddl#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
-//     *
-//     * @return
-//     */
-//    private List<HiveColumn> getCols() {
-//        List<Configuration> cols = null;//this.columns;
-//        AtomicInteger index = new AtomicInteger();
-//        return cols.stream().map((c) -> {
-//            HiveColumn hivCol = new HiveColumn();
-//            DataType colType = DataType.ds(c.getString(HdfsColMeta.KEY_TYPE));
-//            //SupportHiveDataType columnType = DataType.convert2HiveType();
-//            String name = StringUtils.remove(c.getString(HdfsColMeta.KEY_NAME), "`");
-//            if (StringUtils.isBlank(name)) {
-//                throw new IllegalStateException("col name can not be blank");
-//            }
-//            hivCol.setName(name);
-//            hivCol.setDataType(colType);
-//            //hivCol.setType(columnType.name());
-//            hivCol.setIndex(index.getAndIncrement());
-//            return hivCol;
-//        }).collect(Collectors.toList());
-//    }
 
     /**
      * impl End: IDataXBatchPost

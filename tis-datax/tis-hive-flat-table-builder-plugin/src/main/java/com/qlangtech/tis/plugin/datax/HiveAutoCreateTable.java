@@ -21,12 +21,14 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -35,6 +37,7 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 
 import java.util.List;
@@ -47,7 +50,6 @@ import java.util.Optional;
 public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
     private final Optional<String> tabProperties;
-
 
 
     public HiveAutoCreateTable() {
@@ -63,6 +65,7 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         DataXHiveWriter hiveWriter = (DataXHiveWriter) rdbmsWriter;
+        final Hiveserver2DataSourceFactory dsFactory = hiveWriter.getDataSourceFactory();
         final ITISFileSystem fileSystem = hiveWriter.getFs().getFileSystem();
         final CreateTableSqlBuilder createTableSqlBuilder
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, hiveWriter.getDataSourceFactory(), transformers) {
@@ -89,8 +92,10 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 script.appendLine(fsFormat.getRowFormat());
                 script.appendLine("STORED AS " + fsFormat.getFileType().getType());
 
+                //  hiveWriter.getDumpTab(targetTableName)
                 script.appendLine("LOCATION '").append(
-                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), hiveWriter.getDumpTab(targetTableName))
+                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir()
+                                , dsFactory.getSubTablePath(EntityName.parse(targetTableName)))
                 ).append("'");
 
                 tabProperties.ifPresent((tabProps) -> {

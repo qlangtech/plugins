@@ -36,6 +36,22 @@ import java.util.List;
  **/
 public class TestHiveserver2DataSourceFactory {
 
+    @Test
+    public void testGetAlternativeHdfsSubPath() {
+        Hiveserver2DataSourceFactory hive2DataSourceFactory = new Hiveserver2DataSourceFactory();
+        hive2DataSourceFactory.dbName = "order";
+        hive2DataSourceFactory.alternativeHdfsSubPath = "$1.db";
+
+        Assert.assertEquals("order.db", hive2DataSourceFactory.getAlternativeHdfsSubPath());
+
+        hive2DataSourceFactory.alternativeHdfsSubPath = null;
+
+        Assert.assertEquals("order", hive2DataSourceFactory.getAlternativeHdfsSubPath());
+
+        hive2DataSourceFactory.alternativeHdfsSubPath = "dezhou.db";
+
+        Assert.assertEquals("dezhou.db", hive2DataSourceFactory.getAlternativeHdfsSubPath());
+    }
 
 
     @Test
@@ -73,7 +89,7 @@ public class TestHiveserver2DataSourceFactory {
         Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
         HiveMeta meta = new HiveMeta();
         meta.metaStoreUrls = "thrift://47.96.7.122:9083";
-        meta.userToken =  createKerberToken(); //new OffUserToken();
+        meta.userToken = createKerberToken(); //new OffUserToken();
         //  hiveDS.metadata = createKerberToken();
         hiveDS.metadata = meta;
         //  hiveDS.userToken = createKerberToken();

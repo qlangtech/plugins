@@ -18,12 +18,14 @@
 
 package com.qlangtech.tis.dump.hive;
 
+import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -161,7 +163,7 @@ public class HiveTableBuilder {
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn) throws Exception {
+    public void bindHiveTables(Hiveserver2DataSourceFactory engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn) throws Exception {
         bindHiveTables(engine, hiveTables, conn,
                 (columns, hiveTable) -> {
                     return isTableSame(engine, conn, columns.colsMeta, hiveTable);
@@ -178,7 +180,7 @@ public class HiveTableBuilder {
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn
+    public void bindHiveTables(Hiveserver2DataSourceFactory engine, Map<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> hiveTables, JDBCConnection conn
             , IsTableSchemaSame isTableSchemaSame, CreateHiveTableAndBindPartition createHiveTableAndBindPartition) throws Exception {
 
         try {
@@ -211,7 +213,7 @@ public class HiveTableBuilder {
                 }
 
                 // 生成 hive partitiion
-                this.bindPartition(conn, columns, hiveTable, 0);
+                this.bindPartition(conn, columns, hiveTable, engine.getSubTablePath(hiveTable), 0);
             }
         } finally {
 //                try {
@@ -290,9 +292,10 @@ public class HiveTableBuilder {
      * @param
      * @throws Exception
      */
-    void bindPartition(JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName table, int startIndex) throws Exception {
+    void bindPartition(JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns
+            , EntityName table, INameWithPathGetter tabPath, int startIndex) throws Exception {
 
-        visitSubPmodPath(table, columns, startIndex, (pmod, path) -> {
+        visitSubPmodPath(tabPath, columns, startIndex, (pmod, path) -> {
             String sql = "alter table " + table + " add if not exists partition(" + IDumpTable.PARTITION_PT + "='"
                     + timestamp + "'," + IDumpTable.PARTITION_PMOD + "='" + pmod + "') location '" + path.toString() + "'";
             logger.info(sql);
@@ -301,7 +304,7 @@ public class HiveTableBuilder {
         });
     }
 
-    private IPath visitSubPmodPath(EntityName table, BindHiveTableTool.HiveBindConfig colsMeta, int startIndex, FSPathVisitor pathVisitor) throws Exception {
+    private IPath visitSubPmodPath(INameWithPathGetter table, BindHiveTableTool.HiveBindConfig colsMeta, int startIndex, FSPathVisitor pathVisitor) throws Exception {
         final String hivePath = table.getNameWithPath();
         ITISFileSystem fs = this.fileSystem;
         IPath path = null;
@@ -316,7 +319,9 @@ public class HiveTableBuilder {
                 }
                 return path;
             }
-            if (!pathVisitor.process(startIndex, path)) { return path;}
+            if (!pathVisitor.process(startIndex, path)) {
+                return path;
+            }
             startIndex++;
         }
     }
@@ -326,13 +331,13 @@ public class HiveTableBuilder {
     }
 
 
-    private void createHiveTableAndBindPartition(DataSourceMeta sourceMeta, JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName tableName) throws Exception {
+    private void createHiveTableAndBindPartition(Hiveserver2DataSourceFactory sourceMeta, JDBCConnection conn, BindHiveTableTool.HiveBindConfig columns, EntityName tableName) throws Exception {
         createHiveTableAndBindPartition(sourceMeta, conn, tableName, columns.colsMeta, (hiveSQl) -> {
                     //final String hivePath = tableName.getNameWithPath();
                     int startIndex = 0;
                     //final StringBuffer tableLocation = new StringBuffer();
                     AtomicBoolean hasSubPmod = new AtomicBoolean(false);
-                    IPath p = this.visitSubPmodPath(tableName, columns, startIndex, (pmod, path) -> {
+                    IPath p = this.visitSubPmodPath(sourceMeta.getSubTablePath(tableName), columns, startIndex, (pmod, path) -> {
                         // hiveSQl.append(" partition(pt='" + timestamp + "',pmod='" + pmod + "') location '" + path.toString() + "'");
 
                         hiveSQl.append(" location '" + path.toString() + "'");

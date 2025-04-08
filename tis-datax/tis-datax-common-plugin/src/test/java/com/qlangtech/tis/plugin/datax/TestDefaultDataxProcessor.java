@@ -53,7 +53,8 @@ public class TestDefaultDataxProcessor extends BasicTest {
             tabAlias.setFrom("customer_order_relation");
             tabAlias.setTo("customer_order_relation1");
             List<TableAlias> tableMaps = Lists.newArrayList(tabAlias);
-            dataxProcessor.setTableMaps(tableMaps);
+            TableAlias.testTabAlias = tableMaps;
+            //dataxProcessor.setTableMaps(tableMaps);
 
             dataxProcessor.globalCfg = "datax-global-config";
             dataxProcessor.dptId = "356";

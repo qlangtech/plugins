@@ -38,6 +38,7 @@ import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.hive.reader.SupportedFileFormat;
 import com.qlangtech.tis.hive.reader.impl.HadoopInputFormat;
+import com.qlangtech.tis.hive.shim.IHiveSerDe;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -171,40 +172,22 @@ public class TisDataXHiveWriter extends Writer {
         public static void startCommonWrite(HadoopInputFormat outputFileFormat, FileSystem fileSystem
                 , JobConf conf, RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
 
-            //  RecordWriter recordsWriter = ;
-
             List<IColMetaGetter> colsMeta = HdfsColMeta.getColsMeta(config);
-            // List<Configuration> columns = config.getListConfiguration(Key.COLUMN);
-            // String compress = config.getString(Key.COMPRESS, null);
-            // List<String> columnNames = colsMeta.stream().map((c) -> c.getName()).collect(Collectors.toList());
             ColumnTypeValInspectors columnTypeInspectors = FileFormatUtils.getColumnTypeInspectors(colsMeta);
             StructObjectInspector inspector = columnTypeInspectors.getStructObjectInspector();
-//        ObjectInspectorFactory
-//                .getStandardStructObjectInspector(columnNames, columnTypeInspectors.columnTypeInspectors);
-
-            // OrcSerde orcSerde = new OrcSerde();
-
-//            FileOutputFormat outFormat = new OrcOutputFormat();
-//            if (!"NONE".equalsIgnoreCase(compress) && null != compress) {
-//                Class<? extends CompressionCodec> codecClass = getCompressCodec(compress);
-//                if (null != codecClass) {
-//                    outFormat.setOutputCompressorClass(conf, codecClass);
-//                }
-//            }
-
-            //  Object key = outputFileFormat.createKey();
             outputFileFormat.createValue(colsMeta.size());
 
             FileSinkOperator.RecordWriter writer = null;
             try {
                 writer = outputFileFormat.createRecordsWriter(fileSystem, fileName);// outFormat.getRecordWriter(fileSystem, conf, fileName, Reporter.NULL);
+                IHiveSerDe serde = outputFileFormat.getSerde();
                 Record record = null;
                 Object[] rowVals = new Object[colsMeta.size()];
                 while ((record = lineReceiver.getFromReader()) != null) {
                     MutablePair<Object[], Boolean> transportResult
                             = FileFormatUtils.transportOneRecord(record, rowVals, columnTypeInspectors.columnValGetters, taskPluginCollector);
                     if (!transportResult.getRight()) {
-                        writer.write(outputFileFormat.getSerde().serialize(transportResult.getLeft(), inspector));
+                        writer.write(serde.serialize(transportResult.getLeft(), inspector));
                     }
                 }
 

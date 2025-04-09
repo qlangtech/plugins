@@ -19,12 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -32,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.resmatcher.WildcardDFSResMatcher;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
@@ -39,6 +36,7 @@ import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +46,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -103,29 +102,16 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
+        if (StringUtils.isEmpty(this.dataXName)) {
+            throw new IllegalStateException("prop dataXName can not be null");
+        }
+        return this.resMatcher.getTableMetadata(pluginContext, this.dataXName, this, table);
 
-        Optional<TableMap> tabAlia = getTableMap(pluginContext);
-        return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
+//        Optional<TableMap> tabAlia = getTableMap(pluginContext);
+//        return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
     }
 
-    private Optional<TableMap> getTableMap(IPluginContext pluginContext) {
-        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, this.dataXName);
-        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext);
-        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
-        return tabAlia;
-    }
 
-    @Override
-    public ThreadCacheTableCols getContextTableColsStream(SuFormProperties.SuFormGetterContext context) {
-        return getContextTableColsStream(context, () -> {
-            //Supplier<List<CMeta>>
-            Optional<List<CMeta>> cmetas = getTableMap(context.param.getPluginContext()).map((tab) -> tab.getSourceCols());
-            if (!cmetas.isPresent()) {
-                throw new IllegalStateException("cmetas can not be empty");
-            }
-            return cmetas.get();
-        });
-    }
 
 
     @Override

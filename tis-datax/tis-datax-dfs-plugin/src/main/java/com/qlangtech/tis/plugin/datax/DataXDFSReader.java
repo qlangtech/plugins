@@ -25,17 +25,27 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.extension.impl.SuFormProperties.SuFormGetterContext;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.resmatcher.MetaAwareDFSResMatcher;
+import com.qlangtech.tis.plugin.datax.resmatcher.WildcardDFSResMatcher;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -78,6 +88,49 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         });
     }
 
+    @Override
+    public ThreadCacheTableCols getContextTableColsStream(SuFormProperties.SuFormGetterContext context) {
+        if (this.resMatcher instanceof MetaAwareDFSResMatcher) {
+            return super.getContextTableColsStream(context);
+        } else if (this.resMatcher instanceof WildcardDFSResMatcher) {
+            return this.getContextTableColsStream(context, (targetTab) -> {
+                try {
+                    List<ColumnMetaData> tableMetadata = getColumnMetaData(context.param.getPluginContext(), targetTab);
+                    return tableMetadata.stream().map((col) -> ColumnMetaData.convert(col)).collect(Collectors.toList());
+                } catch (TableNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } else {
+            throw new IllegalStateException("invalid resMatcher class:" + this.resMatcher.getClass().getSimpleName());
+        }
+    }
+
+    private List<ColumnMetaData> getColumnMetaData(IPluginContext context, EntityName targetTab) throws TableNotFoundException {
+        List<ColumnMetaData> tableMetadata
+                = this.resMatcher.getTableMetadata(
+                context, this.dataXName, this, targetTab);
+        return tableMetadata;
+    }
+
+    @Override
+    public List<SelectedTab> fillSelectedTabMeta(List<SelectedTab> tabs) {
+        if (this.resMatcher instanceof MetaAwareDFSResMatcher) {
+            return tabs.stream().map((tab) -> {
+                ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
+                    try {
+                        return getColumnMetaData(IPluginContext.getThreadLocalInstance(), tab.getEntityName())
+                                .stream().collect(Collectors.toMap((col) -> col.getName(), (col) -> col));
+                    } catch (TableNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                return tab;
+            }).collect(Collectors.toList());
+
+        }
+        return tabs;
+    }
 
 
     @Override

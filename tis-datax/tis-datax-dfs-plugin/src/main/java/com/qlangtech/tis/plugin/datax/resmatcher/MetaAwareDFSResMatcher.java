@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
@@ -75,11 +76,19 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
 
     @Override
     public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, TableMap table) throws TableNotFoundException {
-        return dfsReader.getDfsLinker().useTdfsSession((dfs) -> {
-            return getDFSFileMetaData(dfsReader, EntityName.parse(table.getFrom()), dfs);
-        });
+//        return dfsReader.getDfsLinker().useTdfsSession((dfs) -> {
+//            return getDFSFileMetaData(dfsReader, EntityName.parse(table.getFrom()), dfs);
+//        });
+
+        return getTableMetadata(null, null, dfsReader, EntityName.parse(table.getFrom()));
     }
 
+    @Override
+    public List<ColumnMetaData> getTableMetadata(IPluginContext pluginContext, String pipelineName, IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
+        return dfsReader.getDfsLinker().useTdfsSession((dfs) -> {
+            return getDFSFileMetaData(dfsReader, table, dfs);
+        });
+    }
 
     @Override
     public SourceColsMeta getSourceColsMeta(ITDFSSession hdfsSession, Optional<String> entityName, String path, IDataxProcessor processor) {
@@ -94,28 +103,6 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
         }
 
         return getSourceColsMeta(processor, resMeta.getEntityName(), DataXDFSReaderWithMeta.getDFSFileMetaData(path, hdfsSession));
-
-//        Optional<ISelectedTab> tab = selectedTabs.stream().filter((t) -> StringUtils.equals(resMeta.getEntityName(), t.getName())).findFirst();
-//
-//        ISelectedTab ttab = tab.orElseThrow(() -> new IllegalStateException("can not find tab:" + resMeta.getEntityName() + " in select tables:"
-//                + selectedTabs.stream().map((t) -> t.getName()).collect(Collectors.joining(","))));
-//
-//        final Set<String> selectedCols
-//                = ttab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toSet());
-//
-//
-//        List<CMeta> result = Lists.newArrayList();
-//        CMeta cm = null;
-//        List<ColumnMetaData> colsMeta = DataXDFSReaderWithMeta.getDFSFileMetaData(path, hdfsSession);
-//        for (ColumnMetaData col : colsMeta) {
-//            cm = new CMeta();
-//            cm.setPk(col.isPk());
-//            cm.setType(col.getType());
-//            cm.setName(col.getName());
-//            cm.setNullable(col.isNullable());
-//            result.add(cm);
-//        }
-//        return new SourceColsMeta(result, (col) -> selectedCols.contains(col));
     }
 
 
@@ -130,8 +117,6 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
         final int tabsLength = tabs.size();
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
         ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
-
-//        FTPServer server = FTPServer.getServer(this.linker);
 
         ITDFSSession dfs = dfsReader.getDfsLinker().createTdfsSession();
         //  final FtpHelper dfs = server.createFtpHelper(server.timeout);
@@ -187,17 +172,6 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
      */
     private List<ColumnMetaData> getDFSFileMetaData(IDFSReader dfsReader, EntityName table, ITDFSSession dfs) {
 
-//                IPath.pathConcat(dfsReader.getDfsLinker().getRootPath(), table.getTabName());
-//
-//        String[] pathSplit = StringUtils.split(dfsReader.getDfsLinker().getRootPath(), File.separator);
-//        if (pathSplit.length > 0) {
-//            /**
-//             * TDFSLinker 的path 设置 为 meta.json 的直接父目录的话，则不需要再在path 添加表名称了，不然路径不对了
-//             */
-//            if (pathSplit[pathSplit.length - 1].equals(table.getTabName())) {
-//                ftpPath = dfsReader.getDfsLinker().getRootPath();
-//            }
-//        }
         return DataXDFSReaderWithMeta.getDFSFileMetaData(
                 DataXDFSSelectTableReaderContext.buildMetaAwareDFSTargetPath(
                         dfsReader.getDfsLinker(), table.getTabName()), dfs);

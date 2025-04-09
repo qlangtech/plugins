@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,21 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
     public HiveDFSResMatcher() {
         //  this.hiveReader = hiveReader;
         this.maxTraversalLevel = 2;
+    }
+
+    /**
+     * 获取已经选中的表的cols
+     * @param pluginContext
+     * @param pipelineName
+     * @param dfsReader
+     * @param table
+     * @return
+     * @throws TableNotFoundException
+     */
+    @Override
+    public List<ColumnMetaData> getTableMetadata(
+            IPluginContext pluginContext, String pipelineName, IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -63,7 +79,6 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
     public List<ISelectedTab> getSelectedTabs(IDFSReader dfsReader) {
         return ((Supplier<List<ISelectedTab>>) dfsReader).get();
     }
-
 
 
     @Override

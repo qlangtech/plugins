@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.resmatcher;
 
 import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -58,6 +59,32 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String wildcard;
+
+    public static Optional<TableMap> getTableMap(IPluginContext pluginContext, String dataXName) {
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalArgumentException("param dataXName can not be empty");
+        }
+        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, dataXName);
+        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext);
+        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
+        return tabAlia;
+    }
+
+
+    @Override
+    public List<ColumnMetaData> getTableMetadata(IPluginContext pluginContext, String pipelineName, IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
+        Optional<TableMap> tabAlia = getTableMap(IPluginContext.getThreadLocalInstance(), pipelineName);
+        return getTableMetadata(dfsReader, tabAlia.orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName())));
+        //return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
+    }
+
+
+//    private Optional<TableMap> getTableMap(String pipelineName, IPluginContext pluginContext) {
+//        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, pipelineName);
+//        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext);
+//        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
+//        return tabAlia;
+//    }
 
 
     /**

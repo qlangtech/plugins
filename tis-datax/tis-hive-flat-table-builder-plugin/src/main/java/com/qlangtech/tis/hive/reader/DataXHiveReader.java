@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.ThreadCacheTableCols;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -173,6 +175,11 @@ public class DataXHiveReader extends AbstractDFSReader implements AfterPluginSav
         }
 
         return result;
+    }
+
+    @Override
+    public ThreadCacheTableCols getContextTableColsStream(SuFormProperties.SuFormGetterContext context) {
+        return super.getContextTableColsStream(context);
     }
 
     public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {

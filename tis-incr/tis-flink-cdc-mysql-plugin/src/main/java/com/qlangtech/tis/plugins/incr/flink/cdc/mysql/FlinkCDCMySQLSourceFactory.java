@@ -118,7 +118,7 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
         }
 
         @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean validateMQListenerForm(IControlMsgHandler msgHandler, Context context, MQListenerFactory postFormVals) {
 
 
             IPluginContext plugContext = (IPluginContext) msgHandler;
@@ -130,7 +130,7 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
 
             List<ISelectedTab> tabs = dataxReader.getSelectedTabs();
             DataSourceFactory dsFactory = ((IDataSourceFactoryGetter) dataxReader).getDataSourceFactory();
-            FlinkCDCMySQLSourceFactory sourceFactory = postFormVals.newInstance();
+            FlinkCDCMySQLSourceFactory sourceFactory = (FlinkCDCMySQLSourceFactory) postFormVals;
 
             AtomicInteger count = new AtomicInteger();
             /**

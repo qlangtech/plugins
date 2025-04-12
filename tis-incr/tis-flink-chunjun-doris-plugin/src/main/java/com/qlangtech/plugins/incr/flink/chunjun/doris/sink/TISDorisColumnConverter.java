@@ -124,10 +124,15 @@ public class TISDorisColumnConverter
     }
 
     @Override
-    protected ISerializationConverter<List<String>> wrapIntoNullableExternalConverter(
-            ISerializationConverter<List<String>> serializeConverter, DataType type) {
-        return wrapNullableExternalConverter(serializeConverter);
+    protected ISerializationConverter<List<String>> wrapIntoNullableExternalConverter(ExternalConverter<List<String>, DataType> externalConverter) {
+        return wrapNullableExternalConverter(externalConverter.getSerConverter());
     }
+
+//    @Override
+//    protected ISerializationConverter<List<String>> wrapIntoNullableExternalConverter(
+//            ISerializationConverter<List<String>> serializeConverter, DataType type) {
+//        return wrapNullableExternalConverter(serializeConverter);
+//    }
 
     private static ISerializationConverter<List<String>>
     wrapNullableExternalConverter(ISerializationConverter<List<String>> serializeConverter) {

@@ -24,17 +24,14 @@ import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.ExternalConverter;
 import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
-import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.dialect.PostgresqlDialect;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
-import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.dtstack.chunjun.converter.RawTypeConverter;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.converter.TISPostgresqlColumnConverter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import io.vertx.core.json.JsonArray;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.table.types.logical.LogicalType;
 
 import java.sql.ResultSet;

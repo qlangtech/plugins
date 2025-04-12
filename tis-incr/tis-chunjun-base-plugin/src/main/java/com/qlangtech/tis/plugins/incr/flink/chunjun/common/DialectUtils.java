@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.common;
 
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
+import com.dtstack.chunjun.connector.jdbc.dialect.ExternalConverter;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
@@ -68,12 +69,13 @@ public class DialectUtils {
         }
         List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(colsMeta.stream().collect(Collectors.toList()));
         List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
-        List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>> toExternalConverters = Lists.newArrayList();
+        List<ExternalConverter<IFieldNamesAttachedStatement, LogicalType>> toExternalConverters = Lists.newArrayList();
         LogicalType type = null;
         for (FlinkCol col : flinkCols) {
             type = col.type.getLogicalType();
             toInternalConverters.add(internalConverterCreator.apply(type));
-            toExternalConverters.add(Pair.of(externalConverterCreator.apply(col), type));
+            //  Pair.of(externalConverterCreator.apply(col), type)
+            toExternalConverters.add(new ExternalConverter(externalConverterCreator.apply(col), col, col.colType));
         }
 // List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>>
         return jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters);

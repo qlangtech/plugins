@@ -22,7 +22,14 @@ public class MongoCMetaCreatorFactory extends IdlistElementCreatorFactory {
     public static final String KEY_DOC_FIELD_SPLIT_METAS = "docFieldSplitMetas";
     public static final String KEY_JSON_PATH = "jsonPath";
 
-//    @Override
+
+
+    @Override
+    public CMeta createDefault(JSONObject targetCol) {
+        return new MongoCMeta();
+    }
+
+    //    @Override
 //    public ParsePostMCols<CMeta> parsePostMCols(IPropertyType propertyType, IControlMsgHandler msgHandler, Context context, String keyColsMeta, JSONArray targetCols) {
 //        if (targetCols == null) {
 //            throw new IllegalArgumentException("param targetCols can not be null");
@@ -105,10 +112,7 @@ public class MongoCMetaCreatorFactory extends IdlistElementCreatorFactory {
                 fieldKey);
     }
 
-    @Override
-    public CMeta createDefault() {
-        return new MongoCMeta();
-    }
+
 
     /**
      * @param targetCol

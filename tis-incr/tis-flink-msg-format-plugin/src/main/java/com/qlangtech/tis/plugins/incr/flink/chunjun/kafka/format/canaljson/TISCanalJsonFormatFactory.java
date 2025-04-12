@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.formats.json.JsonFormatOptions;
@@ -141,11 +142,15 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
     public KafkaStructuredRecord parseRecord(KafkaStructuredRecord reuse, byte[] record) {
         reuse.clean();
         HashMap jsonObject = JSON.parseObject(record, HashMap.class);
+        String eventType = StringUtils.upperCase((String) jsonObject.get("type"));
+        if (StringUtils.isEmpty(eventType)) {
+            return null;
+        }
         List<Map> data = (List<Map>) jsonObject.get("data");
         if (data == null) {
             return null;
         }
-        String eventType = (String) jsonObject.get("type");
+
 
         if (data != null) {
             for (Map d : data) {

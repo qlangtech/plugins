@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.chunjun.starrocks.sink;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.connector.jdbc.dialect.ExternalConverter;
 import com.dtstack.chunjun.connector.starrocks.converter.StarRocksColumnConverter;
 import com.dtstack.chunjun.connector.starrocks.streamload.StarRocksSinkOP;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
@@ -41,7 +42,7 @@ import java.util.Map;
 public class TISStarRocksColumnConverter extends StarRocksColumnConverter {
     public TISStarRocksColumnConverter(int fieldCount
             , List<IDeserializationConverter> toInternalConverters
-            , List<Pair<ISerializationConverter<Map<String, Object>>, LogicalType>> toExternalConverters
+            , List<ExternalConverter<Map<String, Object>, LogicalType>> toExternalConverters
             , List<String> columnList) {
         super(fieldCount, toInternalConverters, toExternalConverters, columnList);
     }
@@ -51,8 +52,7 @@ public class TISStarRocksColumnConverter extends StarRocksColumnConverter {
 
         // Map<String, Integer> col2ordMap = Maps.newHashMap();
         List<String> columns = Lists.newArrayList();
-        List<Pair<ISerializationConverter<Map<String, Object>>, LogicalType>>
-                toExternalConverters = Lists.newArrayList();
+        List<ExternalConverter<Map<String, Object>, LogicalType>> toExternalConverters = Lists.newArrayList();
         List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
         // ISerializationConverter<Map<String, Object>> extrnalColConerter = null;
 
@@ -60,7 +60,8 @@ public class TISStarRocksColumnConverter extends StarRocksColumnConverter {
         List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(sinkTabCols.getCols());
         for (FlinkCol col : flinkCols) {
             columns.add(col.name);
-            toExternalConverters.add(Pair.of(getSerializationConverter(col), col.type.getLogicalType()));
+            toExternalConverters.add(new ExternalConverter(getSerializationConverter(col), col.type.getLogicalType(), col.colType));
+            // toExternalConverters.add(Pair.of(getSerializationConverter(col), col.type.getLogicalType()));
             fieldCount++;
         }
         return new TISStarRocksColumnConverter(fieldCount, toInternalConverters, toExternalConverters, columns);

@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect;
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
 import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
+import com.dtstack.chunjun.connector.jdbc.dialect.ExternalConverter;
 import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
@@ -62,7 +63,7 @@ public class TISPostgresqlDialect extends PostgresqlDialect {
     public AbstractRowConverter<ResultSet, JsonArray, IFieldNamesAttachedStatement, LogicalType>
     getColumnConverter(
             ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters
-            , List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>> toExternalConverters) {
+            , List<ExternalConverter<IFieldNamesAttachedStatement, LogicalType>> toExternalConverters) {
         return new TISPostgresqlColumnConverter(commonConf, fieldCount, toInternalConverters, toExternalConverters);
     }
 

@@ -121,7 +121,7 @@ public class MongoDataXColUtils {
                     convertor = new MongoColValCreator(new MongoObjectIdDTOConvert()) {
                         @Override
                         protected FunctionWithPayloadColumnDecorator createColumnValueCreator() {
-                            return new MongoDecimalValueDTOConvertColumn();
+                            return new MongoObjectIdDTOConvertColumn();
                         }
                     };
                     break block_switch;
@@ -187,8 +187,9 @@ public class MongoDataXColUtils {
                     + mongoFieldType + ",bsonType:" + bsonType);
         }
 
-
-        return dataXColumType ? valConvertor.getColumnValueCreator().create(val, zone) : valConvertor.valCreator.apply(val, zone);
+        return dataXColumType
+                ? valConvertor.getColumnValueCreator().create(val, zone)
+                : valConvertor.valCreator.apply(val, zone);
     }
 
     public static class MongoBinaryRawValueDTOConvert implements FunctionWithPayload {

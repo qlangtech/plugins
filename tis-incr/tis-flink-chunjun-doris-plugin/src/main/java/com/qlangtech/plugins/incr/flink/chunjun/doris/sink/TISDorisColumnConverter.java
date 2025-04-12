@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.connector.jdbc.dialect.ExternalConverter;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
@@ -58,7 +59,7 @@ public class TISDorisColumnConverter
     private TISDorisColumnConverter(
             Map<String, Integer> col2ordMap,
             int fieldCount, List<IDeserializationConverter> toInternalConverters
-            , List<Pair<ISerializationConverter<List<String>>, DataType>> toExternalConverters) {
+            , List<ExternalConverter<List<String>, DataType>> toExternalConverters) {
         super(fieldCount, toInternalConverters, toExternalConverters);
         this.col2ordMap = col2ordMap;
     }
@@ -68,7 +69,7 @@ public class TISDorisColumnConverter
     ) {
         Map<String, Integer> col2ordMap = Maps.newHashMap();
 
-        List<Pair<ISerializationConverter<List<String>>, DataType>>
+        List<ExternalConverter<List<String>, DataType>>
                 toExternalConverters = Lists.newArrayList();
         List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
         ISerializationConverter extrnalColConerter = null;
@@ -78,7 +79,9 @@ public class TISDorisColumnConverter
         for (FlinkCol col : flinkCols) {
             col2ordMap.put(col.name, fieldCount);
             extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(col));
-            toExternalConverters.add(Pair.of(extrnalColConerter, col.colType));
+            toExternalConverters.add(new ExternalConverter(extrnalColConerter, col.colType, col.colType)
+                    //Pair.of(extrnalColConerter, col.colType)
+            );
             fieldCount++;
 
         }

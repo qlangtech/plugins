@@ -200,7 +200,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
         this.replay();
         CMeta.ParsePostMCols<CMeta> parsePostMCols
-                = mongoElementCreator.parsePostMCols(null , msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
+                = mongoElementCreator.parsePostMCols(null, msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
         Assert.assertNotNull(parsePostMCols);
         Assert.assertFalse(parsePostMCols.validateFaild);
         Assert.assertEquals(5, parsePostMCols.writerCols.size());
@@ -246,10 +246,10 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
         });
 
         ElementCreatorFactory metaCreator = fieldProp.getCMetaCreator();
-      //  Assert.assertTrue(metaCreator.isPresent());
-        List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, Optional.of((ElementCreatorFactory<CMeta>)metaCreator) , (tab) -> {
+        //  Assert.assertTrue(metaCreator.isPresent());
+        List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, Optional.of((ElementCreatorFactory<CMeta>) metaCreator), (tab) -> {
 
-            MongoCMeta addCol = (MongoCMeta) CMeta.create(Optional.of( metaCreator), DOC_TYPE_FIELD, JDBCTypes.LONGNVARCHAR);
+            MongoCMeta addCol = (MongoCMeta) CMeta.create(Optional.of(metaCreator), DOC_TYPE_FIELD, JDBCTypes.LONGNVARCHAR);
             addCol.setDisable(disableDocTypeField);
             addCol.setMongoFieldType(BsonType.DOCUMENT);
             List<MongoCMeta.MongoDocSplitCMeta> docFieldSplitMetas = Lists.newArrayList();
@@ -315,7 +315,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
     public void testGetTableMetadata() throws Exception {
         DataXMongodbReader reader = createMongodbReader();
         EntityName tab = EntityName.parse("user");
-        List<ColumnMetaData> tableMetadata = reader.getTableMetadata(false, tab);
+        List<ColumnMetaData> tableMetadata = reader.getTableMetadata(false, null, tab);
         Assert.assertTrue(tableMetadata.size() > 0);
     }
 
@@ -336,7 +336,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
                 return DataXMongodbReader.class;
             }
         };
-       // reader.inspectRowCount = 200;
+        // reader.inspectRowCount = 200;
         reader.selectedTabs = getSelectedTabs(disableDocTypeField);
         reader.template = DataXMongodbReader.getDftTemplate();
         return reader;

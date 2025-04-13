@@ -135,7 +135,24 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                     }
                     return keyChar + "(" + type.getColumnSize() + ")";
                 }
-                case BIT:
+                case BIT: {
+                    if (type.getColumnSize() > 1) {
+                        return "BIT(" + type.getColumnSize() + ")";
+                    }
+                    //TINYINT 的存储大小固定为 1字节，无论括号中的数字是多少。其取值范围始终为：
+                    //*有符号（Signed）：-128 到 127
+                    //*无符号（Unsigned）：0 到 255
+                    // 括号中的数字代表在客户端工具（如命令行、某些GUI工具）中显示时最小占用字符数的可选参数。
+                    // 例如，TINYINT(4) 表示数值在显示时至少占用4个字符宽度。
+                    /**
+                     * 此处需要使用2，如果源端（mysql）中为TINYINT(1) 映射到 kingbase中也为TINYINT(1) 则会被视为Boolean类型，则会报以下错误：
+                     * <pre>
+                     *     was aborted: ERROR: column "is_limittime" is of type boolean but expression is of type bit varying
+                     *   Hint: You will need to rewrite or cast the expression.
+                     * </pre>
+                     */
+                    return "TINYINT(2)";
+                }
                 case BOOLEAN:
                     return "BOOLEAN";
                 case REAL:

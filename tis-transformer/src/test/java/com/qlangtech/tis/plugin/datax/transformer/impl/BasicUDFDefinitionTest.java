@@ -94,7 +94,8 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
         //  EasyMock.expect(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).andReturn(selectedTabs);
 
         List<ColumnMetaData> selectableCols = ColumnMetaData.convert(selectedTabs.get(0).getCols());
-        ThreadCacheTableCols cacheTableCols = new ThreadCacheTableCols(dsMetaPlugin, () -> {
+        ThreadCacheTableCols cacheTableCols = new ThreadCacheTableCols(dsMetaPlugin
+                , selectedTabs.get(0).getEntityName(), (entity) -> {
             return selectedTabs.get(0).getCols();
         }, selectableCols);
 

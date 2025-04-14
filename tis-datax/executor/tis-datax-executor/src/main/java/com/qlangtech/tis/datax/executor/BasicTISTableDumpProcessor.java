@@ -188,26 +188,13 @@ public class BasicTISTableDumpProcessor {
 
         execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
         execContext.setDisableGrpcRemoteServerConnect(context.isDisableGrpcRemoteServerConnect());
-
-//        execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
-//        if (triggerCfg.getResType() == StoreResourceType.DataFlow) {
-//            execContext.setWorkflowName(triggerCfg.getDataXName());
-//        }
-
-
+        /**
+         * 同步必要的配置及tpi资源到本地
+         */
         snapshotConsumer.synchronizTpisAndConfs(execContext, cacheSnaphsot);
 
         Long triggerTimestamp = execContext.getPartitionTimestampWithMillis();// instanceParams.getLong(DataxUtils
-        // .EXEC_TIMESTAMP);
         System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(triggerTimestamp));
-
-        //        Integer taskId = instanceParams.getInteger(JobParams.KEY_TASK_ID);
-        //        if (taskId == null) {
-        //            // 说明是定时任务触发
-        //            throw new InstanceParamsException(JobParams.KEY_TASK_ID + " can not be null," + JsonUtil
-        //            .toString(instanceParams));
-        //        }
-        //boolean dryRun = instanceParams.getBooleanValue(IFullBuildContext.DRY_RUN);
         for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
             tskMsg.setExecTimeStamp(triggerTimestamp);
         }

@@ -58,7 +58,7 @@ public class DataxPrePostExecutor {
      * 入口开始执行
      */
     public static void main(String[] args) throws Exception {
-        if (args.length != 8) {
+        if (args.length != 9) {
             throw new IllegalArgumentException("args length must be 8,but now is " + String.join(",", args));
         }
         Integer jobId = Integer.parseInt(args[0]);
@@ -67,8 +67,15 @@ public class DataxPrePostExecutor {
         if (StringUtils.isEmpty(incrStateCollectAddress)) {
             throw new IllegalArgumentException("arg 'incrStateCollectAddress' can not be null");
         }
+
+//        boolean isDisableGrpcRemoteServerConnect;
+//        if (isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[8])) {
+//            ITISCoordinator.disableRemoteServer();
+//        }
+//        logger.info("isDisableGrpcRemoteServerConnect:{}", isDisableGrpcRemoteServerConnect);
+        boolean isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[8]);
         RpcServiceReference statusRpc =
-                StatusRpcClientFactory.getService(ITISCoordinator.create(Optional.of(incrStateCollectAddress)));
+                StatusRpcClientFactory.getService(ITISCoordinator.create(!isDisableGrpcRemoteServerConnect, Optional.of(incrStateCollectAddress)));
         AssembleSvcCompsite.statusRpc = (statusRpc);
 
         final String lifecycleHookName = args[3];

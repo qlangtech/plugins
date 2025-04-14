@@ -113,6 +113,9 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
         cmdLine.addArgument(msg.getResType().getType());
         cmdLine.addArgument(msg.getJobName());
         cmdLine.addArgument(String.valueOf(msg.getExecEpochMilli()));
+        cmdLine.addArgument(String.valueOf(msg.isDisableGrpcRemoteServerConnect()));
+
+
     }
 
     @Override

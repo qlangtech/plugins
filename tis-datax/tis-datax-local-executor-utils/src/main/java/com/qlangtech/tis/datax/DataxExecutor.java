@@ -79,6 +79,7 @@ import java.util.Set;
  */
 public class DataxExecutor {
     private static final Logger logger = LoggerFactory.getLogger(DataxExecutor.class);
+
     /**
      * 当使用dolphinscheduler运行数据同步任务希望在本地记录一份完整的dataX执行日志，而不是都要通过grpc的方式传输到assemble节点查看
      *
@@ -135,11 +136,13 @@ public class DataxExecutor {
         final int taskSerializeNum = Integer.parseInt(args[7]);
 
         final long execEpochMilli = Long.parseLong(args[8]);
-        boolean isDisableGrpcRemoteServerConnect;
-        if (isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[9])) {
-            ITISCoordinator.disableRemoteServer();
-        }
-        logger.info("isDisableGrpcRemoteServerConnect:{}", isDisableGrpcRemoteServerConnect);
+//        boolean isDisableGrpcRemoteServerConnect;
+//        if (isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[9])) {
+//            ITISCoordinator.disableRemoteServer();
+//        }
+//        logger.info("isDisableGrpcRemoteServerConnect:{}", isDisableGrpcRemoteServerConnect);
+
+        boolean isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[9]);
 
         String localLoggerFilePath = null;
         if (StringUtils.isNotEmpty(localLoggerFilePath = System.getProperty(Config.EXEC_LOCAL_LOGGER_FILE_PATH))) {
@@ -165,7 +168,8 @@ public class DataxExecutor {
             throw new IllegalArgumentException("arg 'incrStateCollectAddress' can not be null");
         }
 
-        RpcServiceReference statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create(Optional.of(incrStateCollectAddress)));
+        RpcServiceReference statusRpc = StatusRpcClientFactory.getService(
+                ITISCoordinator.create(!isDisableGrpcRemoteServerConnect, Optional.of(incrStateCollectAddress)));
         AssembleSvcCompsite.statusRpc = statusRpc;
 
         //  final AtomicReference<ITISRpcService> rpcRef = new AtomicReference<>(statusRpc);

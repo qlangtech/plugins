@@ -65,7 +65,7 @@ public class SubStrUDF extends CopyValUDF {
         }
 
         @Override
-        public EndType getEndType() {
+        public EndType getTransformerEndType() {
             return EndType.SubString;
         }
 

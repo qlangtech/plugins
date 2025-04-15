@@ -230,7 +230,7 @@ public class AutoGenerateBigIntIDUDF extends UDFDefinition implements AfterPlugi
         }
 
         @Override
-        public EndType getEndType() {
+        public EndType getTransformerEndType() {
             return EndType.AutoGen;
         }
 

@@ -75,7 +75,7 @@ public class DataMaskingUDF extends SubStrUDF {
         }
 
         @Override
-        public EndType getEndType() {
+        public EndType getTransformerEndType() {
             return EndType.Mask;
         }
 

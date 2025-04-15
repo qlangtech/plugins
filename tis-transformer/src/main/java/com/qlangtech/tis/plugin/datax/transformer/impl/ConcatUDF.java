@@ -151,7 +151,7 @@ public class ConcatUDF extends UDFDefinition implements AfterPluginSaved {
         }
 
         @Override
-        public EndType getEndType() {
+        public EndType getTransformerEndType() {
             return EndType.Concat;
         }
 

@@ -145,7 +145,7 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
         }
 
         @Override
-        public EndType getEndType() {
+        public EndType getTransformerEndType() {
             return EndType.Splitter;
         }
 

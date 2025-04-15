@@ -101,9 +101,10 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
         }
 
         @Override
-        public EndType getEndType() {
-            return EndType.Clone;
+        public EndType getTransformerEndType() {
+            return EndType.Copy;
         }
+
 
         @Override
         public String getDisplayName() {

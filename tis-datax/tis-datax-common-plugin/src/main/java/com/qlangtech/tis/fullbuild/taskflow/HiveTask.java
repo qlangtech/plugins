@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.hive.AbstractResultSet;
 import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
@@ -68,11 +69,13 @@ public abstract class HiveTask extends AdapterTask {
     protected final IDataSourceFactoryGetter dsFactoryGetter;
 
     private final Supplier<IPrimaryTabFinder> erRules;
+    protected final IPartionableWarehouse partionableWarehouse;
 
     /**
      * @param joinTaskStatus
      */
-    protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
+    protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta
+            , boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus, IPartionableWarehouse partionableWarehouse) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
@@ -83,6 +86,7 @@ public abstract class HiveTask extends AdapterTask {
         this.nodeMeta = nodeMeta;
         this.isFinalNode = isFinalNode;
         this.dsFactoryGetter = dsFactoryGetter;
+        this.partionableWarehouse = Objects.requireNonNull(partionableWarehouse, "partionableWarehouse can not be null");
     }
 
     /**
@@ -158,7 +162,8 @@ public abstract class HiveTask extends AdapterTask {
 
     protected ISqlTask.RewriteSql getRewriteSql() {
         if (this.rewriteSql == null) {
-            this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition(), this.erRules, this.getExecContext(), this.isFinalNode);
+            this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition()
+                    , this.partionableWarehouse, this.erRules, this.getExecContext(), this.isFinalNode);
         }
         return this.rewriteSql;
     }

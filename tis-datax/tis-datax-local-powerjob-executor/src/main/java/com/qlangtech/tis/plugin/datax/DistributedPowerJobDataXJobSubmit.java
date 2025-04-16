@@ -25,6 +25,7 @@ import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataXPowerJobSubmit;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
@@ -204,7 +205,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
      * @param dataxProcessor
      */
     @Override
-    public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+    public void createJob(IControlMsgHandler module, Context context, IDataxProcessor dataxProcessor) {
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
                 this, module, dataxProcessor.identityValue());
@@ -244,7 +245,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
 
 
     @Override
-    public TISWorkflowInfoDTO saveJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+    public TISWorkflowInfoDTO saveJob(IControlMsgHandler module, Context context, IDataxProcessor dataxProcessor) {
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
                 this, module, dataxProcessor.identityValue());

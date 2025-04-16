@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
@@ -63,8 +64,8 @@ public class JoinOdpsTask extends HiveTask {
 
     public JoinOdpsTask(DataXOdpsWriter odpsWriter, IDataSourceFactoryGetter dsFactoryGetter,
                         ISqlTask nodeMeta, boolean isFinalNode
-            , Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
-        super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
+            , Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus, IPartionableWarehouse partionableWarehouse) {
+        super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus, partionableWarehouse);
         this.odpsWriter = odpsWriter;
     }
 

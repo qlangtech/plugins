@@ -20,6 +20,7 @@ package com.qlangtech.tis.hive;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -60,7 +61,7 @@ public abstract class AbstractInsertFromSelectParser {
 
         SqlTaskNodeMeta sqlTaskNodeMeta = new SqlTaskNodeMeta();
         sqlTaskNodeMeta.setSql(sql);
-        this.rewriteSql = sqlTaskNodeMeta.getColMetaGetterSql(tabPartition);
+        this.rewriteSql = sqlTaskNodeMeta.getColMetaGetterSql(tabPartition, IPartionableWarehouse.createForNoWriterForTableName());
         this.sqlColMetaGetter = sqlColMetaGetter;
 
         HiveColumn hc = null;

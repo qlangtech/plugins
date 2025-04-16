@@ -25,6 +25,7 @@ import com.qlangtech.tis.dump.hive.HiveTableBuilder;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
@@ -66,8 +67,8 @@ public class JoinHiveTask extends HiveTask {
     private final MREngine mrEngine;
 
     public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus
-            , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter) {
-        super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
+            , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter, IPartionableWarehouse partionableWarehouse) {
+        super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus, partionableWarehouse);
         this.fileSystem = fileSystem;
         this.mrEngine = mrEngine;
     }

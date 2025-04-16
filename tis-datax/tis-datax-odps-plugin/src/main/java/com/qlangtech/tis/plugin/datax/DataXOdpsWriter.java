@@ -68,6 +68,10 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
+    @Override
+    public String appendTabPrefix(String rawTabName) {
+        return autoCreateTable.appendTabPrefix(rawTabName);
+    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXOdpsWriter.class, "DataXOdpsWriter-tpl.json");
@@ -187,7 +191,8 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
             , ITaskContext tskContext, IJoinTaskStatus joinTaskStatus, IDataSourceFactoryGetter dsGetter
             , Supplier<IPrimaryTabFinder> primaryTabFinder) {
 
-        JoinOdpsTask odpsTask = new JoinOdpsTask(this, dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus);
+        JoinOdpsTask odpsTask
+                = new JoinOdpsTask(this, dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus, this);
         odpsTask.setContext(tplContext, tskContext);
         return odpsTask;
     }

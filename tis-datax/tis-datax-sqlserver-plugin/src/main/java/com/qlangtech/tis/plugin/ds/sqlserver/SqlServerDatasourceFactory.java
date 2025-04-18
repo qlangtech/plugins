@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.DataXSqlserverReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -171,7 +172,10 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         protected static String dataSourceName(String version) {
             return DS_TYPE_SQL_SERVER + "-" + version;
         }
-
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(DataXSqlserverReader.DATAX_NAME);
+        }
         protected abstract String getVersion();
 
         @Override

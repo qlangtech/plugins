@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -34,6 +35,8 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.extension.util.PluginExtraProps.Props;
+import com.qlangtech.tis.extension.util.PluginExtraProps.RouterAssistType;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -52,12 +55,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import static com.qlangtech.tis.extension.util.PluginExtraProps.KEY_CREATOR_ASSIST_TYPE;
 
 /**
  * @author: baisui 百岁
@@ -268,6 +272,13 @@ public class TestDataxMySQLWriter extends BasicTest {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
         Assert.assertTrue(extraProps.isPresent());
+        PluginExtraProps ep  = extraProps.get();
+        Props dbNameProp = ep.getProp("dbName");
+        JSONObject props = dbNameProp.getProps();
+        JSONObject creator = props.getJSONObject("creator");
+        assertNotNull(creator);
+
+        assertEquals(RouterAssistType.dbQuickManager, RouterAssistType.parse(creator.getString(KEY_CREATOR_ASSIST_TYPE)));
     }
 
 

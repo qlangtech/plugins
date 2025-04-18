@@ -519,6 +519,11 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
 
     @TISExtension
     public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
+
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(DataXDaMengReader.DATAX_NAME);
+        }
         @Override
         public boolean supportFacade() {
             return false;
@@ -541,11 +546,6 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                 return false;
             }
             return true;
-        }
-
-        @Override
-        public Optional<String> getDefaultDataXReaderDescName() {
-            return Optional.of(DataXDaMengReader.DATAX_NAME);
         }
 
         @Override

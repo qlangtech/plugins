@@ -32,6 +32,8 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.extension.util.PluginExtraProps.Props;
+import com.qlangtech.tis.extension.util.PluginExtraProps.RouterAssistType;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
@@ -58,6 +60,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.extension.util.PluginExtraProps.KEY_CREATOR_ASSIST_TYPE;
 
 /**
  * @author: baisui 百岁
@@ -227,8 +231,9 @@ public class TestDataxMySQLReader extends BasicTest {
 //                throw new UnsupportedOperationException();
 //            }
 
+
             @Override
-            public List<ColumnMetaData> getTableMetadata(boolean sink, EntityName table) {
+            public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) {
                 switch (table.getTabName()) {
                     case TestSelectedTabs.tabNameOrderDetail:
                         return TestSelectedTabs.tabColsMetaOrderDetail;
@@ -238,6 +243,8 @@ public class TestDataxMySQLReader extends BasicTest {
                         throw new IllegalArgumentException("table:" + table);
                 }
             }
+
+
         };
         mysqlDs.dbName = dbName;
         mysqlDs.port = 3306;
@@ -335,7 +342,7 @@ public class TestDataxMySQLReader extends BasicTest {
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getTableMetadata(false, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+        EasyMock.expect(mysqlDataSource.getTableMetadata(false, null, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
                 .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
@@ -395,6 +402,12 @@ public class TestDataxMySQLReader extends BasicTest {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue(extraProps.isPresent());
+        PluginExtraProps pluginExtraProps = extraProps.get();
+        Props dbNameProp = pluginExtraProps.getProp("dbName");
+        JSONObject props = dbNameProp.getProps();
+        JSONObject creator = props.getJSONObject("creator");
+        assertNotNull(creator);
+        assertEquals(RouterAssistType.dbQuickManager, RouterAssistType.parse(creator.getString(KEY_CREATOR_ASSIST_TYPE)));
     }
 
 

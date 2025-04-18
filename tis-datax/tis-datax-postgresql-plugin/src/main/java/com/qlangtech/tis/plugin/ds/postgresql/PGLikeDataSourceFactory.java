@@ -24,6 +24,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -197,7 +198,10 @@ public abstract class PGLikeDataSourceFactory extends BasicDataSourceFactory imp
 
     //  @TISExtension
     public static abstract class BasicPGLikeDefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
-
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(DataXPostgresqlReader.PG_NAME);
+        }
 
         @Override
         public boolean supportFacade() {

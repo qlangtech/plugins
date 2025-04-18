@@ -178,7 +178,10 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
 
             // return super.validateAll(msgHandler, context, postFormVals);
         }
-
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(KingBaseDataSourceFactory.KingBase_NAME);
+        }
 
         @Override
         protected boolean validateConnection(JDBCConnection conn

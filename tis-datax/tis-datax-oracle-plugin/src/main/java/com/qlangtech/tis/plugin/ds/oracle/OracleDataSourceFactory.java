@@ -339,7 +339,10 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @TISExtension
     public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
-
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(OracleDataSourceFactory.ORACLE);
+        }
         @Override
         protected String getDataSourceName() {
             return ORACLE;

@@ -64,7 +64,7 @@ public class TestMySQLDataSourceFactory  //extends TestCase
         // DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
         assertNotNull(dataSourceFactory);
 
-        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(false, EntityName.parse("totalpayinfo"));
+        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(false, null, EntityName.parse("totalpayinfo"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }
@@ -73,7 +73,7 @@ public class TestMySQLDataSourceFactory  //extends TestCase
         assertNotNull(datasource);
 
 
-        cols = dataSourceFactory.getTableMetadata(false, EntityName.parse("base"));
+        cols = dataSourceFactory.getTableMetadata(false, null, EntityName.parse("base"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }

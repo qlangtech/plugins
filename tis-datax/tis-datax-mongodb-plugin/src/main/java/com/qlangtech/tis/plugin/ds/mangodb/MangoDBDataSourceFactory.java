@@ -36,6 +36,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -373,6 +374,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
             return DS_TYPE_MONGO_DB;
         }
 
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(DataXMongodbReader.DATAX_NAME);
+        }
         @Override
         public EndType getEndType() {
             return EndType.MongoDB;

@@ -20,9 +20,10 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -100,9 +101,10 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         public static Optional<SelectedTableTransformerRules>
         createTransformerRules(String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
             final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
+            DataXName dataX = dataXContext.getCollectionName();
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                    dataXContext, StoreResourceType.DataApp, dataXContext.getCollectionName(), tabAlias.getFrom());
+                    dataXContext, dataX.getType(), dataX.getPipelineName(), tabAlias.getFrom());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));

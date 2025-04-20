@@ -20,8 +20,10 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IDescribableManipulate;
@@ -31,7 +33,7 @@ import com.qlangtech.tis.manage.biz.dal.pojo.AppType;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.AppAndRuntime;
 import com.qlangtech.tis.plugin.IPluginStore;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -125,7 +127,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
     private <T> T writerPluginOverwrite(Function<IStreamIncrGenerateStrategy, T> func, Callable<T> unmatchCreator) {
         try {
-            TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
+            TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.getDataXName());
             Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
             if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
                 return func.apply(((IStreamIncrGenerateStrategy) sinKFactory));
@@ -163,7 +165,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
         @Override
         public String getDisplayName() {
-            return DataxProcessor.DEFAULT_DATAX_PROCESSOR_NAME;
+            return StoreResourceTypeConstants.DEFAULT_DATAX_PROCESSOR_NAME;
         }
 
         @Override
@@ -175,8 +177,8 @@ public class DefaultDataxProcessor extends DataxProcessor {
         public Optional<IPluginStore<DefaultDataXProcessorManipulate>> getManipulateStore() {
 
             AppAndRuntime appAndRuntime = AppAndRuntime.getAppAndRuntime();
-            String appName = Objects.requireNonNull(appAndRuntime, "appAndRuntime can not be null").getAppName();
-            if (StringUtils.isEmpty(appName)) {
+            DataXName appName = Objects.requireNonNull(appAndRuntime, "appAndRuntime can not be null").getAppName();
+            if (appName == null) {
                 return Optional.empty();
             }
             return Optional.of(DefaultDataXProcessorManipulate.loadPlugins(null, DefaultDataXProcessorManipulate.class, appName).getValue());

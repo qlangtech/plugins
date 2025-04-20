@@ -25,6 +25,7 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
@@ -71,12 +72,12 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     }
 
     @Override
-    public final String getCollectionName() {
-        return this.getDataXName();
+    public final DataXName getCollectionName() {
+        return DataXName.createDataXPipeline(this.getDataXName());
     }
 
     public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
-        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
+        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory( DataXName.createDataXPipeline(dataxName.getName()));
         return getStreamTableMeta(sinKFactory, tabName);
     }
 

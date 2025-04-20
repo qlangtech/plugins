@@ -48,7 +48,7 @@ import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
 import com.qlangtech.tis.manage.common.CreateNewTaskResult;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit.WorkflowNodeVisit;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;

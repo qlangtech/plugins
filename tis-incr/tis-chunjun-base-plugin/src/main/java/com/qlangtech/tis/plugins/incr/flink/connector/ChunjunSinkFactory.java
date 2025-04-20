@@ -218,7 +218,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
 //String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
-        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
+        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.getDataXName());
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator
                 = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator(reader);
         //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
@@ -606,7 +606,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
                             final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
                             // 初始化表RDBMS的表，如果表不存在就创建表
-                            DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
+                            DataxWriter.process(getCollectionName(), tableName, ds.getJdbcUrls());
                             final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, null, EntityName.parse(tableName))
                                     .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                                     .collect(Collectors.toList());

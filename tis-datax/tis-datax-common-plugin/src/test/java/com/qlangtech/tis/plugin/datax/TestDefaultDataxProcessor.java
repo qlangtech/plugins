@@ -24,7 +24,7 @@ import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import org.apache.commons.io.FileUtils;

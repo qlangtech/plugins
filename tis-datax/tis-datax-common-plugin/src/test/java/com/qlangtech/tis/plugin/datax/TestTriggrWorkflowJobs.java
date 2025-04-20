@@ -26,7 +26,7 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;

@@ -22,6 +22,7 @@ import com.dtstack.chunjun.connector.jdbc.table.JdbcDynamicTableFactory;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -81,7 +82,7 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
         if (StringUtils.isEmpty(dataXName) || StringUtils.isEmpty(sourceTableName)) {
             throw new IllegalArgumentException("param dataXName or sourceTableName can not be null");
         }
-        ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(dataXName);
+        ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline(dataXName));
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
 
         BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor

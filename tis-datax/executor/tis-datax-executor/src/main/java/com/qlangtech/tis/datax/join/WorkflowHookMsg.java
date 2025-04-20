@@ -3,7 +3,7 @@ package com.qlangtech.tis.datax.join;
 import com.qlangtech.tis.datax.JobHookMsg;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 

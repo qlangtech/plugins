@@ -26,6 +26,7 @@ import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -95,10 +96,10 @@ public class TISFlinkCDCStart {
         IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
         DataxReader reader = (DataxReader) dataXProcess.getReader(null);
 
-        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataxName.getName()));
+        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline( dataxName.getName())));
         tableStreamHandle.setSourceStreamTableMeta(reader);
 
-        MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataxName.getName());
+        MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(DataXName.createDataXPipeline( dataxName.getName()));
         tableStreamHandle.setSourceFlinkColCreator(mqFactory.createFlinkColCreator(reader));
         mqFactory.setConsumerHandle(tableStreamHandle);
 

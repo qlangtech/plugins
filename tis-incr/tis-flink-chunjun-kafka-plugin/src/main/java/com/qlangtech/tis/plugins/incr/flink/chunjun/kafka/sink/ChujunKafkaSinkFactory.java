@@ -274,7 +274,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
             ChujunKafkaSinkFactory sinkFactory = postFormVals.newInstance();
             DataxReader dataxReader
-                    = DataxReader.load((IPluginContext) msgHandler, msgHandler.getCollectionName());
+                    = DataxReader.load((IPluginContext) msgHandler, msgHandler.getCollectionName().getPipelineName());
             // List<ISelectedTab> tabs = dataxReader.getSelectedTabs();
             if (!sinkFactory.validate(msgHandler, context, FormatFactory.KEY_FIELD_FORMAT, dataxReader)) {
                 return false;

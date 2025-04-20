@@ -25,6 +25,7 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -104,8 +105,8 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
      */
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , String appName, Optional<Long> workflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
-        if (StringUtils.isEmpty(appName)) {
+            , DataXName appName, Optional<Long> workflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
+        if ((appName) == null) {
             throw new IllegalArgumentException("appName " + appName + " can not be empty");
         }
 
@@ -117,7 +118,7 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
             IControlMsgHandler module, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory, SqlDataFlowTopology topology);
 
     protected abstract BasicWorkflowPayload<WF_INSTANCE> createApplicationPayload(
-            IControlMsgHandler module, String appName, Optional<WorkFlowBuildHistory> latestWorkflowHistory);
+            IControlMsgHandler module, DataXName appName, Optional<WorkFlowBuildHistory> latestWorkflowHistory);
 
     @Override
     public IDataXJobContext createJobContext(IExecChainContext parentContext) {

@@ -2,7 +2,7 @@ package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import junit.framework.TestCase;
 
 import java.util.Objects;

@@ -1,6 +1,5 @@
 package com.qlangtech.tis.datax;
 
-import com.qlangtech.tis.plugin.StoreResourceType;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;

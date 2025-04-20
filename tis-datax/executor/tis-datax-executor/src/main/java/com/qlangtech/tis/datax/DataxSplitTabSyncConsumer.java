@@ -1,14 +1,12 @@
 package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.apache.commons.exec.CommandLine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * used by com.qlangtech.tis.plugin.datax.TaskExec

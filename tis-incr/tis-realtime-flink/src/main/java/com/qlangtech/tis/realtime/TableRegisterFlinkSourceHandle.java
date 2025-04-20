@@ -24,13 +24,14 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -215,9 +216,10 @@ public abstract class TableRegisterFlinkSourceHandle
         /**
          添加transformer执行逻辑
          */
-        final IPluginContext namedContext = IPluginContext.namedContext(this.getCollectionName());
+        DataXName dataX = this.getCollectionName();
+        final IPluginContext namedContext = IPluginContext.namedContext(dataX.getPipelineName());
         Optional<RecordTransformerRules> transformers
-                = (RecordTransformerRules.loadTransformerRules(namedContext, StoreResourceType.DataApp, namedContext.getCollectionName(), tabName));
+                = (RecordTransformerRules.loadTransformerRules(namedContext, dataX.getType(), dataX.getPipelineName(), tabName));
         RecordTransformerRules tRules = null;
         RowTransformerMapper transformerMapper = null;
         List<FlinkCol> cols = null;

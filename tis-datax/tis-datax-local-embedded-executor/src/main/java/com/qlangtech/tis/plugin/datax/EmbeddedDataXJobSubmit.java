@@ -29,6 +29,7 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXJobUtils;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TISJarLoader;
@@ -78,8 +79,8 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , String appName, Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
-        if (StringUtils.isEmpty(appName)) {
+            , DataXName appName, Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
+        if (appName == null) {
             throw new IllegalArgumentException("param appName can not be empty");
         }
         if (powerJobWorkflowInstanceIdOpt.isPresent()) {
@@ -88,7 +89,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         }
         try {
             List<HttpUtils.PostParam> params = Lists.newArrayList();
-            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
+            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName.getPipelineName()));
 
             Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
             partialTrigger.ifPresent((partial) -> {

@@ -50,7 +50,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.DagTaskUtils;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
@@ -488,13 +488,13 @@ public class DataxExecutor {
         }
 
         @Override
-        public String getTISDataXName() {
+        public DataXName getTISDataXName() {
             return this.dataXName.getTISDataXName();
         }
 
         @Override
         public String getDataXName() {
-            return this.dataXName.getTISDataXName();
+            return this.dataXName.getTISDataXName().getPipelineName();
         }
 
         @Override
@@ -577,7 +577,7 @@ public class DataxExecutor {
 
         Objects.requireNonNull(configuration.get(getPluginReaderKey()), FormatKeyPluginReader + " can not be null");
         Objects.requireNonNull(configuration.get(getPluginWriterKey()), FormatKeyPluginWriter + " can not be null");
-        return Pair.of(configuration, () -> dataxName);
+        return Pair.of(configuration, () -> new DataXName(dataxName, resType));
         // todo config优化，只捕获需要的plugin
     }
 

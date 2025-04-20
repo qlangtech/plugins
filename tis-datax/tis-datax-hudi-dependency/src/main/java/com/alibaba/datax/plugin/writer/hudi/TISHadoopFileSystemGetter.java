@@ -22,7 +22,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;

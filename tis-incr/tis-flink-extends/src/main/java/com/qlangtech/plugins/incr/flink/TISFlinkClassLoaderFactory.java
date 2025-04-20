@@ -32,7 +32,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;

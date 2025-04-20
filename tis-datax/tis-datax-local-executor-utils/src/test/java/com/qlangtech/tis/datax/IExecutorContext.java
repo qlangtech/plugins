@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.datax;
 
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 
 import java.util.Collections;

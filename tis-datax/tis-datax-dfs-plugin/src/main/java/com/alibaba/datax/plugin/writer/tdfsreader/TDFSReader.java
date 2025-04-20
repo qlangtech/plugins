@@ -162,6 +162,7 @@ public class TDFSReader extends FtpReader {
 
 
     private static AbstractDFSReader getDfsReader(IJobContainerContext containerContext) {
-        return Objects.requireNonNull((AbstractDFSReader) DataxReader.load(null, containerContext.getTISDataXName()), "writer can not be null");
+        return Objects.requireNonNull((AbstractDFSReader)
+                DataxReader.load(null, containerContext.getTISDataXName().getPipelineName()), "writer can not be null");
     }
 }

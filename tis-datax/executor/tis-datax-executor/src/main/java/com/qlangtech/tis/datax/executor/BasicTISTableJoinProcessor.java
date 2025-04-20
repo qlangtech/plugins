@@ -18,13 +18,13 @@
 
 package com.qlangtech.tis.datax.executor;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.join.DataXJoinProcessConsumer;
 import com.qlangtech.tis.datax.join.DataXJoinProcessExecutor;
 import com.qlangtech.tis.datax.join.WorkflowHookMsg;
@@ -35,10 +35,8 @@ import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.job.common.JobParams;
-import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
-import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;

@@ -30,9 +30,10 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -76,9 +77,10 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
             MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
             IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
+            DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                            StoreResourceType.DataApp,pluginContext.getCollectionName(),pluginContext, mongoReader, tabs);
+                    dataXName.assetCheckDataAppType(), dataXName.getPipelineName(), pluginContext, mongoReader, tabs);
             Map<String, Pair<FlinkColMapper, List<MongoCMeta>>> tabColsMapper = Maps.newHashMap();
 
 
@@ -87,12 +89,12 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
                 tabColsMapper.put(tab.getName()
-                        , Pair.of(colsMapper, tab.getCols().stream().map((c)-> (MongoCMeta) c).collect(Collectors.toUnmodifiableList())));
+                        , Pair.of(colsMapper, tab.getCols().stream().map((c) -> (MongoCMeta) c).collect(Collectors.toUnmodifiableList())));
             }
 
             final MongoDBDeserializationSchema deserializationSchema
                     = new MongoDBDeserializationSchema(
-                    new MongoDBSourceDTOColValProcess(tabColsMapper,mongoReader.parseZoneId())
+                    new MongoDBSourceDTOColValProcess(tabColsMapper, mongoReader.parseZoneId())
                     , new DefaultTableNameConvert()
                     , contextParamValsGetterMapper);
 

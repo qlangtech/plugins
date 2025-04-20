@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -39,7 +40,7 @@ import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -293,7 +294,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
 
         @Override
         public String getDisplayName() {
-            return DataxProcessor.DEFAULT_WORKFLOW_PROCESSOR_NAME;
+            return StoreResourceTypeConstants.DEFAULT_WORKFLOW_PROCESSOR_NAME;
         }
     }
 }

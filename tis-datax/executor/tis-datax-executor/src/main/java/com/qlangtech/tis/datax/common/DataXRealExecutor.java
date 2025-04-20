@@ -29,6 +29,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.CoreConstant;
 import com.alibaba.datax.core.util.container.LoadUtil;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -37,7 +38,7 @@ import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -115,10 +116,10 @@ public class DataXRealExecutor {
             IDataxReaderContext readerContext = subTasks.next();
 
             Optional<IDataxProcessor.TableMap> tableMap = this.dataXCfgGenerator.buildTabMapper(this.getDataxReader(), readerContext);
-
+            DataXName dataXName = pluginCtx.getCollectionName();
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                            pluginCtx, StoreResourceType.DataApp, pluginCtx.getCollectionName(), readerContext.getSourceTableName());
+                    pluginCtx, dataXName.getType(), dataXName.getPipelineName(), readerContext.getSourceTableName());
 
             Configuration readerCfg
                     = Configuration.from(this.dataXCfgGenerator.generateDataxConfig(readerContext
@@ -231,8 +232,8 @@ public class DataXRealExecutor {
             }
 
             @Override
-            public String getTISDataXName() {
-                return dataXName;
+            public DataXName getTISDataXName() {
+                return new DataXName(dataXName, dataxProcessor.getResType());
             }
         };
         jobContainerSetter.accept(container);

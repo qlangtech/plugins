@@ -4,11 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.PowerWorkflowPayload.PowerJobWorkflow;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobWorkFlowBuildHistoryPayload;
@@ -81,13 +82,13 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
                 .runWorkflow(spiWorkflowId.getSPIWorkflowId() /** wfInfo.getId()*/, JsonUtil.toString(instanceParams), 0));
     }
 
-    public static PowerWorkflowPayload createApplicationPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, String appName) {
+    public static PowerWorkflowPayload createApplicationPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, DataXName appName) {
         ICommonDAOContext commonDAOContext = getCommonDAOContext(module);
 //        if (!(module instanceof IPluginContext)) {
 //            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
 //        }
         DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
-        return new ApplicationPayload(submit, module, appName, commonDAOContext, dataxProcessor);
+        return new ApplicationPayload(submit, module, appName.getPipelineName(), commonDAOContext, dataxProcessor);
     }
 
     public static PowerWorkflowPayload createTISWorkflowPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, IDataFlowTopology topology) {

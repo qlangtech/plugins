@@ -31,6 +31,7 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXJobUtils;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -102,8 +103,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
      */
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , String appName, Optional<Long> powerjobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
-        if (StringUtils.isEmpty(appName)) {
+            , DataXName appName, Optional<Long> powerjobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
+        if ((appName) == null) {
             throw new IllegalArgumentException("param appName can not be empty");
         }
         if (powerjobWorkflowInstanceIdOpt.isPresent()) {
@@ -127,8 +128,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     private final ConcurrentMap<String, DataXPipelinePreviewProcessorExecutor> tabSynchronizeCache = Maps.newConcurrentMap();
 
     @Override
-    public PreviewRowsData previewRowsData(String dataXName, String tableName, QueryCriteria queryCriteria) {
-        DataXPipelinePreviewProcessorExecutor previewProcessorExecutor = getPipelinePreviewProcessor(dataXName);
+    public PreviewRowsData previewRowsData(DataXName dataXName, String tableName, QueryCriteria queryCriteria) {
+        DataXPipelinePreviewProcessorExecutor previewProcessorExecutor = getPipelinePreviewProcessor(dataXName.getPipelineName());
         return previewProcessorExecutor.previewRowsData(dataXName, tableName, queryCriteria);
     }
 

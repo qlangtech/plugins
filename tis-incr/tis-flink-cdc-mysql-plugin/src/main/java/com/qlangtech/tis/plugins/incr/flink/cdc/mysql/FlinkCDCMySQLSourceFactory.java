@@ -26,6 +26,7 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
@@ -126,7 +127,8 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
                 throw new IllegalStateException("plugContext must be collection aware");
             }
 
-            DataxReader dataxReader = DataxReader.load(plugContext, plugContext.getCollectionName());
+            DataXName dataXName = plugContext.getCollectionName();
+            DataxReader dataxReader = DataxReader.load(plugContext, dataXName.getPipelineName());
 
             List<ISelectedTab> tabs = dataxReader.getSelectedTabs();
             DataSourceFactory dsFactory = ((IDataSourceFactoryGetter) dataxReader).getDataSourceFactory();

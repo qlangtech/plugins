@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.DataXCfgFile;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataXNameAware;
@@ -42,7 +43,7 @@ import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -238,8 +239,8 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     public transient String dataXName;
 
     @Override
-    public final String getCollectionName() {
-        return this.dataXName;
+    public final DataXName getCollectionName() {
+        return DataXName.createDataXPipeline(this.dataXName);
     }
 
     @Override

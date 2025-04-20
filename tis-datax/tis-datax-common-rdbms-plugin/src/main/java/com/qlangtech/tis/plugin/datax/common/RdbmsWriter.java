@@ -24,6 +24,7 @@ import com.alibaba.datax.core.job.IJobContainerContext;
 import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class RdbmsWriter {
      */
     public static void initWriterTable(IJobContainerContext containerContext, Configuration cfg) {
         Objects.requireNonNull(containerContext, "containerContext can not be null");
-        String dataXName = containerContext.getTISDataXName();
+        DataXName dataXName = containerContext.getTISDataXName();
 
         String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"
                 , RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);

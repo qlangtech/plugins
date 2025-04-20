@@ -591,7 +591,7 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
             if (!msgHandler.isCollectionAware()) {
                 throw new IllegalStateException("current context must collectionAware");
             }
-            dataxReader.dataXName = msgHandler.getCollectionName();
+            dataxReader.dataXName = msgHandler.getCollectionName().getPipelineName();
             return dataxReader;
         }
 

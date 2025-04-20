@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -33,10 +34,10 @@ import java.util.List;
  **/
 public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
     public void testPreviewRowsData() {
-        final String dataXName = "mysql";
+        final DataXName dataXName = DataXName.createDataXPipeline("mysql");
 
         DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(51509);
-        PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName, 999999);
+        PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName.getPipelineName(), 999999);
         previewExecutor.setCommitTracker(expireTracker);
         String identityVal = null;
         boolean next = true;
@@ -59,7 +60,7 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
         previewExecutor.setCommitTracker(expireTracker);
         //String identityVal = null;
         boolean next = true;
-      //  boolean needHeader = true;
+        //  boolean needHeader = true;
         int pageSize = 20;
         // QueryCriteria queryCriteria = new QueryCriteria();
 
@@ -70,7 +71,8 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
 //        queryCriteria.setPagerOffsetCursor(pagerOffsetCursor);
 //        queryCriteria.setNextPakge(next);
 //        queryCriteria.setPageSize(pageSize);
-        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "TIS.payinfo", queryCriteria);
+        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(
+                DataXName.createDataXPipeline( dataXName), "TIS.payinfo", queryCriteria);
         Assert.assertNotNull(previewRowsData);
 
 

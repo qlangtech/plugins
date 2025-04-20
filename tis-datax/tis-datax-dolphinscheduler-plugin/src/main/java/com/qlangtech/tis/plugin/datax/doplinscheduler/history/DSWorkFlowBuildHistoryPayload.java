@@ -45,7 +45,7 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
     public DSWorkFlowBuildHistoryPayload(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
         super(dataxProcessor, tisTaskId, daoContext);
         Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>> pluginStorePair
-                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, this.dataxProcessor.identityValue());
+                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, this.dataxProcessor.getDataXName());
         for (ExportTISPipelineToDolphinscheduler exportDSCfg : pluginStorePair.getLeft()) {
             this.exportDSCfg = exportDSCfg;
             return;

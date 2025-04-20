@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -67,7 +68,8 @@ import java.util.stream.Collectors;
  * @create: 2024-07-23 21:18
  * @see com.qlangtech.tis.datax.DataxSplitTabSyncConsumer
  **/
-public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcessorExecutor<PreviewLaunchParam> implements IPreviewRowsDataService {
+public class DataXPipelinePreviewProcessorExecutor
+        extends DataXJobSingleProcessorExecutor<PreviewLaunchParam> implements IPreviewRowsDataService {
     private static final Logger logger = LoggerFactory.getLogger(DataXPipelinePreviewProcessorExecutor.class);
     private String classpath;
     private final int newGrpcPort;
@@ -97,7 +99,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
      */
     @Override
     public PreviewRowsData previewRowsData(
-            String dataXName, String tableName, QueryCriteria queryCriteria) {
+            DataXName dataXName, String tableName, QueryCriteria queryCriteria) {
 
         if (blockingStub == null) {
             try {
@@ -126,7 +128,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
         Objects.requireNonNull(this.commitTracker, "commitTracker can not be null").scheduleCommitWithin(-1);
         Builder rowsDataBuilder = PreviewRowsDataCriteria.newBuilder();
 
-        rowsDataBuilder.setDataXName(dataXName);
+        rowsDataBuilder.setDataXName(dataXName.getPipelineName());
         rowsDataBuilder.setTableName(tableName);
         rowsDataBuilder.setPageSize(queryCriteria.getPageSize());
         rowsDataBuilder.setNext(queryCriteria.isNextPakge());

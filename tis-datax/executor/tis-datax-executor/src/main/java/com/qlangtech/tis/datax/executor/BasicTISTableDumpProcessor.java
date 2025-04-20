@@ -32,15 +32,12 @@ import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
 import com.qlangtech.tis.datax.powerjob.ExecPhase;
 import com.qlangtech.tis.datax.powerjob.SplitTabSync;
 import com.qlangtech.tis.exec.AbstractExecContext;
-
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
-import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;

@@ -24,6 +24,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -161,7 +162,8 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         }
 
         Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>>
-                pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext, ExportTISPipelineToDolphinscheduler.class, itemsProcessor.getOriginIdentityId());
+                pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext
+                , ExportTISPipelineToDolphinscheduler.class, DataXName.createDataXPipeline(itemsProcessor.getOriginIdentityId()));
 
         /**
          * 是否需要删除

@@ -31,9 +31,10 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -189,10 +190,11 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
                 tabColsMapper.put(tab.getName(), colsMapper);
             }
+            DataXName dataXName = pluginContext.getCollectionName();
 
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                            StoreResourceType.DataApp, pluginContext.getCollectionName(), pluginContext, rdbmsReader, tabs);
+                    dataXName.assetCheckDataAppType(), dataXName.getPipelineName(), pluginContext, rdbmsReader, tabs);
             //
             TISDeserializationSchema deserializationSchema
                     = new TISDeserializationSchema(

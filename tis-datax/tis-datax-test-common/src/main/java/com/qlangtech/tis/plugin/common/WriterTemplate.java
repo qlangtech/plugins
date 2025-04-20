@@ -33,7 +33,7 @@ import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -335,8 +335,8 @@ public class WriterTemplate {
             }
 
             @Override
-            public String getTISDataXName() {
-                return dataXName;
+            public DataXName getTISDataXName() {
+                return DataXName.createDataXPipeline(dataXName);
             }
         };
 

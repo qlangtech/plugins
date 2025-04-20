@@ -115,7 +115,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
-        MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
+        MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.getDataXName());
 
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         ElasticEndpoint token = dataXWriter.getToken();

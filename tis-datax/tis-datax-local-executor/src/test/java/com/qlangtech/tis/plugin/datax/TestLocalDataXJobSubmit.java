@@ -32,6 +32,7 @@ import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
@@ -132,7 +133,8 @@ public class TestLocalDataXJobSubmit extends TestCase {
         queryCriteria.setNextPakge(true);
         queryCriteria.setPagerOffsetCursor(null);
 
-        PreviewRowsData previewRowsData = localJobSubmit.previewRowsData("mysql", "base", queryCriteria);
+        PreviewRowsData previewRowsData
+                = localJobSubmit.previewRowsData(DataXName.createDataXPipeline("mysql"), "base", queryCriteria);
         Assert.assertNotNull(previewRowsData);
         Thread.sleep(99999999);
     }

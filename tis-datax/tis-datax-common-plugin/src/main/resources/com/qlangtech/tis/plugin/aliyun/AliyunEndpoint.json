@@ -1,0 +1,6 @@
+{
+  "authToken": {
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.aliyun.AliyunEndpoint.filter(desc);",
+    "dftVal": "accessKey"
+  }
+}

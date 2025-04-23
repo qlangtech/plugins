@@ -31,6 +31,7 @@ import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.ISqlTask.RewriteSql;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
@@ -375,7 +376,7 @@ public abstract class HiveTask extends AdapterTask {
 
         private AbstractInsertFromSelectParser getInserSqlParser() {
             if (sqlParser == null) {
-                sqlParser = getSQLParserResult(sql.originSql, conn);
+                sqlParser = getSQLParserResult(sql, conn);
             }
             return sqlParser;
         }
@@ -396,7 +397,7 @@ public abstract class HiveTask extends AdapterTask {
         }
     }
 
-    private AbstractInsertFromSelectParser getSQLParserResult(String sql, JDBCConnection conn) {
+    private AbstractInsertFromSelectParser getSQLParserResult(RewriteSql sql, JDBCConnection conn) {
         DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
         Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter = (rewriteSql) -> {
             List<ColMeta> cols = rewriteSql.getCols();
@@ -445,7 +446,7 @@ public abstract class HiveTask extends AdapterTask {
         return new ResultSetMetaDataDelegate(metaData);
     }
 
-    protected abstract AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter);
+    protected abstract AbstractInsertFromSelectParser createInsertSQLParser(RewriteSql sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter);
 
 
     public interface IHistoryTableProcessor {

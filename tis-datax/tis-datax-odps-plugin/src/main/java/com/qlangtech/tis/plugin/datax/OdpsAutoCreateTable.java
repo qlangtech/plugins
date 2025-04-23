@@ -120,6 +120,13 @@ public class OdpsAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 = new CreateTableSqlBuilder<>(tableMapper, odpsWriter.getDataSourceFactory(), transformers) {
 
             @Override
+            protected String createTargetTableName(TableMap tableMapper) {
+                return tableMapper.createTargetTableName(OdpsAutoCreateTable.this);
+                //  return tableMapper.isFromEqualTo() ? appendTabPrefix(tableMapper.getFrom()) : tableMapper.getTo();
+                // return appendTabPrefix(tableMapper.getTo());
+            }
+
+            @Override
             public CreateTableName getCreateTableName() {
                 CreateTableName nameBuilder = super.getCreateTableName();
                 // EXTERNAL

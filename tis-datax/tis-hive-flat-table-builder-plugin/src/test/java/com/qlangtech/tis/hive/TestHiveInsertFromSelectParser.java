@@ -22,11 +22,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.ISqlTask.RewriteSql;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
@@ -58,7 +61,8 @@ public class TestHiveInsertFromSelectParser extends TestCase {
 
         try (InputStream input = TestHiveInsertFromSelectParser.class.getResourceAsStream("tmp_pay.sql")) {
 
-            HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser(IOUtils.toString(input, TisUTF8.get()), (sql) -> {
+            ISqlTask.RewriteSql rewriteSql = new RewriteSql(IOUtils.toString(input, TisUTF8.get()), null, null, null);
+            HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser(rewriteSql, (sql) -> {
                 return cols;
             });
 

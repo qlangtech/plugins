@@ -542,15 +542,15 @@ public class DataxExecutor {
         configuration.set(getPluginWriterKey(), writerCfg);
 
 
-        final String dataXKey = "job.content[0]." + DataxUtils.DATAX_NAME;
+        final String dataXKey = "job.content[0]." + StoreResourceType.DATAX_NAME;
         final String dataxName = configuration.getString(dataXKey);
         if (StringUtils.isEmpty(dataxName)) {
             throw new IllegalStateException("param " + dataXKey + " can not be null");
         }
 
 
-        //        configuration.set(readerKeyPrefix + DataxUtils.DATAX_NAME, dataxName);
-        //        configuration.set(writerKeyPrefix + DataxUtils.DATAX_NAME, dataxName);
+        //        configuration.set(readerKeyPrefix + StoreResourceType.DATAX_NAME, dataxName);
+        //        configuration.set(writerKeyPrefix + StoreResourceType.DATAX_NAME, dataxName);
 
         final String readerDbFactoryId = jobName.getDbFactoryId().identityValue();
         configuration.set(IDataXCfg.readerKeyPrefix + DataxUtils.DATASOURCE_FACTORY_IDENTITY, readerDbFactoryId);

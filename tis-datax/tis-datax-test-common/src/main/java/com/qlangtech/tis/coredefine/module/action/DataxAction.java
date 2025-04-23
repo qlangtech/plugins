@@ -21,6 +21,7 @@ package com.qlangtech.tis.coredefine.module.action;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.manage.common.Option;
@@ -35,7 +36,7 @@ import java.util.List;
  **/
 public class DataxAction {
     public static List<String> getTablesInDB(SubFormFilter filter) {
-        String dataxName = filter.param(DataxUtils.DATAX_NAME);
+        String dataxName = filter.param(StoreResourceType.DATAX_NAME);
         Assert.assertEquals("dataxName must equal", "baisuitestTestcase", dataxName);
         return Lists.newArrayList("table1", "table2", "table3");
     }

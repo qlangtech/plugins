@@ -95,10 +95,10 @@ public class TISDorisDynamicTableFactory implements DynamicTableSinkFactory {
     }
 
     public static final ConfigOption<String> DATAX_NAME =
-            ConfigOptions.key(DataxUtils.DATAX_NAME)
+            ConfigOptions.key(StoreResourceType.DATAX_NAME)
                     .stringType()
                     .noDefaultValue()
-                    .withDescription("YOUR DORIS " + DataxUtils.DATAX_NAME);
+                    .withDescription("YOUR DORIS " + StoreResourceType.DATAX_NAME);
 
     public static final ConfigOption<String> SourceTableName =
             ConfigOptions.key(TableAlias.KEY_FROM_TABLE_NAME)

@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -30,9 +29,6 @@ import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder.ColWrapper;
 import com.qlangtech.tis.plugin.datax.common.impl.ParamsAutoCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -71,9 +67,8 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, hiveWriter.getDataSourceFactory(), transformers) {
             @Override
             protected String createTargetTableName(TableMap tableMapper) {
-                return appendTabPrefix(tableMapper.getTo());
-//                Optional<String> mapperTabPrefix = getMapperTabPrefix();
-//                return mapperTabPrefix.map((prefix) -> prefix + tableMapper.getTo()).orElse(tableMapper.getTo());
+                // return appendTabPrefix(tableMapper.getTo());
+                return tableMapper.createTargetTableName(HiveAutoCreateTable.this);
             }
 
             @Override

@@ -53,7 +53,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     private String dumpTimeStamp;
 
     public static IFSWriter getHdfsWriterPlugin(Configuration cfg) {
-        String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
+        String dataxName = cfg.getString(StoreResourceType.DATAX_NAME);
         StoreResourceType resType = StoreResourceType.parse(
                 cfg.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE));
         return Objects.requireNonNull(BasicFSWriter.getWriterPlugin(dataxName, resType)

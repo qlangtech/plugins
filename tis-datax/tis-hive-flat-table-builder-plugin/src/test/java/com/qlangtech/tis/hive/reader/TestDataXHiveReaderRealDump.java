@@ -23,6 +23,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -145,7 +146,7 @@ public class TestDataXHiveReaderRealDump extends TestCase {
 
         });
         TIS.dsFactoryPluginStoreGetter = (p) -> {
-            DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
+            DSKey key = new DSKey(StoreResourceTypeConstants.DB_GROUP_NAME, p, DataSourceFactory.class);
             return new DataSourceFactoryPluginStore(key, false) {
                 @Override
                 public DataSourceFactory getPlugin() {

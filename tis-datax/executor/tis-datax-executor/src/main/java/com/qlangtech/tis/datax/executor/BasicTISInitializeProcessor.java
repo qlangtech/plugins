@@ -21,6 +21,7 @@ package com.qlangtech.tis.datax.executor;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
@@ -126,7 +127,7 @@ public class BasicTISInitializeProcessor {
     public static class InitializeNodeCfg {
         public static InitializeNodeCfg parse(ITaskExecutorContext context) {
             JSONObject jobParams = (context.getJobParams());
-            InitializeNodeCfg initializeNodeCfg = new InitializeNodeCfg(jobParams.getString(DataxUtils.DATAX_NAME),
+            InitializeNodeCfg initializeNodeCfg = new InitializeNodeCfg(jobParams.getString(StoreResourceType.DATAX_NAME),
                     jobParams.getBooleanValue(DataxUtils.TIS_WORK_FLOW_CHANNEL));
             if (initializeNodeCfg.isTisDataflowType()) {
                 Integer workflowId = Objects.requireNonNull(jobParams.getInteger(KEY_WORKFLOW_ID),

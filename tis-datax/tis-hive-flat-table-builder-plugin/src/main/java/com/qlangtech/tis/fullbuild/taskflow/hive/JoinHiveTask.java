@@ -139,7 +139,7 @@ public class JoinHiveTask extends HiveTask {
 
 
     @Override
-    protected AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+    protected AbstractInsertFromSelectParser createInsertSQLParser(ISqlTask.RewriteSql sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
         return new HiveInsertFromSelectParser(sql, sqlColMetaGetter);
     }
 

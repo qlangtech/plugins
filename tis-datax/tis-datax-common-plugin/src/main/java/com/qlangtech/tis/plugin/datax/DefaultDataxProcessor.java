@@ -20,40 +20,57 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.biz.dal.pojo.AppType;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.AppAndRuntime;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.plugin.KeyedPluginStore.Key;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.TransformerRuleKey;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FalseFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-21 09:09
+ * @see DataFlowDataXProcessor
  **/
 public class DefaultDataxProcessor extends DataxProcessor {
 
@@ -84,6 +101,42 @@ public class DefaultDataxProcessor extends DataxProcessor {
         app.setAppType(AppType.DataXPipe.getType());
         return app;
     }
+
+    /**
+     * @param pluginCtx
+     * @param groupedChildTask key: tableName
+     * @return
+     */
+    @Override
+    public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
+        Set<TransformerInfo> tinfos = new HashSet<>();
+        IDataxProcessor.addTransformerInfo(tinfos,pluginCtx,groupedChildTask,this.getResType(),this.identityValue());
+
+//        Key transformerRuleKey = TransformerRuleKey.createStoreKey(
+//                pluginCtx, this.getResType(), this.identityValue(), "dump");
+//        XmlFile sotre = transformerRuleKey.getSotreFile();
+//        File parent = sotre.getFile().getParentFile();
+//        if (!parent.exists()) {
+//            return Collections.emptySet();
+//        }
+//        Optional<RecordTransformerRules> transformerRules = null;
+//        String xmlExtend = Descriptor.getPluginFileName(org.apache.commons.lang.StringUtils.EMPTY);
+//        SuffixFileFilter filter = new SuffixFileFilter(xmlExtend);
+//        Collection<File> matched = FileUtils.listFiles(parent, filter, FalseFileFilter.INSTANCE);
+//        for (File tfile : matched) {
+//            String tabName = org.apache.commons.lang.StringUtils.substringBefore(tfile.getName(), xmlExtend);
+//            if (groupedChildTask.containsKey(tabName)) {
+//                transformerRules = RecordTransformerRules.loadTransformerRules(
+//                        pluginCtx, this.getResType(), this.identityValue(), tabName);
+//                if (transformerRules.isPresent()) {
+//                    tinfos.add(new TransformerInfo(tabName, transformerRules.get().rules.size()));
+//                }
+//            }
+//        }
+        return tinfos;
+    }
+
+
 
     @Override
     public void copy(String newIdentityVal) {

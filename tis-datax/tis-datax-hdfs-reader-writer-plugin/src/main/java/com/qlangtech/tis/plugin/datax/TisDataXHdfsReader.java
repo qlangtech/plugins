@@ -67,7 +67,7 @@ public class TisDataXHdfsReader extends HdfsReader {
     }
 
     private static DataXHdfsReader getHdfsReaderPlugin(Configuration cfg) {
-        String dataxName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
+        String dataxName = cfg.getNecessaryValue(com.qlangtech.tis.datax.StoreResourceType.DATAX_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
         DataxReader dataxReader = DataxReader.load(null, dataxName);
         if (!(dataxReader instanceof DataXHdfsReader)) {
             throw new BasicHdfsWriterJob.JobPropInitializeException(

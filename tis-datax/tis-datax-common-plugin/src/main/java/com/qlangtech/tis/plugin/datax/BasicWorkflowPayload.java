@@ -504,7 +504,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
 
     protected JSONObject createInitNodeJson() {
         JSONObject initNode = new JSONObject();
-        initNode.put(DataxUtils.DATAX_NAME, dataxProcessor.identityValue());
+        initNode.put(StoreResourceType.DATAX_NAME, dataxProcessor.identityValue());
         // 是否是dataflow的处理类型
         initNode.put(DataxUtils.TIS_WORK_FLOW_CHANNEL, dataxProcessor.getResType() == StoreResourceType.DataFlow);
         return initNode;

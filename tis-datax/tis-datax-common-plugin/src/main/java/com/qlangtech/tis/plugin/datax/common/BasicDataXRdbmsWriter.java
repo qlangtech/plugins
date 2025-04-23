@@ -500,14 +500,17 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
          */
         private boolean validateSourceAndTargetEndIsSame(IControlMsgHandler msgHandler, Context context, BasicDataXRdbmsWriter targetDataxWriter) {
             IDataxProcessor dataXProcessor = DataxProcessor.load((IPluginContext) msgHandler, msgHandler.getCollectionName());
-            IDataxReader dataXRreader = dataXProcessor.getReader((IPluginContext) msgHandler);
-
-            if (dataXRreader instanceof IDataSourceFactoryGetter) {
-                if (StringUtils.equals(targetDataxWriter.dbName, ((IDataSourceFactoryGetter) dataXRreader).getDataSourceFactory().identityValue())) {
-                    msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "源端和目标端不能相同，这非常危险！回头是岸啊");
-                    return false;
+            List<IDataxReader> readers = dataXProcessor.getReaders((IPluginContext) msgHandler);
+            for (IDataxReader dataXRreader : readers) {
+                if (dataXRreader instanceof IDataSourceFactoryGetter) {
+                    if (StringUtils.equals(targetDataxWriter.dbName, ((IDataSourceFactoryGetter) dataXRreader).getDataSourceFactory().identityValue())) {
+                        msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "源端和目标端不能相同，这非常危险！回头是岸啊");
+                        return false;
+                    }
                 }
             }
+
+
             return true;
         }
 

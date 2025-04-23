@@ -122,7 +122,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
                         try {
                             BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXOdpsWriter.this
-                                    , DataXOdpsWriter.this, conn, entity, entity.getTabName());
+                                    , DataXOdpsWriter.this, conn, entity, tab.getEntityName().getTabName());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -197,61 +197,6 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         return odpsTask;
     }
 
-
-//    /**
-//     * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
-//     *
-//     * @param tableMapper
-//     * @return
-//     */
-//    @Override
-//    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(SourceColMetaGetter sourceColMetaGetter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
-//        final CreateTableSqlBuilder createTableSqlBuilder
-//                = new CreateTableSqlBuilder<ColWrapper>(tableMapper, this.getDataSourceFactory(), transformers) {
-//
-//            @Override
-//            public CreateTableName getCreateTableName() {
-//                CreateTableName nameBuilder = super.getCreateTableName();
-//                // EXTERNAL
-//                nameBuilder.setCreateTablePredicate("CREATE TABLE IF NOT EXISTS");
-//                return nameBuilder;
-//            }
-//
-//            @Override
-//            protected void appendTabMeta(List<String> pks) {
-//
-//                // HdfsFormat fsFormat = parseFSFormat();
-//                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
-//                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-//                script.append("lifecycle " + Objects.requireNonNull(lifecycle, "lifecycle can not be null"));
-//
-//                // script.appendLine(fsFormat.getRowFormat());
-//                // script.appendLine("STORED AS " + fsFormat.getFileType().getType());
-//
-////                script.appendLine("LOCATION '").append(
-////                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
-////                ).append("'");
-//            }
-//
-//            @Override
-//            protected ColWrapper createColWrapper(IColMetaGetter c) {
-//                return new ColWrapper(c, this.pks) {
-//                    @Override
-//                    public String getMapperType() {
-//                        return c.getType().accept(OdpsAutoCreateTable.typeTransfer);
-//                    }
-//
-//                    @Override
-//                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-//                        autoCreateTable.addStandardColComment(sourceColMetaGetter, tableMapper, this, ddlScript);
-//                    }
-//                };
-//            }
-//        };
-//
-//        return createTableSqlBuilder.build();
-//    }
-
     @Override
     public boolean isGenerateCreateDDLSwitchOff() {
         return false;
@@ -320,7 +265,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         }
 
         public String getTable() {
-            return this.tableMapper.getTo();
+            return this.tableMapper.createTargetTableName(odpsWriter.autoCreateTable);
         }
 
         public String getProject() {

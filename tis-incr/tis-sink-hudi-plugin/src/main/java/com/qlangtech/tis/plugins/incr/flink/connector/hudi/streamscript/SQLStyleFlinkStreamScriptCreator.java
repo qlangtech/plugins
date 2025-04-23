@@ -156,7 +156,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                         throw new IllegalStateException("prop of dataXName can not be empty");
                     }
                     this.script.block(!tab.getKeyGenerator().getPartition().isSupportPartition(), "WITH", (sub) -> {
-                        sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + hudiSinkFactory.getDataXName() + "',");
+                        sub.appendLine("'" + StoreResourceType.DATAX_NAME + "' = '" + hudiSinkFactory.getDataXName() + "',");
                         sub.appendLine("'connector' = 'hudi',");
                         sub.appendLine("'path' = '" + HudiTableMeta.getHudiDataDir(
                                 dataXWriter.getFileSystem(), tableName, "", dataXWriter.getHiveConnMeta()) + "',");

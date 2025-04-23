@@ -23,24 +23,28 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.AdapterDataxReader;
+import com.qlangtech.tis.datax.DBDataXChildTask;
+import com.qlangtech.tis.datax.IDataFlowDataXProcess;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -59,23 +63,28 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-01-05 22:10
+ * @see DefaultDataxProcessor
  **/
-public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, IdentityName {
+public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, IdentityName, IDataFlowDataXProcess, AfterPluginSaved {
 
 
     @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
     @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String globalCfg;
+
+    private transient SqlTaskNodeMeta.SqlDataFlowTopology _dataFlowTopology;
 
     @Override
     public String identityValue() {
@@ -98,35 +107,46 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         return TableAliasMapper.Null;
     }
 
-//    @Override
-//    public TableAliasMapper getTabAlias() {
-//        return TableAliasMapper.Null;
-//    }
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        this.refresh();
+    }
+
+    @Override
+    public void refresh() {
+        _dataFlowTopology = null;
+    }
+
+    @Override
+    public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
+        Set<TransformerInfo> tinfos = new HashSet<>();
+        Map<String, SelectedTabs> dbIds = getDB2TabsMapper();
+        for (Map.Entry<String, SelectedTabs> entry : dbIds.entrySet()) {
+            IDataxProcessor.addTransformerInfo(tinfos, pluginCtx, groupedChildTask, StoreResourceType.DataBase, entry.getKey());
+        }
+        return tinfos;
+    }
+
+
+    @Override
+    public String getDBNameByTable(String tabName) {
+        Map<String, SelectedTabs> dbIds = getDB2TabsMapper();
+        for (Map.Entry<String, SelectedTabs> entry : dbIds.entrySet()) {
+            if (entry.getValue().contains(tabName)) {
+                return entry.getKey();
+            }
+        }
+
+        throw new IllegalStateException("table:" + tabName + " can not find matched dbId,in:"
+                + dbIds.entrySet().stream().map((e) -> e.getKey()
+                + "[" + String.valueOf(e.getValue()) + "]").collect(Collectors.joining(",")));
+    }
 
     @Override
     public List<IDataxReader> getReaders(IPluginContext pluginCtx) {
-
         try {
+            Map<String, SelectedTabs> dbIds = getDB2TabsMapper();
             List<IDataxReader> readers = Lists.newArrayList();
-
-            SqlTaskNodeMeta.SqlDataFlowTopology topology = getTopology();
-
-            List<DependencyNode> dumpNodes = topology.getDumpNodes();
-
-
-            Map<String/*dbName*/, SelectedTabs> dbIds = Maps.newHashMap();
-            SelectedTabs tabs = null;
-            for (DependencyNode dump : dumpNodes) {
-                tabs = dbIds.get(dump.getDbName());
-                if (tabs == null) {
-                    tabs = new SelectedTabs();
-                    dbIds.put(dump.getDbName(), tabs);
-                }
-
-                tabs.addDumpNode(dump);
-                // dbIds.add(dump.getDbName());
-            }
-
             dbIds.entrySet().forEach((entry) -> {
                 readers.add(new AdapterDataxReader(DataxReader.load(null, true, entry.getKey())) {
                     @Override
@@ -137,6 +157,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
                     @Override
                     public List<TopologySelectedTab> getSelectedTabs() {
                         return super.getSelectedTabs().stream()//
+                                .filter((tab) -> entry.getValue().contains(tab))
                                 .map((tab) -> new TopologySelectedTab(tab, entry.getValue().getTopologyId(tab))) //
                                 .collect(Collectors.toList());
                     }
@@ -147,6 +168,24 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Map<String, SelectedTabs> getDB2TabsMapper() {
+        SqlTaskNodeMeta.SqlDataFlowTopology topology = getTopology();
+
+        List<DependencyNode> dumpNodes = topology.getDumpNodes();
+
+        Map<String/*dbName*/, SelectedTabs> dbIds = Maps.newHashMap();
+        SelectedTabs tabs = null;
+        for (DependencyNode dump : dumpNodes) {
+            tabs = dbIds.get(dump.getDbName());
+            if (tabs == null) {
+                tabs = new SelectedTabs();
+                dbIds.put(dump.getDbName(), tabs);
+            }
+            tabs.addDumpNode(dump);
+        }
+        return dbIds;
     }
 
     @Override
@@ -175,21 +214,33 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         }
 
         public boolean contains(ISelectedTab tab) {
-            return tab2ToplogId.containsKey(tab.getName());
+            return this.contains(tab.getName());
+        }
+
+        public boolean contains(String tableName) {
+            return tab2ToplogId.containsKey(tableName);
         }
 
         public String getTopologyId(ISelectedTab tab) {
             return Objects.requireNonNull(tab2ToplogId.get(tab.getName()) //
                     , "tabName:" + tab.getName() + " relevant topologyName can not be null");
         }
+
+        @Override
+        public String toString() {
+            return String.join(",", this.tab2ToplogId.keySet());
+        }
     }
 
     public SqlTaskNodeMeta.SqlDataFlowTopology getTopology() {
-        try {
-            return SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        if (_dataFlowTopology == null) {
+            try {
+                _dataFlowTopology = SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+        return _dataFlowTopology;
     }
 
     @Override

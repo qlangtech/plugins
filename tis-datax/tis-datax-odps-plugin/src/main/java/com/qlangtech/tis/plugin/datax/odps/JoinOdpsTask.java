@@ -18,7 +18,13 @@
 
 package com.qlangtech.tis.plugin.datax.odps;
 
-import com.aliyun.odps.*;
+import com.aliyun.odps.Instance;
+import com.aliyun.odps.Odps;
+import com.aliyun.odps.OdpsException;
+import com.aliyun.odps.Partition;
+import com.aliyun.odps.PartitionSpec;
+import com.aliyun.odps.Table;
+import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.task.SQLTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -38,6 +44,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.ISqlTask.RewriteSql;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.map.HashedMap;
@@ -47,7 +54,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -226,22 +237,6 @@ public class JoinOdpsTask extends HiveTask {
      */
     private void createTable(OdpsDataSourceFactory dsFactory, EntityName dumpTable
             , ColsParser insertParser, JDBCConnection conn) {
-        // ISqlTask.RewriteSql rewriteSql = insertParser.getSql();
-//        String sql = rewriteSql.rewriteSql;
-//        try {
-//            conn.execute("CREATE TABLE IF NOT EXISTS " + dumpTable.getFullName((dsFactory.getEscapeChar()))
-//                    + " lifecycle " + odpsWriter.lifecycle + " AS \n" + sql);
-//            // 添加分区
-//            Table ntab = dsFactory.getOdpsTable(dumpTable, dsFactory.getEscapeChar());
-//            PartitionSpec spec = new PartitionSpec();
-//            spec.set(IDumpTable.PARTITION_PT, rewriteSql.primaryTable.getPt());
-//            spec.set(IDumpTable.PARTITION_PMOD, "0");
-//            ntab.createPartition(spec, true);
-//
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-
         List<HiveColumn> colsExcludePartitionCols = insertParser.getColsExcludePartitionCols();
 
         List<IColMetaGetter> cols = colsExcludePartitionCols.stream()
@@ -251,10 +246,11 @@ public class JoinOdpsTask extends HiveTask {
                 = IDataxProcessor.TableMap.create(dumpTable.getTabName(), cols);
 
         CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(
-                SourceColMetaGetter.getNone(), tabMapper, Optional.empty());
+                SourceColMetaGetter.getNone(), tabMapper.setShallNotRewriteTargetTableName(), Optional.empty());
         StringBuffer ddlScript = createDDL.getDDLScript();
         try {
             conn.execute(ddlScript.toString());
+            logger.info("create table script:\n" + ddlScript);
         } catch (Exception e) {
             throw new RuntimeException(ddlScript.toString(), e);
         }
@@ -274,7 +270,8 @@ public class JoinOdpsTask extends HiveTask {
     }
 
     @Override
-    protected AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+    protected AbstractInsertFromSelectParser createInsertSQLParser(
+            RewriteSql sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
         return new OdpsInsertFromSelectParser(sql, sqlColMetaGetter);
     }
 

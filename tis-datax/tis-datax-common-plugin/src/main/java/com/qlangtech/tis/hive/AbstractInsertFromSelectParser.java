@@ -43,25 +43,32 @@ public abstract class AbstractInsertFromSelectParser {
     private final ISqlTask.RewriteSql rewriteSql;
     private final Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter;
 
-    public AbstractInsertFromSelectParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+    public AbstractInsertFromSelectParser(ISqlTask.RewriteSql rewriteSql //
+            , Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter //
+                                          //        , final IPartionableWarehouse dumpTableNameRewriter
+    ) {
 
-        if (StringUtils.isEmpty(sql)) {
-            throw new IllegalArgumentException("param sql can not be null");
+//        if (StringUtils.isEmpty(sql)) {
+//            throw new IllegalArgumentException("param sql can not be null");
+//        }
+        if (rewriteSql == null) {
+            throw new IllegalArgumentException("param rewriteSql can not be null");
         }
         if (sqlColMetaGetter == null) {
             throw new IllegalArgumentException("param sqlColMetaGetter can not be null");
         }
 
-        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
-            @Override
-            protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
-                return Optional.of(new DumpTabPartition((dbNameCriteria ? EntityName.create(dbName, tableName) : EntityName.parse(tableName)), () -> "-1"));
-            }
-        };
+//        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
+//            @Override
+//            protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
+//                return Optional.of(new DumpTabPartition((dbNameCriteria ? EntityName.create(dbName, tableName) : EntityName.parse(tableName)), () -> "-1"));
+//            }
+//        };
 
-        SqlTaskNodeMeta sqlTaskNodeMeta = new SqlTaskNodeMeta();
-        sqlTaskNodeMeta.setSql(sql);
-        this.rewriteSql = sqlTaskNodeMeta.getColMetaGetterSql(tabPartition, IPartionableWarehouse.createForNoWriterForTableName());
+//        SqlTaskNodeMeta sqlTaskNodeMeta = new SqlTaskNodeMeta();
+//        sqlTaskNodeMeta.setSql(sql);
+        //  sqlTaskNodeMeta.setDependencies();
+        this.rewriteSql = rewriteSql;//sqlTaskNodeMeta.getColMetaGetterSql(tabPartition, dumpTableNameRewriter);
         this.sqlColMetaGetter = sqlColMetaGetter;
 
         HiveColumn hc = null;

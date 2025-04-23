@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.hive;
 
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import org.apache.hadoop.conf.Configuration;
@@ -73,7 +74,7 @@ public class HiveInsertFromSelectParser extends AbstractInsertFromSelectParser {
         }
     }
 
-    public HiveInsertFromSelectParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+    public HiveInsertFromSelectParser(ISqlTask.RewriteSql sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
         super(sql, sqlColMetaGetter);
     }
 

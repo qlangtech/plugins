@@ -151,7 +151,7 @@ public abstract class TableRegisterFlinkSourceHandle
 
         tabEnv.createTemporaryTable(alias.getTo()
                 , TableDescriptor.forConnector(this.getSinkTypeName())
-                        .option(DataxUtils.DATAX_NAME, this.getDataXName())
+                        .option(StoreResourceType.DATAX_NAME, this.getDataXName())
                         .option(TableAlias.KEY_FROM_TABLE_NAME, alias.getFrom())
                         .schema(sinkTabSchema.build()).build());
     }

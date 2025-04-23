@@ -71,7 +71,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
 
     @Override
     public StreamTableSink<Tuple2<Boolean, Row>> createStreamTableSink(Map<String, String> properties) {
-        String dataXName = (properties.get(StringUtils.lowerCase(DataxUtils.DATAX_NAME)));
+        String dataXName = (properties.get(StringUtils.lowerCase(StoreResourceType.DATAX_NAME)));
         String sourceTableName = properties.get(StringUtils.lowerCase(TableAlias.KEY_FROM_TABLE_NAME));
         if (StringUtils.isEmpty(dataXName) || StringUtils.isEmpty(sourceTableName)) {
             throw new IllegalArgumentException("param dataXName or sourceTableName can not be null");
@@ -195,7 +195,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
     @Override
     public List<String> supportedProperties() {
         List<String> props = Lists.newArrayList();
-        props.add(DataxUtils.DATAX_NAME);
+        props.add(StoreResourceType.DATAX_NAME);
         props.add(TableAlias.KEY_FROM_TABLE_NAME);
         props.add("update-mode");
 

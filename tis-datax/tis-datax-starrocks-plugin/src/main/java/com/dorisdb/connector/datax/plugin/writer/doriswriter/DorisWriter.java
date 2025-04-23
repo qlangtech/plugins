@@ -59,7 +59,7 @@
 //                options = new DorisWriterOptions(super.getPluginJobConf());
 //                options.doPretreatment();
 //                // 执行初始化建标操作
-//                String dataXName = this.originalConfig.getString(DataxUtils.DATAX_NAME);
+//                String dataXName = this.originalConfig.getString(StoreResourceType.DATAX_NAME);
 //                String tableName = options.getTable();
 //                List<String> jdbcUrls = Collections.singletonList(options.getJdbcUrl());
 //                InitWriterTable.process(dataXName, tableName, jdbcUrls);

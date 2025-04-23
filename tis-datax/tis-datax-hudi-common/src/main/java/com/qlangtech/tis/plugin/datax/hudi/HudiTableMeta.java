@@ -267,7 +267,7 @@ public class HudiTableMeta {
         this.hudiTabName = hudiTabName;// paramCfg.getNecessaryValue(Key.FILE_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
         this.sourceOrderingField
                 = paramCfg.getNecessaryValue(KEY_SOURCE_ORDERING_FIELD, HudiWriterErrorCode.REQUIRED_VALUE);
-        this.dataXName = paramCfg.getNecessaryValue(DataxUtils.DATAX_NAME, HudiWriterErrorCode.REQUIRED_VALUE);
+        this.dataXName = paramCfg.getNecessaryValue(StoreResourceType.DATAX_NAME, HudiWriterErrorCode.REQUIRED_VALUE);
         this.pkName = paramCfg.getNecessaryValue("hudiRecordkey", HudiWriterErrorCode.REQUIRED_VALUE);
         //  this.partitionpathField = paramCfg.getNecessaryValue("hudiPartitionpathField", HdfsWriterErrorCode.REQUIRED_VALUE);
         this.shuffleParallelism

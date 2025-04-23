@@ -53,7 +53,7 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
     private final IEndTypeGetter.EndType endType;
 
     public static final ConfigOption<String> dataXNameOpt
-            = ConfigOptions.key((DataxUtils.DATAX_NAME)).stringType().noDefaultValue();
+            = ConfigOptions.key((StoreResourceType.DATAX_NAME)).stringType().noDefaultValue();
     public static final ConfigOption<String> sourceTableNameOpt
             = ConfigOptions.key((TableAlias.KEY_FROM_TABLE_NAME)).stringType().noDefaultValue();
 
@@ -77,7 +77,7 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
 //        JdbcDialect jdbcDialect = getDialect();
 
 
-        String dataXName = config.get(dataXNameOpt); //(config.get(StringUtils.lowerCase(DataxUtils.DATAX_NAME)));
+        String dataXName = config.get(dataXNameOpt); //(config.get(StringUtils.lowerCase(StoreResourceType.DATAX_NAME)));
         String sourceTableName = config.get(sourceTableNameOpt);//  //properties.get(StringUtils.lowerCase(TableAlias.KEY_FROM_TABLE_NAME));
         if (StringUtils.isEmpty(dataXName) || StringUtils.isEmpty(sourceTableName)) {
             throw new IllegalArgumentException("param dataXName or sourceTableName can not be null");

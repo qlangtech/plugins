@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.dump.hive;
 
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -185,12 +187,13 @@ public class HiveTableBuilder {
 
         try {
             EntityName hiveTable = null;
-
+            // Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
+            final Set<String> tables = Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
+            tables.addAll(engine.getTablesInDB().getTabs());
             for (Map.Entry<EntityName, Callable<BindHiveTableTool.HiveBindConfig>> entry : hiveTables.entrySet()) {
                 // String hivePath = hiveTable.getNameWithPath();
                 hiveTable = entry.getKey();
 
-                final List<String> tables = engine.getTablesInDB().getTabs();
                 BindHiveTableTool.HiveBindConfig columns = entry.getValue().call();
                 if (tables.contains(hiveTable.getTableName())) {
                     //isTableSame(conn, columns.colsMeta, hiveTable)

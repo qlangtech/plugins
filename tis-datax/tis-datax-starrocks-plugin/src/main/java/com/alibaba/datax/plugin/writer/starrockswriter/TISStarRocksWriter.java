@@ -40,7 +40,7 @@ public class TISStarRocksWriter extends StarRocksWriter {
         public void init() {
             Configuration cfg = super.getPluginJobConf();
             // 判断表是否存在，如果不存在则创建表
-            //final String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, RdbmsWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
+            //final String dataXName = cfg.getNecessaryValue(StoreResourceType.DATAX_NAME, RdbmsWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
             String tableName = cfg.getNecessaryValue(com.alibaba.datax.plugin.rdbms.writer.Key.TABLE
                     , RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
             List<String> jdbcUrls = Lists.newArrayList(

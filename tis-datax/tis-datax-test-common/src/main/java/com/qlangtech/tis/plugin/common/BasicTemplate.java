@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.common;
 
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -8,6 +9,7 @@ import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.util.IPluginContext;
@@ -15,7 +17,10 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -30,6 +35,11 @@ public abstract class BasicTemplate {
             @Override
             public IDataxReader getReader(IPluginContext pluginCtx) {
                 return null;
+            }
+
+            @Override
+            public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
+                return Set.of();
             }
 
             @Override
@@ -130,7 +140,7 @@ public abstract class BasicTemplate {
             @Override
             protected String getTemplateContent(
                     IDataxReaderContext readerContext, IDataxReader reader
-                    , IDataxWriter writer, Optional< RecordTransformerRules> transformerRules) {
+                    , IDataxWriter writer, Optional<RecordTransformerRules> transformerRules) {
                 return vmTplContent;
             }
         };

@@ -80,7 +80,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                    dataXName.assetCheckDataAppType(), dataXName.getPipelineName(), pluginContext, mongoReader, tabs);
+                    dataXProcessor, pluginContext, mongoReader, tabs);
             Map<String, Pair<FlinkColMapper, List<MongoCMeta>>> tabColsMapper = Maps.newHashMap();
 
 

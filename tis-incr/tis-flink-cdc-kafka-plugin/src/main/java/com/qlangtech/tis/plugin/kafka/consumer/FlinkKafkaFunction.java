@@ -105,7 +105,7 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
         IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
         Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                 = RecordTransformerRules.contextParamValsGetterMapper(
-                         pluginContext.getCollectionName(), pluginContext, kafkaReader, tabs);
+                dataXProcessor, pluginContext, kafkaReader, tabs);
 
         KafkaSourceBuilder<DTO> kafkaSourceBuilder = kafkaReader.createKafkaSourceBuilder(contextParamValsGetterMapper);
 //        kafkaSourceBuilder.setValueOnlyDeserializer(

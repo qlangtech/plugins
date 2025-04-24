@@ -190,11 +190,10 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
                 tabColsMapper.put(tab.getName(), colsMapper);
             }
-            DataXName dataXName = pluginContext.getCollectionName();
-
+//            DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                    dataXName.assetCheckDataAppType(), dataXName.getPipelineName(), pluginContext, rdbmsReader, tabs);
+                    dataXProcessor, pluginContext, rdbmsReader, tabs);
             //
             TISDeserializationSchema deserializationSchema
                     = new TISDeserializationSchema(

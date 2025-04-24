@@ -102,7 +102,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             IPluginContext pluginContext = IPluginContext.namedContext(channalName.getName());
             DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-                    = RecordTransformerRules.contextParamValsGetterMapper(dataXName.assetCheckDataAppType(), dataXName.getPipelineName(), pluginContext, reader, tabs);
+                    = RecordTransformerRules.contextParamValsGetterMapper(dataXProcessor, pluginContext, reader, tabs);
 
             final TISDeserializationSchema deserializationSchema
                     = new TISDeserializationSchema(

@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -104,7 +105,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             DataXName dataX = dataXContext.getCollectionName();
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                    dataXContext, dataX.getType(), dataX.getPipelineName(), tabAlias.getFrom());
+                    dataXContext, DataxProcessor.load(dataXContext,dataX), tabAlias.getFrom());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));

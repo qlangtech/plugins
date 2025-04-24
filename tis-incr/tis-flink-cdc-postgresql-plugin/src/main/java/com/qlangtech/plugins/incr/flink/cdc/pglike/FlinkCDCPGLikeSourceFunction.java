@@ -86,7 +86,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
 
             final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                            StoreResourceType.DataApp, dataxName.getName(),IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
+                    dataXProcessor,IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
 
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {

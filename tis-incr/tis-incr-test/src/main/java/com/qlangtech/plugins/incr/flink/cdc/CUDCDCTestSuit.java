@@ -27,15 +27,20 @@ import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -53,6 +58,7 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -77,6 +83,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -379,6 +386,17 @@ public abstract class CUDCDCTestSuit {
             }
 
             @Override
+            public Pair<List<RecordTransformerRules>, IPluginStore>
+            getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public IDataxReader getReader(IPluginContext pluginContext, ISelectedTab tab) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Application buildApp() {
                 throw new UnsupportedOperationException();
             }
@@ -394,12 +412,17 @@ public abstract class CUDCDCTestSuit {
             }
 
             @Override
+            public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public String identityValue() {
                 throw new UnsupportedOperationException();
             }
         };
         TableAlias.testTabAlias = Lists.newArrayList(new TableAlias(this.tabName));
-       // processor.setTableMaps();
+        // processor.setTableMaps();
         return processor;
     }
 

@@ -24,7 +24,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.AdapterDataxReader;
 import com.qlangtech.tis.datax.DBDataXChildTask;
-import com.qlangtech.tis.datax.IDataFlowDataXProcess;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -40,14 +40,19 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.KeyedPluginStore.Key;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.AdapterSelectedTab;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -57,18 +62,27 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
+import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.TransformerRuleKey;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FalseFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -76,7 +90,7 @@ import java.util.stream.Collectors;
  * @create: 2023-01-05 22:10
  * @see DefaultDataxProcessor
  **/
-public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, IdentityName, IDataFlowDataXProcess, AfterPluginSaved {
+public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, IdentityName, AfterPluginSaved {
 
 
     @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -122,14 +136,63 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         Set<TransformerInfo> tinfos = new HashSet<>();
         Map<String, SelectedTabs> dbIds = getDB2TabsMapper();
         for (Map.Entry<String, SelectedTabs> entry : dbIds.entrySet()) {
-            IDataxProcessor.addTransformerInfo(tinfos, pluginCtx, groupedChildTask, StoreResourceType.DataBase, entry.getKey());
+            addTransformerInfo(tinfos, pluginCtx, groupedChildTask
+                    , StoreResourceType.DataBase, entry.getKey(), (tabName, context) -> {
+                        Pair<List<RecordTransformerRules>, IPluginStore> tabTransformerRule
+                                = loadRecordTransformerRulesAndPluginStore(context, StoreResourceType.DataBase, entry.getKey(), tabName);
+                        for (RecordTransformerRules trule : tabTransformerRule.getKey()) {
+                            return Optional.of(trule);
+                        }
+                        return Optional.empty();
+                    });
         }
         return tinfos;
     }
 
 
-    @Override
-    public String getDBNameByTable(String tabName) {
+    /**
+     * @param tinfos
+     * @param pluginCtx
+     * @param groupedChildTask key: tableName
+     * @param resType
+     * @param pipeName
+     */
+    static void addTransformerInfo(Set<TransformerInfo> tinfos,
+                                   IPluginContext pluginCtx
+            , Map<String, List<DBDataXChildTask>> groupedChildTask, StoreResourceType resType, String pipeName
+            , BiFunction<String, IPluginContext, Optional<RecordTransformerRules>> loadTransformerRules) {
+        if (resType == StoreResourceType.DataBase) {
+            // 由于在DataBase的情况下 使用 execId=99a716f6-c5f9-6cdd-34e9-9ab5835c29a9#writer 无效，所以重新创建一个pluginCtx实例
+            pluginCtx = IPluginContext.namedContext(new DataXName(pipeName, resType));
+        }
+        Key transformerRuleKey = TransformerRuleKey.createStoreKey(pluginCtx, resType, pipeName, "dump");
+        XmlFile sotre = transformerRuleKey.getSotreFile();
+        File parent = sotre.getFile().getParentFile();
+        if (!parent.exists()) {
+            // return Collections.emptySet();
+            return;
+        }
+        Optional<RecordTransformerRules> transformerRules = null;
+        String xmlExtend = Descriptor.getPluginFileName(org.apache.commons.lang.StringUtils.EMPTY);
+        SuffixFileFilter filter = new SuffixFileFilter(xmlExtend);
+        Collection<File> matched = FileUtils.listFiles(parent, filter, FalseFileFilter.INSTANCE);
+        for (File tfile : matched) {
+            String tabName = org.apache.commons.lang.StringUtils.substringBefore(tfile.getName(), xmlExtend);
+            if (StringUtils.isEmpty(tabName)) {
+                throw new IllegalStateException("tabName can not be null");
+            }
+            if (groupedChildTask.containsKey(tabName)) {
+                transformerRules = loadTransformerRules.apply(tabName, pluginCtx);
+//                RecordTransformerRules.loadTransformerRules(
+//                        pluginCtx, resType, pipeName, tabName);
+                if (transformerRules.isPresent()) {
+                    tinfos.add(new TransformerInfo(resType, pipeName, tabName, transformerRules.get().rules.size()));
+                }
+            }
+        }
+    }
+
+    private String getDBNameByTable(String tabName) {
         Map<String, SelectedTabs> dbIds = getDB2TabsMapper();
         for (Map.Entry<String, SelectedTabs> entry : dbIds.entrySet()) {
             if (entry.getValue().contains(tabName)) {
@@ -140,6 +203,37 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         throw new IllegalStateException("table:" + tabName + " can not find matched dbId,in:"
                 + dbIds.entrySet().stream().map((e) -> e.getKey()
                 + "[" + String.valueOf(e.getValue()) + "]").collect(Collectors.joining(",")));
+    }
+
+    @Override
+    public IDataxReader getReader(IPluginContext pluginContext, ISelectedTab tab) {
+        return DataxReader.load(null, true, getDBNameByTable(Objects.requireNonNull(tab).getName()));
+    }
+
+    @Override
+    public Pair<List<RecordTransformerRules>, IPluginStore> getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(tableName)) {
+            throw new IllegalArgumentException("param tableName:" + tableName + " can not be empty");
+        }
+
+        String appname = this.getDBNameByTable(tableName);
+        StoreResourceType resourceType = StoreResourceType.DataBase;
+
+        return loadRecordTransformerRulesAndPluginStore(pluginCtx, resourceType, appname, tableName);
+    }
+
+
+    public static Pair<List<RecordTransformerRules>, IPluginStore>
+    loadRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, StoreResourceType resourceType, String appname, String tableName) {
+        try {
+            String rawContent = HeteroEnum.TRANSFORMER_RULES.identity + ":require,"
+                    + SuFormProperties.SuFormGetterContext.FIELD_SUBFORM_ID + "_" + tableName
+                    + "," + StoreResourceType.KEY_PROCESS_MODEL + "_" + resourceType.getType()
+                    + "," + StoreResourceType.getPipeParma(resourceType, appname);
+            return HeteroEnum.TRANSFORMER_RULES.getPluginsAndStore(pluginCtx, UploadPluginMeta.parse(rawContent));
+        } catch (Throwable e) {
+            throw new RuntimeException("tableName:" + tableName, e);
+        }
     }
 
     @Override

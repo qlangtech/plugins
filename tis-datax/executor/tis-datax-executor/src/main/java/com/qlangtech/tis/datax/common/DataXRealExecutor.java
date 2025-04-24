@@ -37,6 +37,7 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -117,9 +118,9 @@ public class DataXRealExecutor {
 
             Optional<IDataxProcessor.TableMap> tableMap = this.dataXCfgGenerator.buildTabMapper(this.getDataxReader(), readerContext);
             DataXName dataXName = pluginCtx.getCollectionName();
+            IDataxProcessor dataxProcessor = DataxProcessor.load(pluginCtx, dataXName);
             Optional<RecordTransformerRules> transformerRules
-                    = RecordTransformerRules.loadTransformerRules(
-                    pluginCtx, dataXName.getType(), dataXName.getPipelineName(), readerContext.getSourceTableName());
+                    = RecordTransformerRules.loadTransformerRules(pluginCtx, dataxProcessor, readerContext.getSourceTableName());
 
             Configuration readerCfg
                     = Configuration.from(this.dataXCfgGenerator.generateDataxConfig(readerContext

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.doris.table;
 
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.offline.DataxUtils;
 import org.apache.flink.configuration.ConfigOption;

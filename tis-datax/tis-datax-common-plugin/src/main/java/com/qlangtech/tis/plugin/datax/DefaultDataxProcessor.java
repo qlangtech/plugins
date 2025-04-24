@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
@@ -43,6 +44,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
@@ -53,6 +55,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +69,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+
+import static com.qlangtech.tis.plugin.datax.DataFlowDataXProcessor.addTransformerInfo;
 
 /**
  * @author: baisui 百岁
@@ -102,6 +107,19 @@ public class DefaultDataxProcessor extends DataxProcessor {
         return app;
     }
 
+    @Override
+    public IDataxReader getReader(IPluginContext pluginContext, ISelectedTab tab) {
+        return this.getReader(pluginContext);
+    }
+
+    @Override
+    public Pair<List<RecordTransformerRules>, IPluginStore> getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
+        if (StringUtils.isEmpty(tableName)) {
+            throw new IllegalArgumentException("param tableName:" + tableName + " can not be empty");
+        }
+        return DataFlowDataXProcessor.loadRecordTransformerRulesAndPluginStore(pluginCtx, this.getResType(), this.name, tableName);
+    }
+
     /**
      * @param pluginCtx
      * @param groupedChildTask key: tableName
@@ -110,7 +128,15 @@ public class DefaultDataxProcessor extends DataxProcessor {
     @Override
     public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
         Set<TransformerInfo> tinfos = new HashSet<>();
-        IDataxProcessor.addTransformerInfo(tinfos,pluginCtx,groupedChildTask,this.getResType(),this.identityValue());
+        addTransformerInfo(tinfos, pluginCtx, groupedChildTask, this.getResType(), this.identityValue(), (tableName, context) -> {
+            // return Optional<RecordTransformerRules>
+            Pair<List<RecordTransformerRules>, IPluginStore> tabTransformerRule
+                    = DataFlowDataXProcessor.loadRecordTransformerRulesAndPluginStore(context, this.getResType(), this.name, tableName);
+            for (RecordTransformerRules trule : tabTransformerRule.getKey()) {
+                return Optional.of(trule);
+            }
+            return Optional.empty();
+        });
 
 //        Key transformerRuleKey = TransformerRuleKey.createStoreKey(
 //                pluginCtx, this.getResType(), this.identityValue(), "dump");
@@ -135,7 +161,6 @@ public class DefaultDataxProcessor extends DataxProcessor {
 //        }
         return tinfos;
     }
-
 
 
     @Override

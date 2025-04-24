@@ -226,7 +226,7 @@ public abstract class TableRegisterFlinkSourceHandle
         if (transformers.isPresent()) {
             tRules = transformers.get();
 
-            ITransformerBuildInfo transformerCfg = tRules.createTransformerBuildInfo(namedContext);
+            ITransformerBuildInfo transformerCfg = tRules.createTransformerBuildInfo(namedContext, selectedTab);
             List<OutputParameter> colsWithContextParams
                     = transformerCfg.overwriteColsWithContextParams(srcCols);
             transformerMapper = new RowTransformerMapper(

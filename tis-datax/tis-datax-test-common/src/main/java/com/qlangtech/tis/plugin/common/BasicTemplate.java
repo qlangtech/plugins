@@ -10,10 +10,14 @@ import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +39,17 @@ public abstract class BasicTemplate {
             @Override
             public IDataxReader getReader(IPluginContext pluginCtx) {
                 return null;
+            }
+
+            @Override
+            public Pair<List<RecordTransformerRules>, IPluginStore>
+            getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public IDataxReader getReader(IPluginContext pluginContext, ISelectedTab tab) {
+                throw new UnsupportedOperationException();
             }
 
             @Override

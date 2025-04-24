@@ -47,7 +47,7 @@ public class SelectedTableTransformerRules {
         this.tab = Objects.requireNonNull(tab, "param tab can not be null");
         this.sourceFlinkColCreator = Objects.requireNonNull(sourceFlinkColCreator, "param sourceFlinkColCreator can not be null");
         this.dataXContext = Objects.requireNonNull(dataXContext, "param dataXContext can not be null");
-        this.rules = transformerRules.createTransformerBuildInfo(dataXContext);
+        this.rules = transformerRules.createTransformerBuildInfo(dataXContext,tab);
     }
 
     List<OutputParameter> cols;

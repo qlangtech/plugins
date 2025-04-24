@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.ds.oracle.auth;
 
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -26,23 +28,27 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.oracle.Authorized;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-03-31 16:25
  **/
 public class AcceptAuthorized extends Authorized {
+    public static final String KEY_SCHEMA = "schema";
     private static final List<String> systemSchemas
-            = Arrays.asList("GSMADMIN_INTERNAL","ANONYMOUS", "APEX_030200", "APEX_PUBLIC_USER", "APPQOSSYS", "BI", "CTXSYS", "DBSNMP"
+            = Arrays.asList("GSMADMIN_INTERNAL", "ANONYMOUS", "APEX_030200", "APEX_PUBLIC_USER", "APPQOSSYS", "BI", "CTXSYS", "DBSNMP"
             , "DIP", "EXFSYS", "FLOWS_FILES", "HR", "IX", "MDDATA", "MDSYS", "MGMT_VIEW", "OE", "OLAPSYS"
             , "ORACLE_OCM", "ORDDATA", "ORDPLUGINS", "ORDSYS", "OUTLN", "OWBSYS", "OWBSYS_AUDIT"
             , "PM", "SCOTT", "SH", "SI_INFORMTN_SCHEMA", "SPATIAL_CSW_ADMIN_USR", "SPATIAL_WFS_ADMIN_USR", "SYS", "SYSMAN", "SYSTEM", "WMSYS", "XDB", "XS$NULL");
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name,Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name, Validator.require})
     public String schema;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -81,6 +87,26 @@ public class AcceptAuthorized extends Authorized {
         @Override
         public String getDisplayName() {
             return SWITCH_ON;
+        }
+
+        @Override
+        public boolean secondVerify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals, PostFormVals parentPostFormVals) {
+            // 校验schema的大小写问题
+            com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory dsFactory = parentPostFormVals.newInstance();
+            AcceptAuthorized schemaAuth = postFormVals.newInstance();
+            final String[] schemaShallBe = new String[1];
+            dsFactory.visitFirstConnection((conn) -> {
+                if (StringUtils.equalsIgnoreCase(conn.getSchema(), schemaAuth.schema)
+                        && !StringUtils.equals(conn.getSchema(), schemaAuth.schema)) {
+                    schemaShallBe[0] = (conn.getSchema());
+                }
+            });
+            if (schemaShallBe[0] != null) {
+                msgHandler.addFieldError(context, KEY_SCHEMA, "填写的内容与数据库目标Schema大小写不一致，实际为：" + schemaShallBe[0]);
+                return false;
+            }
+            // return super.secondVerify(msgHandler, context, postFormVals, parentPostFormVals);
+            return true;
         }
     }
 }

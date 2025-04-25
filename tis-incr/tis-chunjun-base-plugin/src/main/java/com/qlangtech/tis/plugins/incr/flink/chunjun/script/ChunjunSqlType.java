@@ -92,7 +92,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
         }
 
         public List<IColMetaGetter> getCols(TableAlias alia) {
-            return sinkStreamMetaGetter.getStreamTableMeta(alia.getTo()).getColsMeta();
+            return sinkStreamMetaGetter.getStreamTableMeta(alia).getColsMeta();
         }
 
         /**

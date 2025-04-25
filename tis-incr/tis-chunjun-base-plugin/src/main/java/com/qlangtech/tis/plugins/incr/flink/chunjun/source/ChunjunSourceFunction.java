@@ -36,6 +36,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -78,7 +79,7 @@ public abstract class ChunjunSourceFunction
             String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
 
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-        IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(sourceTabName);
+        IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(new TableAlias(sourceTabName));
         JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, streamTableMeta, sourceFunc);
         Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();

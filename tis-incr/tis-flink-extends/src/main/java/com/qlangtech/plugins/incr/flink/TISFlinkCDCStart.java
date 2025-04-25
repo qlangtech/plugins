@@ -95,11 +95,11 @@ public class TISFlinkCDCStart {
 
         IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
         DataxReader reader = (DataxReader) dataXProcess.getReader(null);
-
-        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline( dataxName.getName())));
+        DataXName dataX = DataXName.createDataXPipeline(dataxName.getName());
+        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataX));
         tableStreamHandle.setSourceStreamTableMeta(reader);
 
-        MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(DataXName.createDataXPipeline( dataxName.getName()));
+        MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataX);
         tableStreamHandle.setSourceFlinkColCreator(mqFactory.createFlinkColCreator(reader));
         mqFactory.setConsumerHandle(tableStreamHandle);
 

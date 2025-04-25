@@ -22,11 +22,8 @@ import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,12 +31,12 @@ import java.util.stream.Collectors;
  **/
 public class ColMetaUtils {
 
-    public static List<IColMetaGetter> getColMetas(
-            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator, JdbcConf conf) {
-        IStreamTableMeta tabColMetas
-                = sourceStreamMetaCreator.getStreamTableMeta(conf.getTable());
-        return tabColMetas.getColsMeta().stream().map((c) -> c).collect(Collectors.toList());
-    }
+//    public static List<IColMetaGetter> getColMetas(
+//            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator, JdbcConf conf) {
+//        IStreamTableMeta tabColMetas
+//                = sourceStreamMetaCreator.getStreamTableMeta(conf.getTable());
+//        return tabColMetas.getColsMeta().stream().map((c) -> c).collect(Collectors.toList());
+//    }
 
     /**
      * 取得目标库的字段类型
@@ -50,13 +47,16 @@ public class ColMetaUtils {
      */
     public static SinkColMetas getColMetasMap(
             IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, JdbcConf conf) {
-        return getColMetasMap(sinkStreamMetaCreator, conf.getTable());
+        TableAlias tableAlias = TableAlias.create(null, conf.getTable());
+        return getColMetasMap(sinkStreamMetaCreator, tableAlias);
     }
 
     public static SinkColMetas getColMetasMap(
-            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, String tabName) {
-        EntityName tab = EntityName.parse(tabName);
-        IStreamTableMeta tableMeta = sinkStreamMetaCreator.getStreamTableMeta(tab.getTabName());
+            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, TableAlias tableAlias
+            //        String tabName
+    ) {
+        // EntityName tab = EntityName.parse(tabName);
+        IStreamTableMeta tableMeta = sinkStreamMetaCreator.getStreamTableMeta(tableAlias);
         return new SinkColMetas(tableMeta);
     }
 

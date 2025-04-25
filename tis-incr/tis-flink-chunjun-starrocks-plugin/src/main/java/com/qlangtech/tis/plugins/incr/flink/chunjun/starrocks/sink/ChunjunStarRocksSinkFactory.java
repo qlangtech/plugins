@@ -33,6 +33,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -71,12 +72,13 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, List<String> primaryKeys , BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, TableAlias targetTabName, List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
         DataXStarRocksWriter rocksWriter = (DataXStarRocksWriter) dataXWriter;
 
-        final CreateChunjunSinkFunctionResult createSinkResult = createSinkFunctionResult(jdbcUrl, rocksWriter, dsFactory, targetTabName, primaryKeys, syncConf, tabMeta, this);
+        final CreateChunjunSinkFunctionResult createSinkResult = createSinkFunctionResult(jdbcUrl
+                , rocksWriter, dsFactory, targetTabName.getTo(), primaryKeys, syncConf, tabMeta, this);
         return createSinkResult;
     }
 

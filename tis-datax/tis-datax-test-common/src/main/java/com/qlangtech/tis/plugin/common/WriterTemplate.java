@@ -144,7 +144,7 @@ public class WriterTemplate {
             }
 
             @Override
-            public IStreamTableMeta getStreamTableMeta(String tableName) {
+            public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
                 throw new UnsupportedOperationException();
             }
 

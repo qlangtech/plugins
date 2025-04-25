@@ -36,6 +36,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -48,8 +49,6 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.doris.DorisSelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.CMeta;
- 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -109,7 +108,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, SelectedTab tab, Map<String, Object> params, final String targetTabName) {
+            , BasicDataXRdbmsWriter dataXWriter, SelectedTab tab, Map<String, Object> params, final TableAlias targetTabName) {
         DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
         DataXDorisWriter dataxWriter = (DataXDorisWriter) dataXWriter;
 
@@ -165,9 +164,10 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, List<String> primaryKeys, BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, TableAlias tableAlias
+            , List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
-        IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
+        IStreamTableMeta tabMeta = this.getStreamTableMeta(tableAlias);
         final CreateChunjunSinkFunctionResult createSinkResult = createDorisSinkFunctionResult(syncConf, tabMeta, primaryKeys);
         return createSinkResult;
     }

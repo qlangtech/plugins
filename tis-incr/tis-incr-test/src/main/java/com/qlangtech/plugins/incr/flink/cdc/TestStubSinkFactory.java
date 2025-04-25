@@ -47,7 +47,7 @@ public class TestStubSinkFactory extends TISSinkFactory implements IStreamTableM
     }
 
     @Override
-    public IStreamTableMeta getStreamTableMeta(String tableName) {
+    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
         return new IStreamTableMeta() {
             @Override
             public List<IColMetaGetter> getColsMeta() {

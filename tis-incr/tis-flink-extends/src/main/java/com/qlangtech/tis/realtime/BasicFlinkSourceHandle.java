@@ -76,12 +76,12 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return DataXName.createDataXPipeline(this.getDataXName());
     }
 
-    public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, TableAlias tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory( DataXName.createDataXPipeline(dataxName.getName()));
         return getStreamTableMeta(sinKFactory, tabName);
     }
 
-    public static IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, TableAlias tabName) {
         if (!(sinKFactory instanceof IStreamTableMeataCreator.ISinkStreamMetaCreator)) {
             throw new IllegalStateException("writer:"
                     + sinKFactory.getClass().getName() + " must be type of "
@@ -91,7 +91,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     }
 
     public static IStreamTableMeta getStreamTableMeta(
-            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, String tabName) {
+            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, TableAlias tabName) {
         return sourceFactory.getStreamTableMeta(tabName);
     }
 
@@ -146,7 +146,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return tab2OutputTag;
     }
 
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
         return Collections.emptyList();
     }
 

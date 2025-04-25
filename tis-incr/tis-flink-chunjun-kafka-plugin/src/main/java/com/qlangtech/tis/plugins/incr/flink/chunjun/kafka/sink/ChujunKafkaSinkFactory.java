@@ -39,6 +39,7 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -117,8 +118,8 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         kafkaConf.setTopic(dataXWriter.topic);
 
         kafkaConf.setProducerSettings(dataXWriter.buildKafkaConfig());
-
-        SyncConf syncConf = createSyncConf(selectedTab, targetTabName, () -> {
+        TableAlias tableAlias = TableAlias.create(selectedTab.getName(), targetTabName);
+        SyncConf syncConf = createSyncConf(selectedTab, tableAlias, () -> {
             Map<String, Object> params = Maps.newHashMap();
             return params;
         }, dataXWriter);
@@ -234,7 +235,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    public IStreamTableMeta getStreamTableMeta(String tableName) {
+    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
 
         // DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
         //  DataxWriter writer = DataxWriter.load(null, this.dataXName);// dataXProcessor.getWriter(null);
@@ -242,7 +243,8 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
         List<ISelectedTab> tabs = reader.getSelectedTabs();
 
-        Optional<ISelectedTab> find = tabs.stream().filter((f) -> StringUtils.equals(f.getName(), tableName)).findFirst();
+        Optional<ISelectedTab> find = tabs.stream()
+                .filter((f) -> StringUtils.equals(f.getName(), tableName.getFrom())).findFirst();
         if (!find.isPresent()) {
             throw new IllegalStateException("target table:" + tableName + " can not find in reader selectedTabs:"
                     + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")));

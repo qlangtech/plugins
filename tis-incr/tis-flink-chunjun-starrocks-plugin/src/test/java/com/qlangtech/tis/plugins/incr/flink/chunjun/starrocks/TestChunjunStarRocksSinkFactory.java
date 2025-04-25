@@ -27,6 +27,7 @@ import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
@@ -118,7 +119,7 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
                     }
 
                     @Override
-                    public IStreamTableMeta getStreamTableMeta(String tableName) {
+                    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
                         return () -> selectedTab.getCols().stream()
                                 .map((c) -> new HdfsColMeta(
                                         c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());

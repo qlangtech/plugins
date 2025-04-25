@@ -24,6 +24,7 @@ import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -76,7 +77,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         this.cols = cols;
     }
 
-    public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, String tabName) {
+    public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, TableAlias tabName) {
         IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
         return getAllTabColsMeta(streamTableMeta);
     }

@@ -86,7 +86,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
     }
 
     @Override
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
         List<FlinkCol> flinkCols = super.getTabColMetas(dataxName, tabName);
         this.flinkColMap = flinkCols.stream().collect(Collectors.toMap((c) -> c.name, (c) -> c));
         return flinkCols;

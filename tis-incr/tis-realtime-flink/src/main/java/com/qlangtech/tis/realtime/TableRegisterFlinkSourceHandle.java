@@ -28,22 +28,18 @@ import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DefaultTab;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowTransformerMapper;
@@ -134,7 +130,7 @@ public abstract class TableRegisterFlinkSourceHandle
     abstract protected void executeSql(TISTableEnvironment tabEnv);
 
     @Override
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
 
         return getAllTabColsMeta(this.getSinkFuncFactory(), tabName);
     }
@@ -145,7 +141,7 @@ public abstract class TableRegisterFlinkSourceHandle
                 = org.apache.flink.table.api.Schema.newBuilder();
         // 其实无作用骗骗校验器的
         initWriterTable(alias);
-        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias.getTo());
+        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias);
         for (FlinkCol c : cols) {
             sinkTabSchema.column(c.name, c.type);
         }
@@ -172,7 +168,7 @@ public abstract class TableRegisterFlinkSourceHandle
                      * 需要先初始化表MySQL目标库中的表
                      */
                     ((IInitWriterTableExecutor) dataXWriter)
-                            .initWriterTable(alias.getTo(), Collections.singletonList(jdbcUrl));
+                            .initWriterTable(() -> alias.getFrom(), alias.getTo(), Collections.singletonList(jdbcUrl));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -269,7 +265,7 @@ public abstract class TableRegisterFlinkSourceHandle
         tabEnv.createTemporaryView(alias.getTo() + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
     }
 
-    private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, String tabName) {
+    private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, TableAlias tabName) {
         IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
         return AbstractRowDataMapper.getAllTabColsMeta(streamTableMeta);
     }

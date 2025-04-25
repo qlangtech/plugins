@@ -376,15 +376,8 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
-
             });
-
         }
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-        //  return false;
     }
 
     /**

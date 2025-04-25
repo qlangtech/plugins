@@ -47,7 +47,7 @@ public class TISStarRocksWriter extends StarRocksWriter {
                     cfg.getNecessaryValue(Key.JDBC_URL, RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR));
             try {
 
-                DataxWriter.process(this.containerContext.getTISDataXName(), tableName, jdbcUrls);
+                DataxWriter.process(this.containerContext, tableName, jdbcUrls);
             } catch (Exception e) {
                 throw DataXException.asDataXException(RdbmsWriterErrorCode.INITIALIZE_TABLE_ERROR, tableName, e);
             }

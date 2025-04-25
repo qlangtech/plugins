@@ -58,9 +58,9 @@ public class RdbmsWriter {
      */
     public static void initWriterTable(IJobContainerContext containerContext, Configuration cfg) {
         Objects.requireNonNull(containerContext, "containerContext can not be null");
-        DataXName dataXName = containerContext.getTISDataXName();
-
-        String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"
+        // DataXName dataXName = containerContext.getTISDataXName();
+        // String sourceTableName = containerContext.getSourceTableName();
+        String sinkTableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"
                 , RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
         List<String> jdbcUrls = Lists.newArrayList();
         List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
@@ -71,9 +71,9 @@ public class RdbmsWriter {
         }
 
         try {
-            DataxWriter.process(dataXName, tableName, jdbcUrls);
+            DataxWriter.process(containerContext, sinkTableName, jdbcUrls);
         } catch (Exception e) {
-            throw DataXException.asDataXException(RdbmsWriterErrorCode.INITIALIZE_TABLE_ERROR, tableName, e);
+            throw DataXException.asDataXException(RdbmsWriterErrorCode.INITIALIZE_TABLE_ERROR, sinkTableName, e);
         }
     }
 

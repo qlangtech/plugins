@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.core.job.IJobContainerContext;
+import com.alibaba.datax.core.job.ISourceTable;
 import com.alibaba.datax.plugin.rdbms.writer.util.SelectTable;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
@@ -282,11 +284,10 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
-    public final void initWriterTable(String sinkTargetTabName, List<String> jdbcUrls) throws Exception {
-//        if (RobustReflectionConverter2.usedPluginInfo.get().isDryRun()) {
-//            return;
-//        }
-        process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, sinkTargetTabName, jdbcUrls);
+    public void initWriterTable(ISourceTable sourceTable, String sinkTargetTabName, List<String> jdbcUrls) throws Exception {
+
+
+        process(sourceTable, this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, sinkTargetTabName, jdbcUrls);
     }
 
     /**
@@ -295,14 +296,14 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      * @param
      * @throws Exception
      */
-    private static void process(String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
+    private static void process(ISourceTable sourceTable, String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
             , String sinkTableName, List<String> jdbcUrls) throws Exception {
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
             try (JDBCConnection conn = dsFactory.getConnection((jdbcUrl), Optional.empty(), false)) {
                 EntityName sinkTab = EntityName.parse(sinkTableName);
-                process(dataXName, processor, dataXWriter, dataXWriter, conn, sinkTab, sinkTab.getTabName());
+                process(dataXName, processor, dataXWriter, dataXWriter, conn, sinkTab, sourceTable.getSourceTableName());
             }
         }
     }

@@ -266,7 +266,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     /**
                      * 需要先初始化表MySQL目标库中的表
                      */
-                    dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
+                    dataXWriter.initWriterTable(selectedTab, targetTabName, Collections.singletonList(jdbcUrl));
                 }
 
 // FIXME 这里不能用 MySQLSelectedTab

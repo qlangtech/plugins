@@ -510,7 +510,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
             @Override
             protected JdbcOutputFormatBuilder getBuilder() {
-                return new JdbcOutputFormatBuilder(createChunjunOutputFormat(dataXWriter.getDataSourceFactory(), this.jdbcConf));
+                return new JdbcOutputFormatBuilder(createChunjunOutputFormat(tableAlias, dataXWriter.getDataSourceFactory(), this.jdbcConf));
             }
 
             @Override
@@ -587,7 +587,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
 
-    protected abstract JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf);
+    protected abstract JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf);
 
 
     private transient LoadingCache<String, IStreamTableMeta> tabMetaCache;
@@ -605,7 +605,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     .build(new CacheLoader<String, IStreamTableMeta>() {
                         @Override
                         public IStreamTableMeta load(String targetTableName) throws Exception {
-                            BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) DataxWriter.load(null, ChunjunSinkFactory.this.dataXName);
+                            BasicDataXRdbmsWriter writer
+                                    = (BasicDataXRdbmsWriter) DataxWriter.load(null, ChunjunSinkFactory.this.dataXName);
 
                             final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
                             // 初始化表RDBMS的表，如果表不存在就创建表

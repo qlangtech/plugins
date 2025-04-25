@@ -225,7 +225,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
         return null;
     }
 

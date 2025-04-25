@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -56,8 +57,8 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
-        return new TISPostgresOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, conf));
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf conf) {
+        return new TISPostgresOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, tableAlias));
     }
 
     @Override

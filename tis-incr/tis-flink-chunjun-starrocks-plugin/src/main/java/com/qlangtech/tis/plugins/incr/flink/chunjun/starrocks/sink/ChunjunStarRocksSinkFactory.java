@@ -166,7 +166,7 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
         throw new UnsupportedOperationException();
     }
 

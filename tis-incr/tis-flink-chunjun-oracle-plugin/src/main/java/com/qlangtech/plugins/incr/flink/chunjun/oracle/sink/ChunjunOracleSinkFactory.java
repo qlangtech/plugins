@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -55,9 +56,9 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf conf) {
 
-        return new TISJdbcOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, conf));
+        return new TISJdbcOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, tableAlias));
     }
 
     @Override

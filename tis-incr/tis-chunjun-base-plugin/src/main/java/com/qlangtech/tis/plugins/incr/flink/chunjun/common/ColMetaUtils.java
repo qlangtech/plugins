@@ -38,18 +38,18 @@ public class ColMetaUtils {
 //        return tabColMetas.getColsMeta().stream().map((c) -> c).collect(Collectors.toList());
 //    }
 
-    /**
-     * 取得目标库的字段类型
-     *
-     * @param
-     * @param conf
-     * @return
-     */
-    public static SinkColMetas getColMetasMap(
-            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, JdbcConf conf) {
-        TableAlias tableAlias = TableAlias.create(null, conf.getTable());
-        return getColMetasMap(sinkStreamMetaCreator, tableAlias);
-    }
+//    /**
+//     * 取得目标库的字段类型
+//     *
+//     * @param
+//     * @param conf
+//     * @return
+//     */
+//    public static SinkColMetas getColMetasMap(
+//            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, JdbcConf conf) {
+//        TableAlias tableAlias = TableAlias.create(null, conf.getTable());
+//        return getColMetasMap(sinkStreamMetaCreator, tableAlias);
+//    }
 
     public static SinkColMetas getColMetasMap(
             IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, TableAlias tableAlias

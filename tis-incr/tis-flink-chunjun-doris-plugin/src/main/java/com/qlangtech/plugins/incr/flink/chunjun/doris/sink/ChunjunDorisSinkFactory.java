@@ -96,7 +96,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias,DataSourceFactory dsFactory, JdbcConf conf) {
         throw new UnsupportedOperationException();
     }
 

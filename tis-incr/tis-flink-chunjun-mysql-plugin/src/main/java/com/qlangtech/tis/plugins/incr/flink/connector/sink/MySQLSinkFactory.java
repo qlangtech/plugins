@@ -25,6 +25,7 @@ import com.dtstack.chunjun.connector.jdbc.util.JdbcUtil;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -71,10 +72,10 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected TISMysqlOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected TISMysqlOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
 
-        TISMysqlOutputFormat outputFormat = new TISMysqlOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, jdbcConf));
-
+        TISMysqlOutputFormat outputFormat = new TISMysqlOutputFormat(dsFactory
+                , ColMetaUtils.getColMetasMap(this, tableAlias));
         return outputFormat;
     }
 

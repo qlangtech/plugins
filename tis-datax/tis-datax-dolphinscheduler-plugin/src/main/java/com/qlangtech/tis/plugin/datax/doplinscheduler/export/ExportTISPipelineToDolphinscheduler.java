@@ -324,7 +324,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
 
         @Override
         public String helpPath() {
-            return "docs/guide/integer-dolphinscheduler";
+            return "docs/install/integer-dolphinscheduler";
         }
 
         @Override

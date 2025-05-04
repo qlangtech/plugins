@@ -1,5 +1,6 @@
 # 基础镜像（支持 amd64 & arm64），based on Ubuntu 18.04.4 LTS
-FROM adoptopenjdk:8-jdk-hotspot
+#FROM adoptopenjdk:8-jdk-hotspot
+FROM eclipse-temurin:11-jdk
 # 维护者
 MAINTAINER dudiao(idudiao@163.com)
 # 设置时区

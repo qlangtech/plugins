@@ -52,7 +52,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-19 18:12
  **/
@@ -86,7 +85,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
 
             final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                    dataXProcessor,IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
+                    dataXProcessor, IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
 
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
@@ -100,7 +99,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
                         return dbs.getDbStream().map((dbname) -> {
 
                             JdbcIncrementalSource<DTO> incrSource =
-                                    createIncrementalSource(tabs, dbHost, tbs, debeziumProperties
+                                    createIncrementalSource(dataxName, tabs, dbHost, tbs, debeziumProperties
                                             , dbname, dsFactory, schemaSupported, flinkColCreator, contextParamValsGetterMapper);
 
 
@@ -120,7 +119,10 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
         }
     }
 
-    protected PostgresIncrementalSource<DTO> createIncrementalSource(List<ISelectedTab> tabs, String dbHost, Set<String> tbs, Properties debeziumProperties, String dbname, BasicDataSourceFactory dsFactory, ISchemaSupported schemaSupported, IFlinkColCreator<FlinkCol> flinkColCreator, Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
+    protected PostgresIncrementalSource<DTO> createIncrementalSource(TargetResName dataxName, List<ISelectedTab> tabs, String dbHost, Set<String> tbs
+            , Properties debeziumProperties, String dbname, BasicDataSourceFactory dsFactory
+            , ISchemaSupported schemaSupported, IFlinkColCreator<FlinkCol> flinkColCreator
+            , Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
         return PostgresIncrementalSource.<DTO>builder()
                 .hostname(dbHost)
                 .port(dsFactory.port)
@@ -133,7 +135,9 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
                 .password(dsFactory.password)
                 .debeziumProperties(debeziumProperties)
                 .startupOptions(StartupOptionUtils.getStartupOptions(sourceFactory.startupOptions))
-                .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper, sourceFactory.getRepIdentity()))
+                .deserializer(new PostgreSQLDeserializationSchema(
+                        tabs, flinkColCreator, contextParamValsGetterMapper, sourceFactory.getRepIdentity()))
+                .slotName(dataxName.getName())
                 .build();
     }
 

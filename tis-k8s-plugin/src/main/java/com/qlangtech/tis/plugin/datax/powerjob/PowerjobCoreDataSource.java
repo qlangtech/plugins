@@ -26,6 +26,8 @@ import java.text.MessageFormat;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/10/31
+ * @see com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.DefaultPowerjobCoreDataSource
+ * @see com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.EmbeddedPowerjobCoreDataSource
  */
 @TISExtensible
 public abstract class PowerjobCoreDataSource implements Describable<PowerjobCoreDataSource> {

@@ -1,5 +1,7 @@
 package com.qlangtech.tis.datax.powerjob;
 
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.datax.powerjob.impl.PowerJobTaskContext;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.TaskResult;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -18,8 +21,15 @@ import java.util.List;
 public class TISTableDumpProcessor extends BasicTISTableDumpProcessor implements MapReduceProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(TISTableDumpProcessor.class);
-    // public static final String KEY_instanceParams = "instanceParams";
 
+    // public static final String KEY_instanceParams = "instanceParams";
+    static {
+        setDataXExecutorDir();
+    }
+
+    static void setDataXExecutorDir() {
+        DataXJobInfo.dataXExecutorDir.set(new File("/opt/tis/" + IDataXTaskRelevant.KEY_TIS_DATAX_EXECUTOR));
+    }
 
 
     @Override
@@ -76,15 +86,13 @@ public class TISTableDumpProcessor extends BasicTISTableDumpProcessor implements
     }
 
 
-
-
     @Override
     public ProcessResult process(TaskContext context) throws Exception {
 
-       // PowerJobTaskContext powerJobTaskContext = ;
+        // PowerJobTaskContext powerJobTaskContext = ;
 
-       // final OmsLogger logger = context.getOmsLogger();
-      //  ExecPhase execPhase = ;
+        // final OmsLogger logger = context.getOmsLogger();
+        //  ExecPhase execPhase = ;
 
         processSync(new PowerJobTaskContext(context), PowerJobTaskContext.parse(this, context));
         return new ProcessResult(true, "map success");

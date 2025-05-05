@@ -1,11 +1,20 @@
 package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.util.IPluginContext;
 import junit.framework.TestCase;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -38,8 +47,23 @@ public class TestDataxPrePostConsumer extends TestCase {
             }
 
             @Override
+            public Pair<List<RecordTransformerRules>, IPluginStore> getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
+                return null;
+            }
+
+            @Override
+            public IDataxReader getReader(IPluginContext pluginContext, ISelectedTab tab) {
+                return null;
+            }
+
+            @Override
             public IDataxGlobalCfg getDataXGlobalCfg() {
                 return null;
+            }
+
+            @Override
+            public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {
+                return Set.of();
             }
 
             @Override

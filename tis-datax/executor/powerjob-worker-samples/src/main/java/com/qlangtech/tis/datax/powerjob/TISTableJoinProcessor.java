@@ -6,12 +6,16 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 
+import static com.qlangtech.tis.datax.powerjob.TISTableDumpProcessor.setDataXExecutorDir;
+
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/11
  */
 public class TISTableJoinProcessor extends BasicTISTableJoinProcessor implements BasicProcessor {
-
+    static {
+        setDataXExecutorDir();
+    }
     // public static final String KEY_instanceParams = "instanceParams";
 //    private static final Pattern PATTERN_PARTITION_PARAMS =
 //            Pattern.compile("^" + ExecChainContextUtils.PARTITION_DATA_PARAMS + "_(.+?)$");

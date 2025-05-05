@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.datax.executor;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.datax.StoreResourceType;
@@ -29,10 +28,8 @@ import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
-import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent.Level;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

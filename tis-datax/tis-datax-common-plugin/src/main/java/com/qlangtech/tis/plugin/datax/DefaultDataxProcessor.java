@@ -219,10 +219,21 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<IAppSource> implements IDescribableManipulate<DefaultDataXProcessorManipulate> {
+        static final int MAX_RECEPT_LENGTH = 20;
 
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IDataxGlobalCfg.KEY_DISPLAY_NAME));
+        }
+
+
+        public boolean validateRecept(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            if (StringUtils.length(value) > MAX_RECEPT_LENGTH) {
+                msgHandler.addFieldError(context, fieldName, "长度不能超过" + MAX_RECEPT_LENGTH + "个字符");
+                return false;
+            }
+            return true;
         }
 
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

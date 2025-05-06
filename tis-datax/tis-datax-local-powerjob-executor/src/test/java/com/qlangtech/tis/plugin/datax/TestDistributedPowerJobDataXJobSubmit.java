@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.dao.ICommonDAOContext;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
@@ -200,9 +201,9 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
 
         HttpUtils.addMockApply(0, "do_create_new_task"
                 , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
-
+        DataXName dataXPipeline = DataXName.createDataXPipeline(testDataXName);
         powerJobDataXJobSubmit.triggerJob(
-                module, context, testDataXName, Optional.empty(), Optional.empty());
+                module, context, dataXPipeline, Optional.empty(), Optional.empty());
 
         this.verifyAll();
     }

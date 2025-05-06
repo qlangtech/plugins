@@ -162,10 +162,10 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         dataXWriter.splitter = ",";
         dataXWriter.dynamic = true;
 
-
-        ESTableAlias tableMap = new ESTableAlias();
         String esSchema = IOUtils.loadResourceFromClasspath(DataXElasticsearchWriter.class, "es-schema-content.json");
-        tableMap.setSchemaContent(esSchema);
+        ESTableAlias tableMap = new ESTableAlias(esSchema);
+
+      //  tableMap.setSchemaContent(esSchema);
 
 
         WriterTemplate.valiateCfgGenerate("es-datax-writer-assert.json", dataXWriter, tableMap);

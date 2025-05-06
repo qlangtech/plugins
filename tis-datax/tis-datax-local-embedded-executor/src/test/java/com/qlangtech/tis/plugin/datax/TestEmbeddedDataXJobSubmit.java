@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.element.QueryCriteria;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -37,8 +38,8 @@ public class TestEmbeddedDataXJobSubmit extends TestCase {
         queryCriteria.setPageSize(pageSize);
         queryCriteria.setNextPakge(true);
 
-
-        PreviewRowsData records = embeddedDataXJobSubmit.previewRowsData("mysql_mysql", "base", queryCriteria);
+        DataXName datax = DataXName.createDataXPipeline("mysql_mysql");
+        PreviewRowsData records = embeddedDataXJobSubmit.previewRowsData(datax, "base", queryCriteria);
         Assert.assertTrue(records.getRows().size() > 0);
     }
 }

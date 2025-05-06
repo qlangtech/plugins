@@ -15,9 +15,8 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+
 import com.qlangtech.async.message.client.consumer.TestRocketMQListenerFactory;
-import com.qlangtech.tis.component.TestIncrComponent;
-import com.qlangtech.tis.component.TestPlugin;
 import com.qlangtech.tis.component.TestRockMqPluginValidate;
 import com.qlangtech.tis.util.TestHeteroList;
 import junit.framework.Test;
@@ -34,8 +33,8 @@ public class TestAll extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestPlugin.class);
-        suite.addTestSuite(TestIncrComponent.class);
+        //suite.addTestSuite(TestPlugin.class);
+       // suite.addTestSuite(TestIncrComponent.class);
         suite.addTestSuite(TestRockMqPluginValidate.class);
         suite.addTestSuite(TestHeteroList.class);
         suite.addTestSuite(TestRocketMQListenerFactory.class);

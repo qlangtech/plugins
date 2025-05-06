@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.Descriptor.FormVaildateType;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IPluginStore;
@@ -106,7 +107,8 @@ public class TestKerberosCfg {
         AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), jsonObject);
         Assert.assertNotNull(attrValMap);
 
-        Descriptor.PluginValidateResult validate = attrValMap.validate(fieldErrorHandler, context, false);
+        Descriptor.PluginValidateResult validate
+                = attrValMap.validate(fieldErrorHandler, context, FormVaildateType.VERIFY, Optional.empty());
         Assert.assertNotNull(validate);
 
         Assert.assertTrue(validate.isValid());
@@ -114,7 +116,7 @@ public class TestKerberosCfg {
         Assert.assertNotNull(attrValMap.descriptor);
         validate.setDescriptor(attrValMap.descriptor);
 
-        KerberosCfg kerberosCfg = validate.newInstance(fieldErrorHandler);
+        KerberosCfg kerberosCfg = validate.newInstance();
         validateKerberosProps(kerberosCfg);
 
         IPluginStore<ParamsConfig> pluginStore
@@ -149,12 +151,12 @@ public class TestKerberosCfg {
         attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), updateJson);
         Assert.assertNotNull(attrValMap);
 
-        validate = attrValMap.validate(fieldErrorHandler, context, false);
+        validate = attrValMap.validate(fieldErrorHandler, context, FormVaildateType.VERIFY,Optional.empty());
         Assert.assertNotNull(validate);
 
         Assert.assertTrue(validate.isValid());
         validate.setDescriptor(attrValMap.descriptor);
-        kerberosCfg = validate.newInstance(fieldErrorHandler);
+        kerberosCfg = validate.newInstance();
 
         // validateKerberosProps(kerberosCfg);
 

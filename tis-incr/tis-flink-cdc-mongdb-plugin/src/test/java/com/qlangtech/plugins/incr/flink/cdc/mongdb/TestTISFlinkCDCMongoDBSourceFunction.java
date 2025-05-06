@@ -42,6 +42,7 @@ import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -193,7 +194,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
             protected DataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 dataSourceFactory = createMySqlDataSourceFactory(dataxName, createdDB);
                 TIS.dsFactoryPluginStoreGetter = (p) -> {
-                    DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
+                    DSKey key = new DSKey(StoreResourceTypeConstants.DB_GROUP_NAME, p, DataSourceFactory.class);
                     return new DataSourceFactoryPluginStore(key, false) {
                         @Override
                         public DataSourceFactory getPlugin() {

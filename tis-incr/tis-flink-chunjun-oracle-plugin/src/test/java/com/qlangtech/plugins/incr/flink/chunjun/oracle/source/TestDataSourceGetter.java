@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.datax.DataXOracleReader;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.junit.Test;
 
 import java.sql.ResultSet;
@@ -53,8 +54,8 @@ public class TestDataSourceGetter {
             }
         });
 
-
-        List<ColumnMetaData> dmp_user_ = dsFactory.getTableMetadata(false, EntityName.parse("DMP_USER_"));
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
+        List<ColumnMetaData> dmp_user_ = dsFactory.getTableMetadata(false, pluginContext, EntityName.parse("DMP_USER_"));
         for (ColumnMetaData col : dmp_user_) {
             System.out.println(col.getName() + "->" + col.getType().toString());
         }

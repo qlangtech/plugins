@@ -147,7 +147,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
         String colName = null;
         dsFactory = getDorisSourceFactory(feServiceHost, jdbcPort, loadPort);
         try (JDBCConnection conn = dsFactory.getConnection(
-                dsFactory.buidJdbcUrl(null, feServiceHost, null), false)) {
+                dsFactory.buidJdbcUrl(null, feServiceHost, null), Optional.empty(), false)) {
 
             try (Statement statement = conn.createStatement()) {
 //                System.out.println("beContainerName:" + beContainerName);

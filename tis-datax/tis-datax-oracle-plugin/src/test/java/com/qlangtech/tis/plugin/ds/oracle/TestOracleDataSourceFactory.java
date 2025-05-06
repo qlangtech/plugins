@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.oracle.auth.NoneAuth;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -63,7 +64,7 @@ public class TestOracleDataSourceFactory {
 //        System.out.println(createDDL);
         final boolean inSink = false;
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory(inSink);
-
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
         Assert.assertNotNull("allAuthorized must be true", dsFactory.allAuthorized);
 
         TableInDB tablesInDB = dsFactory.getTablesInDB();
@@ -71,7 +72,7 @@ public class TestOracleDataSourceFactory {
         EntityName tab = EntityName.parse("SYSTEM." + OracleDSFactoryContainer.testTabName);
         Assert.assertTrue(tablesInDB.contains(tab.getFullName()));
         // tablesInDB.forEach((tab) -> System.out.println(tab));
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(inSink, tab);
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(inSink, pluginContext, tab);
         Assert.assertTrue(cols.size() > 0);
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.isPk() + " " + col.getType());
@@ -82,7 +83,7 @@ public class TestOracleDataSourceFactory {
         dsFactory.allAuthorized = new NoneAuth();
         tablesInDB = dsFactory.getTablesInDB();
         Assert.assertTrue(tablesInDB.contains(tabNonePrefix.getFullName()));
-        cols = dsFactory.getTableMetadata(inSink, tabNonePrefix);
+        cols = dsFactory.getTableMetadata(inSink, pluginContext, tabNonePrefix);
         Assert.assertTrue(cols.size() > 0);
     }
 

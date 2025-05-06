@@ -30,11 +30,10 @@ import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpsertType;
-import org.apache.flink.cdc.connectors.postgres.PostgresTestBase;
+import com.ververica.cdc.connectors.postgres.PostgresTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

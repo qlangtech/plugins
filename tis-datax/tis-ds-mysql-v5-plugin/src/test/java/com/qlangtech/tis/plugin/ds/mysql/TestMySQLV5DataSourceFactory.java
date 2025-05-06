@@ -18,10 +18,10 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
-import com.mysql.jdbc.ConnectionImpl;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.IPluginContext;
 import junit.framework.TestCase;
 import org.junit.Ignore;
 
@@ -36,7 +36,7 @@ import java.util.List;
  **/
 public class TestMySQLV5DataSourceFactory extends TestCase {
     public void testGetTableMetadata() {
-        
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
         dataSourceFactory.useCompression = true;
         dataSourceFactory.password = "123456";
@@ -47,7 +47,7 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
         dataSourceFactory.nodeDesc = "192.168.28.200";
 
 
-        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata(false, EntityName.parse("base"));
+        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata(false, pluginContext, EntityName.parse("base"));
         assertEquals(8, baseColsMeta.size());
 
 

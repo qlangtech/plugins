@@ -21,9 +21,14 @@ package com.qlangtech.tis.hdfs.impl;
 import com.qlangtech.tis.AliyunOSSCfg;
 import com.qlangtech.tis.OssConfig;
 import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
-import com.qlangtech.tis.fs.*;
+import com.qlangtech.tis.fs.FSDataInputStream;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.IPathInfo;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fs.TISFSDataOutputStream;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.AliyunEndpoint;
+import com.qlangtech.tis.plugin.aliyun.AliyunEndpoint;
+
 import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import org.apache.commons.io.IOUtils;

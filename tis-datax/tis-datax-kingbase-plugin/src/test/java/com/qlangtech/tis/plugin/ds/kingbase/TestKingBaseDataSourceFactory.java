@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.kingbase;
 
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,7 +43,8 @@ public class TestKingBaseDataSourceFactory {
         dataSourceFactory.password = "123456";
         dataSourceFactory.tabSchema = "public";
         EntityName orderdetail = EntityName.parse("public.orderdetail");
-        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(true, orderdetail);
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
+        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(true, pluginContext, orderdetail);
         Assert.assertNotNull(tableMetadata);
     }
 }

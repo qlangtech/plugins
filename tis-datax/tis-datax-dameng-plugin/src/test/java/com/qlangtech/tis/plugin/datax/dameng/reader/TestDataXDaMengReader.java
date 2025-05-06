@@ -20,6 +20,7 @@ import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Rule;
@@ -70,8 +71,8 @@ public class TestDataXDaMengReader {
 // int index, String key, int type, boolean pk
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
-
-        EasyMock.expect(datasource.getTableMetadata(false, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
+        EasyMock.expect(datasource.getTableMetadata(false, pluginContext, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
                 .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
         EasyMock.expect(datasource.getDataDumpers(targetTable)).andDelegateTo(new DaMengDataSourceFactory() {

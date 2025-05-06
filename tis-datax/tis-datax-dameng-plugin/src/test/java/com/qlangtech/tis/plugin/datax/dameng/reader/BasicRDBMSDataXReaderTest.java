@@ -7,7 +7,9 @@ import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -22,6 +24,8 @@ import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Rule;
@@ -64,7 +68,7 @@ public abstract class BasicRDBMSDataXReaderTest
 
         DS dsFactory = createDataSourceFactory();
         TIS.dsFactoryPluginStoreGetter = (p) -> {
-            DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
+            DSKey key = new DSKey(StoreResourceTypeConstants.DB_GROUP_NAME, p, DataSourceFactory.class);
             return new DataSourceFactoryPluginStore(key, false) {
                 @Override
                 public DataSourceFactory getPlugin() {
@@ -75,14 +79,14 @@ public abstract class BasicRDBMSDataXReaderTest
         READER dataxReader = createDataXReader(dsFactory);
         SelectedTab tab =
                 TestSelectedTab.load(folder, BasicRDBMSDataXReaderTest.class, "datax-reader-cfg-selected-tabs-full-types.xml");
-
+        EntityName sinkTab = EntityName.parse(tab.getName());
         DataxProcessor processor = EasyMock.createMock("processor", DataxProcessor.class);
 
         EasyMock.expect(processor.getReader(null)).andReturn(dataxReader).times(2);
 
         final File ddlDir = folder.newFolder("ddlDir");
         EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
-        SourceColMetaGetter colMetaGetter = new SourceColMetaGetter(dataxReader);
+        SourceColMetaGetter colMetaGetter = new SourceColMetaGetter(dataxReader, true);
         AbstractCreateTableSqlBuilder.CreateDDL createDDL
                 = this.dataXWriter.generateCreateDDL(colMetaGetter, new IDataxProcessor.TableMap(tab), Optional.empty());
 
@@ -99,6 +103,11 @@ public abstract class BasicRDBMSDataXReaderTest
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+
+//            String dataXName, IDataxProcessor processor
+//                    , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, JDBCConnection jdbcConn
+//                    , EntityName sinkTab, final String tableSqlFileName
+
             // initialize table
             BasicDataXRdbmsWriter.process(dataXName, processor, new IDataSourceFactoryGetter() {
                 @Override
@@ -110,7 +119,7 @@ public abstract class BasicRDBMSDataXReaderTest
                 public Integer getRowFetchSize() {
                     return 1;
                 }
-            }, dataXWriter, conn, tab.getName());
+            }, dataXWriter, conn, sinkTab, tab.getName());
 
             // insert rows into table
 

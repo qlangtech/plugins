@@ -48,7 +48,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     public void testCreateIncrDeployment() throws Exception {
 
-        IRCController incr = incrFactory.getIncrSync();
+        IRCController incr = getIncrSync();
         assertNotNull(incr);
         assertFalse(s4totalpay + " shall have not deploy incr instance in k8s"
                 , incr.getRCDeployment(new TargetResName(s4totalpay)) != null);
@@ -73,10 +73,21 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     public void testDeleteIncrDeployment() throws Exception {
         try {
-            incrFactory.getIncrSync().removeInstance(new TargetResName(s4totalpay));
+            getIncrSync().removeInstance(new TargetResName(s4totalpay));
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    public static IRCController getIncrSync() {
+        IPluginStore<IncrStreamFactory> store = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
+        assertNotNull(store);
+        IncrStreamFactory incrStream = store.getPlugin();
+        assertNotNull(incrStream);
+
+        IRCController incrSync = incrStream;
+        assertNotNull(incrSync);
+        return incrSync;
     }
 }

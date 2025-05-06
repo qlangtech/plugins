@@ -139,7 +139,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator(dataxReader));
                 return sourceHandle;
             }
         };
@@ -221,7 +221,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator(dataxReader));
 
                 return sourceHandle;
             }
@@ -450,7 +450,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator(dataxReader));
                 return sourceHandle;
             }
 

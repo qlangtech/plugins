@@ -128,7 +128,7 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 sourceHandle.setStreamFactory(streamFactory);
-                sourceHandle.setSourceFlinkColCreator(pgCDCFactory.createFlinkColCreator());
+                sourceHandle.setSourceFlinkColCreator(pgCDCFactory.createFlinkColCreator(dataxReader));
                 return sourceHandle;
             }
 

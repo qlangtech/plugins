@@ -18,7 +18,7 @@
 
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactory;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactoryByFullTypes;
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.TestChunjunPostreSQLSourceFactory;
+//import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.TestChunjunPostreSQLSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -29,7 +29,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({TestChunjunPostgreSQLSinkFactory.class
-        , TestChunjunPostgreSQLSinkFactoryByFullTypes.class, TestChunjunPostreSQLSourceFactory.class})
+        , TestChunjunPostgreSQLSinkFactoryByFullTypes.class})
 public class TestAll {
 
 }

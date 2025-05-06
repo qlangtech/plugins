@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.TISApplySkipFlinkClassloaderFactoryCreat
 import com.qlangtech.plugins.incr.flink.launch.clustertype.Standalone;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.util.PluginMeta;
@@ -49,7 +50,8 @@ public class TestFlinkTaskNodeController {
     @Test
     public void testGetterIncrSinkFactory() {
 
-        TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory("mysql_mysql");
+        DataXName dataX = DataXName.createDataXPipeline("mysql_mysql");
+        TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory(dataX);
 
         Assert.assertNotNull(incrSinkFactory);
         RobustReflectionConverter2.PluginMetas pluginMetas = RobustReflectionConverter2.usedPluginInfo.get();

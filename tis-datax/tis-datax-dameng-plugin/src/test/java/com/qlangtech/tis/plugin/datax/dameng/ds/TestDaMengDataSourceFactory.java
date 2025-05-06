@@ -4,6 +4,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.junit.Test;
 
 import java.sql.ResultSet;
@@ -23,8 +24,8 @@ public class TestDaMengDataSourceFactory {
 
 
         TableInDB tablesInDB = dsFactory.getTablesInDB();
-
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(false, EntityName.parse("NUMERIC_TEST"));
+        IPluginContext pluginContext = IPluginContext.namedContext("test");
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(false, pluginContext ,EntityName.parse("NUMERIC_TEST"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getName() + ":" + col.getType());
         }

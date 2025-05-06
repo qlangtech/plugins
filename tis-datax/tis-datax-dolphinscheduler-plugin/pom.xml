@@ -44,6 +44,11 @@
 <!--        </dependency>-->
 
         <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-common-dao</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.dolphinscheduler</groupId>
             <artifactId>dolphinscheduler-common</artifactId>
             <version>${dolphinscheduler.version}</version>

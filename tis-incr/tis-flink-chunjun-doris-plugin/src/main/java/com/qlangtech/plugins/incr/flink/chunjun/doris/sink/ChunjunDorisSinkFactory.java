@@ -132,7 +132,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         // params.put(DorisKeys.BATCH_SIZE_KEY, dataxWriter.maxBatchRows);
 
         params.put(DorisKeys.DATABASE_KEY, dsFactory.dbName);
-        params.put(DorisKeys.TABLE_KEY, targetTabName);
+        params.put(DorisKeys.TABLE_KEY, targetTabName.getTo());
         // params.put()
 
 //        int connectTimeout = loadConf.getRequestConnectTimeoutMs() == null ? DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT : loadConf.getRequestConnectTimeoutMs();

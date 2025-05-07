@@ -55,8 +55,9 @@ public class WriterPluginMeta {
                                    // , IDataXPluginMeta dataxReader
             , WriterPluginMeta writerPluginMeta
             , Optional<Pair<String, List<String>>> transformer, Optional<JarLoader> jarLoader) throws IllegalAccessException {
-        realExecute(dataXName, writerPluginMeta, jarLoader).startPipeline(readerCfg, transformer, (jobContainer) -> {
-        });
+        realExecute(dataXName, writerPluginMeta, jarLoader)
+                .startPipeline(readerCfg, transformer, (jobContainer) -> {
+                });
 
     }
 

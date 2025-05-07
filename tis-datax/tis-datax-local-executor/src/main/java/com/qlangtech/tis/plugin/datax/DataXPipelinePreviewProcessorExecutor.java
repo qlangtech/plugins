@@ -106,7 +106,7 @@ public class DataXPipelinePreviewProcessorExecutor
                 synchronized (this) {
                     if (blockingStub == null) {
                         final ManagedChannel channel
-                                = ManagedChannelBuilder.forTarget("127.0.0.1:" + newGrpcPort)
+                                = ManagedChannelBuilder.forTarget(queryCriteria.getTargetPreviewHost() + ":" + newGrpcPort)
                                 .usePlaintext()//.enableRetry().maxRetryAttempts(5)
                                 .build();
 

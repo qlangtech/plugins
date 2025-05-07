@@ -34,9 +34,9 @@ import java.util.List;
  **/
 public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
     public void testPreviewRowsData() {
-        final DataXName dataXName = DataXName.createDataXPipeline("mysql");
+        final DataXName dataXName = DataXName.createDataXPipeline("mysql_doris");
 
-        DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(51509);
+        DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(44499);
         PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName.getPipelineName(), 999999);
         previewExecutor.setCommitTracker(expireTracker);
         String identityVal = null;
@@ -47,7 +47,8 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
         queryCriteria.setPagerOffsetCursor(null);
         queryCriteria.setNextPakge(next);
         queryCriteria.setPageSize(pageSize);
-        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "base", queryCriteria);
+        queryCriteria.setTargetPreviewHost("192.168.28.201");
+        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "orderdetail", queryCriteria);
         Assert.assertNotNull(previewRowsData);
     }
 

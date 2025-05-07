@@ -187,13 +187,22 @@ public class DataXRealExecutor {
                     cfg.set(writerPluginMeta.getPluginKey() + ".class", writerPluginMeta.getStreamwriterClass());
 
                     cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
+//                    transformer.ifPresent((tt) -> {
+//                        Pair<String, List<String>> t = tt;
+//                        Configuration c = Configuration.newDefault();
+//                        c.set(CoreConstant.JOB_TRANSFORMER_NAME, t.getKey());
+//                        c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());
+//                        cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
+//                    });
+
+
+                    Configuration c = Configuration.newDefault();
+                    c.set(CoreConstant.JOB_TRANSFORMER_NAME, transformer.map((p) -> p.getKey()).orElse("testTab"));
                     transformer.ifPresent((tt) -> {
                         Pair<String, List<String>> t = tt;
-                        Configuration c = Configuration.newDefault();
-                        c.set(CoreConstant.JOB_TRANSFORMER_NAME, t.getKey());
                         c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());
-                        cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
                     });
+                    cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
 
                     cfg.set("job.content[0].reader", readerCfg);
                     cfg.set("job.content[0].writer", writerPluginMeta.getConf());

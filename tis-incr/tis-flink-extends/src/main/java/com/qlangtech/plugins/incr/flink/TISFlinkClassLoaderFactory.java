@@ -77,7 +77,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     public BlobLibraryCacheManager.ClassLoaderFactory buildClientLoaderFactory(
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
             , String[] alwaysParentFirstPatterns
-            ,  Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
+            , Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
         this.makeDataDirUseable();
         TIS tis = TIS.get();
         PluginManager pluginManager = tis.getPluginManager();
@@ -94,7 +94,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 PluginAndCfgsSnapshot cfg = null;
                 for (URL cp : libraryURLs) {
                     // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
-                    cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), cp.openStream(), false);
+                    cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString()
+                            , StoreResourceType.DataApp, cp.openStream(), false);
                     tisAppName = cfg.getAppName();
 
                     flinkPluginMeta = getFlinkPluginMeta(tisAppName);
@@ -152,7 +153,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildServerLoaderFactory(
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
-            , String[] alwaysParentFirstPatterns,  Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
+            , String[] alwaysParentFirstPatterns, Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
 
         if (Boolean.getBoolean(SKIP_CLASSLOADER_FACTORY_CREATION)) {
 
@@ -202,7 +203,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 try {
                     TIS.permitInitialize = false;
                     for (URL url : libraryURLs) {
-                        cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), url.openStream());
+                        cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), StoreResourceType.DataApp, url.openStream());
                         break;
                     }
                     Objects.requireNonNull(cfgSnapshot, "cfgSnapshot can not be null,libraryURLs size:" + libraryURLs.length);

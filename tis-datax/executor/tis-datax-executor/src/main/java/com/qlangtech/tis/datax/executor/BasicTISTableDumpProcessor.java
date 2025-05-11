@@ -83,17 +83,6 @@ public class BasicTISTableDumpProcessor {
 
 
     public void processPostTask(ITaskExecutorContext context) {
-//        final OmsLogger omsLogger = context.getOmsLogger();
-//        if (CollectionUtils.isEmpty(taskResults)) {
-//            return new ProcessResult(false, "taskResults is empty,terminate");
-//        }
-//        for (TaskResult childResult : taskResults) {
-//            if (!childResult.isSuccess()) {
-//                return new ProcessResult(false,
-//                        "childResult faild:" + childResult.getResult() + ",taskid:" + childResult.getTaskId() + "  " + "skip reduce phase");
-//            }
-//        }
-
 
         RpcServiceReference svc = getRpcServiceReference();
         // StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
@@ -101,9 +90,7 @@ public class BasicTISTableDumpProcessor {
 
         AbstractExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
         SelectedTabTriggersConfig triggerCfg = pair.getRight();
-        // execContext.putTablePt( );
-        //  IDataxProcessor processor = execContext.getProcessor(); // DataxProcessor.load(null, triggerCfg
-        // .getDataXName());
+
         ISelectedTab tab = new DefaultTab(triggerCfg.getTabName());
         String postTrigger = null;
         Integer taskId = execContext.getTaskId();
@@ -119,17 +106,12 @@ public class BasicTISTableDumpProcessor {
                 RpcUtils.setJoinStatus(taskId, true, false, svc, postTrigger);
             } catch (Exception e) {
                 RpcUtils.setJoinStatus(taskId, true, true, svc, postTrigger);
-                //  markFaildToken(context);
                 context.errorLog("postTrigger:" + postTrigger + " falid", e);
-                //throw new RuntimeException(e);
-                //   return new ProcessResult(false, e.getMessage());
                 throw new RuntimeException("postTrigger:" + postTrigger + " falid", e);
             }
         }
 
         addSuccessPartition(context, execContext, tab.getName());
-
-        // return new ProcessResult(true);
     }
 
 
@@ -145,8 +127,6 @@ public class BasicTISTableDumpProcessor {
         Pair<Boolean, JSONObject> instanceParamsGetter = getInstanceParams(context);
         instanceParams = instanceParamsGetter.getRight();
         if (!instanceParamsGetter.getLeft()) {
-            //            Map<String, String> appendedWfData = context.getWorkflowContext().getAppendedContextData();
-            //            instanceParams = JSONObject.parseObject(appendedWfData.get(KEY_instanceParams));
             throw new IllegalStateException("instanceParams is illegal:" + JsonUtil.toString(instanceParams, true));
         }
 
@@ -177,7 +157,6 @@ public class BasicTISTableDumpProcessor {
                 if (prevTaskId == null) {
                     return null;
                 }
-                //AssembleSvcCompsite svc = getRpcServiceReference().get();
                 return getRpcServiceReference().loadPhaseStatusFromLatest(prevTaskId);
             }));
 
@@ -195,11 +174,6 @@ public class BasicTISTableDumpProcessor {
         for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
             tskMsg.setExecTimeStamp(triggerTimestamp);
         }
-        // String dataXName = triggerCfg.getDataXName();
-        // DefaultExecContext execChainContext = new DefaultExecContext(dataXName, triggerTimestamp);
-        //        execChainContext.setCoordinator(ITISCoordinator.create());
-        //        execChainContext.setDryRun(dryRun);
-        //        execChainContext.setAttribute(JobCommon.KEY_TASK_ID, taskId);
         triggerCfg.getSplitTabsCfg().forEach((tskMsg) -> {
             tskMsg.setJobId(taskId);
         });
@@ -222,11 +196,6 @@ public class BasicTISTableDumpProcessor {
 
         Objects.requireNonNull(context, "workflowContext can not be null")
                 .appendData2WfContext(ExecChainContextUtils.PARTITION_DATA_PARAMS + "_" + entityName, execContext.getPartitionTimestampWithMillis());
-
-//        Objects.requireNonNull(context.getWorkflowContext(), "workflowContext can not be null") //
-//                .appendData2WfContext( //
-//                        ExecChainContextUtils.PARTITION_DATA_PARAMS + "_" + entityName,
-//                        execContext.getPartitionTimestampWithMillis());
     }
 
     protected static IDataXBatchPost getDataXBatchPost(IDataxProcessor processor) {
@@ -242,17 +211,11 @@ public class BasicTISTableDumpProcessor {
          */
         Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
 
-        //  StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
-
         final AbstractExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
                 "execChainContext can " + "not be null");
         final SelectedTabTriggersConfig triggerCfg = pair.getRight();
 
         ISelectedTab tab = new DefaultTab(triggerCfg.getTabName());
-
-        // IDataxProcessor processors = DataxProcessor.load(null, triggerCfg.getResType(), triggerCfg.getDataXName());
-
-        // if (isRootTask()) {
 
         // L1. 执行根任务
         try {
@@ -275,46 +238,17 @@ public class BasicTISTableDumpProcessor {
 
                     reportError(e, execChainContext, svc);
 
-                    //                return new ProcessResult(false, e.getMessage());
                     throw new RuntimeException("pretrigger:" + preTrigger + " faild", e);
                 }
             }
-            // try {
-            // List<SplitTabSync> splitTabsSync = Lists.newArrayList();
-            for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
-                //  splitTabsSync.add();
 
-                // ProcessResult result  =
+            for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
                 executeSplitTabSync(context, statusRpc, svc, execChainContext, new SplitTabSync(tskMsg));
-                //            if (!result.isSuccess()) {
-                //                //               return result;
-                //                throw new RuntimeException(result.getMsg());
-                //            }
             }
         } finally {
             context.finallyCommit();
         }
 
-//            // map(splitTabsSync, triggerCfg.getTabName() + "Mapper");
-//            /**
-//             * 由于powerjob 的map任务执行有问题，先把 map阶段执行的任务，都在初始化阶段执行了
-//             */
-//            map(Collections.emptyList(), triggerCfg.getTabName() + "Mapper");
-//
-//            return new ProcessResult(true, "map success");
-//        } catch (Exception e) {
-//            reportError(e, execChainContext, svc);
-//            return new ProcessResult(false, e.getMessage());
-//        }
-//            } else if (context.getSubTask() instanceof SplitTabSync) {
-//                SplitTabSync tabSync = (SplitTabSync) context.getSubTask();
-//                return executeSplitTabSync(logger, statusRpc, svc, execChainContext, tabSync);
-//            }
-
-
-        // return new ProcessResult(false, "UNKNOWN_TYPE_OF_SUB_TASK");
-//        } finally {
-//        }
     }
 
     protected void executeSplitTabSync(ITaskExecutorContext context, RpcServiceReference statusRpc
@@ -322,8 +256,6 @@ public class BasicTISTableDumpProcessor {
         try {
 
             tabSync.execSync(execChainContext, statusRpc);
-//            return new ProcessResult(true, "table split sync:" + tabSync.tskMsg.getJobName() + ",task " +
-//                    "serial:" + tabSync.tskMsg.getTaskSerializeNum());
         } catch (Exception e) {
             context.errorLog("spilt table sync job:" + tabSync.tskMsg.getJobName() + " faild", e);
             reportError(e, execChainContext, svc);
@@ -365,7 +297,6 @@ public class BasicTISTableDumpProcessor {
             EntityName entityName = dataXBatchPost.parseEntity(tab);
             IDataXBatchPost.LifeCycleHook cycleHook = lifeCycleHookInfo.getRight();
             if (cycleHook == IDataXBatchPost.LifeCycleHook.Post) {
-                //IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames
                 return dataXBatchPost.createPostTask(execContext, entityName, tab,
                         processor.getDataxCfgFileNames(null, Optional.empty()));
             } else if (cycleHook == IDataXBatchPost.LifeCycleHook.Prep) {

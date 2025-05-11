@@ -20,7 +20,9 @@ package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
@@ -63,13 +65,11 @@ public class BasicTISInitializeProcessor {
      * @throws Exception
      */
     public void initializeProcess(final ITaskExecutorContext context) throws Exception {
-        //OmsLogger omsLogger = context.getOmsLogger();
         try {
 
 
             Pair<Boolean, JSONObject> instanceParams = BasicTISTableDumpProcessor.getInstanceParams(context);
             RpcServiceReference svc = getRpcServiceReference();
-         //   StatusRpcClientFactory.AssembleSvcCompsite svc = rpcSvcRef.get();
             if (!instanceParams.getLeft()) {
                 // 说明是定时任务触发
                 context.infoLog("trigger by crontab,now shall create taskId");
@@ -77,7 +77,7 @@ public class BasicTISInitializeProcessor {
 
                 IExecChainContext.TriggerNewTaskParam triggerParams =
                         new IExecChainContext.TriggerNewTaskParam(context.getWfInstanceId(), context.getJobTriggerType()
-                                , initNodeCfg.getDataXName(), initNodeCfg.isTisDataflowType()) {
+                                , initNodeCfg.getDataXName(), initNodeCfg.resourceType) {
                             @Override
                             public List<PostParam> params() {
                                 List<HttpUtils.PostParam> params = super.params();
@@ -96,11 +96,14 @@ public class BasicTISInitializeProcessor {
                  *TriggerNewTask
                  =======================================================================*/
                 PowerjobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
-                svc.appendLog(LogLevel.INFO, triggerResult.getTaskid(), Optional.empty(), "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));
+                svc.appendLog(LogLevel.INFO, triggerResult.getTaskid()
+                        , Optional.empty()
+                        , "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));
 
-                //  WorkflowContext wfContext = context.getWorkflowContext();
                 context.infoLog("create task context,taskId:{},name:{}", triggerResult.getTaskid(), initNodeCfg.getDataXName());
-                JSONObject iparams = IExecChainContext.createInstanceParams(triggerResult.getTaskid(), () -> initNodeCfg.getDataXName(),
+
+                IDataxProcessor dataxProcessor = DataxProcessor.load(null, initNodeCfg.resourceType, initNodeCfg.dataXName);
+                JSONObject iparams = IExecChainContext.createInstanceParams(triggerResult.getTaskid(), dataxProcessor,
                         false, Optional.of(triggerResult.getPluginCfgsMetas()));
                 for (Map.Entry<String, Object> e : iparams.entrySet()) {
                     context.appendData2WfContext(e.getKey(), e.getValue());
@@ -118,14 +121,13 @@ public class BasicTISInitializeProcessor {
         } finally {
             context.finallyCommit();
         }
-        //    return new ProcessResult(true);
     }
 
     public static class InitializeNodeCfg {
         public static InitializeNodeCfg parse(ITaskExecutorContext context) {
             JSONObject jobParams = (context.getJobParams());
             InitializeNodeCfg initializeNodeCfg = new InitializeNodeCfg(jobParams.getString(StoreResourceType.DATAX_NAME),
-                    jobParams.getBooleanValue(DataxUtils.TIS_WORK_FLOW_CHANNEL));
+                    StoreResourceType.parse(jobParams.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE)));
             if (initializeNodeCfg.isTisDataflowType()) {
                 Integer workflowId = Objects.requireNonNull(jobParams.getInteger(KEY_WORKFLOW_ID),
                         "key:" + KEY_WORKFLOW_ID + " must be present");
@@ -136,13 +138,13 @@ public class BasicTISInitializeProcessor {
         }
 
         private final String dataXName;
-        private final boolean tisDataflowType;
+        public final StoreResourceType resourceType;
         private Integer workflowId;
 
 
-        public InitializeNodeCfg(String dataXName, boolean tisDataflowType) {
+        public InitializeNodeCfg(String dataXName, StoreResourceType resourceType) {
             this.dataXName = dataXName;
-            this.tisDataflowType = tisDataflowType;
+            this.resourceType = Objects.requireNonNull(resourceType);
         }
 
         public Integer getWorkflowId() {
@@ -154,7 +156,7 @@ public class BasicTISInitializeProcessor {
         }
 
         public boolean isTisDataflowType() {
-            return tisDataflowType;
+            return resourceType == StoreResourceType.DataFlow;
         }
 
         public String getDataXName() {
@@ -165,7 +167,7 @@ public class BasicTISInitializeProcessor {
         public String toString() {
             return "{" +
                     "dataXName='" + dataXName + '\'' +
-                    ", tisDataflowType=" + tisDataflowType +
+                    ", resourceType=" + resourceType +
                     ", workflowId=" + workflowId +
                     '}';
         }

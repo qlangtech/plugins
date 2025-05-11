@@ -75,7 +75,6 @@ public class WriterPluginMeta {
 
             @Override
             public void validatePluginName(IDataxWriter writer, IDataxReader reader, JSONObject cfg) {
-                // super.validatePluginName(writer, reader, cfg);
             }
         };
         IDataxReader reader = dataxProcessor.getReader(pluginCtx);

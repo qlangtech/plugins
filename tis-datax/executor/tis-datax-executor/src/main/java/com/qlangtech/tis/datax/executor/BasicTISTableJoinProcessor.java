@@ -80,7 +80,6 @@ public class BasicTISTableJoinProcessor {
 
     protected void process(ITaskExecutorContext context) throws Exception {
         RpcServiceReference feedback = createRpcServiceReference();
-        // StatusRpcClientFactory.AssembleSvcCompsite feedback = rpcRef.get();
         SqlTaskNodeMeta sqlTask =
                 SqlTaskNodeMeta.deserializeTaskNode(ISqlTask.toCfg((context.getJobParams())));
         AbstractExecContext execContext = createDftExecContent(context);
@@ -117,9 +116,6 @@ public class BasicTISTableJoinProcessor {
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
         TriggersConfig triggerCfg = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
         AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
-//            ctx.setResType(StoreResourceType.DataFlow);
-//            ctx.setWorkflowName(ctx.getIndexName());
-//            ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
             ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
         }, snapshotConsumer);
 

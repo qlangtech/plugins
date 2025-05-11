@@ -59,17 +59,7 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
      *
      * @param params
      */
-//    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public List<String> uniqueKey;
-
-//    public UpdateMode getIncrMode() {
-//        return Objects.requireNonNull(incrMode, "incrMode can not be null");
-//    }
     public void setParams(Map<String, Object> params) {
-//        if (CollectionUtils.isEmpty(uniqueKey)) {
-//            throw new IllegalStateException("collection of 'updateKey' can not be null");
-//        }
-//        params.put(KEY_UNIQUE_KEY, this.uniqueKey);
         this.incrMode.set(params);
     }
 
@@ -88,20 +78,10 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
     }
 
     private static PrimaryKeys buildPrimaryKeys() {
-        //  boolean[] containPk = new boolean[1];
         AtomicReference<List<ColumnMetaData>> colsRef = new AtomicReference<>(Collections.emptyList());
         List<Option> pkResult = SelectedTab.getContextOpts((cols) -> {
             colsRef.set(Collections.unmodifiableList(cols));
             return cols.stream().filter((c) -> c.isPk());
-
-//            Optional<ColumnMetaData> findPks = .findFirst();
-//            if (findPks.isPresent()) {
-//                containPk[0] = true;
-//                return cols.stream().filter((c) -> c.isPk());
-//            } else {
-//                // 如果不存在主键则全选
-//                return cols.stream();
-//            }
         });
 
         return new PrimaryKeys(pkResult, colsRef.get());
@@ -110,7 +90,6 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
     private static class PrimaryKeys {
         final List<Option> pks;
         final List<ColumnMetaData> allCols;
-        //  private final boolean containPk;
 
         public PrimaryKeys(List<Option> pks, List<ColumnMetaData> allCols) {
             this.pks = pks;
@@ -118,12 +97,8 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
         }
 
         public List<String> createPkKeys() {
-            // if (this.containPk) {
             return pks.stream()
                     .map((pk) -> String.valueOf(pk.getValue())).collect(Collectors.toList());
-//            } else {
-//                return Collections.emptyList();
-//            }
         }
     }
 
@@ -152,8 +127,6 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
         if (context.param == null) {
             return descs;
         }
-        //Objects.requireNonNull(context.param, "'context.param' can not be null");
-        //String dataXName = context.param.getDataXName();
         ChunjunSinkFactory sinkFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(context.param.getDataXName());
         Set<WriteMode> writeModes = sinkFactory.supportSinkWriteMode();
         return descs.stream().filter((d) -> {
@@ -170,31 +143,6 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseDescriptor {
-
-//        @Override
-//        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
-//
-//            SinkTabPropsExtends tab = (SinkTabPropsExtends) postFormVals;
-//            boolean success = true;
-////            if (!tab.containCol(tab.sourceOrderingField)) {
-////                msgHandler.addFieldError(context, KEY_SOURCE_ORDERING_FIELD, "'"
-////                        + tab.sourceOrderingField + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
-////                success = false;
-////            }
-////
-////            if (tab.keyGenerator != null) {
-////                for (String field : tab.keyGenerator.getRecordFields()) {
-////                    if (!tab.containCol(field)) {
-////                        msgHandler.addFieldError(context, KEY_RECORD_FIELD
-////                                , "'" + field + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
-////                        success = false;
-////                        break;
-////                    }
-////                }
-////            }
-//            return success;
-//        }
-
 
     }
 }

@@ -76,7 +76,13 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
 
                         } finally {
                             if (!successSync) {
-                                processTaskIds.remove(execContext.getTaskId());
+                                /** avoid throwing excpetion below:
+                                 * Caused by: java.lang.IllegalStateException: Recursive update
+                                 * 	at java.base/java.util.concurrent.ConcurrentHashMap.replaceNode(ConcurrentHashMap.java:1167)
+                                 * 	at java.base/java.util.concurrent.ConcurrentHashMap.remove(ConcurrentHashMap.java:1102)
+                                 * 	at com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer.lambda$synchronizTpisAndConfs$1(CfgsSnapshotConsumer.java:79)
+                                 */
+                              //   processTaskIds.remove(execContext.getTaskId());
                             }
                         }
                         return current;

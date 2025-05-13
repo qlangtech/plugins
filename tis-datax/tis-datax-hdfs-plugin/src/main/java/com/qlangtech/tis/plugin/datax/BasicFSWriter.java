@@ -88,9 +88,12 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
     @Override
-    public void startScanDependency() {
+    public final void startScanDependency() {
         this.getFsFactory();
+        this.startScanFSWriterDependency();
     }
+
+    protected abstract void startScanFSWriterDependency();
 
     @Override
     public FileSystemFactory getFsFactory() {

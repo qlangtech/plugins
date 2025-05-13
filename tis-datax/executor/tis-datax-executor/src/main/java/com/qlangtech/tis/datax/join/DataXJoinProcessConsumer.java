@@ -6,12 +6,10 @@ import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
-import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.job.common.JobParams;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -53,14 +51,17 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
         if (StringUtils.isEmpty(msg.getJobName())) {
             throw new IllegalArgumentException("param getJobName can not be empty");
         }
+
         Command command = new Command(cmdLine);
 
         JSONObject sqlTskJson = ISqlTask.json(msg.getSqlTask());
 
         command.add(KEY_ID, sqlTskJson.getString(KEY_ID));
-        command.add(KEY_SQL_SCRIPT, sqlTskJson.getString(KEY_SQL_SCRIPT));
+       // command.add(KEY_SQL_SCRIPT, sqlTskJson.getString(KEY_SQL_SCRIPT));
         command.add(KEY_EXECUTE_TYPE, sqlTskJson.getString(KEY_EXECUTE_TYPE));
         command.add(KEY_EXPORT_NAME, sqlTskJson.getString(KEY_EXPORT_NAME));
+//        command.add(KEY_DEPENDENCIES, Objects.requireNonNull(sqlTskJson.getString(KEY_DEPENDENCIES)
+//                , "key:" + KEY_DEPENDENCIES + " relevant value can not be null"));
 
         command.add(JobParams.KEY_TASK_ID, String.valueOf(Objects.requireNonNull(taskId, "taskId can not be null")));
         command.add(IFullBuildContext.DRY_RUN, msg.getDryRun());
@@ -84,6 +85,10 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
             command.add(tab, pt);
             // cmdLine.addArgument(tab.getFullName() + "_" + pt.getPt(), true);
         });
+
+//        msg.getSqlTask();
+//
+//        List<DependencyNode> dependencyNodes = msg.getSqlTask().getDependencies();
 
     }
 

@@ -28,7 +28,6 @@ import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.tis.hadoop.rpc.RpcServiceReference;

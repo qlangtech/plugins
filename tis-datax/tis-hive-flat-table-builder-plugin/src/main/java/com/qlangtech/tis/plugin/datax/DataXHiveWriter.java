@@ -279,10 +279,10 @@ public class DataXHiveWriter extends BasicFSWriter
     }
 
     @Override
-    public void startScanDependency() {
+    protected void startScanFSWriterDependency() {
         this.getHiveConnGetter();
     }
-
+    
     @Override
     public Hiveserver2DataSourceFactory getDataSourceFactory() {
         if (StringUtils.isBlank(this.dbName)) {

@@ -6,24 +6,29 @@ import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.AbstractExecContext;
+import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
+import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.powerjob.TriggersConfig;
-import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
+import com.qlangtech.tis.sql.parser.TabPartitions;
+import com.qlangtech.tis.sql.parser.TopologyDir;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
+import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
@@ -34,10 +39,12 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
@@ -71,9 +78,10 @@ public class DataXJoinProcessExecutor {
         //        sqlTaskCfg.put(KEY_EXPORT_NAME, args[3]);
 
         addOpt(options, KEY_ID);
-        addOpt(options, KEY_SQL_SCRIPT);
+        //  addOpt(options, KEY_DATAFLOW_NAME);
         addOpt(options, KEY_EXECUTE_TYPE);
         addOpt(options, KEY_EXPORT_NAME);
+        //  addOpt(options, KEY_DEPENDENCIES);
 
         addOpt(options, JobParams.KEY_TASK_ID);
         addOpt(options, IFullBuildContext.DRY_RUN, (builder) -> {
@@ -102,7 +110,7 @@ public class DataXJoinProcessExecutor {
     /**
      * @param args
      * @throws Exception
-     * @see DataXJoinProcessConsumer
+     * @see DataXJoinProcessConsumer 提交任务，设置必要参数
      */
     public static void main(String[] args) throws Exception {
         // create the parser
@@ -122,6 +130,7 @@ public class DataXJoinProcessExecutor {
 
         try {
             AbstractExecContext execContext = createDftExecContent(line);
+//            TabPartitions tabPartitions = ExecChainContextUtils.getDependencyTablesPartitions(execContext);
             JobCommon.setMDC(execContext.getTaskId(), null);
 
             //        cmdLine.addArgument(sqlTskJson.getString(KEY_ID));
@@ -131,15 +140,32 @@ public class DataXJoinProcessExecutor {
 
             JSONObject sqlTaskCfg = new JSONObject();
             sqlTaskCfg.put(KEY_ID, line.getOptionValue(KEY_ID));
-            sqlTaskCfg.put(KEY_SQL_SCRIPT, line.getOptionValue(KEY_SQL_SCRIPT));
+            //  sqlTaskCfg.put(KEY_SQL_SCRIPT, line.getOptionValue(KEY_SQL_SCRIPT));
             sqlTaskCfg.put(KEY_EXECUTE_TYPE, line.getOptionValue(KEY_EXECUTE_TYPE));
             sqlTaskCfg.put(KEY_EXPORT_NAME, line.getOptionValue(KEY_EXPORT_NAME));
-            ISqlTask.SqlTaskCfg sqlCfg = ISqlTask.toCfg(sqlTaskCfg);
-            logger.info("start join process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
-            SqlTaskNodeMeta sqlTask = SqlTaskNodeMeta.deserializeTaskNode(sqlCfg);
 
+            String dataflowName = line.getOptionValue(JobParams.KEY_COLLECTION);
+            String nodeId = line.getOptionValue(KEY_ID);
+
+            TopologyDir topologyDir = SqlTaskNodeMeta.getTopologyDir(dataflowName);
+            //SqlDataFlowTopology sqlDataFlowTopology = SqlTaskNodeMeta.getSqlDataFlowTopology(dataflowName);
+
+            SqlTaskNodeMeta sqlTask = topologyDir.getSqlTaskNodeMeta(nodeId); //SqlTaskNodeMeta.deserializeTaskNode();// SqlTaskNodeMeta.deserializeTaskNode(sqlCfg);
+
+            // ISqlTask.SqlTaskCfg sqlCfg = ISqlTask.toCfg(sqlTaskCfg);
+            // logger.info("start join process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
+            List<DependencyNode> dependencyNodes = sqlTask.getDependencies();// // JSONArray.parseArray(line.getOptionValue(KEY_DEPENDENCIES), DependencyNode.class);
+            Map<String, Boolean> taskWorkStatus = AdapterTask.createTaskWorkStatus(execContext);
+            // 分布式环境中执行，这里暂且把依赖的表设置为已经成功执行
+            dependencyNodes.forEach((node) -> {
+                taskWorkStatus.put(node.getId(), true);
+            });
+            if (CollectionUtils.isEmpty(dependencyNodes)) {
+                throw new IllegalStateException("dependencyNodes can not be empty");
+            }
+            // sqlTask.setDependencies(dependencyNodes);
             executeJoin(statusRpc, execContext, sqlTask);
-            logger.info("exit the process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
+            logger.info("exit the process:{},sqlScript:{}", sqlTask.getExportName(), sqlTask.getSql());
             System.exit(0);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);

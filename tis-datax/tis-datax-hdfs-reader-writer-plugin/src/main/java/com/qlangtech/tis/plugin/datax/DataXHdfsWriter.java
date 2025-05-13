@@ -57,6 +57,11 @@ public class DataXHdfsWriter extends BasicFSWriter {
     }
 
     @Override
+    protected void startScanFSWriterDependency() {
+
+    }
+
+    @Override
     protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules) {
         return new HdfsDataXContext(tableMap, this.dataXName, transformerRules);
     }

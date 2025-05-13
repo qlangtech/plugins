@@ -163,6 +163,8 @@ public abstract class HiveTask extends AdapterTask {
 
     protected ISqlTask.RewriteSql getRewriteSql() {
         if (this.rewriteSql == null) {
+
+
             this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition()
                     , this.partionableWarehouse, this.erRules, this.getExecContext(), this.isFinalNode);
         }

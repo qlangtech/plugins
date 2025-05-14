@@ -91,7 +91,7 @@
 
         <module>tis-flink-chunjun-kingbase-plugin</module>
         <module>tis-flink-cdc-kingbase-plugin</module>
-
+        <module>tis-flink-pipeline-paimon-plugin</module>
     </modules>
 
     <dependencyManagement>

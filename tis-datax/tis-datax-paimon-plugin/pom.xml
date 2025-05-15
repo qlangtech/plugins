@@ -20,34 +20,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>tis-incr</artifactId>
+        <artifactId>tis-datax</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <modelVersion>4.0.0</modelVersion>
-    <packaging>tpi</packaging>
-    <!--add for issue: https://github.com/datavane/tis/issues/416-->
-    <artifactId>tis-flink-pipeline-paimon-plugin</artifactId>
+    <artifactId>tis-datax-paimon-plugin</artifactId>
 
     <properties>
 
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-realtime-flink</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <!--可以考虑将该依赖放入到 <artifactId>tis-flink-cdc-common</artifactId>-->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-common</artifactId>
-            <version>${flink.cdc.version}</version>
-        </dependency>
-    </dependencies>
 
 </project>

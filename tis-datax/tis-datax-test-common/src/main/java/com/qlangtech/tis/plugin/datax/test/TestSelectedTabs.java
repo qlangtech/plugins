@@ -35,6 +35,9 @@ import java.util.stream.Collectors;
  * @create: 2021-06-23 10:18
  **/
 public class TestSelectedTabs {
+
+    public static final String tabNameOrderinfo = "orderinfo";
+
     public static final String tabNameOrderDetail = "orderdetail";
     public static final String tabNameTotalpayinfo = "totalpayinfo";
     public static List<ColumnMetaData> tabColsMetaOrderDetail = Lists.newArrayList(new ColumnMetaData(0, "col1",
@@ -109,7 +112,7 @@ public class TestSelectedTabs {
                     meta.setType(DataXReaderColType.STRING.dataType);
                     return meta;
                 }).collect(Collectors.toList()));
-        tm.setFrom("orderinfo");
+        tm.setFrom(tabNameOrderinfo);
         tm.setTo("orderinfo_new");
 
         Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);

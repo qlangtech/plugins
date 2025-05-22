@@ -118,7 +118,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
     public class FSDataXContext implements IDataxContext {
 
-        final IDataxProcessor.TableMap tabMap;
+        protected final IDataxProcessor.TableMap tabMap;
         private final String dataxName;
         private final List<IColMetaGetter> cols;
 

@@ -19,11 +19,9 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.core.job.IJobContainerContext;
 import com.alibaba.datax.core.job.ISourceTable;
 import com.alibaba.datax.plugin.rdbms.writer.util.SelectTable;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.DataXName;
@@ -59,7 +57,6 @@ import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -265,16 +262,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");
         }
-        return getDs(this.dbName);
-    }
-
-    public static <DS extends DataSourceFactory> DS getDs(String dbName) {
-        return getDs(dbName, true);
-    }
-
-    public static <DS extends DataSourceFactory> DS getDs(String dbName, boolean validateNull) {
-        return TIS.getDataBasePlugin(PostedDSProp.parse((dbName)), validateNull);
-        // return (DS) dsStore.getPlugin();
+        return BasicDataSourceFactory.getDs(this.dbName);
     }
 
 
@@ -467,7 +455,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
 
         public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {
-            BasicDataSourceFactory ds = getDs(dbName, false);
+            BasicDataSourceFactory ds = BasicDataSourceFactory.getDs(dbName, false);
             if (ds == null) {
                 msgHandler.addFieldError(context, fieldName, "请确认该数据源是否存在");
                 return false;

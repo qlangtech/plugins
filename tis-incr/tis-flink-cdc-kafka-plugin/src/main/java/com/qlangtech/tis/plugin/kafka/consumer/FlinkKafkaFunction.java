@@ -28,7 +28,6 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.kafka.reader.DataXKafkaReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -78,42 +77,14 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
     @Override
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
-//        try {
-//            Objects.requireNonNull(dataXProcessor, "param dataXProcessor can not be null");
         DataXKafkaReader kafkaReader = (DataXKafkaReader) dataSource;
-//            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
-        //  Map<String, DeserializationSchema<RowData>> tabColsMapper = Maps.newHashMap();
-//            TableInDB tablesInDB = dsFactory.getTablesInDB();
-        IFlinkColCreator<FlinkCol> flinkColCreator = sourceFactory.createFlinkColCreator(kafkaReader);
-//            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
-//        DataType physicalDataType = null;
-//        DeserializationSchema<RowData> deserializeSchema = null;
-//        List<DataTypes.Field> fields = null;
-        // for (ISelectedTab tab : tabs) {
-//            FlinkColMapper colsMapper
-//                    = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
-//            fields = colsMapper.getColMapper().entrySet().stream()
-//                    .map((entry) -> FIELD(entry.getKey(), entry.getValue().type)).collect(Collectors.toList());
-//            // tabColsMapper.put(tab.getName(), colsMapper);
-//            physicalDataType = ROW(fields);
-//            deserializeSchema
-//                    = kafkaReader.format.createDecodingFormat(tab.getName())
-//                    .createRuntimeDecoder(null, physicalDataType);
-//
-//            tabColsMapper.put(tab.getName(), Objects.requireNonNull(deserializeSchema, "deserializeSchema can not be null"));
-        //}
+
         IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
         Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                 = RecordTransformerRules.contextParamValsGetterMapper(
                 dataXProcessor, pluginContext, kafkaReader, tabs);
 
         KafkaSourceBuilder<DTO> kafkaSourceBuilder = kafkaReader.createKafkaSourceBuilder(contextParamValsGetterMapper);
-//        kafkaSourceBuilder.setValueOnlyDeserializer(
-//                new KafkaDTODeserializationSchema(kafkaReader.format, contextParamValsGetterMapper));
-//        KafkaSourceBuilder<DTO> kafkaSourceBuilder
-//                = KafkaSource.<DTO>builder()
-//                .setProperties(kafkaReader.buildKafkaProperties())
-//                .setValueOnlyDeserializer(new KafkaDTODeserializationSchema(kafkaReader.format, contextParamValsGetterMapper));
 
         Objects.requireNonNull(sourceFactory.startOffset, "startOffset can not be null")
                 .setOffset(kafkaSourceBuilder);

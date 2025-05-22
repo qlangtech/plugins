@@ -38,7 +38,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper.TimestampDataConvert;
+import com.qlangtech.tis.plugins.incr.flink.cdc.BasicFlinkDataMapper.TimestampDataConvert;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.table.data.TimestampData;

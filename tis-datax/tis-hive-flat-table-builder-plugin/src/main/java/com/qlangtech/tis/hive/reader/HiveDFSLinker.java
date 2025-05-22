@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
@@ -100,7 +101,7 @@ public class HiveDFSLinker extends TDFSLinker {
         if (StringUtils.isBlank(this.linker)) {
             throw new IllegalStateException("prop dbName can not be null");
         }
-        return BasicDataXRdbmsWriter.getDs(this.linker);
+        return BasicDataSourceFactory.getDs(this.linker);
     }
 
     @Override

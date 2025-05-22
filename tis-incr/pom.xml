@@ -39,7 +39,7 @@
     <properties>
         <!--https://github.com/ververica/flink-cdc-connectors-->
         <!--        <flink.cdc.version>2.1.0</flink.cdc.version>-->
-        <flink.cdc.version>3.1.0</flink.cdc.version>
+
         <chunjun.version>1.12.5-${revision}</chunjun.version>
         <debezium-connector.version>1.9.8.Final</debezium-connector.version>
     </properties>

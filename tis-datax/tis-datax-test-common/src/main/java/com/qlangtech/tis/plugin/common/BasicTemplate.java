@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.common;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -32,6 +33,10 @@ import java.util.Set;
  */
 public abstract class BasicTemplate {
     public static DataXCfgGenerator createMockDataXCfgGenerator(String vmTplContent) {
+        return createMockDataXCfgGenerator(vmTplContent, TableAliasMapper.Null);
+    }
+
+    public static DataXCfgGenerator createMockDataXCfgGenerator(String vmTplContent, TableAliasMapper tableAliasMapper) {
         if (StringUtils.isEmpty(vmTplContent)) {
             throw new IllegalArgumentException("param vmTplContent can not be empty");
         }
@@ -44,7 +49,7 @@ public abstract class BasicTemplate {
             @Override
             public Pair<List<RecordTransformerRules>, IPluginStore>
             getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
-                throw new UnsupportedOperationException();
+                return Pair.of(Lists.newArrayList(), null);
             }
 
             @Override
@@ -109,7 +114,7 @@ public abstract class BasicTemplate {
 
             @Override
             public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
-                return null;
+                return tableAliasMapper;
             }
 
             @Override

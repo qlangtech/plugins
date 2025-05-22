@@ -59,6 +59,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -288,7 +289,7 @@ public class DataXHiveWriter extends BasicFSWriter
         if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");
         }
-        return BasicDataXRdbmsWriter.getDs(this.dbName);
+        return BasicDataSourceFactory.getDs(this.dbName);
     }
 
     @Override

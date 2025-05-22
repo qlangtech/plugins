@@ -28,7 +28,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper.DecimalConvert;
+import com.qlangtech.tis.plugins.incr.flink.cdc.BasicFlinkDataMapper.DecimalConvert;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;

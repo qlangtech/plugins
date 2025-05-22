@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.lang.TisException;
@@ -104,6 +105,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
      */
     @FormField(ordinal = 15, advance = true, type = FormFieldType.INPUTTEXT)
     public String extraParams;
+
+    public static <DS extends DataSourceFactory> DS getDs(String dbName) {
+        return getDs(dbName, true);
+    }
+
+    public static <DS extends DataSourceFactory> DS getDs(String dbName, boolean validateNull) {
+        return TIS.getDataBasePlugin(PostedDSProp.parse((dbName)), validateNull);
+        // return (DS) dsStore.getPlugin();
+    }
 
     public String getDbName() {
         return this.dbName;

@@ -105,7 +105,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             DataXName dataX = dataXContext.getCollectionName();
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                    dataXContext, DataxProcessor.load(dataXContext,dataX), tabAlias.getFrom());
+                    dataXContext, DataxProcessor.load(dataXContext, dataX), tabAlias.getFrom());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));
@@ -163,6 +163,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
+                // 当chunjun作为source时
                 logger.info("create stream directly, source type is RowData");
                 result = sourceStream.getStream();
             }

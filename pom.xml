@@ -228,6 +228,7 @@
         <testcontainers.version>1.18.3</testcontainers.version>
         <powerjob.version>4.3.6</powerjob.version>
         <mariadb-java-client.version>3.4.1</mariadb-java-client.version>
+        <flink.cdc.version>3.1.0</flink.cdc.version>
     </properties>
 
 

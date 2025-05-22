@@ -20,7 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.debuzium.DebuziumPropAssist;
-import com.qlangtech.plugins.incr.debuzium.DebuziumPropAssist.Options;
+
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
@@ -28,6 +28,7 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.AbstractPropAssist.Options;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -154,7 +155,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
 
         public DefaultDescriptor() {
             super();
-            Options<MQListenerFactory> opts = DebuziumPropAssist.createOpts(this);
+            Options<MQListenerFactory, Field> opts = DebuziumPropAssist.createOpts(this);
             for (Triple<String, Field, Function<FlinkCDCOracleSourceFactory, Object>> t : debeziumProps) {
                 opts.addFieldDescriptor(t.getLeft(), t.getMiddle());
             }

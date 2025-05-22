@@ -313,6 +313,8 @@ public class WriterTemplate {
                     cfg.set("job.content[0].writer" //
                             , writerMeta.getWriterJsonCfg());
 
+                    cfg.set("job.content[0].transformer", Configuration.newDefault());
+
                     cfg.set("job.content[0].reader", Configuration.from(readerPluginMeta.getReaderJsonCfgContent()));
                     DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
                     return cfg;

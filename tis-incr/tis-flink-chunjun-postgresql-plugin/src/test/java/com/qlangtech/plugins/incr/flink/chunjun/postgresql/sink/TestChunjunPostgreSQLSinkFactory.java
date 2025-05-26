@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter;
@@ -40,7 +41,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-22 20:35
  **/
-public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
+public class TestChunjunPostgreSQLSinkFactory extends TestChunjunFlinkSinkExecutor {
     static BasicDataSourceFactory pgDSFactory;
 
     @BeforeClass
@@ -77,7 +78,7 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         return new ChunjunPostgreSQLSinkFactory();
     }
 

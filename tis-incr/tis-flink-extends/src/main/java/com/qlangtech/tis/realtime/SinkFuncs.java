@@ -35,10 +35,10 @@ import java.util.stream.Collectors;
  **/
 public final class SinkFuncs<TRANSFER_OBJ> {
 
-    private transient final Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction;
+    private transient final Map<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> sinkFunction;
     // public transient final CountDownLatch countDown;
 
-    public SinkFuncs(Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction) {
+    public SinkFuncs(Map<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> sinkFunction) {
         this.sinkFunction = sinkFunction;
         //   this.countDown = countDown;
     }
@@ -48,7 +48,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
             throw new IllegalArgumentException("param sourceStream can not be null");
         }
         if (sinkFunction.size() < 2) {
-            for (Map.Entry<TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 entry.getValue().add2Sink(sourceStream);
                 return;
             }
@@ -57,7 +57,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
                 throw new IllegalArgumentException("param originTableName can not be null");
             }
             boolean hasMatch = false;
-            for (Map.Entry<TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 if (originTableName.equals(entry.getKey().getTo())) {
                     entry.getValue().add2Sink(sourceStream);
                     // streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());

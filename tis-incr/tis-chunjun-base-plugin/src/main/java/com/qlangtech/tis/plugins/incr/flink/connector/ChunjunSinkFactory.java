@@ -164,8 +164,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
-        Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
+    public Map<TableAlias, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
+        Map<TableAlias, TabSinkFunc<?, ?, RowData>> sinkFuncs = Maps.newHashMap();
 
 
         TableAliasMapper selectedTabs = dataxProcessor.getTabAlias(null);
@@ -237,13 +237,14 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , IPluginContext.namedContext(dataxProcessor.identityValue())
                 , tab
                 , sourceFlinkColCreator
+                 /** sinkColsMeta*/
                 , AbstractRowDataMapper.getAllTabColsMeta(
                 Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
                 , filterRowKinds
                 , this.parallelism
                 , RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue()
-                , tabName
+              //  , tabName
                 , tab
                 , Objects.requireNonNull(sourceFlinkColCreator, "sourceFlinkColCreator can not be null")));
     }

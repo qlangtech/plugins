@@ -26,6 +26,7 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -75,8 +76,9 @@ import java.util.function.Function;
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:17
+ * @see JobExecutionResult
  **/
-public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResult> {
+public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSource>> {
 
     private final FlinkCDCMySQLSourceFactory sourceFactory;
 
@@ -85,10 +87,10 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         this.sourceFactory = sourceFactory;
     }
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHander();
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.sourceFactory.getConsumerHander();
+//    }
 
     public static class MySQLSourceDTOColValProcess implements ISourceValConvert, Serializable {
         final Map<String, FlinkColMapper> tabColsMapper;
@@ -174,8 +176,17 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     }
 
 
+    /**
+     * @param dataxName
+     * @param dataSource
+     * @param tabs
+     * @param dataXProcessor
+     * @return
+     * @throws MQConsumeException
+     * @see JobExecutionResult
+     */
     @Override
-    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             Objects.requireNonNull(dataXProcessor, "param dataXProcessor can not be null");
@@ -206,11 +217,12 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     SourceChannel.getSourceFunction(
                             dsFactory,
                             tabs
-                            , new MySQLReaderSourceCreator(dsFactory, this.sourceFactory, deserializationSchema)
+                            , new MySQLReaderSourceCreator(flinkCDCPipelineEnable, dsFactory, this.sourceFactory, deserializationSchema)
                     ));
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
@@ -221,15 +233,17 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         private final FlinkCDCMySQLSourceFactory sourceFactory;
         private final TISDeserializationSchema deserializationSchema;
         private static final Logger logger = LoggerFactory.getLogger(MySQLReaderSourceCreator.class);
+        private final boolean flinkCDCPipelineEnable;
 
         public MySQLReaderSourceCreator(BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory) {
-            this(dsFactory, sourceFactory, new TISDeserializationSchema());
+            this(false, dsFactory, sourceFactory, new TISDeserializationSchema());
         }
 
-        public MySQLReaderSourceCreator(BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory, TISDeserializationSchema deserializationSchema) {
+        public MySQLReaderSourceCreator(boolean flinkCDCPipelineEnable, BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory, TISDeserializationSchema deserializationSchema) {
             this.dsFactory = dsFactory;
             this.sourceFactory = sourceFactory;
             this.deserializationSchema = deserializationSchema;
+            this.flinkCDCPipelineEnable = flinkCDCPipelineEnable;
         }
 
         /**
@@ -279,6 +293,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         protected List<ReaderSource> createReaderSources(String dbHost, HostDBs dbs, MySqlSource<DTO> sourceFunc) {
             return Collections.singletonList(ReaderSource.createDTOSource(
                             dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
+                            , flinkCDCPipelineEnable
                             , sourceFunc
                     )
             );

@@ -50,6 +50,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.data.RowData;
 import org.apache.http.HttpEntity;
 import org.junit.After;
 import org.junit.Assert;
@@ -79,7 +80,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-15 16:01
  **/
-public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
+public class TestChunjunDorisSinkFactory extends TestChunjunFlinkSinkExecutor {
 
     private static final int DORIS_FE_PORT = 9030;
     private static final int DORIS_FE_LOAD_PORT = 8030;
@@ -250,8 +251,8 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     public void testSinkSyncWithSQL() throws Exception {
 
         AtomicInteger httpPutCount = getHttpPutCount();
-
-        IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+        boolean flinkCDCPipelineEnable = false;
+        IStreamScriptRun<ChunjunSinkFactory, RowData> streamScriptRun = new IStreamScriptRun<ChunjunSinkFactory, RowData>() {
             @Override
             protected void runStream(DataxProcessor dataxProcessor
                     , ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
@@ -285,7 +286,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 
                 SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
                 sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
-                tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
+                tableRegisterHandle.consume(flinkCDCPipelineEnable, new TargetResName(dataXName), sourceChannel, dataxProcessor);
                 /**
                  * ===========================================
                  */
@@ -339,7 +340,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         ChunjunDorisSinkFactory dorisSinkFactory = new ChunjunDorisSinkFactory();
         ChunjunSqlType chunjunSqlType = new ChunjunSqlType();
         dorisSinkFactory.scriptType = chunjunSqlType;

@@ -66,8 +66,8 @@ public abstract class BaseConsumerListener implements IMQListener<Object> {
         return this.topic;
     }
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.consumerHandle;
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.consumerHandle;
+//    }
 }

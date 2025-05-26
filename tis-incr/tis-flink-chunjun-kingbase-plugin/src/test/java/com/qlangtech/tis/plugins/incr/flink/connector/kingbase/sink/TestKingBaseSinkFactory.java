@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.kingbase.sink;
 
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -34,7 +35,7 @@ import org.junit.Test;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-26 20:34
  **/
-public class TestKingBaseSinkFactory extends TestFlinkSinkExecutor {
+public class TestKingBaseSinkFactory extends TestChunjunFlinkSinkExecutor {
 
 
     @Test
@@ -81,7 +82,7 @@ public class TestKingBaseSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         KingBaseSinkFactory sinkFactory = new KingBaseSinkFactory();
         return sinkFactory;
     }

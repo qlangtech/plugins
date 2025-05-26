@@ -22,7 +22,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
@@ -31,7 +31,6 @@ import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -53,7 +52,6 @@ import io.debezium.connector.oracle.OracleConnectorConfig.LogMiningStrategy;
 import io.debezium.jdbc.JdbcConfiguration;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
 import org.apache.flink.cdc.connectors.oracle.source.OracleSourceBuilder;
 
@@ -69,7 +67,7 @@ import static io.debezium.config.CommonConnectorConfig.DATABASE_CONFIG_PREFIX;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:17
  **/
-public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionResult> {
+public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSource>> {
 
     private final FlinkCDCOracleSourceFactory sourceFactory;
 
@@ -77,13 +75,13 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
         this.sourceFactory = sourceFactory;
     }
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHander();
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.sourceFactory.getConsumerHander();
+//    }
 
     @Override
-    public JobExecutionResult start(TargetResName channalName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName channalName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
 
@@ -162,7 +160,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
 
                                     JdbcIncrementalSource<DTO> sourceFunction = builder.build();
                                     return ReaderSource.createDTOSource(
-                                            dbHost + ":" + dsFactory.port + "_" + databaseName, sourceFunction);
+                                            dbHost + ":" + dsFactory.port + "_" + databaseName, flinkCDCPipelineEnable, sourceFunction);
                                 }).collect(Collectors.toList());
 
                             }));
@@ -170,7 +168,8 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             //}
-            return (JobExecutionResult) getConsumerHandle().consume(channalName, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            // return (JobExecutionResult) getConsumerHandle().consume(channalName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

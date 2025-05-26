@@ -18,6 +18,7 @@
 // */
 package com.qlangtech.tis.plugin.kafka.consumer;
 
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.tis.annotation.Public;
@@ -54,7 +55,6 @@ import static com.qlangtech.tis.plugin.annotation.Validator.require;
 @Public
 public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPluginStore.IPluginKeyAware {
 
-    private transient IConsumerHandle consumerHandle;
 
     /**
      * binlog监听在独立的slot中执行
@@ -66,24 +66,6 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
     public StartOffset startOffset;
     private transient String dataXName;
 
-//    @FormField(ordinal = 3, validate = {Validator.require})
-//    public KafkaSubscriptionMethod subscription;
-
-//    @FormField(validate = {Validator.require, Validator.identity}, ordinal = 2)
-//    public String consumeName;
-//
-//    @FormField(validate = {Validator.require, Validator.identity}, ordinal = 0)
-//    public String mqTopic;
-//
-//    @FormField(validate = {Validator.require, Validator.host}, ordinal = 3)
-//    public String namesrvAddr;
-//
-//
-//    public String getConsumeName() {
-//        return consumeName;
-//    }
-
-
     @Override
     public void setKey(Key key) {
         this.dataXName = key.keyVal.getVal();
@@ -91,26 +73,6 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
 
     @Override
     public IMQListener create() {
-//        if (StringUtils.isEmpty(this.consumeName)) {
-//            throw new IllegalStateException("prop consumeName can not be null");
-//        }
-//        if (StringUtils.isEmpty(this.mqTopic)) {
-//            throw new IllegalStateException("prop mqTopic can not be null");
-//        }
-//        if (StringUtils.isEmpty(this.namesrvAddr)) {
-//            throw new IllegalStateException("prop namesrvAddr can not be null");
-//        }
-//        if (deserialize == null) {
-//            throw new IllegalStateException("prop deserialize can not be null");
-//        }
-//        ConsumerListenerForRm rmListener = new ConsumerListenerForRm();
-//        rmListener.setConsumerGroup(this.consumeName);
-//        rmListener.setTopic(this.mqTopic);
-//        rmListener.setNamesrvAddr(this.namesrvAddr);
-//        rmListener.setDeserialize(deserialize);
-//        return rmListener;
-
-
         return new FlinkKafkaFunction(this);
     }
 
@@ -150,6 +112,8 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
             return new FlinkCol(meta, type, new AtomicDataType(new TimestampType(nullable, 3)) //DataTypes.TIMESTAMP(3)
                     , new KafkaTimestampValueDTOConvert(format)
                     , new KafkaDatetimeValueDTOConvert(format)
+                    , new FlinkCDCPipelineEventProcess(
+                    org.apache.flink.cdc.common.types.DataTypes.TIMESTAMP(), new KafkaFlinkCDCPipelineTimestampValueDTOConvert(format))
                     , new RowFieldGetterFactory.TimestampGetter(meta.getName(), colIndex));
 
         }
@@ -162,6 +126,17 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
             @Override
             public Object apply(Object timestamp) {
                 return TimestampData.fromLocalDateTime((LocalDateTime) super.apply(timestamp));
+            }
+        }
+
+        static class KafkaFlinkCDCPipelineTimestampValueDTOConvert extends KafkaDatetimeValueDTOConvert {
+            public KafkaFlinkCDCPipelineTimestampValueDTOConvert(FormatFactory format) {
+                super(format);
+            }
+
+            @Override
+            public Object apply(Object timestamp) {
+                return org.apache.flink.cdc.common.data.TimestampData.fromLocalDateTime((LocalDateTime) super.apply(timestamp));
             }
         }
 
@@ -186,27 +161,6 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
                 return timestamp;
             }
         }
-
-//        @Override
-//        public FlinkCol varcharType(DataType type) {
-//            FlinkCol flinkCol = super.varcharType(type);
-//            return flinkCol.setSourceDTOColValProcess(new MySQLStringValueDTOConvert());
-//        }
-//
-//        @Override
-//        public FlinkCol blobType(DataType type) {
-//            FlinkCol flinkCol = super.blobType(type);
-//            return flinkCol.setSourceDTOColValProcess(new MySQLBinaryRawValueDTOConvert());
-//        }
-    }
-
-    public IConsumerHandle getConsumerHander() {
-        return Objects.requireNonNull(consumerHandle, "consumerHandle can not be null");
-    }
-
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = Objects.requireNonNull(consumerHandle, "consumerHandle can not be null");
     }
 
     @TISExtension(ordinal = 0)
@@ -226,36 +180,5 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
         public EndType getEndType() {
             return EndType.Kafka;
         }
-
-
-        // private static final Pattern spec_pattern = Pattern.compile("[\\da-z_]+");
-
-        // private static final Pattern host_pattern = Pattern.compile("[\\da-z]{1}[\\da-z.:]+");
-
-        //  public static final String MSG_HOST_IP_ERROR = "必须由IP、HOST及端口号组成";
-
-        // public static final String MSG_DIGITAL_Alpha_CHARACTER_ERROR = "必须由数字、小写字母、下划线组成";
-
-//        public boolean validateNamesrvAddr(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            Matcher matcher = host_pattern.matcher(value);
-//            if (!matcher.matches()) {
-//                msgHandler.addFieldError(context, fieldName, MSG_HOST_IP_ERROR);
-//                return false;
-//            }
-//            return true;
-//        }
-
-//        public boolean validateMqTopic(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            return validateConsumeName(msgHandler, context, fieldName, value);
-//        }
-//
-//        public boolean validateConsumeName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            Matcher matcher = spec_pattern.matcher(value);
-//            if (!matcher.matches()) {
-//                msgHandler.addFieldError(context, fieldName, MSG_DIGITAL_Alpha_CHARACTER_ERROR);
-//                return false;
-//            }
-//            return true;
-//        }
     }
 }

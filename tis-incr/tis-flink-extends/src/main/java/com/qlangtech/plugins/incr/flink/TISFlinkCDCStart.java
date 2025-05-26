@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -35,6 +36,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,12 +98,14 @@ public class TISFlinkCDCStart {
         IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
         DataxReader reader = (DataxReader) dataXProcess.getReader(null);
         DataXName dataX = DataXName.createDataXPipeline(dataxName.getName());
-        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataX));
+        TISSinkFactory incrSinKFactory = TISSinkFactory.getIncrSinKFactory(dataX);
+        boolean flinkCDCPipelineEnable = incrSinKFactory.flinkCDCPipelineEnable();
+        tableStreamHandle.setSinkFuncFactory(incrSinKFactory);
         tableStreamHandle.setSourceStreamTableMeta(reader);
 
         MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataX);
         tableStreamHandle.setSourceFlinkColCreator(mqFactory.createFlinkColCreator(reader));
-        mqFactory.setConsumerHandle(tableStreamHandle);
+        // mqFactory.setConsumerHandle(tableStreamHandle);
 
 
         IMQListener mq = mqFactory.create();
@@ -110,6 +114,8 @@ public class TISFlinkCDCStart {
             throw new IllegalStateException("dataXReader is illegal");
         }
         List<ISelectedTab> tabs = reader.getSelectedTabs();
-        mq.start(dataxName, reader, tabs, dataXProcess);
+        AsyncMsg<List<ReaderSource>> sourceReaders = mq.start(flinkCDCPipelineEnable, dataxName, reader, tabs, dataXProcess);
+
+        tableStreamHandle.consume(flinkCDCPipelineEnable, dataxName, sourceReaders, dataXProcess);
     }
 }

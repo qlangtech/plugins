@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.sink;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.XmlFile;
@@ -43,7 +44,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-09-28 14:45
  **/
-public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSinkExecutor {
+public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestChunjunFlinkSinkExecutor {
 
     //    @Rule
 //    public TemporaryFolder tmpFolder = new TemporaryFolder();

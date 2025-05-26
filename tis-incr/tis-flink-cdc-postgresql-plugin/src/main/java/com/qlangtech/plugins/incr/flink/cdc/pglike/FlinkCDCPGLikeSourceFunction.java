@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc.pglike;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -55,7 +56,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-19 18:12
  **/
-public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionResult> {
+public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSource>> {
     protected final FlinkCDCPGLikeSourceFactory sourceFactory;
 
     //   private IDataxProcessor dataXProcessor;
@@ -65,13 +66,14 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
     }
 
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHander();
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.sourceFactory.getConsumerHander();
+//    }
 
     @Override
-    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(
+            boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
@@ -103,7 +105,8 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
                                             , dbname, dsFactory, schemaSupported, flinkColCreator, contextParamValsGetterMapper);
 
 
-                            return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, incrSource);
+                            return ReaderSource.createDTOSource(
+                                    dbHost + ":" + dsFactory.port + "_" + dbname, flinkCDCPipelineEnable, incrSource);
                         }).collect(Collectors.toList());
 
                     });
@@ -113,7 +116,8 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<JobExecutionRes
             // for (ISelectedTab tab : tabs) {
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
             //}
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

@@ -52,11 +52,12 @@
 
 
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-scala-compiler</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-scala-compiler</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.easymock</groupId>
@@ -119,6 +120,7 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-k8s-plugin</artifactId>
         </dependency>
+
         <!-- scala end -->
 
     </dependencies>

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink;
 
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
@@ -41,7 +42,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-03-17 17:23
  **/
-public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor {
+public class TestChujunKafkaSinkFactoryIntegration extends TestChunjunFlinkSinkExecutor {
 
     private static KafkaContainer kafka;
     private static final String TOPIC_NAME = "test.topic";
@@ -111,7 +112,7 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor
 
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         ChujunKafkaSinkFactory dorisSinkFactory = new ChujunKafkaSinkFactory();
         ChunjunSqlType chunjunSqlType = new ChunjunSqlType();
         dorisSinkFactory.scriptType = chunjunSqlType;

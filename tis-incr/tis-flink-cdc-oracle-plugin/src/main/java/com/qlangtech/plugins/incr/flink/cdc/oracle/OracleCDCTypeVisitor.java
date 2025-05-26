@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.LocalDateProcess;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
@@ -53,6 +54,7 @@ public class OracleCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisit
         return new FlinkCol(meta, type, new AtomicDataType(new TimestampType(nullable, 3)) //DataTypes.TIMESTAMP(3)
                 , new OracleTimestampDataConvert()
                 , new OracleDateTimeProcess()
+                , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.TIMESTAMP(), new OracleFlinkCDCPipelineTimestampDataConvert())
                 , new RowFieldGetterFactory.TimestampGetter(meta.getName(), colIndex));
     }
 
@@ -71,12 +73,21 @@ public class OracleCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisit
         }
     }
 
+    public static class OracleFlinkCDCPipelineTimestampDataConvert extends OracleDateTimeProcess {
+        @Override
+        public Object apply(Object o) {
+            LocalDateTime v = (LocalDateTime) super.apply(o);
+            return org.apache.flink.cdc.common.data.TimestampData.fromLocalDateTime(v);
+        }
+    }
+
     @Override
     public FlinkCol dateType(DataType type) {
         // return super.dateType(type);
         return new FlinkCol(meta, type, new AtomicDataType(new DateType(nullable))
                 , new OracleDateConvert()
                 , new OracleLocalDateProcess()
+                , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.DATE(), new OracleDateConvert())
                 , new RowFieldGetterFactory.DateGetter(meta.getName(), colIndex));
     }
 

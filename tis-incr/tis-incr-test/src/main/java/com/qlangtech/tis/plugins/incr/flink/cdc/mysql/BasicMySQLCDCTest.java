@@ -22,10 +22,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -33,6 +35,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
@@ -121,10 +124,13 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener) throws Exception {
                 Map<String, ColMeta> colMetaMapper = this.getColMetaMapper();
+                boolean flinkCDCPipelineEnable = false;
                 //  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
+                AsyncMsg<List<ReaderSource>> readerSources = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, Collections.singletonList(tab), null);
+
+                consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSources, this.createProcess());
                 Thread.sleep(1000);
 
 //                CREATE TABLE `stu` (
@@ -305,7 +311,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener)
                     throws MQConsumeException, InterruptedException {
                 // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
 
@@ -313,9 +319,16 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
                 List<TestRow> exampleRows = Lists.newArrayList();
                 exampleRows.add(this.parseTestRow(RowKind.INSERT, BasicMySQLCDCTest.class, tabName + "/insert1.txt"));
-
+                boolean flinkCDCPipelineEnable = false;
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(dataxName, dataxReader, tabs, createProcess());
+                DataxProcessor dataxProcessor = createProcess();
+                AsyncMsg<List<ReaderSource>> readerSources = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, tabs, dataxProcessor);
+
+                try {
+                    consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSources, dataxProcessor);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);

@@ -29,6 +29,7 @@ import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXCfgFile;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
@@ -57,12 +58,14 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.ReplaceType;
+import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -100,7 +103,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-17 16:07
  **/
-public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements TISEasyMock {
+public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFactory<ROW>, ROW> extends AbstractTestBase implements TISEasyMock {
 
 
     protected static String dataXName = "testDataX";
@@ -239,16 +242,17 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
      */
     protected void testSinkSync() throws Exception {
 
-        final IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+        final IStreamScriptRun<SINK_FACTORY, ROW> streamScriptRun = new IStreamScriptRun<SINK_FACTORY, ROW>() {
             @Override
-            public void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
+            public void runStream(DataxProcessor dataxProcessor, SINK_FACTORY sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
                 IFlinkColCreator flinkColCreator = null;
-                Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
+                //Map<TableAlias, TabSinkFunc<?, ?, RowData>> sinkFunction =
+                Map<TableAlias, TabSinkFunc<?, ?, ROW>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
                 Assert.assertEquals(1, sinkFunction.size());
                 TestFlinkSinkExecutor.this.startTestSinkSync(sinkFunction);
 
 
-                for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+                for (Map.Entry<TableAlias, TabSinkFunc<?, ?, ROW>> entry : sinkFunction.entrySet()) {
 
                     Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey(), this);
 
@@ -305,7 +309,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 //        return dtos.toArray(new DTO[dtos.size()]); //new DTO[]{add, updateAfter};
 //    }
 
-    protected void startTestSinkSync(Map<TableAlias, TabSinkFunc<RowData>> sinkFunction) {
+    protected void startTestSinkSync(Map<TableAlias, TabSinkFunc<?, ?, ROW>> sinkFunction) {
     }
 
     // @Test
@@ -346,11 +350,16 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper);
             EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
 
+            EasyMock.expect(dataxProcessor.getDataXName())
+                    .andReturn(DataXName.createDataXPipeline(dataXName)).anyTimes();
+
             File ddlDir = folder.newFolder("ddl");
             String tabSql = tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
 
 
             EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir).anyTimes();
+            EasyMock.expect(dataxProcessor.getRecordTransformerRulesAndPluginStore(EasyMock.anyObject(IPluginContext.class), EasyMock.eq(tableName)))
+                    .andReturn(Pair.of(Collections.emptyList(), null)).anyTimes();
 
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
@@ -400,7 +409,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             // Assert.assertTrue("autoCreateTable must be true", dataXWriter.autoCreateTable);
             CreateTableSqlBuilder.CreateDDL createDDL = null;
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
-                createDDL = dataXWriter.generateCreateDDL(SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
+                createDDL = dataXWriter.generateCreateDDL(
+                        SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
@@ -411,13 +421,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             //   .201:9030/tis"));
 
             EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter).anyTimes();
-
-            ChunjunSinkFactory sinkFactory = getSinkFactory();
+// ChunjunSinkFactory
+            SINK_FACTORY sinkFactory = getSinkFactory();
             sinkFactory.setKey(new KeyedPluginStore.Key(null, dataXName, null));
-            sinkFactory.batchSize = 100;
-            sinkFactory.flushIntervalMills = 100000;
-            sinkFactory.semantic = "at-least-once";
-            sinkFactory.parallelism = 1;
+
             TISSinkFactory.stubGetter = (pn) -> {
                 return sinkFactory;
             };
@@ -476,9 +483,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     }
 
 
-    public abstract class IStreamScriptRun {
+    public abstract class IStreamScriptRun<SINK_FACTORY extends BasicTISSinkFactory<ROW>, ROW> {
 
-        protected abstract void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
+        protected abstract void runStream(DataxProcessor dataxProcessor, SINK_FACTORY sinkFactory, StreamExecutionEnvironment env,
                                           SelectedTab selectedTab) throws Exception;
 
         private void verifyReocrdVals(CreateDDL ddl, Statement statement, String pk, int colNumVal, String updateTimeVal) throws SQLException {
@@ -599,7 +606,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(
             StreamExecutionEnvironment env,
-            TableAlias tableAlia, IStreamScriptRun streamScriptRun) {
+            TableAlias tableAlia, IStreamScriptRun<SINK_FACTORY, ROW> streamScriptRun) {
         List<DTO> testRecords = Lists.newArrayList();
         for (FlinkTestCase testCase : streamScriptRun.createFlinkTestCases()) {
             for (DTO dto : testCase.createTestData()) {
@@ -715,7 +722,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         return updateMode;
     }
 
-    protected abstract ChunjunSinkFactory getSinkFactory();
+    /**
+     * @see ChunjunSinkFactory
+     */
+    protected abstract SINK_FACTORY getSinkFactory();
 
     protected abstract DataxWriter createDataXWriter();
 

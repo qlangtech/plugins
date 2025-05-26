@@ -20,6 +20,9 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
@@ -33,7 +36,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -59,13 +64,20 @@ public class FlinkCol implements Serializable {
      * @see RowData (处理从DTO中取数据组装RowData中的列内容处理器)
      */
     public BiFunction rowDataProcess;
+
+    /**
+     * (处理从DTO中取数据组装DataChangeEvent中 before 或者 after的列内容处理器)
+     */
+    public FlinkCDCPipelineEventProcess flinkCDCPipelineEventProcess;
+
     /**
      * @see Row (处理从DTO中取数据组装Row中的列内容处理器)
      */
     public BiFunction rowProcess;
 
-    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, RowData.FieldGetter rowDataValGetter) {
-        this(meta, colType, type, new NoOpProcess(), rowDataValGetter);
+    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType
+            , DataType type, FlinkCDCPipelineEventProcess cdcPipelineEventProcess, RowData.FieldGetter rowDataValGetter) {
+        this(meta, colType, type, new NoOpProcess(), new NoOpProcess(), cdcPipelineEventProcess, rowDataValGetter);
     }
 
     public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
@@ -73,6 +85,20 @@ public class FlinkCol implements Serializable {
         return colsMeta.stream()
                 .map((c) -> flinkColCreator.build(c, colIndex.getAndIncrement()))
                 .collect(Collectors.toList());
+    }
+
+    public static List<FlinkCol> createSourceCols(IPluginContext pluginContext
+            , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
+            , Optional<SelectedTableTransformerRules> transformerOpt) {
+        List<FlinkCol> sourceColsMeta = null;
+        if (transformerOpt.isPresent()) {
+            SelectedTableTransformerRules rules = transformerOpt.get();
+            sourceColsMeta = rules.originColsWithContextParamsFlinkCol();
+        } else {
+            sourceColsMeta = getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+        }
+
+        return sourceColsMeta;
     }
 
     public Object getRowDataVal(RowData row) {
@@ -83,9 +109,10 @@ public class FlinkCol implements Serializable {
         }
     }
 
-    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
-        this(meta, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
-    }
+//    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type
+//            , BiFunction rowDataProcess, BiFunction flinkCDCPipelineEventProcess, RowData.FieldGetter rowDataValGetter) {
+//        this(meta, colType, type, rowDataProcess, rowDataProcess, flinkCDCPipelineEventProcess, rowDataValGetter);
+//    }
 
     /**
      * @param meta
@@ -93,10 +120,12 @@ public class FlinkCol implements Serializable {
      * @param type
      * @param rowDataProcess
      * @param rowProcess
+     * @param flinkCDCPipelineEventProcess
      * @param rowDataValGetter
+     * @see org.apache.flink.cdc.runtime.serializer.data.writer.BinaryWriter#write
      */
     public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess
-            , BiFunction rowProcess, RowData.FieldGetter rowDataValGetter) {
+            , BiFunction rowProcess, FlinkCDCPipelineEventProcess flinkCDCPipelineEventProcess, RowData.FieldGetter rowDataValGetter) {
         if (StringUtils.isEmpty(meta.getName())) {
             throw new IllegalArgumentException("param name can not be null");
         }
@@ -104,6 +133,7 @@ public class FlinkCol implements Serializable {
         this.type = type;
         this.colType = colType;
         this.rowDataProcess = rowDataProcess;
+        this.flinkCDCPipelineEventProcess = flinkCDCPipelineEventProcess;
         this.rowProcess = rowProcess;
         this.rowDataValGetter = rowDataValGetter;
         this.setPk(meta.isPk());
@@ -140,8 +170,26 @@ public class FlinkCol implements Serializable {
         return this;
     }
 
-    public Object processVal(Object val) {
-        return this.rowDataProcess.apply(val);
+    public Object processVal(DTOConvertTo convertTo, Object val) {
+        if (val == null) {
+            return null;
+        }
+        return convertTo.targetValGetter.apply(this, val);
+    }
+
+    public enum DTOConvertTo {
+        RowData((flinkCol, val) -> {
+            return flinkCol.rowDataProcess.apply(val);
+        }),
+        FlinkCDCPipelineEvent((flinkCol, val) -> {
+            return flinkCol.flinkCDCPipelineEventProcess.apply(val);
+        });
+
+        private final java.util.function.BiFunction<FlinkCol, Object, Object> targetValGetter;
+
+        private DTOConvertTo(java.util.function.BiFunction<FlinkCol, Object, Object> targetValGetter) {
+            this.targetValGetter = targetValGetter;
+        }
     }
 
     public static BiFunction ByteBuffer() {

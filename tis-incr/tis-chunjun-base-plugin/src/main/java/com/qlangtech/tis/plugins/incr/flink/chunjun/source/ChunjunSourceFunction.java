@@ -27,6 +27,7 @@ import com.dtstack.chunjun.constants.ConfigConstant;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
@@ -62,7 +63,7 @@ import java.util.stream.Collectors;
  * @create: 2022-08-10 11:59
  **/
 public abstract class ChunjunSourceFunction
-        implements IMQListener<JobExecutionResult> {
+        implements IMQListener<List<ReaderSource>> {
     final ChunjunSourceFactory sourceFactory;
 
     public ChunjunSourceFunction(ChunjunSourceFactory sourceFactory) {
@@ -70,10 +71,10 @@ public abstract class ChunjunSourceFunction
     }
 
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHandle();
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.sourceFactory.getConsumerHandle();
+//    }
 
     private SourceFunction<RowData> createSourceFunction(
             String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
@@ -93,7 +94,7 @@ public abstract class ChunjunSourceFunction
 
 
     @Override
-    public JobExecutionResult start(TargetResName name, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName name, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         Objects.requireNonNull(dataXProcessor, "dataXProcessor can not be null");
         BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
@@ -127,7 +128,8 @@ public abstract class ChunjunSourceFunction
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
-            return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            // return (JobExecutionResult) getConsumerHandle().consume(false, name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

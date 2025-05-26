@@ -56,7 +56,7 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 11, advance = true, type = FormFieldType.TEXTAREA)
     public String copyExistingPipeline;
 
-    private transient IConsumerHandle consumerHandle;
+    //private transient IConsumerHandle consumerHandle;
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
@@ -69,15 +69,6 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     public IMQListener create() {
         FlinkCDCMongoDBSourceFunction sourceFunction = new FlinkCDCMongoDBSourceFunction(this);
         return sourceFunction;
-    }
-
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = consumerHandle;
-    }
-
-    public IConsumerHandle getConsumerHander() {
-        return this.consumerHandle;
     }
 
 

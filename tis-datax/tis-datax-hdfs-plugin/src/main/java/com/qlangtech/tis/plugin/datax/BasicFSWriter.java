@@ -81,6 +81,9 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
     public FileSystemFactory getFs() {
         if (fileSystem == null) {
+            if (StringUtils.isEmpty(this.fsName)) {
+                throw new IllegalStateException("prop field:" + this.fsName + " can not be empty");
+            }
             this.fileSystem = FileSystemFactory.getFsFactory(fsName);
         }
         Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");

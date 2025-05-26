@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 
 import com.dtstack.chunjun.conf.SyncConf;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -40,7 +41,7 @@ import org.junit.Test;
  * @create: 2022-07-17 14:54
  * @see MySqlSourceTestBase
  **/
-public class TestMySQLSinkFactory extends TestFlinkSinkExecutor {
+public class TestMySQLSinkFactory extends TestChunjunFlinkSinkExecutor {
 
     @Test
     public void testMySQLWrite() throws Exception {
@@ -82,7 +83,7 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         MySQLSinkFactory sinkFactory = new MySQLSinkFactory();
         return sinkFactory;
     }

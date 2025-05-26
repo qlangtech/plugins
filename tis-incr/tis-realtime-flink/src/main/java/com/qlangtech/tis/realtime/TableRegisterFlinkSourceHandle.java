@@ -53,6 +53,7 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
@@ -105,7 +106,7 @@ public abstract class TableRegisterFlinkSourceHandle
     }
 
     @Override
-    protected Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+    protected Map<TableAlias, AbstractTabSinkFuncV1<?, ?, DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
     }

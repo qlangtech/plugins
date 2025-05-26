@@ -19,10 +19,14 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
+import com.qlangtech.tis.realtime.transfer.DTO;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,9 +34,37 @@ import java.util.List;
  **/
 public abstract class AbstractRowDataMapper extends BasicFlinkDataMapper<GenericRowData, RowData> {
 
+    protected final List<FlinkCol> cols;
 
-    public AbstractRowDataMapper(List<FlinkCol> cols) {
-        super(cols);
+    public AbstractRowDataMapper(List<FlinkCol> cols, DTOConvertTo dtoConvert2Type) {
+        super(dtoConvert2Type);
+        if (CollectionUtils.isEmpty(cols)) {
+            throw new IllegalArgumentException("param cols can not be empty");
+        }
+        this.cols = cols;
     }
+
+    protected abstract void setRowDataVal(int index, GenericRowData row, Object value);
+
+    @Override
+    protected void fillRowVals(DTO dto, GenericRowData row) {
+        Map<String, Object> vals
+                = (dto.getEventType() == DTO.EventType.DELETE || dto.getEventType() == DTO.EventType.UPDATE_BEFORE)
+                ? dto.getBefore() : dto.getAfter();
+        if (vals == null) {
+            throw new IllegalStateException("incr data of " + dto.getTableName() + " can not be null");
+        }
+        int index = 0;
+        Object val = null;
+        for (FlinkCol col : cols) {
+            try {
+                val = vals.get(col.name);
+                setRowDataVal(index++, row, (val == null) ? null : col.processVal(dtoConvert2Type, val));
+            } catch (Exception e) {
+                throw new IllegalStateException("colName:" + col.name + ",index:" + index, e);
+            }
+        }
+    }
+
 
 }

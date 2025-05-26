@@ -21,6 +21,7 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.util.OutputTag;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -28,6 +29,12 @@ import java.util.Map;
  * @create: 2025-01-04 09:22
  **/
 public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
+    public static final String KEY_MERGE_ALL_TABS_IN_ONE_BUS = "merge_all_tabs_in_one_bus";
+
+    public static DTOSourceTagProcessFunction createMergeAllTabsInOneBus() {
+        return new MergeAllTabsInOneBusProcessFunction();
+    }
+
     public DTOSourceTagProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
         super(tab2OutputTag);
     }
@@ -35,5 +42,19 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
     @Override
     protected String getTableName(DTO record) {
         return record.getTableName();
+    }
+
+
+    static class MergeAllTabsInOneBusProcessFunction extends DTOSourceTagProcessFunction {
+
+        public MergeAllTabsInOneBusProcessFunction() {
+            super(Collections.singletonMap(KEY_MERGE_ALL_TABS_IN_ONE_BUS, new OutputTag<DTO>(KEY_MERGE_ALL_TABS_IN_ONE_BUS) {
+            }));
+        }
+
+        @Override
+        protected String getTableName(DTO record) {
+            return KEY_MERGE_ALL_TABS_IN_ONE_BUS;
+        }
     }
 }

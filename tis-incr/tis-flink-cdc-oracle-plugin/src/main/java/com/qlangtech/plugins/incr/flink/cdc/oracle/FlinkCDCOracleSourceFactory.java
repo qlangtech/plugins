@@ -55,7 +55,7 @@ import java.util.function.Function;
  **/
 @Public
 public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
-    private transient IConsumerHandle consumerHandle;
+
 
 //     opts.addFieldDescriptor("lob", OracleConnectorConfig.LOB_ENABLED);
 //            opts.addFieldDescriptor("poolInterval", OracleConnectorConfig.POLL_INTERVAL_MS);
@@ -140,15 +140,6 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
         return sourceFunctionCreator;
     }
 
-    public IConsumerHandle getConsumerHander() {
-        Objects.requireNonNull(this.consumerHandle, "prop consumerHandle can not be null");
-        return this.consumerHandle;
-    }
-
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = consumerHandle;
-    }
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {

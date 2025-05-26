@@ -23,6 +23,7 @@ import com.dtstack.chunjun.connector.starrocks.streamload.StarRocksStreamLoadVis
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
@@ -49,6 +50,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.data.RowData;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -64,7 +66,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-12 10:29
  **/
-public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
+public class TestChunjunStarRocksSinkFactory extends TestChunjunFlinkSinkExecutor {
     protected static StarRocksSourceFactory dsFactory;
 
 //            new DockerComposeContainer(new File("src/test/resources/compose-doris-test.yml"))
@@ -93,8 +95,8 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
      */
     @Test
     public void testSinkSyncWithSQL() throws Exception {
-
-        IStreamScriptRun streamScriptRun = new IStreamScriptRun() {
+        boolean flinkCDCPipelineEnable = false;
+        IStreamScriptRun<ChunjunSinkFactory, RowData> streamScriptRun = new IStreamScriptRun<ChunjunSinkFactory, RowData>() {
             @Override
             protected void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
                                      SelectedTab selectedTab) throws Exception {
@@ -134,7 +136,8 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
 
                 SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
                 sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
-                tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
+                boolean flinkCDCPipelineEnable = false;
+                tableRegisterHandle.consume(flinkCDCPipelineEnable, new TargetResName(dataXName), sourceChannel, dataxProcessor);
                 /**
                  * ===========================================
                  */
@@ -189,7 +192,7 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         ChunjunStarRocksSinkFactory starRocksSinkFactory = new ChunjunStarRocksSinkFactory();
         ChunjunSqlType chunjunSqlType = new ChunjunSqlType();
         starRocksSinkFactory.scriptType = chunjunSqlType;

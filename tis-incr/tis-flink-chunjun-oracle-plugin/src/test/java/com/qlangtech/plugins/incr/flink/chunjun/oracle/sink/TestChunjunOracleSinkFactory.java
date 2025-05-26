@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.sink;
 
-import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.plugin.datax.DataXOracleWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -33,13 +33,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-24 13:39
  **/
-public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
+public class TestChunjunOracleSinkFactory extends TestChunjunFlinkSinkExecutor {
 
 //    // docker run -d -p 1521:1521 -e ORACLE_PASSWORD=test -e ORACLE_DATABASE=tis gvenzl/oracle-xe:18.4.0-slim
 //    public static final DockerImageName ORACLE_DOCKER_IMAGE_NAME = DockerImageName.parse(
@@ -90,7 +88,7 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         return new ChunjunOracleSinkFactory();
     }
 

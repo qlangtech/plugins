@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 @Public
 public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
-    private transient IConsumerHandle consumerHandle;
+    // private transient IConsumerHandle consumerHandle;
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions startupOptions;
@@ -96,15 +96,6 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
         return sourceFunctionCreator;
     }
 
-    public IConsumerHandle getConsumerHander() {
-        Objects.requireNonNull(this.consumerHandle, "prop consumerHandle can not be null");
-        return this.consumerHandle;
-    }
-
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = consumerHandle;
-    }
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {

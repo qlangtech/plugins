@@ -19,12 +19,9 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
 import com.alibaba.datax.common.element.ColumnAwareRecord;
-import com.alibaba.datax.common.element.Record;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -43,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 用于使用虚拟列

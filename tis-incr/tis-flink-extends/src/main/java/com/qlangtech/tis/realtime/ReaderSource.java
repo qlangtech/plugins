@@ -62,30 +62,10 @@ public abstract class ReaderSource<T> {
                 .setParallelism(1);
 
         afterSourceStreamGetter(tab2OutputStream, operator);
-
-//        if (rowType == DTO.class) {
-//
-//            return (SingleOutputStreamOperator<T>) (((SingleOutputStreamOperator<DTO>) operator)
-//                    .process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-//                    .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue().outputTag)))));
-//
-//        } else if (rowType == RowData.class) {
-//            return operator;
-//        } else {
-//
-//        }
-//        return env.addSource(this.sourceFunc)
-//                .name(this.tokenName)
-//                .setParallelism(1)
-//                .;
     }
 
-    protected abstract DataStreamSource<T> addAsSource(StreamExecutionEnvironment env);// {
-    //  return env.addSource(this.sourceFunc);
-    //}
+    protected abstract DataStreamSource<T> addAsSource(StreamExecutionEnvironment env);
 
-
-//<Tuple2<String, byte[]>>
 
     public static ReaderSource<DTO> createDTOSource(String tokenName, SourceFunction<DTO> sourceFunc) {
         return new SideOutputReaderSource<DTO>(tokenName) {
@@ -102,7 +82,7 @@ public abstract class ReaderSource<T> {
     }
 
 
-    public static ReaderSource<DTO> createDTOSource(String tokenName, Source<DTO, ?, ?> sourceFunc) {
+    public static ReaderSource<DTO> createDTOSource(String tokenName, boolean flinkCDCPipelineEnable, Source<DTO, ?, ?> sourceFunc) {
         return new SideOutputReaderSource<DTO>(tokenName) {
             @Override
             protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
@@ -111,7 +91,7 @@ public abstract class ReaderSource<T> {
 
             @Override
             protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-                return new DTOSourceTagProcessFunction(tab2OutputTag);
+                return flinkCDCPipelineEnable ? DTOSourceTagProcessFunction.createMergeAllTabsInOneBus() : new DTOSourceTagProcessFunction(tab2OutputTag);
             }
         };
     }
@@ -156,19 +136,16 @@ public abstract class ReaderSource<T> {
             Map<String, OutputTag<RECORD_TYPE>> tab2OutputTag
                     = tab2OutputStream.createTab2OutputTag((dtoStream) -> ((DispatchedDTOStream) dtoStream).outputTag);
 
-
-//            SingleOutputStreamOperator<DTO> mainStream
-//                    = operator.process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-//                    .collect(Collectors.toMap( //
-//                            (e) -> e.getKey().getFrom()
-//                            , (e) -> ((DTOStream.DispatchedDTOStream) e.getValue()).outputTag))));
-
+            /**
+             * 为主事件流打上分支流标记
+             */
             SingleOutputStreamOperator<RECORD_TYPE> mainStream
-                    = operator.process(createStreamTagFunction(tab2OutputTag)
-                    //   new SourceProcessFunction<RECORD_TYPE>(tab2OutputTag)
-            );
+                    = operator.process(createStreamTagFunction(tab2OutputTag));
 
 
+            /**
+             * 利用标记从主事件流中分叉出子事件流
+             */
             for (Map.Entry<TableAlias, DTOStream<RECORD_TYPE>> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }

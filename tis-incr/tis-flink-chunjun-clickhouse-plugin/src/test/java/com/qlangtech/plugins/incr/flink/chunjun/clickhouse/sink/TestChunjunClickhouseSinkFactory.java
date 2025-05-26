@@ -230,7 +230,7 @@ public class TestChunjunClickhouseSinkFactory
             clickHouseSinkFactory.parallelism = 1;
             clickHouseSinkFactory.semantic = "at-least-once";
             IFlinkColCreator flinkColCreator = null;
-            Map<TableAlias, TabSinkFunc<RowData>>
+            Map<TableAlias, TabSinkFunc<?, ?, RowData>>
                     sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
             Assert.assertTrue(sinkFuncs.size() > 0);
 
@@ -253,7 +253,7 @@ public class TestChunjunClickhouseSinkFactory
             Assert.assertEquals(1, sinkFuncs.size());
             DTOStream rowStream = DTOStream.createRowData();
             // rowStream.addStream(env.fromElements(new RowData[]{d}));
-            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<?, ?, RowData>> entry : sinkFuncs.entrySet()) {
 
                 ReaderSource<RowData> readerSource = ReaderSource.createRowDataSource("testStreamSource", totalpayinfo
                         , env.fromElements(new RowData[]{d}));

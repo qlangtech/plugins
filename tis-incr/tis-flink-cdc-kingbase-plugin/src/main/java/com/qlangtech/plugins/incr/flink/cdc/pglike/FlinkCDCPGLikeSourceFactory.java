@@ -35,8 +35,6 @@ import java.util.Objects;
  * @create: 2025-01-19 18:14
  **/
 public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
-    private transient IConsumerHandle consumerHandle;
-
     /**
      * The name of the Postgres logical decoding plug-in installed on the server. Supported values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming, wal2json_rds_streaming and pgoutput.
      */
@@ -57,42 +55,6 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
         return ReplicaIdentity.parse(this.replicaIdentity);
     }
 
-
-    /**
-     * 只支持两种option 'latest' 和 'initial'
-     *
-     * @return
-     * @see org.apache.flink.cdc.connectors.base.config.JdbcSourceConfigFactory #startupOptions()
-     */
-    //  public StartupOptions getStartupOptions() {
-    //   return StartupOptionUtils.getStartupOptions(this.startupOptions);
-//        switch (startupOptions) {
-//            case StartupOptionUtils.KEY_STARTUP_LATEST:
-//                return StartupOptions.latest();
-////            case "earliest":
-////                return StartupOptions.earliest();
-//            case "initial":
-//                return StartupOptions.initial();
-//            default:
-//                throw new IllegalStateException("illegal startupOptions:" + startupOptions);
-//        }
-    // }
-
-
-//    @Override
-//    public IMQListener create() {
-//        FlinkCDCPostgreSQLSourceFunction sourceFunctionCreator = new FlinkCDCPostgreSQLSourceFunction(this);
-//        return sourceFunctionCreator;
-//    }
-    public IConsumerHandle getConsumerHander() {
-        Objects.requireNonNull(this.consumerHandle, "prop consumerHandle can not be null");
-        return this.consumerHandle;
-    }
-
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = consumerHandle;
-    }
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {

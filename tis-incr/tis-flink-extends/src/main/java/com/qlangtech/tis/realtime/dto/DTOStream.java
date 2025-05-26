@@ -44,11 +44,11 @@ public abstract class DTOStream<T> {
 
     public abstract DTOStream<T> addStream(SingleOutputStreamOperator<T> mainStream);
 
-    public static DTOStream createDispatched(String table) {
+    public static DTOStream<DTO> createDispatched(String table) {
         return createDispatched(table, false);
     }
 
-    public static DTOStream createDispatched(String table, boolean startNewChain) {
+    public static DTOStream<DTO> createDispatched(String table, boolean startNewChain) {
         return new DispatchedDTOStream(DTO.class, new OutputTag<DTO>(table) {
         }, startNewChain);
     }

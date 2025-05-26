@@ -19,8 +19,13 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkCDCPipelineEventTimestampDataConvert;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineDecimalConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
+import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory.ByteGetter;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeta;
@@ -31,7 +36,6 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
@@ -56,7 +60,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -65,15 +69,23 @@ import java.util.stream.Collectors;
  * @create: 2025-05-22 11:11
  **/
 public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implements MapFunction<DTO, DATA>, Serializable {
-    protected final List<FlinkCol> cols;
 
+    protected final DTOConvertTo dtoConvert2Type;
 
-    public BasicFlinkDataMapper(List<FlinkCol> cols) {
-        if (CollectionUtils.isEmpty(cols)) {
-            throw new IllegalArgumentException("param cols can not be empty");
-        }
-        this.cols = cols;
+    public BasicFlinkDataMapper(DTOConvertTo dtoConvert2Type) {
+
+        this.dtoConvert2Type = Objects.requireNonNull(dtoConvert2Type, "dtoConvert2Type can not be null");
     }
+
+    @Override
+    public final DATA map(DTO dto) throws Exception {
+        IMPLDATA row = createRowData(dto);
+        this.fillRowVals(dto, row);
+        return row;
+    }
+
+    protected abstract void fillRowVals(DTO dto, IMPLDATA row);
+
 
     public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, TableAlias tabName) {
         IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
@@ -116,7 +128,10 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         @Override
         public FlinkCol intType(DataType type) {
             return new FlinkCol(meta, type
-                    , new AtomicDataType(new IntType(nullable)), new IntegerConvert()
+                    , new AtomicDataType(new IntType(nullable)) //
+                    , new IntegerConvert()
+                    , new IntegerConvert()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.INT(), new IntegerConvert())
                     , RowFieldGetterFactory.intGetter(meta.getName(), colIndex));
         }
 
@@ -127,6 +142,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     new AtomicDataType(new SmallIntType(nullable))
                     , new ShortConvert()
                     , new RowShortConvert()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.SMALLINT(), new ShortConvert())
                     , RowFieldGetterFactory.smallIntGetter(meta.getName(), colIndex));
         }
 
@@ -138,6 +154,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     //         , DataTypes.TINYINT()
                     , new TinyIntConvertByte()
                     , new TinyIntConvertByte()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.TINYINT(), new TinyIntConvertByte())
                     , new RowFieldGetterFactory.ByteGetter(meta.getName(), colIndex));
         }
 
@@ -148,6 +165,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , DataTypes.FLOAT()
                     , new FloatDataConvert()
                     , new FloatDataConvert()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.FLOAT(), new FloatDataConvert())
                     , new RowFieldGetterFactory.FloatGetter(meta.getName(), colIndex));
         }
 
@@ -179,6 +197,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , DataTypes.TIME()
                     , new DTOLocalTimeConvert()
                     , new LocalTimeConvert()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.TIME(), new DTOLocalTimeConvert())
                     // , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L))
                     , new RowFieldGetterFactory.TimeGetter(meta.getName(), colIndex));
         }
@@ -191,6 +210,8 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , new AtomicDataType(new BigIntType(nullable))
                     // , DataTypes.BIGINT()
                     , new LongConvert()
+                    , new LongConvert()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BIGINT(), new LongConvert())
                     , new RowFieldGetterFactory.BigIntGetter(meta.getName(), colIndex));
         }
 
@@ -207,6 +228,9 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                         new AtomicDataType(new DecimalType(nullable, precision, scale))
                         , new DecimalConvert(precision, scale)
                         , FlinkCol.NoOp()
+                        , new FlinkCDCPipelineEventProcess(
+                        org.apache.flink.cdc.common.types.DataTypes.DECIMAL(precision, scale)
+                        , new FlinkPipelineDecimalConvert(precision, scale))
                         , new RowFieldGetterFactory.DecimalGetter(meta.getName(), colIndex));
             } catch (Exception e) {
                 throw new RuntimeException("colName:" + meta.getName() + ",type:" + type.toString() + ",precision:" + precision + ",scale:" + scale, e);
@@ -218,6 +242,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public FlinkCol doubleType(DataType type) {
             return new FlinkCol(meta, type
                     , DataTypes.DOUBLE()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.DOUBLE(), FlinkCol.NoOp())
                     , new RowFieldGetterFactory.DoubleGetter(meta.getName(), colIndex));
         }
 
@@ -226,14 +251,17 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             return new FlinkCol(meta, type, new AtomicDataType(new DateType(nullable))
                     , new DateConvert()
                     , FlinkCol.LocalDate()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.DATE(), new DateConvert())
                     , new RowFieldGetterFactory.DateGetter(meta.getName(), colIndex));
         }
 
         @Override
         public FlinkCol timestampType(DataType type) {
-            return new FlinkCol(meta, type, new AtomicDataType(new TimestampType(nullable, 3)) //DataTypes.TIMESTAMP(3)
+            return new FlinkCol(meta, type
+                    , new AtomicDataType(new TimestampType(nullable, 3))
                     , new TimestampDataConvert()
                     , new FlinkCol.DateTimeProcess()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.TIMESTAMP(), new FlinkCDCPipelineEventTimestampDataConvert())
                     , new RowFieldGetterFactory.TimestampGetter(meta.getName(), colIndex));
         }
 
@@ -241,7 +269,9 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public FlinkCol bitType(DataType type) {
             return new FlinkCol(meta, type, DataTypes.TINYINT()
                     , FlinkCol.Byte()
-                    , new RowFieldGetterFactory.ByteGetter(meta.getName(), colIndex));
+                    , FlinkCol.NoOp()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BINARY(type.getColumnSize()), FlinkCol.Byte())
+                    , new ByteGetter(meta.getName(), colIndex));
         }
 
         @Override
@@ -250,6 +280,8 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , dataType //
                     , DataTypes.BOOLEAN() //
                     , new FlinkCol.BoolProcess() //
+                    , FlinkCol.NoOp() //
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BOOLEAN(), new FlinkCol.BoolProcess()) //
                     , new RowFieldGetterFactory.BoolGetter(meta.getName(), colIndex));
             return fcol.setSourceDTOColValProcess(new BiFunction() {
                 @Override
@@ -267,6 +299,8 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public FlinkCol blobType(DataType type) {
             FlinkCol col = new FlinkCol(meta, type, DataTypes.BYTES()
                     , new BinaryRawValueDataConvert()
+                    , FlinkCol.NoOp()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BYTES(), new BinaryRawValueDataConvert())
                     , new RowFieldGetterFactory.BlobGetter(meta.getName(), colIndex));
             return col.setSourceDTOColValProcess(new BinaryRawValueDTOConvert());
         }
@@ -280,6 +314,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     //, DataTypes.VARCHAR(type.columnSize)
                     , new StringConvert()
                     , FlinkCol.NoOp()
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize()), new StringConvert())
                     , new RowFieldGetterFactory.StringGetter(meta.getName(), colIndex));
         }
 
@@ -299,30 +334,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
     }
 
 
-    @Override
-    public final DATA map(DTO dto) throws Exception {
-        IMPLDATA row = createRowData(dto);
 
-        Map<String, Object> vals
-                = (dto.getEventType() == DTO.EventType.DELETE || dto.getEventType() == DTO.EventType.UPDATE_BEFORE)
-                ? dto.getBefore() : dto.getAfter();
-        if (vals == null) {
-            throw new IllegalStateException("incr data of " + dto.getTableName() + " can not be null");
-        }
-        int index = 0;
-        Object val = null;
-        for (FlinkCol col : cols) {
-            try {
-                val = vals.get(col.name);
-                setRowDataVal(index++, row, (val == null) ? null : col.processVal(val));
-            } catch (Exception e) {
-                throw new IllegalStateException("colName:" + col.name + ",index:" + index, e);
-            }
-        }
-        return row;
-    }
-
-    protected abstract void setRowDataVal(int index, IMPLDATA row, Object value);
 
 
     protected abstract IMPLDATA createRowData(DTO dto);
@@ -390,8 +402,6 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public Object apply(Object o) {
             LocalDateTime v = (LocalDateTime) super.apply(o);
             return TimestampData.fromLocalDateTime(v);
-//            ZoneOffset zoneOffset = sysDefaultZone.getRules().getOffset(v);
-//            return v.toInstant(zoneOffset).toEpochMilli();
         }
     }
 

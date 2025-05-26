@@ -134,7 +134,8 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
                 return rConverter.toInternal(row.f1);
             }));
 
-            return this.rowDataSinkFunc.add2Sink(rowData);
+            this.rowDataSinkFunc.add2Sink(rowData);
+            return null;
         }
 
         @Override

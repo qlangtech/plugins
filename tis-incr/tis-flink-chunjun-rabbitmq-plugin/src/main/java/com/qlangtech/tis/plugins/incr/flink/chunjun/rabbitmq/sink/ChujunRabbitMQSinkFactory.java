@@ -24,6 +24,7 @@ import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -56,8 +57,13 @@ public class ChujunRabbitMQSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
         return null;
+    }
+
+//    @Override
+//    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+//        return null;
 //        CreateChunjunSinkFunctionResult sinkFuncRef = new CreateChunjunSinkFunctionResult();
 //        KafkaSelectedTab kfkTable = (KafkaSelectedTab) selectedTab;
 //
@@ -146,7 +152,7 @@ public class ChujunRabbitMQSinkFactory extends ChunjunSinkFactory {
 //        //Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
 //        sinkFuncRef.setParallelism(this.parallelism);
 //        return sinkFuncRef;
-    }
+    //  }
 
     @Override
     protected void initChunjunJdbcConf(JdbcConf jdbcConf) {

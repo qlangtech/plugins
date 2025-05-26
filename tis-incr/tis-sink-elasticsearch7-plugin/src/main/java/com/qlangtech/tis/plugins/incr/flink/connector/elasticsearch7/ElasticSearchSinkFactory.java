@@ -112,7 +112,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
+    public Map<TableAlias, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
         MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.getDataXName());
@@ -212,9 +212,12 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         });
         // final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
-
+        if (!StringUtils.equals(esSchema.getFrom(), tab.getName())) {
+            throw new IllegalStateException("esSchema.getFrom():" + esSchema.getFrom() + " must be equal with tab.getName():" + tab.getName());
+        }
         Optional<SelectedTableTransformerRules> transformerOpt
-                = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), esSchema, tab, sourceFlinkColCreator);
+                = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue() //, esSchema
+                , tab, sourceFlinkColCreator);
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys
                         , IPluginContext.namedContext(dataxProcessor.identityValue())

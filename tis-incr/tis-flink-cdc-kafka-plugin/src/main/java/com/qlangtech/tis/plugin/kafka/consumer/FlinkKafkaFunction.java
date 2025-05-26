@@ -19,10 +19,8 @@
 package com.qlangtech.tis.plugin.kafka.consumer;
 
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -39,7 +37,6 @@ import com.qlangtech.tis.realtime.SourceProcessFunction;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -60,22 +57,17 @@ import java.util.function.Function;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-27
  */
-public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
+public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
 
     private final KafkaMQListenerFactory sourceFactory;
-
 
     public FlinkKafkaFunction(KafkaMQListenerFactory sourceFactory) {
         this.sourceFactory = sourceFactory;
     }
 
     @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHander();
-    }
-
-    @Override
-    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(
+            boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         DataXKafkaReader kafkaReader = (DataXKafkaReader) dataSource;
 
@@ -98,7 +90,8 @@ public class FlinkKafkaFunction implements IMQListener<JobExecutionResult> {
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> createDispatched(tabName, sourceFactory.independentBinLogMonitor));
 
-            return (JobExecutionResult) this.getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            //return (JobExecutionResult) this.getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

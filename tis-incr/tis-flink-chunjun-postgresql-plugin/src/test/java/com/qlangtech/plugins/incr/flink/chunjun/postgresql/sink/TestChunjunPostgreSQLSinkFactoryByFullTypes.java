@@ -78,7 +78,7 @@ public class TestChunjunPostgreSQLSinkFactoryByFullTypes extends TestFlinkSinkEx
     }
 
     @Override
-    protected ChunjunSinkFactory getSinkFactory() {
+    protected ChunjunSinkFactory createSinkFactory() {
         return new ChunjunPostgreSQLSinkFactory();
     }
 
@@ -91,7 +91,8 @@ public class TestChunjunPostgreSQLSinkFactoryByFullTypes extends TestFlinkSinkEx
                 return (PGDataSourceFactory) pgDSFactory;
             }
         };
-        pgDataXWriter.autoCreateTable = AutoCreateTable.dft();;
+        pgDataXWriter.autoCreateTable = AutoCreateTable.dft();
+        ;
         // pgDataXWriter.generateCreateDDL()
         return pgDataXWriter;
     }

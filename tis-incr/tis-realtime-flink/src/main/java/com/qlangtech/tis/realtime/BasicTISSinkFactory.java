@@ -23,7 +23,6 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -37,6 +36,7 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
@@ -60,72 +60,65 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
-    public abstract Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator);
+    public abstract Map<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator);
 
 
-    /**
-     * (RowData,DTO) -> DTO
-     */
-    public final static class DTOSinkFunc extends TabSinkFunc<DTO> {
-
-        /**
-         * @param tab
-         * @param sinkFunction
-         * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
-         */
-        public DTOSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<DTO> sinkFunction
-                , boolean supportUpset, List<EventType> filterRowKinds, List<FlinkCol> colsMeta, int sinkTaskParallelism) {
-            super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
-            if (supportUpset || CollectionUtils.isNotEmpty(filterRowKinds)) {
-                this.setSourceFilter(KEY_SKIP_UPDATE_BEFORE_EVENT
-                        , new FilterUpdateBeforeEvent.DTOFilter(supportUpset, filterRowKinds));
-            }
-        }
-
-        @Override
-        protected DataStream<DTO> streamMap(DTOStream sourceStream) {
-            if (sourceStream.clazz == DTO.class) {
-                return sourceStream.getStream();
-            } else if (sourceStream.clazz == RowData.class) {
-                throw new UnsupportedOperationException("RowData -> DTO is not support");
-            }
-
-            throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
-        }
-    }
+//    /**
+//     * (RowData,DTO) -> DTO
+//     */
+//    public final static class DTOSinkFunc extends TabSinkFunc<SinkFunction<DTO>, DataStreamSink<DTO>, DTO> {
+//
+//        /**
+//         * @param tab
+//         * @param sinkFunction
+//         * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
+//         */
+//        public DTOSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<DTO> sinkFunction
+//                , boolean supportUpset, List<EventType> filterRowKinds, List<FlinkCol> colsMeta, int sinkTaskParallelism) {
+//            super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
+//            if (supportUpset || CollectionUtils.isNotEmpty(filterRowKinds)) {
+//                this.setSourceFilter(KEY_SKIP_UPDATE_BEFORE_EVENT
+//                        , new FilterUpdateBeforeEvent.DTOFilter(supportUpset, filterRowKinds));
+//            }
+//        }
+//
+//        @Override
+//        protected DataStream<DTO> streamMap(DTOStream sourceStream) {
+//            if (sourceStream.clazz == DTO.class) {
+//                return sourceStream.getStream();
+//            } else if (sourceStream.clazz == RowData.class) {
+//                throw new UnsupportedOperationException("RowData -> DTO is not support");
+//            }
+//
+//            throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
+//        }
+//
+//        @Override
+//        protected DataStreamSink<DTO> addSinkToSource(DataStream<DTO> source) {
+//            return source.addSink(sinkFunction).name(tab.getTo()).setParallelism(this.sinkTaskParallelism);
+//        }
+//    }
 
     /**
      * (RowData,DTO) -> RowData
      */
-    public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
+    public final static class RowDataSinkFunc extends AbstractTabSinkFuncV1<SinkFunction<RowData>, DataStreamSink<RowData>, RowData> {
 
         public static Optional<SelectedTableTransformerRules>
-        createTransformerRules(String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
+        createTransformerRules(String dataXName
+                //, TableAlias tabAlias
+                , ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
             final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
             DataXName dataX = dataXContext.getCollectionName();
             Optional<RecordTransformerRules> transformerRules
                     = RecordTransformerRules.loadTransformerRules(
-                    dataXContext, DataxProcessor.load(dataXContext, dataX), tabAlias.getFrom());
+                    dataXContext, DataxProcessor.load(dataXContext, dataX), tab.getName());
 
             Optional<SelectedTableTransformerRules> transformerOpt
                     = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));
             return transformerOpt;
         }
 
-
-        private static List<FlinkCol> createSourceCols(IPluginContext pluginContext
-                , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
-                , Optional<SelectedTableTransformerRules> transformerOpt) {
-            List<FlinkCol> sourceColsMeta = null;
-            if (transformerOpt.isPresent()) {
-                SelectedTableTransformerRules rules = transformerOpt.get();
-                sourceColsMeta = rules.originColsWithContextParamsFlinkCol();
-            } else {
-                sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
-            }
-
-            return sourceColsMeta;
-        }
 
         public RowDataSinkFunc(TableAlias tab
                 , SinkFunction<RowData> sinkFunction //
@@ -139,7 +132,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                 , int sinkTaskParallelism
                 , Optional<SelectedTableTransformerRules> transformerOpt) {
             super(tab, primaryKeys, sinkFunction
-                    , createSourceCols(pluginContext, selectedTab, sourceFlinkColCreator, transformerOpt), sinkColsMeta, sinkTaskParallelism
+                    , FlinkCol.createSourceCols(pluginContext, selectedTab, sourceFlinkColCreator, transformerOpt)
+                    , sinkColsMeta, sinkTaskParallelism
                     , transformerOpt);
 
             //this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
@@ -191,5 +185,12 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                 return result;
             }
         }
+
+        @Override
+        protected DataStreamSink<RowData> addSinkToSource(DataStream<RowData> source) {
+            return source.addSink(sinkFunction).name(tab.getTo()).setParallelism(this.sinkTaskParallelism);
+        }
+
+
     }
 }

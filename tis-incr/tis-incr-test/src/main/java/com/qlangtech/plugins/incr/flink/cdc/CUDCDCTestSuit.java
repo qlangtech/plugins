@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsUpdate.UpdatedColVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -53,6 +54,7 @@ import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.IOUtils;
@@ -197,9 +199,9 @@ public abstract class CUDCDCTestSuit {
 
         IResultRows consumerHandle = getTestBasicFlinkSourceHandle(dataxReader, tabName);
 
-        cdcFactory.setConsumerHandle(consumerHandle.getConsumerHandle());
+        // cdcFactory.setConsumerHandle(consumerHandle.getConsumerHandle());
 
-        IMQListener<JobExecutionResult> imqListener = cdcFactory.create();
+        IMQListener<List<ReaderSource>> imqListener = cdcFactory.create();
 
 
         this.manipulateAndVerfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
@@ -241,7 +243,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-            , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
+            , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener)
             throws Exception {
 //        File file = new File("full_types.xml");
 //        XmlFile tabStore = new XmlFile(file.getAbsoluteFile(), "test");
@@ -252,9 +254,10 @@ public abstract class CUDCDCTestSuit {
         List<TestRow> exampleRows = createExampleTestRows();
 
         DataxProcessor process = createProcess();
+        boolean flinkCDCPipelineEnable = false;
+        AsyncMsg<List<ReaderSource>> readerSource = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, tabs, process);
 
-        imqListener.start(dataxName, dataxReader, tabs, process);
-
+        consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSource, process);
         Thread.sleep(4000);
 
 
@@ -388,7 +391,7 @@ public abstract class CUDCDCTestSuit {
             @Override
             public Pair<List<RecordTransformerRules>, IPluginStore>
             getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
-              throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
             }
 
             @Override

@@ -50,10 +50,10 @@ public abstract class ChunjunSourceFactory extends MQListenerFactory {
     }
 
 
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumerHandle) {
-        this.consumerHandle = consumerHandle;
-    }
+//    @Override
+//    public void setConsumerHandle(IConsumerHandle consumerHandle) {
+//        this.consumerHandle = consumerHandle;
+//    }
 
     @Override
     public Descriptor<MQListenerFactory> getDescriptor() {

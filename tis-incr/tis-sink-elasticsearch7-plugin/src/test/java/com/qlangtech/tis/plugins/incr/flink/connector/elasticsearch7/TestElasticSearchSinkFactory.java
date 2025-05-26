@@ -43,8 +43,10 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
@@ -171,7 +173,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         IFlinkColCreator flinkColCreator = null;
 
         ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
-        Map<TableAlias, TabSinkFunc<RowData>>
+        Map<TableAlias, TabSinkFunc<?, ?, RowData>>
                 sinkFuncs = esSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
@@ -189,7 +191,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         d.setAfter(after);
         Assert.assertEquals(1, sinkFuncs.size());
 
-        for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
+        for (Map.Entry<TableAlias, TabSinkFunc<?, ?, RowData>> entry : sinkFuncs.entrySet()) {
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             runElasticSearchSinkTest(
                     "elasticsearch-sink-test-json-index", entry.getValue());
@@ -214,7 +216,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
     private void runElasticSearchSinkTest(
             String index,
-            TabSinkFunc<RowData> sinkFunc)
+            TabSinkFunc<?, ?, RowData> sinkFunc)
             throws Exception {
         Objects.requireNonNull(sinkFunc, "sinkFunc can not be null");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();

@@ -25,6 +25,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.MongoDBDeserializationSchema;
+import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -63,7 +64,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-02 11:40
  **/
-public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionResult> {
+public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSource>> {
     private final FlinkCDCMongoDBSourceFactory sourceFactory;
 
     public FlinkCDCMongoDBSourceFunction(FlinkCDCMongoDBSourceFactory sourceFactory) {
@@ -71,7 +72,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
     }
 
     @Override
-    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
@@ -106,7 +107,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
             // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return sourceChannel;
+            //   return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
@@ -152,8 +154,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
     }
 
 
-    @Override
-    public IConsumerHandle getConsumerHandle() {
-        return this.sourceFactory.getConsumerHander();
-    }
+//    @Override
+//    public IConsumerHandle getConsumerHandle() {
+//        return this.sourceFactory.getConsumerHander();
+//    }
 }

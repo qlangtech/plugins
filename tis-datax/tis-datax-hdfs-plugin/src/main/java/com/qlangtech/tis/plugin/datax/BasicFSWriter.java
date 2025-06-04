@@ -119,7 +119,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
     protected abstract FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap, Optional<RecordTransformerRules> transformerRules);
 
-    public class FSDataXContext implements IDataxContext {
+    public  class FSDataXContext implements IDataxContext {
 
         protected final IDataxProcessor.TableMap tabMap;
         private final String dataxName;

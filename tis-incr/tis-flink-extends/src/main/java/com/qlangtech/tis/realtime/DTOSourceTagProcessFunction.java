@@ -31,8 +31,8 @@ import java.util.Map;
 public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
     public static final String KEY_MERGE_ALL_TABS_IN_ONE_BUS = "merge_all_tabs_in_one_bus";
 
-    public static DTOSourceTagProcessFunction createMergeAllTabsInOneBus() {
-        return new MergeAllTabsInOneBusProcessFunction();
+    public static DTOSourceTagProcessFunction create(boolean flinkCDCPipelineEnable, Map<String, OutputTag<DTO>> tab2OutputTag) {
+        return flinkCDCPipelineEnable ? new MergeAllTabsInOneBusProcessFunction() : new DTOSourceTagProcessFunction(tab2OutputTag);
     }
 
     public DTOSourceTagProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
@@ -47,7 +47,7 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
 
     static class MergeAllTabsInOneBusProcessFunction extends DTOSourceTagProcessFunction {
 
-        public MergeAllTabsInOneBusProcessFunction() {
+        private MergeAllTabsInOneBusProcessFunction() {
             super(Collections.singletonMap(KEY_MERGE_ALL_TABS_IN_ONE_BUS, new OutputTag<DTO>(KEY_MERGE_ALL_TABS_IN_ONE_BUS) {
             }));
         }

@@ -114,7 +114,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
     String colEntityId = "entity_id";
     protected final String colNum = "num";
     static protected String colId = "id";
-    String colCreateTime = "create_time";
+    protected String colCreateTime = "create_time";
     protected String updateTime = "update_time";
     String updateDate = "update_date";
     static String starTime = "start_time";
@@ -163,11 +163,12 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
         });
 
         // env.fromElements(new DTO[]{d, update}).addSink(new PrintSinkFunction<>());
-
+        // boolean flinkCDCPipelineEnable = false;
         DTOStream sourceStream = DTOStream.createDispatched(tableName);
         //
         ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
-                env.fromElements(new DTO[]{d, update}));
+                isFlinkCDCPipelineEnable()
+                , env.fromElements(new DTO[]{d, update}));
         //
         readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(new TableAlias(tableName),
                 sourceStream)));
@@ -184,11 +185,9 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
 
     }
 
-    //  protected int updateNumVal = 999;
-
-//    protected DTO[] createTestDTO() {
-//        return createTestDTO(true);
-//    }
+    protected boolean isFlinkCDCPipelineEnable() {
+        return false;
+    }
 
 
     public interface FlinkTestCase {
@@ -347,7 +346,8 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             Map<String, TableAlias> mapper = Maps.newHashMap();
             mapper.put(tableName, new TableAlias(tableName));
             TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
-            EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper);
+            EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper).anyTimes();
+            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
             EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
 
             EasyMock.expect(dataxProcessor.getDataXName())
@@ -429,17 +429,20 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
                 return sinkFactory;
             };
 
-            Map<String, TableAlias> aliasMap = new HashMap<>();
-            TableAlias tab = new TableAlias(tableName);
-            aliasMap.put(tableName, tab);
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap)).anyTimes();
+//            Map<String, TableAlias> aliasMap = new HashMap<>();
+//            TableAlias tab = new TableAlias(tableName);
+//            aliasMap.put(tableName, tab);
+//            TableAliasMapper tableAliasMapper = new TableAliasMapper(aliasMap);
+
+
 
             this.replay();
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-
+            env.setParallelism(1);
+            env.getCheckpointConfig().disableCheckpointing();
             streamScriptRun.runStream(dataxProcessor, sinkFactory, env, totalpayInfo);
+
             Thread.sleep(3000);
 
 
@@ -613,9 +616,9 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
                 testRecords.add(dto);
             }
         }
-
+        // boolean flinkCDCPipelineEnable = false;
         DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
-        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", isFlinkCDCPipelineEnable(),
                 env.fromElements(testRecords.toArray(new DTO[testRecords.size()])).setParallelism(1));
         readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
         return Pair.of(sourceStream, readerSource);

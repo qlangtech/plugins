@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -115,12 +116,12 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             configuration.setInteger(JobManagerOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, this.maxRetry);
-            configuration.setLong(RestOptions.RETRY_DELAY, this.retryDelay);
+            configuration.set(RestOptions.RETRY_DELAY, Duration.ofSeconds(this.retryDelay));
 
             if (connTimeout.isPresent()) {
-                configuration.setLong(RestOptions.CONNECTION_TIMEOUT, connTimeout.get());
+                configuration.set(RestOptions.CONNECTION_TIMEOUT, Duration.ofSeconds(connTimeout.get()));
                 configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
-                configuration.setLong(RestOptions.RETRY_DELAY, 0l);
+                configuration.set(RestOptions.RETRY_DELAY, Duration.ofSeconds(0l));
             }
 
 

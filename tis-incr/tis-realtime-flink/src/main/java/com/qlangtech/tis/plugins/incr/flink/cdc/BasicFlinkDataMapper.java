@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkCDCPipelineEventTimestampDataConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineDecimalConvert;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineStringConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
@@ -314,7 +315,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     //, DataTypes.VARCHAR(type.columnSize)
                     , new StringConvert()
                     , FlinkCol.NoOp()
-                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize()), new StringConvert())
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize()), new FlinkPipelineStringConvert())
                     , new RowFieldGetterFactory.StringGetter(meta.getName(), colIndex));
         }
 

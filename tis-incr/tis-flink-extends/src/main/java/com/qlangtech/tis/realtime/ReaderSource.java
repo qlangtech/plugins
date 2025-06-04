@@ -91,12 +91,12 @@ public abstract class ReaderSource<T> {
 
             @Override
             protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-                return flinkCDCPipelineEnable ? DTOSourceTagProcessFunction.createMergeAllTabsInOneBus() : new DTOSourceTagProcessFunction(tab2OutputTag);
+                return DTOSourceTagProcessFunction.create(flinkCDCPipelineEnable, tab2OutputTag);// : new DTOSourceTagProcessFunction(tab2OutputTag);
             }
         };
     }
 
-    public static ReaderSource<DTO> createDTOSource(String tokenName, final DataStreamSource<DTO> source) {
+    public static ReaderSource<DTO> createDTOSource(String tokenName, boolean flinkCDCPipelineEnable, final DataStreamSource<DTO> source) {
         return new SideOutputReaderSource<DTO>(tokenName) {
             @Override
             protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
@@ -105,7 +105,7 @@ public abstract class ReaderSource<T> {
 
             @Override
             protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-                return new DTOSourceTagProcessFunction(tab2OutputTag);
+                return DTOSourceTagProcessFunction.create(flinkCDCPipelineEnable, tab2OutputTag);// new DTOSourceTagProcessFunction(tab2OutputTag);
             }
         };
     }

@@ -18,12 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-05-23 10:37
+ * @see org.apache.flink.cdc.runtime.serializer.data.writer.BinaryWriter#write
  **/
 public class FlinkCDCPipelineEventProcess extends BiFunction {
 
@@ -42,6 +44,22 @@ public class FlinkCDCPipelineEventProcess extends BiFunction {
 
     public org.apache.flink.cdc.common.types.DataType getDataType() {
         return this.dataType;
+    }
+
+
+    public static class FlinkPipelineStringConvert extends BiFunction {
+        @Override
+        public Object deApply(Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof java.nio.ByteBuffer) {
+                return org.apache.flink.cdc.common.data.binary.BinaryStringData.fromBytes(((java.nio.ByteBuffer) o).array());
+            }
+            return org.apache.flink.cdc.common.data.binary.BinaryStringData.fromString(String.valueOf(o));
+        }
     }
 
     public static class FlinkPipelineDecimalConvert extends BiFunction {

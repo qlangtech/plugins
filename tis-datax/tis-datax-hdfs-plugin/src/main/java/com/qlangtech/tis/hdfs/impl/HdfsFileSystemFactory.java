@@ -229,11 +229,11 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
                 conf.setBoolean("fs.hdfs.impl.disable.cache", false);
 
-    //            if (StringUtils.isNotEmpty(this.kerberos)) {
-    //                Logger.info("kerberos has been enabled,name:" + this.kerberos);
-    //                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
-    //                kerberosCfg.setConfiguration(conf);
-    //            }
+                //            if (StringUtils.isNotEmpty(this.kerberos)) {
+                //                Logger.info("kerberos has been enabled,name:" + this.kerberos);
+                //                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
+                //                kerberosCfg.setConfiguration(conf);
+                //            }
                 cfgProcess.accept(conf);
                 // this.setConfiguration(conf);
                 conf.reloadConfiguration();
@@ -283,6 +283,14 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         } finally {
             t.setContextClassLoader(contextClassLoader);
         }
+    }
+
+    @Override
+    public String getRootDir() {
+        if (StringUtils.isEmpty(this.rootDir)) {
+            throw new IllegalStateException("prop rootDir can not be null");
+        }
+        return rootDir;
     }
 
     @Override

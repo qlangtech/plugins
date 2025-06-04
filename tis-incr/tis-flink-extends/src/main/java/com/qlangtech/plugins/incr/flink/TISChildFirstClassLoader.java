@@ -19,7 +19,9 @@
 package com.qlangtech.plugins.incr.flink;
 
 import com.qlangtech.tis.extension.UberClassLoader;
+import org.apache.flink.util.ChildFirstClassLoader;
 import org.apache.flink.util.FlinkUserCodeClassLoader;
+import org.apache.flink.util.MutableURLClassLoader;
 
 import java.io.IOException;
 import java.net.URL;
@@ -132,4 +134,9 @@ public class TISChildFirstClassLoader extends FlinkUserCodeClassLoader {
         ClassLoader.registerAsParallelCapable();
     }
 
+    @Override
+    public MutableURLClassLoader copy() {
+        return new TISChildFirstClassLoader(
+                this.uberClassloader, this.getURLs(), this.getParent() ,alwaysParentFirstPatterns, classLoadingExceptionHandler);
+    }
 }

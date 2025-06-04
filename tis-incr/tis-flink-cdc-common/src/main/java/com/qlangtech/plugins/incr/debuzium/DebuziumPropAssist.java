@@ -42,7 +42,7 @@ public class DebuziumPropAssist extends AbstractPropAssist<Describable, Field> {
 
     public static <T extends Describable, PLUGIN extends T> Options<PLUGIN, Field> createOpts(Descriptor<T> descriptor) {
         DebuziumPropAssist flinkProps = new DebuziumPropAssist(descriptor);
-        return flinkProps.createFlinkOptions();
+        return flinkProps.createOptions();
     }
 
     @Override

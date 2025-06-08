@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mongdb.impl;
 
-import com.alibaba.datax.common.element.Column;
 import com.mongodb.client.model.changestream.OperationType;
 import com.qlangtech.plugins.incr.flink.cdc.EventOperation;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;

@@ -20,19 +20,16 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.table;
 
 import com.dtstack.chunjun.connector.jdbc.table.JdbcDynamicTableFactory;
 import com.google.common.collect.Sets;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.RowDataSinkFunc;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
@@ -86,7 +83,7 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
         ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline(dataXName));
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
 
-        BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
+        RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
                 , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false);
 
         // 3.封装参数

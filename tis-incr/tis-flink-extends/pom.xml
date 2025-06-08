@@ -35,8 +35,6 @@
 
     <dependencies>
 
-
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-jdbc</artifactId>

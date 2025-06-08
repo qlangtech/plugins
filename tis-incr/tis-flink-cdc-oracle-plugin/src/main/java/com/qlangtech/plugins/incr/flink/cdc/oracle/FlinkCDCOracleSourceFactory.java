@@ -148,7 +148,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
             super();
             Options<MQListenerFactory, Field> opts = DebuziumPropAssist.createOpts(this);
             for (Triple<String, Field, Function<FlinkCDCOracleSourceFactory, Object>> t : debeziumProps) {
-                opts.addFieldDescriptor(t.getLeft(), t.getMiddle());
+                opts.add(t.getLeft(), t.getMiddle());
             }
         }
 

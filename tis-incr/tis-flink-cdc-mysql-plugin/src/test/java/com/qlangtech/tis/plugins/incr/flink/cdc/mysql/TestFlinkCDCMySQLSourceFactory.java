@@ -55,6 +55,7 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.LatestStartupOptions;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.utils.IntegerUtils;
 import org.apache.flink.cdc.connectors.IDataSourceFactoryCreator;
@@ -523,9 +524,20 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 return sourceHandle;
             }
 
+            /**
+             * String tabName, BasicDataXRdbmsReader dataxReader
+             *             , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener
+             * @param tabName
+             * @param dataxReader
+             * @param tab
+             * @param consumerHandle
+             * @param imqListener
+             * @throws MQConsumeException
+             * @throws InterruptedException
+             */
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener)
                     throws MQConsumeException, InterruptedException {
                 // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
 
@@ -535,7 +547,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 exampleRows.add(this.parseTestRow(RowKind.INSERT, TestFlinkCDCMySQLSourceFactory.class, tabName + "/insert1.txt"));
 
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(dataxName, dataxReader, tabs, createProcess());
+                imqListener.start(false, dataxName, dataxReader, tabs, createProcess());
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);

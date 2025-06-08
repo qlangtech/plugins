@@ -78,6 +78,8 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.RowDataSinkFunc;
+import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -243,7 +245,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , supportUpsetDML()
                 , filterRowKinds
                 , this.parallelism
-                , RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue()
+                , SelectedTableTransformerRules.createTransformerRules(dataxProcessor.identityValue()
               //  , tabName
                 , tab
                 , Objects.requireNonNull(sourceFlinkColCreator, "sourceFlinkColCreator can not be null")));

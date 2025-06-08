@@ -19,7 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.chunjun.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.RowDataSinkFunc;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -31,10 +31,10 @@ import org.apache.flink.table.connector.sink.SinkFunctionProvider;
  **/
 public class TISJdbcDymaincTableSink implements DynamicTableSink {
 
-    private final BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc;
+    private final RowDataSinkFunc rowDataSinkFunc;
     private final IEndTypeGetter.EndType endType;
 
-    public TISJdbcDymaincTableSink(IEndTypeGetter.EndType endType, BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc) {
+    public TISJdbcDymaincTableSink(IEndTypeGetter.EndType endType, RowDataSinkFunc rowDataSinkFunc) {
         this.rowDataSinkFunc = rowDataSinkFunc;
         this.endType = endType;
     }

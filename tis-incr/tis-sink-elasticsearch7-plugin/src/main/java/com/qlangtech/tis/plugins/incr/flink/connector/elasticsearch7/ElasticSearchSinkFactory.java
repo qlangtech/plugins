@@ -43,11 +43,11 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.RowDataSinkFunc;
 import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -55,7 +55,6 @@ import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureHandler;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
@@ -69,7 +68,6 @@ import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +214,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
             throw new IllegalStateException("esSchema.getFrom():" + esSchema.getFrom() + " must be equal with tab.getName():" + tab.getName());
         }
         Optional<SelectedTableTransformerRules> transformerOpt
-                = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue() //, esSchema
+                = SelectedTableTransformerRules.createTransformerRules(dataxProcessor.identityValue() //, esSchema
                 , tab, sourceFlinkColCreator);
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys

@@ -58,6 +58,9 @@ public class JarSubmitFlinkRequest {
     public static JarSubmitFlinkRequest createFlinkJobRequest(
             TISFlinkCDCStreamFactory factory, TargetResName collection
             , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter) {
+        if (!Objects.requireNonNull(streamUberJar, "streamUberJar can not be null").exists()) {
+            throw new IllegalArgumentException("streamUberJar path:" + streamUberJar.getAbsolutePath() + " must be exist");
+        }
         JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
         request.setJobName(collection.getName());
         request.setParallelism(factory.parallelism);
@@ -81,7 +84,6 @@ public class JarSubmitFlinkRequest {
         PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
         programBuilder.setEntryPointClassName(this.getEntryClass());
         programBuilder.setJarFile(jarFile);
-
 
 
         if (CollectionUtils.isNotEmpty(this.getUserClassPaths())) {

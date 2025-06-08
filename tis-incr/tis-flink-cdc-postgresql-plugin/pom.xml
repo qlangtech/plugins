@@ -52,7 +52,6 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-cdc-common</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
 

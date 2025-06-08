@@ -20,19 +20,17 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.table;
 
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.RowDataSinkFunc;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
@@ -80,7 +78,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline(dataXName));
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
 
-        BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
+        RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
                 , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false);
         return new ChunjunStreamTableSink(false, endType, rowDataSinkFunc);
     }
@@ -88,7 +86,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
 
     public static class ChunjunStreamTableSink implements UpsertStreamTableSink<Row> {
 
-        private final BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc;
+        private final RowDataSinkFunc rowDataSinkFunc;
         private String[] primaryKeys;
         private final IEndTypeGetter.EndType endType;
         /**
@@ -97,7 +95,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         private final boolean isAppendOnly;
 
         public ChunjunStreamTableSink(boolean isAppendOnly, IEndTypeGetter.EndType endType
-                , BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc) {
+                , RowDataSinkFunc rowDataSinkFunc) {
             this.rowDataSinkFunc = rowDataSinkFunc;
 
             this.endType = endType;

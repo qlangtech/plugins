@@ -110,7 +110,7 @@ public class FlinkPropAssist<T extends Describable> {
                     }
                     property = Objects.requireNonNull(getProps().get(opt.getLeft())
                             , "key:" + opt.getLeft() + " relevant props can not be null");
-                    val = property.getVal(instance);
+                    val = property.getVal(false, instance);
                 }
                 if (val == null) {
                     continue;

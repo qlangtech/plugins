@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.ScanAll;
+import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -115,9 +116,9 @@ public class TestChunjunOracleSourceFactory {
 
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener) throws Exception {
                 //   super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), createProcess());
+                imqListener.start(false, dataxName, dataxReader, Collections.singletonList(tab), createProcess());
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
                 waitForSnapshotStarted(snapshot);
                 while (snapshot.hasNext()) {
@@ -213,7 +214,7 @@ public class TestChunjunOracleSourceFactory {
 
             @Override
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener) throws Exception {
                 super.manipulateAndVerfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 // imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);

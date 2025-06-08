@@ -21,6 +21,8 @@ package com.qlangtech.tis.realtime;
 import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.datax.DataXName;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -29,6 +31,7 @@ import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,6 +54,20 @@ public class SelectedTableTransformerRules {
     }
 
     List<OutputParameter> cols;
+
+    public static Optional<SelectedTableTransformerRules>
+    createTransformerRules(String dataXName
+            , ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
+        final IPluginContext dataXContext = IPluginContext.namedContext(dataXName);
+        DataXName dataX = dataXContext.getCollectionName();
+        Optional<RecordTransformerRules> transformerRules
+                = RecordTransformerRules.loadTransformerRules(
+                dataXContext, DataxProcessor.load(dataXContext, dataX), tab.getName());
+
+        Optional<SelectedTableTransformerRules> transformerOpt
+                = transformerRules.map((trule) -> new SelectedTableTransformerRules(trule, tab, sourceFlinkColCreator, dataXContext));
+        return transformerOpt;
+    }
 
     public List<OutputParameter> overwriteColsWithContextParams() {
         if (cols == null) {

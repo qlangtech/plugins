@@ -271,7 +271,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             return new FlinkCol(meta, type, DataTypes.TINYINT()
                     , FlinkCol.Byte()
                     , FlinkCol.NoOp()
-                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BINARY(type.getColumnSize()), FlinkCol.Byte())
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BINARY(1), FlinkCol.Byte())
                     , new ByteGetter(meta.getName(), colIndex));
         }
 

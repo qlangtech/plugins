@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink;
 
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fs.IPath;
@@ -115,7 +116,7 @@ public class TestHudiTISFlinkClassLoaderFactory {
 
         // IPluginContext pluginContext, StoreResourceType resourceType, String appname, Class<TT> clazz
         KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, StoreResourceType.DataApp, "hudi", (KeyedPluginStore.PluginClassCategory) null);
-        String appPath = IPath.pathConcat(Config.SUB_DIR_CFG_REPO, Config.KEY_TIS_PLUGIN_CONFIG, appKey.getSubDirPath());// Config.SUB_DIR_CFG_REPO + File.separator + Config.KEY_TIS_PLUGIN_CONFIG + File.separator + ;
+        String appPath = IPath.pathConcat(Config.SUB_DIR_CFG_REPO, StoreResourceTypeConstants.KEY_TIS_PLUGIN_CONFIG, appKey.getSubDirPath());// Config.SUB_DIR_CFG_REPO + File.separator + Config.KEY_TIS_PLUGIN_CONFIG + File.separator + ;
         HttpUtils.addMockApply(-1, new HttpUtils.MockMatchKey(URLEncoder.encode(appPath, TisUTF8.getName()), false, true), new HttpUtils.IClasspathRes() {
             @Override
             public InputStream getResourceAsStream(URL url) {

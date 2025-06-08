@@ -106,15 +106,15 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         }
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
-        Map<TableAlias, AbstractTabSinkFuncV1<?, ?, SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
+        Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
 
         this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
         return executeFlinkJob(dataxName, env);
     }
 
-    protected Map<TableAlias, AbstractTabSinkFuncV1<?, ?, SINK_TRANSFER_OBJ>> createTabSinkFunc(
+    protected Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> createTabSinkFunc(
             IDataxProcessor dataXProcessor) {
-        Map<TableAlias, AbstractTabSinkFuncV1<?, ?, SINK_TRANSFER_OBJ>> sinks
+        Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor, flinkColCreator);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {

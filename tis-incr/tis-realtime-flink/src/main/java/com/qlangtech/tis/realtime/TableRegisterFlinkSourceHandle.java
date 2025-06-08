@@ -106,7 +106,7 @@ public abstract class TableRegisterFlinkSourceHandle
     }
 
     @Override
-    protected Map<TableAlias, AbstractTabSinkFuncV1<?, ?, DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+    protected Map<TableAlias, TabSinkFunc<?, ?, DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
     }

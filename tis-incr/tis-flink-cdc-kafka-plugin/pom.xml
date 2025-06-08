@@ -33,7 +33,7 @@
     <!--https://github.com/apache/flink-connector-kafka-->
     <!--https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/connectors/datastream/kafka/-->
     <properties>
-        <flink-connector-kafka.version>3.2.0-1.18</flink-connector-kafka.version>
+        <flink-connector-kafka.version>3.4.0-1.20</flink-connector-kafka.version>
     </properties>
 
     <dependencies>

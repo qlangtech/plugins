@@ -18,37 +18,14 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
-import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
-import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
-import com.qlangtech.tis.realtime.dto.DTOStream;
-import com.qlangtech.tis.realtime.transfer.DTO;
-import com.qlangtech.tis.realtime.transfer.DTO.EventType;
-import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamSink;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.table.connector.sink.SinkFunctionProvider;
-import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
-import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.RowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

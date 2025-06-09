@@ -58,17 +58,7 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.qlangtech.tis</groupId>
-                <artifactId>maven-tpi-plugin</artifactId>
-                <configuration>
-                    <maskClasses>com.qlangtech.tis.realtime.AbstractTabSinkFuncV1</maskClasses>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+
 
 
 </project>

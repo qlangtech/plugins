@@ -32,7 +32,7 @@
     <artifactId>tis-datax-kafka-plugin</artifactId>
 
     <properties>
-        <kafka.version>3.4.0</kafka.version>
+        <kafka.version>3.9.1</kafka.version>
     </properties>
 
 

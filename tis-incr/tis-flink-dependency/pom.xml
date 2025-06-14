@@ -35,22 +35,7 @@
     </properties>
     <dependencies>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-common</artifactId>
-            <version>${flink.cdc.version}</version>
-        </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-runtime</artifactId>
-            <version>${flink.cdc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-cdc-composer-tis</artifactId>
-            <version>${flink.cdc.version}</version>
-        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis</groupId>-->
         <!--            <artifactId>tis-dag</artifactId>-->

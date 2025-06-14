@@ -190,6 +190,10 @@ public class WriterTemplate {
     }
 
     public static void realExecuteDump(String dataXName, final DataXCfgJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+        realExecuteDump(null, dataXName, writerJson, dataxWriter);
+    }
+
+    public static void realExecuteDump(Integer taskId, String dataXName, final DataXCfgJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         PerfTrace.getInstance(false, -1111, -1111, 0, false);
         final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
             @Override
@@ -268,12 +272,17 @@ public class WriterTemplate {
             }
         };
 
-        realExecuteDump(dataXName, readerMeta, writerMeta);
+        realExecuteDump(taskId, dataXName, readerMeta, writerMeta);
     }
 
     public static void realExecuteDump(IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
     ) throws IllegalAccessException {
         throw new UnsupportedOperationException("please use realExecuteDump(final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta");
+    }
+
+    public static void realExecuteDump(final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
+    ) throws IllegalAccessException {
+        realExecuteDump(null, dataXName, readerPluginMeta, writerMeta);
     }
 
     /**
@@ -283,7 +292,7 @@ public class WriterTemplate {
      * @param writerMeta
      * @throws IllegalAccessException
      */
-    public static void realExecuteDump(final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
+    public static void realExecuteDump(Integer taskId, final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
     ) throws IllegalAccessException {
         // final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
         final JarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());
@@ -326,6 +335,11 @@ public class WriterTemplate {
         LoadUtil.bind(allConf);
 
         JobContainer container = new JobContainer(allConf) {
+            @Override
+            public Integer getTaskId() {
+                return taskId != null ? taskId : super.getTaskId();
+            }
+
             @Override
             public int getTaskSerializeNum() {
                 return super.getTaskSerializeNum();

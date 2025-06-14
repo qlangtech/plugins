@@ -221,7 +221,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                 private IHiveMetaStore createHiveMetaStore() {
                     try {
                         final IMetaStoreClient storeClient = Hive.getWithFastCheck(hiveCfg, false).getMSC();
-                        return new DefaultHiveMetaStore(storeClient, metaStoreUrls);
+                        return new DefaultHiveMetaStore(hiveCfg, storeClient, metaStoreUrls);
                     } catch (Exception e) {
 //                        if (ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class) > -1) {
 //                            throw TisException.create(metaStoreUrls, e);

@@ -6,6 +6,7 @@ import com.qlangtech.tis.config.hive.meta.HiveTable.StoredAs;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.hive.meta.PartitionFilter;
 import com.qlangtech.tis.hive.shim.IHiveSerDe;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
@@ -39,11 +40,13 @@ import java.util.stream.Collectors;
 public class DefaultHiveMetaStore implements IHiveMetaStore {
     final IMetaStoreClient storeClient;
     private final String metaStoreUrls;
+    private final HiveConf hiveCfg;
     private static final Logger logger = LoggerFactory.getLogger(DefaultHiveMetaStore.class);
 
-    public DefaultHiveMetaStore(IMetaStoreClient storeClient, String metaStoreUrls) {
+    public DefaultHiveMetaStore(HiveConf hiveCfg, IMetaStoreClient storeClient, String metaStoreUrls) {
         this.storeClient = storeClient;
         this.metaStoreUrls = metaStoreUrls;
+        this.hiveCfg = hiveCfg;
     }
 
     @Override
@@ -106,6 +109,16 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         } catch (TException e) {
             throw new RuntimeException("database:" + database, e);
         }
+    }
+
+    @Override
+    public HiveConf getHiveCfg() {
+        return Objects.requireNonNull(this.hiveCfg, "hiveCfg can not be null");
+    }
+
+    @Override
+    public IMetaStoreClient unwrapClient() {
+        return this.storeClient;
     }
 
     public static class HiveStoredAs extends StoredAs {

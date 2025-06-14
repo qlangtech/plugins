@@ -472,9 +472,14 @@ public class DataxExecutor {
                                     DataXJobInfo jobName) {
             super(configuration);
             this.jobArgs = args;
-            this.jobId = args.jobId;
+            this.jobId = Objects.requireNonNull(args.jobId);
             this.jobName = jobName;
             this.dataXName = dataXName;
+        }
+
+        @Override
+        public Integer getTaskId() {
+            return this.jobId;
         }
 
         @Override

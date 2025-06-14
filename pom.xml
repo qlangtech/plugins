@@ -68,7 +68,7 @@
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
         <module>tis-datax/tis-hive-shim-common</module>
-        <module>tis-datax/tis-datax-paimon-plugin</module>
+
 
 
         <!--        <module>tis-solr-plugin</module>

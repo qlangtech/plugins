@@ -87,52 +87,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return this.fetchSize;
     }
 
-//    @Override
-//    public Map<String, ContextParamConfig> getDBContextParams() {
-//        return ContextParamConfig.defaultContextParams();
-//        ContextParamConfig dbName = new ContextParamConfig("dbName") {
-//            @Override
-//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-//                return new DbNameContextParamValGetter();
-//            }
-//
-//            @Override
-//            public DataType getDataType() {
-//                return DataType.createVarChar(50);
-//            }
-//        };
-//
-//        ContextParamConfig sysTimestamp = new ContextParamConfig("timestamp") {
-//            @Override
-//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-//                return new SystemTimeStampContextParamValGetter();
-//            }
-//
-//            @Override
-//            public DataType getDataType() {
-//                return DataType.getType(JDBCTypes.TIMESTAMP);
-//            }
-//        };
-//
-//        ContextParamConfig tableName = new ContextParamConfig("tableName") {
-//            @Override
-//            public ContextParamValGetter<RdbmsRunningContext> valGetter() {
-//                return new TableNameContextParamValGetter();
-//            }
-//
-//            @Override
-//            public DataType getDataType() {
-//                return DataType.createVarChar(50);
-//            }
-//        };
-//
-//        return Lists.newArrayList(dbName, tableName, sysTimestamp)
-//                .stream().collect(Collectors.toMap((cfg) -> cfg.getKeyName(), (cfg) -> cfg));
-//
-////        dbContextParams.put(dbName.getKeyName(), dbName);
-////        return dbContextParams;
-    //  }
-
     @Override
     public final void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         this.preSelectedTabsHash = -1;

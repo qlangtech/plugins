@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
+import com.qlangtech.tis.sql.parser.tuple.creator.AdapterStreamTemplateData;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 
 import java.util.List;
@@ -68,7 +69,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
         }
     }
 
-    public static class ChunjunTemplateData extends IStreamIncrGenerateStrategy.AdapterStreamTemplateData {
+    public static class ChunjunTemplateData extends AdapterStreamTemplateData {
         private IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaGetter;
         private final IEndTypeGetter.EndType endType;
 

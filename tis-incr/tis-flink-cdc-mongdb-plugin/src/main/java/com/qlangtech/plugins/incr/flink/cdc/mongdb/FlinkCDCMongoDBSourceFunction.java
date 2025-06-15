@@ -99,7 +99,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
                     , new DefaultTableNameConvert()
                     , contextParamValsGetterMapper);
 
-            SourceChannel sourceChannel = new SourceChannel(
+            SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
                         List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs, deserializationSchema);
                         return sourceFunctions;

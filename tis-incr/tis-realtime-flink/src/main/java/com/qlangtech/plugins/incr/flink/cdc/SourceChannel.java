@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.realtime.DTOSourceTagProcessFunction;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -59,21 +60,23 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     private final List<ReaderSource> sourceFunction;
     private Set<String> focusTabs = null;// = Sets.newHashSet();
     private Tab2OutputTag<DTOStream> tab2OutputTag = null;
+    private final boolean flinkCDCPipelineEnable;
 
     @Override
     public Tab2OutputTag<DTOStream> getTab2OutputTag() {
         return Objects.requireNonNull(tab2OutputTag);
     }
 
-    public SourceChannel(List<ReaderSource> sourceFunction) {
+    public SourceChannel(boolean flinkCDCPipelineEnable, List<ReaderSource> sourceFunction) {
         if (CollectionUtils.isEmpty(sourceFunction)) {
             throw new IllegalArgumentException("param sourceFunction can not be empty");
         }
         this.sourceFunction = sourceFunction;
+        this.flinkCDCPipelineEnable = flinkCDCPipelineEnable;
     }
 
-    public SourceChannel(ReaderSource sourceFunction) {
-        this(Collections.singletonList(sourceFunction));
+    public SourceChannel(boolean flinkCDCPipelineEnable, ReaderSource sourceFunction) {
+        this(flinkCDCPipelineEnable, Collections.singletonList(sourceFunction));
     }
 
     public static List<ReaderSource> getSourceFunction(
@@ -170,12 +173,15 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         if (tabAliasMapper.isNull()) {
             throw new IllegalArgumentException("param tabAliasMapper can not be null");
         }
-        this.focusTabs = tabs.stream().map((t) -> t.getName()).collect(Collectors.toSet());
+        this.focusTabs = DTOSourceTagProcessFunction.createFocusTabs(this.flinkCDCPipelineEnable, tabs);
+//     (this.flinkCDCPipelineEnable
+//                ? Stream.of(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS)
+//                : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
 
-        Map<TableAlias, DTOStream> tab2StreamMapper = tabs.stream().collect(
+        Map<TableAlias, DTOStream> tab2StreamMapper = this.focusTabs.stream().collect(
                 Collectors.toMap(
-                        (tab) -> (tabAliasMapper.getWithCheckNotNull(tab.getName()))
-                        , (t) -> dtoStreamCreator.apply(t.getName())));
+                        (name) -> (tabAliasMapper.getWithCheckNotNull(name))
+                        , (name) -> dtoStreamCreator.apply(name)));
         this.tab2OutputTag
                 = new Tab2OutputTag<>(tab2StreamMapper);
     }

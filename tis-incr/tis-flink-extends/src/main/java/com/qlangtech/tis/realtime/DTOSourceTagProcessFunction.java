@@ -18,21 +18,37 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.util.OutputTag;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-04 09:22
  **/
 public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
     public static final String KEY_MERGE_ALL_TABS_IN_ONE_BUS = "merge_all_tabs_in_one_bus";
 
+    public static Set<String> createFocusTabs(boolean flinkCDCPipelineEnable, List<ISelectedTab> tabs) {
+        return (flinkCDCPipelineEnable
+                ? Stream.of(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS)
+                : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
+    }
+
     public static DTOSourceTagProcessFunction create(boolean flinkCDCPipelineEnable, Map<String, OutputTag<DTO>> tab2OutputTag) {
-        return flinkCDCPipelineEnable ? new MergeAllTabsInOneBusProcessFunction() : new DTOSourceTagProcessFunction(tab2OutputTag);
+        if (flinkCDCPipelineEnable) {
+            if (tab2OutputTag.size() != 1 || !tab2OutputTag.containsKey(KEY_MERGE_ALL_TABS_IN_ONE_BUS)) {
+                throw new IllegalStateException("the size of tab2OutputTag must be 1,but now is:" + String.join(",", tab2OutputTag.keySet()));
+            }
+        }
+        return flinkCDCPipelineEnable ? new MergeAllTabsInOneBusProcessFunction(tab2OutputTag) : new DTOSourceTagProcessFunction(tab2OutputTag);
     }
 
     public DTOSourceTagProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
@@ -47,9 +63,8 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
 
     static class MergeAllTabsInOneBusProcessFunction extends DTOSourceTagProcessFunction {
 
-        private MergeAllTabsInOneBusProcessFunction() {
-            super(Collections.singletonMap(KEY_MERGE_ALL_TABS_IN_ONE_BUS, new OutputTag<DTO>(KEY_MERGE_ALL_TABS_IN_ONE_BUS) {
-            }));
+        public MergeAllTabsInOneBusProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
+            super(tab2OutputTag);
         }
 
         @Override

@@ -84,7 +84,7 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
 
         KafkaSource<DTO> source = kafkaSourceBuilder.build();
         try {
-            SourceChannel sourceChannel = new SourceChannel(
+            SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     createKafkaSource(kafkaReader.bootstrapServers, source));
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)

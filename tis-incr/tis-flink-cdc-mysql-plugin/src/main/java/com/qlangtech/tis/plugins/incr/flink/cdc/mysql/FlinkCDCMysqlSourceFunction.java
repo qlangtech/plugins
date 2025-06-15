@@ -214,6 +214,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
 
 
             SourceChannel sourceChannel = new SourceChannel(
+                    flinkCDCPipelineEnable,
                     SourceChannel.getSourceFunction(
                             dsFactory,
                             tabs

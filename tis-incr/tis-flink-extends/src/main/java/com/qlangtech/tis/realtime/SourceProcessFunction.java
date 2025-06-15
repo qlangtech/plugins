@@ -25,6 +25,8 @@ import org.apache.flink.util.OutputTag;
 import java.util.Map;
 
 /**
+ * 负责给主数据流打标，提供给后续流程 {@link com.qlangtech.tis.realtime.dto.DTOStream.DispatchedDTOStream} 实现分流
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-27 10:38
  **/
@@ -35,6 +37,17 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends ProcessFunction
         this.tab2OutputTag = tab2OutputTag;
     }
 
+    /**
+     * 在主流中为每个表打标签
+     *
+     * @param in   The input value.
+     * @param ctx  A {@link Context} that allows querying the timestamp of the element and getting a
+     *             {@link org.apache.flink.streaming.api.TimerService} for registering timers and querying the time. The context is only
+     *             valid during the invocation of this method, do not store it.
+     * @param _out The collector for returning result values.
+     * @throws Exception
+     * @see com.qlangtech.tis.realtime.dto.DTOStream.DispatchedDTOStream#addStream collected in it
+     */
     @Override
     public void processElement(RECORD_TYPE in, Context ctx, Collector<RECORD_TYPE> _out) throws Exception {
         //side_output: https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/side_output.html

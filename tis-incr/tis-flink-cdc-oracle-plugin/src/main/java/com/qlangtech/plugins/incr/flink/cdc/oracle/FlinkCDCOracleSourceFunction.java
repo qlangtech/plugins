@@ -108,7 +108,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
                     , tablesInDB.getPhysicsTabName2LogicNameConvertor()
                     , contextParamValsGetterMapper);
 
-            SourceChannel sourceChannel = new SourceChannel(
+            SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     SourceChannel.getSourceFunction(dsFactory, tabs
                             , (dbHost, dbs, tbs, debeziumProperties) -> {
                                 return dbs.getDbStream().map((databaseName) -> {

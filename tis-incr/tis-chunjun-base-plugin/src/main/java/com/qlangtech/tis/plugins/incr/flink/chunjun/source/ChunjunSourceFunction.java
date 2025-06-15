@@ -126,7 +126,7 @@ public abstract class ChunjunSourceFunction
 
 
         try {
-            SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
+            SourceChannel sourceChannel = new SourceChannel(false, sourceFuncs);
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(false, name, sourceChannel, dataXProcessor);

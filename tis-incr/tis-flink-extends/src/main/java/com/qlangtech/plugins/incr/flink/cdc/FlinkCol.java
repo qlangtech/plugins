@@ -200,6 +200,7 @@ public class FlinkCol implements Serializable {
         return new ByteProcess();
     }
 
+
     public static BiFunction DateTime() {
         return new DateTimeProcess();
     }
@@ -241,6 +242,13 @@ public class FlinkCol implements Serializable {
         @Override
         public Object deApply(Object o) {
             return o;
+        }
+    }
+
+    public static class PipelineBooleanProcess extends ByteProcess {
+        @Override
+        public Object apply(Object o) {
+            return (Boolean) (((Byte) super.apply(o)) > 0);
         }
     }
 

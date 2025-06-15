@@ -25,6 +25,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPi
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineStringConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.PipelineBooleanProcess;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory.ByteGetter;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
@@ -271,7 +272,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             return new FlinkCol(meta, type, DataTypes.TINYINT()
                     , FlinkCol.Byte()
                     , FlinkCol.NoOp()
-                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BINARY(1), FlinkCol.Byte())
+                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BOOLEAN(), new PipelineBooleanProcess())
                     , new ByteGetter(meta.getName(), colIndex));
         }
 

@@ -79,22 +79,16 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         this(flinkCDCPipelineEnable, Collections.singletonList(sourceFunction));
     }
 
-    public static List<ReaderSource> getSourceFunction(
-            DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+    public static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
-        final Optional<DataSourceFactory.ISchemaSupported>
-                schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
+        final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
 
         return getSourceFunction(dsFactory, (tab) -> {
             TableInDB tabsInDB = dsFactory.getTablesInDB();
-            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(
-                    DataXJobSubmit.TableDataXEntity
-                            .createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
+            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
             Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
 
-            List<String> physicsTabNames = targetTableNames
-                    .map((tabNames) -> Lists.newArrayList(tabNames))
-                    .orElseGet(() -> Lists.newArrayList(tab.getTabName()));
+            List<String> physicsTabNames = targetTableNames.map((tabNames) -> Lists.newArrayList(tabNames)).orElseGet(() -> Lists.newArrayList(tab.getTabName()));
 
             return physicsTabNames.stream().map((t) -> {
                 EntityName entity = EntityName.parse(t, true);
@@ -108,9 +102,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
 
     //https://ververica.github.io/flink-cdc-connectors/master/
-    private static List<ReaderSource> getSourceFunction(
-            DataSourceFactory dsFactory, Function<DBTable, Stream<String>> tabnameCreator
-            , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+    private static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory, Function<DBTable, Stream<String>> tabnameCreator, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
@@ -178,12 +170,11 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 //                ? Stream.of(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS)
 //                : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
 
-        Map<TableAlias, DTOStream> tab2StreamMapper = this.focusTabs.stream().collect(
-                Collectors.toMap(
-                        (name) -> (tabAliasMapper.getWithCheckNotNull(name))
-                        , (name) -> dtoStreamCreator.apply(name)));
-        this.tab2OutputTag
-                = new Tab2OutputTag<>(tab2StreamMapper);
+        Map<TableAlias, DTOStream> tab2StreamMapper
+                = this.focusTabs.stream().collect(Collectors.toMap(
+                (name) -> (flinkCDCPipelineEnable ? TableAlias.create(name, name) : tabAliasMapper.getWithCheckNotNull(name))
+                , (name) -> dtoStreamCreator.apply(name)));
+        this.tab2OutputTag = new Tab2OutputTag<>(tab2StreamMapper);
     }
 
 

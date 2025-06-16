@@ -129,7 +129,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
-                DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
+                DataType fixType = type.accept(new DataType.PartialTypeVisitor<DataType>() {
                     @Override
                     public DataType bigInt(DataType type) {
                         if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话

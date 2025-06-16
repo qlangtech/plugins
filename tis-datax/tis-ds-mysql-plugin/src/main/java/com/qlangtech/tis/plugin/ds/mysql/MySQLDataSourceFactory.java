@@ -42,6 +42,7 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -55,6 +56,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -82,7 +84,14 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @FormField(ordinal = 1, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
 
-    //https://blog.csdn.net/Shadow_Light/article/details/100749537
+    @FormField(ordinal = 12, validate = {Validator.require})
+    public TISTimeZone timeZone;
+
+    @Override
+    public final Optional<ZoneId> getTimeZone() {
+        return Optional.of(this.timeZone.getTimeZone());
+    }
+//https://blog.csdn.net/Shadow_Light/article/details/100749537
     /**
      * 传输时数据压缩
      */
@@ -127,7 +136,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
-                DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
+                DataType fixType = type.accept(new DataType.PartialTypeVisitor<DataType>() {
                     @Override
                     public DataType bigInt(DataType type) {
                         if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话
@@ -246,7 +255,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
             StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName +
                     "?" + JDBC_PARAM_AUTO_RECONNECT + "&useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone="
-                    + URLEncoder.encode(MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
+                    + URLEncoder.encode(TISTimeZone.DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }

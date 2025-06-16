@@ -44,7 +44,7 @@ public class OdpsAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
     /**
      * https://help.aliyun.com/document_detail/159540.html?spm=a2c4g.11186623.0.0.6ae36f60bs6Lm2
      */
-    public static DataType.TypeVisitor<String> typeTransfer = new DataType.TypeVisitor<String>() {
+    public static DataType.TypeVisitor<String> typeTransfer = new DataType.PartialTypeVisitor<String>() {
         @Override
         public String bigInt(DataType type) {
             return "BIGINT";

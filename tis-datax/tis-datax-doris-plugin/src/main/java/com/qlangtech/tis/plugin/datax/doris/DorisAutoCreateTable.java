@@ -289,7 +289,7 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
 
             final DorisType type = col.getType().accept((columnTokenRecognise));
 
-            DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
+            DorisType fixType = col.getType().accept(new DataType.PartialTypeVisitor<DorisType>() {
 
                 @Override
                 public DorisType bigInt(DataType type) {

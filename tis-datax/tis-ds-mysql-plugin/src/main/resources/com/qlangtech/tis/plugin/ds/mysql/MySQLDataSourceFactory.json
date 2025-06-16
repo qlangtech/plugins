@@ -22,5 +22,10 @@
   },
   "nodeDesc": {
     "disable": true
+  },
+  "timeZone": {
+    "dftVal": "default",
+    "label": "所在时区",
+    "help": "设置服务端所在时区，有两种输入方式：1. default 从下拉框中选择，2. customize：用户手动输入时区编码"
   }
 }

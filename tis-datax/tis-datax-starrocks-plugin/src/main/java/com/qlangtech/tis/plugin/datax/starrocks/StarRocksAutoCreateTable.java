@@ -63,7 +63,7 @@ public class StarRocksAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
     public Integer bucketsNum;
 
     public static final DataType.TypeVisitor<StarRocksType> columnTokenRecognise
-            = new DataType.TypeVisitor<StarRocksType>() {
+            = new DataType.PartialTypeVisitor<StarRocksType>() {
         @Override
         public StarRocksType tinyIntType(DataType dataType) {
             return new StarRocksType(dataType, "TINYINT");

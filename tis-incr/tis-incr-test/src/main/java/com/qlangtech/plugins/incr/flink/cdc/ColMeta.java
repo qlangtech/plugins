@@ -71,7 +71,7 @@ public class ColMeta {
         }
 
 
-        meta.type.accept(new DataType.TypeVisitor<Void>() {
+        meta.type.accept(new DataType.PartialTypeVisitor<Void>() {
             @Override
             public Void bigInt(DataType type) {
                 try {

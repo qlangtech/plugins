@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -56,6 +57,7 @@ public class MariaDBDataSourceFactory extends MySQLDataSourceFactory {
         if (this.password != null) {
             info.put("password", this.password);
         }
+        info.put("serverTimezone", Objects.requireNonNull(this.timeZone, "timeZone can not be null").getTimeZone().getId());
         if (verify) {
             info.put("connectTimeout", "3000");
             info.put("socketTimeout", "3000");

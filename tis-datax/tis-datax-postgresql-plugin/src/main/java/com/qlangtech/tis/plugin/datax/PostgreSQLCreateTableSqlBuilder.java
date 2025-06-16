@@ -96,7 +96,7 @@ public class PostgreSQLCreateTableSqlBuilder extends CreateTableSqlBuilder<ColWr
     private String convertType(DataType type, boolean isPk) {
 
         String colType = Objects.requireNonNull(type, "type can not be null")
-                .accept(new DataType.TypeVisitor<String>() {
+                .accept(new DataType.PartialTypeVisitor<String>() {
                     @Override
                     public String bigInt(DataType type) {
                         return "BIGINT";

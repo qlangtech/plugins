@@ -63,10 +63,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
@@ -269,14 +271,15 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
 
             String[] databases = dbs.getDataBases();
-            if (StringUtils.isEmpty(sourceFactory.timeZone)) {
+            Optional<ZoneId> timeZone = dsFactory.getTimeZone();
+            if (!timeZone.isPresent()) {
                 throw new IllegalStateException("timezone can not be null");
             }
 
             logger.info("monitor db:{} databaseList:{},tableList:{}", dbHost, databases, tbs);
             MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()
                     .hostname(dbHost)
-                    .serverTimeZone(sourceFactory.timeZone)
+                    .serverTimeZone(timeZone.get().getId())
                     .port(dsFactory.port)
                     .databaseList(databases) // monitor all tables under inventory database
                     .tableList(tbs.toArray(new String[tbs.size()]))

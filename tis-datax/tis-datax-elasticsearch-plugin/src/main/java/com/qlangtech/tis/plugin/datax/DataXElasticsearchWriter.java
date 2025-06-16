@@ -190,7 +190,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         return field;
     }
 
-    private static class CMetaTypeVisitor implements DataType.TypeVisitor {
+    private static class CMetaTypeVisitor implements DataType.PartialTypeVisitor<Void> {
         private final ESField field;
 
         public CMetaTypeVisitor(ESField field) {

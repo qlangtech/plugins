@@ -351,7 +351,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                         PreparedStatement statement = conn.prepareStatement(insertBase);
                         AtomicInteger ci = new AtomicInteger();
                         cols.stream().filter((c) -> vals.notNull(c.getName())).forEach((col) -> {
-                            col.getType().accept(new DataType.TypeVisitor<Void>() {
+                            col.getType().accept(new DataType.PartialTypeVisitor<Void>() {
                                 @Override
                                 public Void bigInt(DataType type) {
                                     try {

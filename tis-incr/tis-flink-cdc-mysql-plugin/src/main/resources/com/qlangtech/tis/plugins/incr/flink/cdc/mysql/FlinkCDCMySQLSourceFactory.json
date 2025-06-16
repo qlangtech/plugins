@@ -16,11 +16,5 @@
   "startupOptions": {
     "label": "起始位点",
     "dftVal": "LATEST_OFFSET"
-  },
-  "timeZone": {
-    "label": "所在时区",
-    "dftVal": "com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMySQLSourceFactory.dftZoneId()",
-    "enum": "com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMySQLSourceFactory.availableZoneIds()",
-    "help": "设置MySQL服务端所在时区"
   }
 }

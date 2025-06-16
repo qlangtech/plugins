@@ -99,7 +99,7 @@ public abstract class BasicPainFormat extends FileFormat implements IGuessColTyp
     @Override
     public final Function<String, Column> buildColValCreator(CMeta cmeta) {
 
-        Function<String, Column> colValCreator = cmeta.getType().accept(new DataType.TypeVisitor<Function<String, Column>>() {
+        Function<String, Column> colValCreator = cmeta.getType().accept(new DataType.PartialTypeVisitor<Function<String, Column>>() {
             @Override
             public Function<String, Column> bigInt(DataType type) {
                 return (val) -> new LongColumn(val);

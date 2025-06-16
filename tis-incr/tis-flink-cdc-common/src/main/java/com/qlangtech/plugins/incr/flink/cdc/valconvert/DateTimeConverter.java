@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc.valconvert;
 
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -79,7 +80,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
         debeziumProperties.put(KEY_DATETIME + ".format.datetime", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put(KEY_DATETIME + ".format.timestamp", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put(KEY_DATETIME + ".format.timestamp.zone"
-                , sysZoneId.orElse(MQListenerFactory.DEFAULT_SERVER_TIME_ZONE.getId()));
+                , sysZoneId.orElse(TISTimeZone.DEFAULT_SERVER_TIME_ZONE.getId()));
     }
 
 

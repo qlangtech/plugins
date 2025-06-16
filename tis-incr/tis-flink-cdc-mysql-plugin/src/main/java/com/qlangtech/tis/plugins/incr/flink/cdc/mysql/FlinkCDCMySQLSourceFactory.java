@@ -22,7 +22,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -53,7 +52,6 @@ import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.table.api.ValidationException;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -69,8 +67,8 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions startupOptions;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+//    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timeZone;
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {

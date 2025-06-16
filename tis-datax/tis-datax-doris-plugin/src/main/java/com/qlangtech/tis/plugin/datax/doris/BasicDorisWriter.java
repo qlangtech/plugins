@@ -108,7 +108,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
     }
 
-    protected static class ColumnTokenRecognise implements DataType.TypeVisitor<DorisType> {
+    protected static class ColumnTokenRecognise implements DataType.PartialTypeVisitor<DorisType> {
         @Override
         public DorisType tinyIntType(DataType dataType) {
             return new DorisType(dataType, "TINYINT");

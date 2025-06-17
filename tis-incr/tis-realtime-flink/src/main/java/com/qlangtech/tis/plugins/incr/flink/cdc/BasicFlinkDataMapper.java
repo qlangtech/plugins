@@ -219,12 +219,12 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
 
 
         public FlinkCol decimalType(DataType type) {
-
-            int precision = type.getColumnSize();
-            Integer scale = type.getDecimalDigits();
-            if (precision < 1 || precision > DataTypeMeta.DEFAULT_DECIMAL_PRECISION) {
-                precision = DataTypeMeta.DEFAULT_DECIMAL_PRECISION;
-            }
+            int[] normalize = DataTypeMeta.normalizeDecimalPrecisionAndScale(type);
+            int precision = normalize[0];// type.getColumnSize();
+            Integer scale = normalize[1];// type.getDecimalDigits();
+//            if (precision < 1 || precision > DataTypeMeta.DEFAULT_DECIMAL_PRECISION) {
+//                precision = DataTypeMeta.DEFAULT_DECIMAL_PRECISION;
+//            }
             try {
                 return new FlinkCol(meta, type, //DataTypes.DECIMAL(precision, scale)
                         new AtomicDataType(new DecimalType(nullable, precision, scale))

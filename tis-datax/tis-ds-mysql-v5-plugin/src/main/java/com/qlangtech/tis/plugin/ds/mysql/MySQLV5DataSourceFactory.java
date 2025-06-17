@@ -57,7 +57,10 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
         if (this.password != null) {
             info.put("password", this.password);
         }
-        info.put("serverTimezone", Objects.requireNonNull(this.timeZone, "timeZone can not be null").getTimeZone().getId());
+        if(this.timeZone != null){
+            info.put("serverTimezone", Objects.requireNonNull(this.timeZone, "timeZone can not be null").getTimeZone().getId());
+        }
+
         if (verify) {
             info.put("connectTimeout", "3000");
             info.put("socketTimeout", "3000");

@@ -19,10 +19,12 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.common.element.ICol2Index;
-import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -34,8 +36,25 @@ import java.util.stream.Collectors;
 public class FlinkCol2Index implements ICol2Index, Serializable {
     final Map<String, ICol2Index.Col> col2IndexMapper;
 
+    public static FlinkCol2Index create(List<FlinkCol> cols) {
+        if (CollectionUtils.isEmpty(cols)) {
+            throw new IllegalArgumentException("param cols can not be empty");
+        }
+        Map<String, Pair<Integer, FlinkCol>> col2IdxBuilder = com.google.common.collect.Maps.newHashMap();
+        int idx = 0;
+        for (FlinkCol col : cols) {
+            col2IdxBuilder.put(col.name, Pair.of(idx++, col));
+        }
+
+        return new FlinkCol2Index(
+                col2IdxBuilder.entrySet().stream().collect(
+                        Collectors.toUnmodifiableMap((entry) -> entry.getKey() //
+                                , (entry) -> new ICol2Index.Col(entry.getValue().getKey(), entry.getValue().getValue().colType))));
+    }
+
+
     public FlinkCol2Index(Map<String, ICol2Index.Col> col2IndexMapper) {
-        this.col2IndexMapper = Maps.newHashMap(Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null"));
+        this.col2IndexMapper = (Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null"));
     }
 
     @Override

@@ -316,7 +316,9 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     //, DataTypes.VARCHAR(type.columnSize)
                     , new StringConvert()
                     , FlinkCol.NoOp()
-                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize()), new FlinkPipelineStringConvert())
+                    , new FlinkCDCPipelineEventProcess(
+                    org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize())
+                    , new FlinkPipelineStringConvert())
                     , new RowFieldGetterFactory.StringGetter(meta.getName(), colIndex));
         }
 
@@ -334,9 +336,6 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             throw new RuntimeException("col:" + meta.getName() + ",colIndex:" + colIndex + ",type:" + meta.getType().getTypeDesc(), e);
         }
     }
-
-
-
 
 
     protected abstract IMPLDATA createRowData(DTO dto);
@@ -384,6 +383,9 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public Object apply(Object o) {
             if (o instanceof String) {
                 return Integer.parseInt((String) o);
+            }
+            if (o instanceof Number) {
+                return ((Number) o).intValue();
             }
             return o;
         }

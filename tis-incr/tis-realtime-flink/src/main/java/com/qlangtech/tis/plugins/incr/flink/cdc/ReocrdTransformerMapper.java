@@ -18,20 +18,15 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.common.element.ICol2Index;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.functions.MapFunction;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 执行TIS中定义的 transformer执行逻辑
@@ -45,21 +40,13 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
     private final FlinkCol2Index col2IdxMapper;
 
     public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
+        this(cols, transformerRules.getTransformerUDFs());
+    }
+
+    public ReocrdTransformerMapper(List<FlinkCol> cols, List<UDFDefinition> transformerUDF) {
         this.cols = Lists.newArrayList(Objects.requireNonNull(cols, "cols can not be null"));
-        this.transformerUDF
-                = Objects.requireNonNull(transformerRules, "param transformerRules can not be null")
-                .rules.stream().map((t) -> t.getUdf()).collect(Collectors.toList());
-
-        Map<String, Pair<Integer, FlinkCol>> col2IdxBuilder = Maps.newHashMap();
-        int idx = 0;
-        for (FlinkCol col : cols) {
-            col2IdxBuilder.put(col.name, Pair.of(idx++, col));
-        }
-
-        this.col2IdxMapper = new FlinkCol2Index(
-                col2IdxBuilder.entrySet().stream().collect(
-                        Collectors.toMap((entry) -> entry.getKey() //
-                                , (entry) -> new ICol2Index.Col(entry.getValue().getKey(), entry.getValue().getValue().colType))));
+        this.transformerUDF = transformerUDF;
+        this.col2IdxMapper = FlinkCol2Index.create(cols);
     }
 
     @Override

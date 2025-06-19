@@ -62,6 +62,8 @@ public class FlinkCDCPipelineEventProcess extends BiFunction {
         }
     }
 
+
+
     public static class FlinkPipelineDecimalConvert extends BiFunction {
         //  private final DataType type;
 

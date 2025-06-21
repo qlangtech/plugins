@@ -22,6 +22,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -45,6 +46,7 @@ import java.net.URL;
  * @create: 2023-03-13 15:41
  **/
 public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
+
 
     @Test
     public void testBuildServerLoaderFactory() throws Exception {

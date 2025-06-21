@@ -197,10 +197,6 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         return odpsTask;
     }
 
-    @Override
-    public boolean isGenerateCreateDDLSwitchOff() {
-        return false;
-    }
 
     @Override
     public ExecuteResult startTask(ITableBuildTask dumpTask) {

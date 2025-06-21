@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.common.element.ICol2Index;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -40,16 +42,13 @@ public class FlinkCol2Index implements ICol2Index, Serializable {
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalArgumentException("param cols can not be empty");
         }
-        Map<String, Pair<Integer, FlinkCol>> col2IdxBuilder = com.google.common.collect.Maps.newHashMap();
+        Builder<String, ICol2Index.Col> col2IdxBuilder = ImmutableMap.builder();
         int idx = 0;
         for (FlinkCol col : cols) {
-            col2IdxBuilder.put(col.name, Pair.of(idx++, col));
+            col2IdxBuilder.put(col.name, new ICol2Index.Col(idx++, col.colType));
         }
 
-        return new FlinkCol2Index(
-                col2IdxBuilder.entrySet().stream().collect(
-                        Collectors.toUnmodifiableMap((entry) -> entry.getKey() //
-                                , (entry) -> new ICol2Index.Col(entry.getValue().getKey(), entry.getValue().getValue().colType))));
+        return new FlinkCol2Index(col2IdxBuilder.build());
     }
 
 

@@ -100,7 +100,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     @Override
     public ClusterClient createConfigInstance() {
-        return createFlinkRestClusterClient(Optional.empty(), Optional.empty());
+        return createFlinkRestClusterClient(Optional.empty(), Optional.of(2000l));
     }
 
     /**
@@ -116,12 +116,12 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             configuration.setInteger(JobManagerOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, this.maxRetry);
-            configuration.set(RestOptions.RETRY_DELAY, Duration.ofSeconds(this.retryDelay));
+            configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(this.retryDelay));
 
             if (connTimeout.isPresent()) {
                 configuration.set(RestOptions.CONNECTION_TIMEOUT, Duration.ofSeconds(connTimeout.get()));
                 configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
-                configuration.set(RestOptions.RETRY_DELAY, Duration.ofSeconds(0l));
+                configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(0l));
             }
 
 

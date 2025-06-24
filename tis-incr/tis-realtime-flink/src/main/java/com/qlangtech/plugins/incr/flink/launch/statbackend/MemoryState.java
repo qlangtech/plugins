@@ -88,7 +88,5 @@ public class MemoryState extends StateBackendFactory {
         public String getDisplayName() {
             return "HashMapState";
         }
-
-
     }
 }

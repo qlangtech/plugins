@@ -36,6 +36,18 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-cdc-common</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.debezium</groupId>
+            <artifactId>debezium-core</artifactId>
+            <!--当flink-cdc 依赖的 debezium 版本变化，此版本也需要相应变化成对应的版本-->
+            <version>${debezium-connector.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-cdc-common</artifactId>
             <version>${flink.cdc.version}</version>
@@ -122,14 +134,14 @@
             <artifactId>tis-base-test</artifactId>
         </dependency>
         <!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>datax-config</artifactId>-->
-<!--        </dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>datax-config</artifactId>-->
+        <!--        </dependency>-->
         <!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-dag</artifactId>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
 
     </dependencies>
 
@@ -174,6 +186,22 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.debezium:debezium-embedded</artifact>
+                                    <excludes>
+                                        <!--https://github.com/datavane/tis/issues/454-->
+                                        <!--have been rewrite in flink-connector-debezium-->
+                                        <exclude>io/debezium/embedded/EmbeddedEngineChangeEvent.class</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>io.debezium:debezium-core</artifact>
+                                    <excludes>
+                                        <exclude>io/debezium/relational/HistorizedRelationalDatabaseConnectorConfig*</exclude>
+                                        <exclude>io/debezium/relational/RelationalChangeRecordEmitter*</exclude>
+                                        <exclude>io/debezium/relational/RelationalTableFilters*</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

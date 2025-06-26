@@ -100,6 +100,7 @@
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-flink-cdc-common</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>io.debezium</groupId>
@@ -107,12 +108,7 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <dependency>
-                <groupId>io.debezium</groupId>
-                <artifactId>debezium-core</artifactId>
-                <!--当flink-cdc 依赖的 debezium 版本变化，此版本也需要相应变化成对应的版本-->
-                <version>${debezium-connector.version}</version>
-            </dependency>
+
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-flink-dependency</artifactId>

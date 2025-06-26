@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -62,8 +63,11 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     @FormField(ordinal = 1, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
 
-    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+//    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timeZone;
+
+    @FormField(ordinal = 13, validate = {Validator.require})
+    public TISTimeZone timeZone;
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
@@ -139,17 +143,18 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         if (password != null) {
             info.put("password", password);
         }
-        if (StringUtils.isEmpty(this.timeZone)) {
-            throw new IllegalStateException("property timeZone can not be null");
-        }
-        info.put("serverTimezone", this.timeZone);
+//        if (StringUtils.isEmpty(this.timeZone)) {
+//            throw new IllegalStateException("property timeZone can not be null");
+//        }
+        info.put("serverTimezone"
+                , Objects.requireNonNull(this.timeZone, "property timeZone can not be null").getTimeZone().getId());
         info.put("characterEncoding", "UTF-8");
         return new SqlServerJDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl, this.getDbName(), this.getDBSchema());
     }
 
     @Override
     public Optional<ZoneId> getTimeZone() {
-        return Optional.of(ZoneId.of(this.timeZone));
+        return Optional.of(this.timeZone.getTimeZone());
     }
 
     protected Properties createJdbcProps() {
@@ -172,10 +177,12 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         protected static String dataSourceName(String version) {
             return DS_TYPE_SQL_SERVER + "-" + version;
         }
+
         @Override
         public Optional<String> getDefaultDataXReaderDescName() {
             return Optional.of(DataXSqlserverReader.DATAX_NAME);
         }
+
         protected abstract String getVersion();
 
         @Override

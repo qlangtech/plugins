@@ -35,6 +35,12 @@
             <groupId>io.debezium</groupId>
             <artifactId>debezium-connector-mysql</artifactId>
             <version>${debezium-connector.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -61,14 +67,14 @@
                                     </excludes>
                                 </filter>
                                 <!--io/debezium/debezium-core/1.9.8.Final/debezium-core-1.9.8.Final.jar!/io/debezium/relational/RelationalTableFilters.class-->
-                                <filter>
-                                    <artifact>io.debezium:debezium-core</artifact>
-                                    <excludes>
-                                        <exclude>io/debezium/relational/HistorizedRelationalDatabaseConnectorConfig*</exclude>
-                                        <exclude>io/debezium/relational/RelationalChangeRecordEmitter*</exclude>
-                                        <exclude>io/debezium/relational/RelationalTableFilters*</exclude>
-                                    </excludes>
-                                </filter>
+<!--                                <filter>-->
+<!--                                    <artifact>io.debezium:debezium-core</artifact>-->
+<!--                                    <excludes>-->
+<!--                                        <exclude>io/debezium/relational/HistorizedRelationalDatabaseConnectorConfig*</exclude>-->
+<!--                                        <exclude>io/debezium/relational/RelationalChangeRecordEmitter*</exclude>-->
+<!--                                        <exclude>io/debezium/relational/RelationalTableFilters*</exclude>-->
+<!--                                    </excludes>-->
+<!--                                </filter>-->
                             </filters>
 
                             <relocations>

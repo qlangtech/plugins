@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -88,8 +89,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     @FormField(ordinal = 8, validate = {Validator.require})
     public Authorized allAuthorized;
 
-    @FormField(ordinal = 14, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+//    @FormField(ordinal = 14, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timeZone;
+
+    @FormField(ordinal = 14, validate = {Validator.require})
+    public TISTimeZone timeZone;
 
     @Override
     public String getDBSchema() {
@@ -108,7 +112,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public Optional<ZoneId> getTimeZone() {
-        return Optional.of(ZoneId.of(this.timeZone));
+        return Optional.of(timeZone.getTimeZone());
     }
 
     @Override
@@ -320,7 +324,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
         props.setProperty("oracle.jdbc.timezoneAsRegion", "false");
         props.setProperty("oracle.jdbc.defaultTimeZone"
-                , Objects.requireNonNull(this.timeZone, "timeZone can not be null"));
+                , Objects.requireNonNull(this.timeZone, "timeZone can not be null").getTimeZone().getId());
 
         Connection conn = DriverManager.getConnection(jdbcUrl, props);
 
@@ -341,6 +345,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         public Optional<String> getDefaultDataXReaderDescName() {
             return Optional.of(OracleDataSourceFactory.ORACLE);
         }
+
         @Override
         protected String getDataSourceName() {
             return ORACLE;

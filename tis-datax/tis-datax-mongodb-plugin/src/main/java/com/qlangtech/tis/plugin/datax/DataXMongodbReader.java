@@ -55,6 +55,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -103,11 +104,14 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timeZone;
+//    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timeZone;
+
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public TISTimeZone timeZone;
 
     public ZoneId parseZoneId() {
-        return ZoneId.of(timeZone);
+        return timeZone.getTimeZone();
     }
 
     @Override

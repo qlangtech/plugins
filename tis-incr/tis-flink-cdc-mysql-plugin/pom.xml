@@ -150,9 +150,9 @@
             <plugin>
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>maven-tpi-plugin</artifactId>
-                <configuration>
-                    <maskClasses>org.apache.kafka.</maskClasses>
-                </configuration>
+<!--                <configuration>-->
+<!--                    <maskClasses>org.apache.kafka.</maskClasses>-->
+<!--                </configuration>-->
             </plugin>
         </plugins>
     </build>

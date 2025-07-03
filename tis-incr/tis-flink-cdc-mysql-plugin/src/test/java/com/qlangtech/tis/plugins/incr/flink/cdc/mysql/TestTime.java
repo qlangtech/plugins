@@ -36,7 +36,7 @@ public class TestTime {
     @Test
     public void testURLs() throws Exception {
         Enumeration<URL> resources = TestTime.class.getClassLoader().getResources(
-                "io/debezium/relational/RelationalTableFilters.class");
+                "org/apache/kafka/connect/errors/ConnectException.class");
         while (resources.hasMoreElements()) {
             System.out.println(resources.nextElement());
         }

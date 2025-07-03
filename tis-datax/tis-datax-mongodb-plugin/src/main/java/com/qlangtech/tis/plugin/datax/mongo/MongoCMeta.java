@@ -146,7 +146,7 @@ public class MongoCMeta extends CMeta implements INestCMetaGetter {
             while (keyIterator.hasNext()) {
                 key = keyIterator.next();
                 value = doc.get(key);
-                if (value == null) {
+                if (value == null || value.isNull()) {
                     return null;
                 }
                 if (value.isDocument()) {

@@ -206,7 +206,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         streamFactory.parallelism = 1;
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
-        mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+
 
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
@@ -340,7 +340,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         streamFactory.parallelism = 1;
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
-        mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+       // mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
         // final String tabName = "base";
         CDCTestSuitParams suitParams = tabParamMap.get(fullTypes);
         Assert.assertNotNull(suitParams);
@@ -463,7 +463,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
     protected FlinkCDCMySQLSourceFactory createCDCFactory() {
         FlinkCDCMySQLSourceFactory mySQLSourceFactory = new FlinkCDCMySQLSourceFactory();
-        mySQLSourceFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+       // mySQLSourceFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
         return mySQLSourceFactory;
     }
 
@@ -702,6 +702,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                                 public Void smallIntType(DataType dataType) {
                                     tinyIntType(dataType);
                                     return null;
+                                }
+
+                                @Override
+                                public Void boolType(DataType dataType) {
+                                   throw new UnsupportedOperationException();
                                 }
                             });
                         });

@@ -40,7 +40,7 @@
         <!--https://github.com/ververica/flink-cdc-connectors-->
         <!--        <flink.cdc.version>2.1.0</flink.cdc.version>-->
 
-        <chunjun.version>1.12.5-${revision}</chunjun.version>
+        <chunjun.version>1.12.5-${project.version}</chunjun.version>
         <debezium-connector.version>1.9.8.Final</debezium-connector.version>
     </properties>
 
@@ -60,6 +60,7 @@
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>
         <module>tis-flink-extends-plugin</module>
+
         <module>tis-flink-cdc-common</module>
         <module>tis-flink-cdc-mysql-plugin</module>
         <module>tis-flink-cdc-postgresql-plugin</module>
@@ -100,7 +101,6 @@
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-flink-cdc-common</artifactId>
                 <version>${project.version}</version>
-                <scope>provided</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>io.debezium</groupId>
@@ -200,6 +200,7 @@
                 <module>tis-flink-cdc-postgresql-shade-4-debezium-connector-postgresql</module>
                 <module>tis-flink-cdc-mysql-shade-4-debezium-connector-mysql</module>
                 <module>tis-flink-cdc-kingbase-shade-4-debezium-connector-postgresql</module>
+                <module>tis-flink-cdc-common-plugin-shade-4-debezium</module>
                 <!--                <module>tis-flink-cdc-kingbase-shade-plugin-extends</module>-->
             </modules>
         </profile>

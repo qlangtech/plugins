@@ -36,14 +36,6 @@
                     <exclude>io/debezium/connector/mysql/MySqlConnection*</exclude>
                   </excludes>
                 </filter>
-                <filter>
-                  <artifact>io.debezium:debezium-core</artifact>
-                  <excludes>
-                    <exclude>io/debezium/relational/HistorizedRelationalDatabaseConnectorConfig*</exclude>
-                    <exclude>io/debezium/relational/RelationalChangeRecordEmitter*</exclude>
-                    <exclude>io/debezium/relational/RelationalTableFilters*</exclude>
-                  </excludes>
-                </filter>
               </filters>
               <relocations />
               <artifactSet>

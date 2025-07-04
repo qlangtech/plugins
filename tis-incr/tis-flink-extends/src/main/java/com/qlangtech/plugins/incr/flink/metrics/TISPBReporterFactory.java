@@ -25,7 +25,7 @@ import java.util.Properties;
 
 /**
  * TIS通过 grpc 协议将flink metric 信息反馈给TIS节点汇总
- *
+ * https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/deployment/config/#metrics-reporter-%3Cname%3E-factory-class
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-05-14 10:22
  **/

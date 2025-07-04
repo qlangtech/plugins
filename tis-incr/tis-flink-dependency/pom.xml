@@ -72,14 +72,12 @@
             <version>${flink.version}</version>
             <!--            <scope>provided</scope>-->
         </dependency>
-
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <!--NEED TO FIX-->
             <artifactId>flink-core</artifactId>
             <version>${flink.version}</version>
-            <!--            <scope>provided</scope>-->
         </dependency>
+
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
@@ -101,11 +99,7 @@
 
 
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-core</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
+
 
         <dependency>
             <groupId>org.apache.flink</groupId>

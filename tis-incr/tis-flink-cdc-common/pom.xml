@@ -52,11 +52,16 @@
         <!--            <version>${flink.cdc.version}</version>-->
         <!--        </dependency>-->
 
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-core</artifactId>-->
+<!--            <version>${flink.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-core</artifactId>
-            <version>${flink.version}</version>
-            <scope>provided</scope>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-dependency</artifactId>
         </dependency>
 
         <!--        <dependency>-->

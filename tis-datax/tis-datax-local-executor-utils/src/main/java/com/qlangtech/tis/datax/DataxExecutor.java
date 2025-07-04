@@ -221,8 +221,7 @@ public class DataxExecutor {
             public void run() {
                 UpdateCounterMap status = new UpdateCounterMap();
                 status.setFrom(NetUtils.getHost());
-                logger.info("start to listen the dataX job taskId:{},jobName:{},dataXName:{} overseer cancel", jobId,
-                        jobInfo, dataXName);
+                logger.info("start to listen the dataX job taskId:{},jobName:{},dataXName:{} overseer cancel", jobId, jobInfo, dataXName);
                 TableSingleDataIndexStatus dataXStatus = new TableSingleDataIndexStatus();
                 dataXStatus.setUUID(jobInfo.jobFileName);
                 status.addTableCounter(IAppSourcePipelineController.DATAX_FULL_PIPELINE + dataXName, dataXStatus);

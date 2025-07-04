@@ -18,18 +18,25 @@
 
 package com.qlangtech.plugins.incr.flink.metrics;
 
+import org.apache.flink.metrics.CharacterFilter;
+import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.MetricConfig;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.reporter.AbstractReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
 
+import java.util.Map;
+
 /**
+ * https://github.com/datavane/tis/issues/397
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-05-14 10:24
  **/
 public class TISPBReporter extends AbstractReporter implements Scheduled {
     @Override
     public String filterCharacters(String s) {
-        return "";
+        return CharacterFilter.NO_OP_FILTER.filterCharacters(s);
     }
 
     @Override
@@ -44,6 +51,12 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 
     @Override
     public void report() {
+
+        for (Map.Entry<Counter, String> entry : counters.entrySet()) {
+            Counter counter = entry.getKey();
+            String metricName = entry.getValue();
+            System.out.println(metricName + ": " + counter.getCount());
+        }
 
     }
 }

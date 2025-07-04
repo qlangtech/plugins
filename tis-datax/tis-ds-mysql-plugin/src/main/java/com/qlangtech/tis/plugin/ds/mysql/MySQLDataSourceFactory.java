@@ -105,10 +105,13 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 + "relevant prop splitTableStrategy can not be null").createTableInDB(this);
     }
 
+    @Override
+    public SplitTableStrategy getSplitTableStrategy() {
+        return Objects.requireNonNull(splitTableStrategy);
+    }
 
     @Override
     public List<String> getAllPhysicsTabs(DataXJobSubmit.TableDataXEntity tabEntity) {
-        // return super.getAllPhysicsTabs(tabEntity);
         return this.splitTableStrategy.getAllPhysicsTabs(this, tabEntity);
     }
 

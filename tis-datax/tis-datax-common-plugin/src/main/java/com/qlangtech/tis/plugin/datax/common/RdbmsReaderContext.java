@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext.ISplitTableContext;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import org.apache.commons.lang.StringUtils;

@@ -39,6 +39,8 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -88,6 +90,15 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
 
+    @Override
+    public SplitTableStrategy getSplitTableStrategy() {
+        NoneSplitTableStrategy splitTableStrategy = new NoneSplitTableStrategy();
+        if (StringUtils.isEmpty(this.nodeDesc)) {
+            throw new IllegalStateException("nodeDesc can not be null");
+        }
+        splitTableStrategy.host = this.nodeDesc;
+        return splitTableStrategy;
+    }
 
     public List<String> getLoadUrls() {
         return DorisSourceFactory.getLoadUrls(this.loadUrl);

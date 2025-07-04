@@ -32,6 +32,6 @@ import java.util.Properties;
 public class TISPBReporterFactory implements MetricReporterFactory {
     @Override
     public MetricReporter createMetricReporter(Properties properties) {
-        return null;
+        return new TISPBReporter();
     }
 }

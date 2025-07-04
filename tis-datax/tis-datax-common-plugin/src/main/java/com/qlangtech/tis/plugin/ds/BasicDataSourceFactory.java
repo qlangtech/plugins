@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * @create: 2021-06-06 19:48
  **/
 public abstract class BasicDataSourceFactory extends DataSourceFactory
-        implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable, IDBAuthorizeTokenGetter {
+        implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable, IDBAuthorizeTokenGetter, SplitTableStrategyAbility {
     private static String TYPE_NAME_JSON = "json";
 
     public static Optional<String> MYSQL_ESCAPE_COL_CHAR = Optional.of("`");
@@ -91,8 +91,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
-
-
 
 
     /**
@@ -127,6 +125,10 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         return this.password;
     }
 
+    @Override
+    public SplitTableStrategy getSplitTableStrategy() {
+      throw new UnsupportedOperationException();
+    }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, final EntityName table) {

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
@@ -36,7 +37,13 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends ProcessFunction
     public SourceProcessFunction(Map<String, OutputTag<RECORD_TYPE>> tab2OutputTag) {
         this.tab2OutputTag = tab2OutputTag;
     }
-
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        // 注册或获取名为 "filteredRecords" 的计数器
+//        this.filteredRecordsCounter = getRuntimeContext()
+//                .getMetricGroup()
+//                .counter(KEY_SKIP_UPDATE_BEFORE_EVENT + "Count");
+    }
     /**
      * 在主流中为每个表打标签
      *

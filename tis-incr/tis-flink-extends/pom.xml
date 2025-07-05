@@ -123,6 +123,12 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.alibaba.datax</groupId>-->
         <!--            <artifactId>datax-config</artifactId>-->

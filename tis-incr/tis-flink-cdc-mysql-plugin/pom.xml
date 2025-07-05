@@ -58,7 +58,7 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-mysql-cdc</artifactId>
+            <artifactId>flink-connector-mysql-cdc-tis</artifactId>
             <version>${flink.cdc.version}</version>
             <exclusions>
                 <exclusion>

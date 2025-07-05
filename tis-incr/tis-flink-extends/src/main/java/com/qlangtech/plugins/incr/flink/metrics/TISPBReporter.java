@@ -18,14 +18,21 @@
 
 package com.qlangtech.plugins.incr.flink.metrics;
 
+import com.qlangtech.tis.cloud.ITISCoordinator;
+import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
+import com.qlangtech.tis.realtime.yarn.rpc.UpdateCounterMap;
+import com.tis.hadoop.rpc.RpcServiceReference;
+import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.flink.metrics.CharacterFilter;
 import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.Metric;
 import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.reporter.AbstractReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * https://github.com/datavane/tis/issues/397
@@ -39,9 +46,30 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         return CharacterFilter.NO_OP_FILTER.filterCharacters(s);
     }
 
+    private RpcServiceReference rpcService;
+
     @Override
     public void open(MetricConfig metricConfig) {
 
+        try {
+            ITISCoordinator coordinator = ITISCoordinator.create(true, Optional.empty());
+            this.rpcService = StatusRpcClientFactory.getService(coordinator);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void notifyOfAddedMetric(Metric metric, String metricName, MetricGroup group) {
+//<jobmanager>
+//  <job.JobName.jobID>
+//    <task.TaskName>
+//      <operator.OperatorName>
+//        <subtask_index>
+
+        String[] scope = group.getScopeComponents();
+// 输出示例：["jobmanager", "job_MyJob", "task_Source", "operator_Map", "0"]
+        super.notifyOfAddedMetric(metric, metricName, group);
     }
 
     @Override
@@ -51,7 +79,36 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 
     @Override
     public void report() {
+        UpdateCounterMap upateCounter = null;
 
+        UpdateCounterMap updateCounterMap = new UpdateCounterMap();
+//        updateCounterMap.setGcCounter(BasicONSListener.getGarbageCollectionCount());
+//        updateCounterMap.setFrom(hostName);
+//        long currentTimeInSec = ConsumeDataKeeper.getCurrentTimeInSec();
+//        updateCounterMap.setUpdateTime(currentTimeInSec);
+        // 汇总一个节点中所有索引的增量信息
+//        for (IOnsListenerStatus l : incrChannels) {
+//            TableSingleDataIndexStatus tableUpdateCounter = new TableSingleDataIndexStatus();
+//            tableUpdateCounter.setBufferQueueRemainingCapacity(l.getBufferQueueRemainingCapacity());
+//            tableUpdateCounter.setBufferQueueUsedSize(l.getBufferQueueUsedSize());
+//            tableUpdateCounter.setConsumeErrorCount((int) l.getConsumeErrorCount());
+//            tableUpdateCounter.setIgnoreRowsCount((int) l.getIgnoreRowsCount());
+//            tableUpdateCounter.setUUID(this.indexUUID.get(l.getCollectionName()));
+//            tableUpdateCounter.setTis30sAvgRT(((BasicONSListener) l).getTis30sAvgRT());
+//            // 汇总一个索引中所有focus table的增量信息
+//            for (Map.Entry<String, IIncreaseCounter> entry : l.getUpdateStatic()) {
+//                // IncrCounter tableIncrCounter = new
+//                // IncrCounter((int)entry.getValue().getIncreasePastLast());
+//                // tableIncrCounter.setAccumulationCount(entry.getValue().getAccumulation());
+//                // tableUpdateCounter.put(entry.getKey(), tableIncrCounter);
+//                // 只记录一个消费总量和当前时间
+//                tableUpdateCounter.put(entry.getKey(), entry.getValue().getAccumulation());
+//            }
+//            tableUpdateCounter.put(TABLE_CONSUME_COUNT, ((BasicONSListener) l).getTableConsumeCount());
+//            updateCounterMap.addTableCounter(l.getCollectionName(), tableUpdateCounter);
+//        }
+
+       // MasterJob masterJob = this.rpcService.reportStatus(upateCounter);
         for (Map.Entry<Counter, String> entry : counters.entrySet()) {
             Counter counter = entry.getKey();
             String metricName = entry.getValue();

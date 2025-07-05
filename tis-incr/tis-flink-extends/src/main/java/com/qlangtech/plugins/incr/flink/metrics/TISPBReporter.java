@@ -70,6 +70,7 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         String[] scope = group.getScopeComponents();
 // 输出示例：["jobmanager", "job_MyJob", "task_Source", "operator_Map", "0"]
         super.notifyOfAddedMetric(metric, metricName, group);
+        String name = group.getMetricIdentifier(metricName, this);
     }
 
     @Override

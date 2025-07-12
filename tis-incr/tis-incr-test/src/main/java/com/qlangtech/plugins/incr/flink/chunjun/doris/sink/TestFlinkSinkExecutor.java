@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
@@ -52,6 +53,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
@@ -105,6 +107,8 @@ import java.util.stream.Collectors;
  **/
 public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFactory<ROW>, ROW> extends AbstractTestBase implements TISEasyMock {
 
+
+    IncrStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
 
     protected static String dataXName = "testDataX";
 
@@ -166,7 +170,10 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
         // boolean flinkCDCPipelineEnable = false;
         DTOStream sourceStream = DTOStream.createDispatched(tableName);
         //
-        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
+
+
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource(streamFactory,
+                DataXName.createDataXPipeline(this.dataXName), "testStreamSource",
                 isFlinkCDCPipelineEnable()
                 , env.fromElements(new DTO[]{d, update}));
         //
@@ -435,7 +442,6 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
 //            TableAliasMapper tableAliasMapper = new TableAliasMapper(aliasMap);
 
 
-
             this.replay();
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -616,9 +622,12 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
                 testRecords.add(dto);
             }
         }
+
         // boolean flinkCDCPipelineEnable = false;
         DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
-        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", isFlinkCDCPipelineEnable(),
+
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource(streamFactory
+                , DataXName.createDataXPipeline(this.dataXName), "testStreamSource", isFlinkCDCPipelineEnable(),
                 env.fromElements(testRecords.toArray(new DTO[testRecords.size()])).setParallelism(1));
         readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
         return Pair.of(sourceStream, readerSource);

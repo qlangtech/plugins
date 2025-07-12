@@ -18,11 +18,20 @@
 
 package com.qlangtech.plugins.incr.flink.metrics;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.cloud.ITISCoordinator;
+import com.qlangtech.tis.realtime.SourceProcessFunction;
+import com.qlangtech.tis.realtime.transfer.IIncreaseCounter;
+import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
 import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
 import com.qlangtech.tis.realtime.yarn.rpc.UpdateCounterMap;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.metrics.CharacterFilter;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.Metric;
@@ -30,9 +39,13 @@ import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.reporter.AbstractReporter;
 import org.apache.flink.metrics.reporter.Scheduled;
+import org.apache.flink.runtime.metrics.scope.ScopeFormat;
+import org.apache.flink.runtime.taskexecutor.TaskExecutor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * https://github.com/datavane/tis/issues/397
@@ -41,22 +54,44 @@ import java.util.Optional;
  * @create: 2025-05-14 10:24
  **/
 public class TISPBReporter extends AbstractReporter implements Scheduled {
+    private final ConcurrentMap<String /**metric identity*/, Pair<String /**metricName*/, MetricGroup>> metricIdentifierMapper = Maps.newConcurrentMap();
+
+    //private static final ConcurrentMap<String /**taskId*/, MasterJob> receivedTaskControllerMessage = Maps.newConcurrentMap();
+
     @Override
     public String filterCharacters(String s) {
         return CharacterFilter.NO_OP_FILTER.filterCharacters(s);
     }
 
-    private RpcServiceReference rpcService;
+//    public static MasterJob getReceivedTaskControllerMessage(String flinkTaskId) {
+//        if (StringUtils.isEmpty(flinkTaskId)) {
+//            throw new IllegalArgumentException("param flinkTaskId can not be empty");
+//        }
+//        return receivedTaskControllerMessage.get(flinkTaskId);
+//    }
+
+    private static RpcServiceReference rpcService;
 
     @Override
     public void open(MetricConfig metricConfig) {
 
-        try {
-            ITISCoordinator coordinator = ITISCoordinator.create(true, Optional.empty());
-            this.rpcService = StatusRpcClientFactory.getService(coordinator);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    }
+
+    private static RpcServiceReference getRpcService() {
+        if (rpcService == null) {
+            synchronized (TISPBReporter.class) {
+                if (rpcService == null) {
+                    try {
+                        ITISCoordinator coordinator = ITISCoordinator.create(true, Optional.empty());
+                        rpcService = StatusRpcClientFactory.getService(coordinator);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
         }
+        return rpcService;
     }
 
     @Override
@@ -67,22 +102,37 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 //      <operator.OperatorName>
 //        <subtask_index>
 
+
         String[] scope = group.getScopeComponents();
+
 // 输出示例：["jobmanager", "job_MyJob", "task_Source", "operator_Map", "0"]
         super.notifyOfAddedMetric(metric, metricName, group);
         String name = group.getMetricIdentifier(metricName, this);
+        if (scope.length > 1 && TaskExecutor.TASK_MANAGER_NAME.equals(scope[1])) {
+            if (IIncreaseCounter.TABLE_CONSUME_COUNT.equals(metricName)) {
+                //  System.out.println(metricName);
+                metricIdentifierMapper.put(name, Pair.of(metricName, group));
+            }
+        }
+    }
+
+    @Override
+    public void notifyOfRemovedMetric(Metric metric, String metricName, MetricGroup group) {
+        super.notifyOfRemovedMetric(metric, metricName, group);
+        String name = group.getMetricIdentifier(metricName, this);
+        metricIdentifierMapper.remove(name);
     }
 
     @Override
     public void close() {
-
+        getRpcService().close();
     }
 
     @Override
     public void report() {
-        UpdateCounterMap upateCounter = null;
-
-        UpdateCounterMap updateCounterMap = new UpdateCounterMap();
+//        UpdateCounterMap upateCounter = null;
+//
+//        UpdateCounterMap updateCounterMap = new UpdateCounterMap();
 //        updateCounterMap.setGcCounter(BasicONSListener.getGarbageCollectionCount());
 //        updateCounterMap.setFrom(hostName);
 //        long currentTimeInSec = ConsumeDataKeeper.getCurrentTimeInSec();
@@ -108,13 +158,87 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 //            tableUpdateCounter.put(TABLE_CONSUME_COUNT, ((BasicONSListener) l).getTableConsumeCount());
 //            updateCounterMap.addTableCounter(l.getCollectionName(), tableUpdateCounter);
 //        }
-
-       // MasterJob masterJob = this.rpcService.reportStatus(upateCounter);
+        Pair<String /**metricName*/, MetricGroup> metricGroup = null;
+        // MasterJob masterJob = this.rpcService.reportStatus(upateCounter);
+        List<UseableMetricForTIS> metrics = Lists.newArrayList();
         for (Map.Entry<Counter, String> entry : counters.entrySet()) {
             Counter counter = entry.getKey();
-            String metricName = entry.getValue();
-            System.out.println(metricName + ": " + counter.getCount());
+            String metricID = entry.getValue();
+            System.out.println(metricID + ": " + counter.getCount());
+            metricGroup = metricIdentifierMapper.get(metricID);
+            if (metricGroup != null) {
+                System.out.println(metricGroup);
+
+                metrics.add(new UseableMetricForTIS(entry.getKey(), metricGroup.getKey(), metricGroup.getRight()));
+            }
         }
 
+        sendMetric2TISAssemble(metrics);
+    }
+
+    private void sendMetric2TISAssemble(List<UseableMetricForTIS> metrics) {
+        // 汇总一个索引中所有focus table的增量信息
+        Map<String, TableSingleDataIndexStatus> tabCounterMapper = Maps.newHashMap();
+
+        String pipelineName = null;
+        TableSingleDataIndexStatus singleDataIndexStatus = null;
+        String host = null;
+        for (UseableMetricForTIS metric : metrics) {
+            pipelineName = metric.getPipelineName();
+            if (host == null) {
+                host = metric.getHost();
+            }
+            singleDataIndexStatus = tabCounterMapper.get(pipelineName);
+            if (singleDataIndexStatus == null) {
+                singleDataIndexStatus = new TableSingleDataIndexStatus();
+                singleDataIndexStatus.setUUID(metric.getFlinkTaskId());
+                tabCounterMapper.put(pipelineName, singleDataIndexStatus);
+            }
+            singleDataIndexStatus.put(metric.metricName, metric.counter.getCount());
+            // IncrCounter tableIncrCounter = new
+            // IncrCounter((int)entry.getValue().getIncreasePastLast());
+            // tableIncrCounter.setAccumulationCount(entry.getValue().getAccumulation());
+            // tableUpdateCounter.put(entry.getKey(), tableIncrCounter);
+            // 只记录一个消费总量和当前时间
+        }
+
+        if (MapUtils.isNotEmpty(tabCounterMapper)) {
+            UpdateCounterMap updateCounterMap = new UpdateCounterMap();
+            if (StringUtils.isEmpty(host)) {
+                throw new IllegalStateException("host can not be empty");
+            }
+            updateCounterMap.setFrom(host);
+            tabCounterMapper.forEach((tisPipeline, tabCounter) -> {
+                updateCounterMap.addTableCounter(tisPipeline, tabCounter);
+            });
+            /**
+             * 服务端：IncrStatusUmbilicalProtocolImpl
+             */
+            getRpcService().reportStatus(updateCounterMap);
+        }
+    }
+
+    private static class UseableMetricForTIS {
+        private Counter counter;
+        private String metricName;
+        private MetricGroup metricGroup;
+
+        String getPipelineName() {
+            return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_JOB_NAME);
+        }
+
+        String getHost() {
+            return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_HOST);
+        }
+
+        String getFlinkTaskId() {
+            return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_TASK_VERTEX_ID);
+        }
+
+        public UseableMetricForTIS(Counter counter, String metricName, MetricGroup metricGroup) {
+            this.counter = counter;
+            this.metricName = metricName;
+            this.metricGroup = metricGroup;
+        }
     }
 }

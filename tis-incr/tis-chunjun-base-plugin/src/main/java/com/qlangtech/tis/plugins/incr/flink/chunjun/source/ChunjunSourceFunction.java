@@ -27,6 +27,7 @@ import com.dtstack.chunjun.constants.ConfigConstant;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -34,6 +35,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeta;
@@ -44,6 +46,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -65,6 +68,7 @@ import java.util.stream.Collectors;
 public abstract class ChunjunSourceFunction
         implements IMQListener<List<ReaderSource>> {
     final ChunjunSourceFactory sourceFactory;
+    IncrStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
 
     public ChunjunSourceFunction(ChunjunSourceFactory sourceFactory) {
         this.sourceFactory = sourceFactory;
@@ -94,7 +98,7 @@ public abstract class ChunjunSourceFunction
 
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName name, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName names, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         Objects.requireNonNull(dataXProcessor, "dataXProcessor can not be null");
         BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
@@ -118,7 +122,7 @@ public abstract class ChunjunSourceFunction
                 for (String physicsName : physicsNames) {
                     SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab, physicsName);
                     SourceFunction<RowData> sourceFunc = createSourceFunction(tab.getName(), conf, sourceFactory, reader);
-                    sourceFuncs.add(ReaderSource.createRowDataSource(
+                    sourceFuncs.add(ReaderSource.createRowDataSource(streamFactory, names,
                             dbHost + ":" + sourceFactory.port + "_" + dbName + "." + physicsName, tab, sourceFunc));
                 }
             }

@@ -22,11 +22,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -105,6 +107,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //
 //    protected abstract TestRow.ValProcessor rewriteActualValProcessor(String tabName, TestRow.ValProcessor valProcess);
 
+    TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
 
     // @Test
     public void testStuBinlogConsume() throws Exception {
@@ -128,7 +131,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 Map<String, ColMeta> colMetaMapper = this.getColMetaMapper();
                 boolean flinkCDCPipelineEnable = false;
                 //  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-                AsyncMsg<List<ReaderSource>> readerSources = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, Collections.singletonList(tab), null);
+                AsyncMsg<List<ReaderSource>> readerSources
+                        = imqListener.start(streamFactory, flinkCDCPipelineEnable, DataXName.createDataXPipeline(dataxName.getName()), dataxReader, Collections.singletonList(tab), null);
 
                 consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSources, this.createProcess());
                 Thread.sleep(1000);
@@ -280,7 +284,6 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
         //  mysqlCDCFactory.startupOptions = "latest";
 
-
         CDCTestSuitParams suitParams = tabParamMap.get(tabInstanceDetail);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
@@ -322,7 +325,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 boolean flinkCDCPipelineEnable = false;
                 Assert.assertEquals(1, exampleRows.size());
                 DataxProcessor dataxProcessor = createProcess();
-                AsyncMsg<List<ReaderSource>> readerSources = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, tabs, dataxProcessor);
+                AsyncMsg<List<ReaderSource>> readerSources = imqListener.start(streamFactory
+                        , flinkCDCPipelineEnable, DataXName.createDataXPipeline(dataxName.getName()), dataxReader, tabs, dataxProcessor);
 
                 try {
                     consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSources, dataxProcessor);

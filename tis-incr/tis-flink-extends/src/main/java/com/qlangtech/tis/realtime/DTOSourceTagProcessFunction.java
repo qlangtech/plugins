@@ -18,9 +18,11 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import org.apache.flink.util.OutputTag;
 
 import java.util.List;
@@ -48,17 +50,19 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
                 : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
     }
 
-    public static DTOSourceTagProcessFunction create(boolean flinkCDCPipelineEnable, Map<String, OutputTag<DTO>> tab2OutputTag) {
+    public static DTOSourceTagProcessFunction create(DataXName dataXName, boolean flinkCDCPipelineEnable, Map<String, OutputTag<DTO>> tab2OutputTag) {
         if (flinkCDCPipelineEnable) {
             if (tab2OutputTag.size() != 1 || !tab2OutputTag.containsKey(KEY_MERGE_ALL_TABS_IN_ONE_BUS)) {
                 throw new IllegalStateException("the size of tab2OutputTag must be 1,but now is:" + String.join(",", tab2OutputTag.keySet()));
             }
         }
-        return flinkCDCPipelineEnable ? new MergeAllTabsInOneBusProcessFunction(tab2OutputTag) : new DTOSourceTagProcessFunction(tab2OutputTag);
+        return flinkCDCPipelineEnable
+                ? new MergeAllTabsInOneBusProcessFunction(dataXName, tab2OutputTag)
+                : new DTOSourceTagProcessFunction(dataXName, tab2OutputTag);
     }
 
-    public DTOSourceTagProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-        super(tab2OutputTag);
+    public DTOSourceTagProcessFunction(DataXName dataXName, Map<String, OutputTag<DTO>> tab2OutputTag) {
+        super(dataXName, tab2OutputTag);
     }
 
     @Override
@@ -66,11 +70,19 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
         return record.getTableName();
     }
 
+    @Override
+    protected void increaseNumRecordsMetric(DTO in) {
+        if (in.getEventType() == EventType.UPDATE_BEFORE) {
+            // 当记录为更新时候会有before，after两条，所以需要将before那条记录过滤掉
+            return;
+        }
+        super.increaseNumRecordsMetric(in);
+    }
 
     static class MergeAllTabsInOneBusProcessFunction extends DTOSourceTagProcessFunction {
 
-        public MergeAllTabsInOneBusProcessFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-            super(tab2OutputTag);
+        public MergeAllTabsInOneBusProcessFunction(DataXName dataXName, Map<String, OutputTag<DTO>> tab2OutputTag) {
+            super(dataXName, tab2OutputTag);
         }
 
         @Override

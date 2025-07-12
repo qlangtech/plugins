@@ -31,6 +31,7 @@ import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -340,7 +341,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         streamFactory.parallelism = 1;
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
-       // mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+        // mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
         // final String tabName = "base";
         CDCTestSuitParams suitParams = tabParamMap.get(fullTypes);
         Assert.assertNotNull(suitParams);
@@ -463,7 +464,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
     protected FlinkCDCMySQLSourceFactory createCDCFactory() {
         FlinkCDCMySQLSourceFactory mySQLSourceFactory = new FlinkCDCMySQLSourceFactory();
-       // mySQLSourceFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
+        // mySQLSourceFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
         return mySQLSourceFactory;
     }
 
@@ -547,7 +548,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 exampleRows.add(this.parseTestRow(RowKind.INSERT, TestFlinkCDCMySQLSourceFactory.class, tabName + "/insert1.txt"));
 
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(false, dataxName, dataxReader, tabs, createProcess());
+                imqListener.start(false, DataXName.createDataXPipeline(dataxName.getName()), dataxReader, tabs, createProcess());
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
@@ -706,7 +707,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
                                 @Override
                                 public Void boolType(DataType dataType) {
-                                   throw new UnsupportedOperationException();
+                                    throw new UnsupportedOperationException();
                                 }
                             });
                         });

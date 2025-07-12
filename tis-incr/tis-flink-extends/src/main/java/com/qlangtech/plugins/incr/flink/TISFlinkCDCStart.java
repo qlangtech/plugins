@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,7 +64,7 @@ public class TISFlinkCDCStart {
         IncrStreamFactory incrStreamFactory = HeteroEnum.getIncrStreamFactory(dataxName);
         BasicFlinkSourceHandle tableStreamHandle = createFlinkSourceHandle(dataxName);
         tableStreamHandle.setStreamFactory(incrStreamFactory);
-        deploy(new TargetResName(dataxName), tableStreamHandle, null, -1);
+        deploy(new TargetResName(dataxName), tableStreamHandle);
     }
 
     public static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
@@ -87,9 +88,7 @@ public class TISFlinkCDCStart {
     }
 
 
-    private static void deploy(TargetResName dataxName
-            , BasicFlinkSourceHandle tableStreamHandle
-            , ReplicasSpec incrSpec, long timestamp) throws Exception {
+    private static void deploy(TargetResName dataxName, BasicFlinkSourceHandle tableStreamHandle) throws Exception {
 
         if (tableStreamHandle == null) {
             throw new IllegalStateException("tableStreamHandle has not been instantiated");
@@ -114,7 +113,8 @@ public class TISFlinkCDCStart {
             throw new IllegalStateException("dataXReader is illegal");
         }
         List<ISelectedTab> tabs = reader.getSelectedTabs();
-        AsyncMsg<List<ReaderSource>> sourceReaders = mq.start(flinkCDCPipelineEnable, dataxName, reader, tabs, dataXProcess);
+        AsyncMsg<List<ReaderSource>> sourceReaders = mq.start(Objects.requireNonNull(tableStreamHandle.getStreamFactory(), "streamFactory can not be null")
+                , flinkCDCPipelineEnable, dataX, reader, tabs, dataXProcess);
 
         tableStreamHandle.consume(flinkCDCPipelineEnable, dataxName, sourceReaders, dataXProcess);
     }

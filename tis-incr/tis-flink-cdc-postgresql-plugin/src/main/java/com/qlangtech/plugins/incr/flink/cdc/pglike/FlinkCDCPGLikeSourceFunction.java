@@ -27,6 +27,7 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.StoreResourceType;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory.ISchemaSupported;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -72,8 +74,8 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
 //    }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(
-            boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory,
+                                              boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
@@ -87,7 +89,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
 
             final Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
-                    dataXProcessor, IPluginContext.namedContext(dataxName.getName()), rdbmsReader, tabs);
+                    dataXProcessor, IPluginContext.namedContext(dataxName.getPipelineName()), rdbmsReader, tabs);
 
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
@@ -105,8 +107,9 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
                                             , dbname, dsFactory, schemaSupported, flinkColCreator, contextParamValsGetterMapper);
 
 
-                            return ReaderSource.createDTOSource(
-                                    dbHost + ":" + dsFactory.port + "_" + dbname, flinkCDCPipelineEnable, incrSource);
+                            return ReaderSource.createDTOSource(streamFactory, dataxName,
+                                    dbHost + ":" + dsFactory.port + "_" + dbname, flinkCDCPipelineEnable
+                                    , incrSource);
                         }).collect(Collectors.toList());
 
                     });
@@ -123,7 +126,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
         }
     }
 
-    protected PostgresIncrementalSource<DTO> createIncrementalSource(TargetResName dataxName, List<ISelectedTab> tabs, String dbHost, Set<String> tbs
+    protected PostgresIncrementalSource<DTO> createIncrementalSource(DataXName dataxName, List<ISelectedTab> tabs, String dbHost, Set<String> tbs
             , Properties debeziumProperties, String dbname, BasicDataSourceFactory dsFactory
             , ISchemaSupported schemaSupported, IFlinkColCreator<FlinkCol> flinkColCreator
             , Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
@@ -141,7 +144,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
                 .startupOptions(StartupOptionUtils.getStartupOptions(sourceFactory.startupOptions))
                 .deserializer(new PostgreSQLDeserializationSchema(
                         tabs, flinkColCreator, contextParamValsGetterMapper, sourceFactory.getRepIdentity()))
-                .slotName(dataxName.getName())
+                .slotName(dataxName.getPipelineName())
                 .build();
     }
 

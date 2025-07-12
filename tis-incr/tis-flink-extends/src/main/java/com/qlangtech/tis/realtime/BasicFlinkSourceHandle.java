@@ -173,6 +173,10 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         this.streamFactory = Objects.requireNonNull(streamFactory, "streamFactory can not be null");
     }
 
+    public IncrStreamFactory getStreamFactory() {
+        return streamFactory;
+    }
+
     /**
      * 源端Meta信息获取策略
      *

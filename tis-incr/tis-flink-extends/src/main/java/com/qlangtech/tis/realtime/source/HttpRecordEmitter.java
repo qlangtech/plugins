@@ -16,22 +16,21 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc;
+package com.qlangtech.tis.realtime.source;
 
-import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
-import org.apache.kafka.connect.data.Field;
 
-import java.io.Serializable;
+import com.qlangtech.tis.realtime.yarn.rpc.IncrRateControllerCfgDTO;
+import org.apache.flink.api.connector.source.SourceOutput;
+import org.apache.flink.connector.base.source.reader.RecordEmitter;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-14 09:46
+ * @create: 2025-07-06 22:33
  **/
-public class DefaultSourceValConvert implements ISourceValConvert, Serializable {
-    @Override
-    public Object convert(DTO dto, Field field, Object val) {
+public class HttpRecordEmitter implements RecordEmitter<IncrRateControllerCfgDTO, IncrRateControllerCfgDTO, Object> {
 
-        return val;
+    @Override
+    public void emitRecord(IncrRateControllerCfgDTO element, SourceOutput<IncrRateControllerCfgDTO> output, Object splitState) throws Exception {
+        output.collect(element);
     }
 }

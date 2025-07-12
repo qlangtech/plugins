@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -72,13 +73,13 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
     }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
             MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
-            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
-            DataXName dataXName = pluginContext.getCollectionName();
+            IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getPipelineName());
+            //   DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(
                     dataXProcessor, pluginContext, mongoReader, tabs);
@@ -101,7 +102,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
 
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
-                        List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs, deserializationSchema);
+                        List<ReaderSource> sourceFunctions = createSourceFunctions(streamFactory, dataxName, dsFactory, tabs, deserializationSchema);
                         return sourceFunctions;
                     }));
 
@@ -114,8 +115,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
         }
     }
 
-    private List<ReaderSource> createSourceFunctions(
-            MangoDBDataSourceFactory dsFactory, List<ISelectedTab> tabs, TISDeserializationSchema deserializationSchema) {
+    private List<ReaderSource> createSourceFunctions(IncrStreamFactory streamFactory, DataXName dataXName,
+                                                     MangoDBDataSourceFactory dsFactory, List<ISelectedTab> tabs, TISDeserializationSchema deserializationSchema) {
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
 
 
@@ -148,7 +149,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
 
         SourceFunction<DTO> source = builder.build();
 
-        sourceFuncs.add(ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName, source));
+        sourceFuncs.add(ReaderSource.createDTOSource(
+                streamFactory, dataXName, dsFactory.address + "_" + dsFactory.dbName, source));
 
         return sourceFuncs;
     }

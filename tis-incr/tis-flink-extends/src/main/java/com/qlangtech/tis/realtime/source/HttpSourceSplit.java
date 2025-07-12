@@ -16,22 +16,37 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc;
+package com.qlangtech.tis.realtime.source;
 
-import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
-import org.apache.kafka.connect.data.Field;
-
-import java.io.Serializable;
+import org.apache.flink.api.connector.source.SourceSplit;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-14 09:46
+ * @create: 2025-07-06 16:45
  **/
-public class DefaultSourceValConvert implements ISourceValConvert, Serializable {
-    @Override
-    public Object convert(DTO dto, Field field, Object val) {
+public class HttpSourceSplit implements SourceSplit {
+    public static final String KEY_SPLIT_ID = "http-split-0";
+    private final String id;
+    private long lastPollTime = 0; // 用于记录上次轮询时间
 
-        return val;
+    public HttpSourceSplit(String id) {
+        this.id = id;
+    }
+
+    @Override
+    public String splitId() {
+        return id;
+    }
+
+    public void updatePollTime() {
+        this.lastPollTime = System.currentTimeMillis();
+    }
+
+    public long getLastPollTime() {
+        return lastPollTime;
+    }
+
+    public void setLastPollTime(long lastPollTime) {
+        this.lastPollTime = lastPollTime;
     }
 }

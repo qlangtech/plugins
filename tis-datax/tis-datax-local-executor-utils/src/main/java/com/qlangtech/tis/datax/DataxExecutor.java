@@ -47,10 +47,9 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.DagTaskUtils;
+import com.qlangtech.tis.manage.common.TaskSoapUtils;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
@@ -283,7 +282,7 @@ public class DataxExecutor {
             TIS.clean(false);
             if (execMode == DataXJobSubmit.InstanceType.DISTRIBUTE) {
                 try {
-                    DagTaskUtils.feedbackAsynTaskStatus(jobArgs.jobId, jobName.jobFileName, success);
+                    TaskSoapUtils.feedbackAsynTaskStatus(jobArgs.jobId, jobName.jobFileName, success);
                 } catch (Throwable e) {
                     logger.warn("notify exec result faild,jobId:" + jobArgs.jobId + ",jobName:" + jobName, e);
                 }

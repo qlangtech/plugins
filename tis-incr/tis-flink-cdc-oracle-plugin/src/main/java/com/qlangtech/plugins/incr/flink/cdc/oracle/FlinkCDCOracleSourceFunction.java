@@ -39,6 +39,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -81,7 +82,8 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
 //    }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(boolean flinkCDCPipelineEnable, TargetResName channalName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(
+            IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName channalName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
 
@@ -97,7 +99,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
                 tabColsMapper.put(entity.getTableName(), colsMapper);
             }
             TableInDB tablesInDB = dsFactory.getTablesInDB();
-            IPluginContext pluginContext = IPluginContext.namedContext(channalName.getName());
+            IPluginContext pluginContext = IPluginContext.namedContext(channalName.getPipelineName());
             DataXName dataXName = pluginContext.getCollectionName();
             Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                     = RecordTransformerRules.contextParamValsGetterMapper(dataXProcessor, pluginContext, reader, tabs);
@@ -159,8 +161,9 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
                                     }
 
                                     JdbcIncrementalSource<DTO> sourceFunction = builder.build();
-                                    return ReaderSource.createDTOSource(
-                                            dbHost + ":" + dsFactory.port + "_" + databaseName, flinkCDCPipelineEnable, sourceFunction);
+                                    return ReaderSource.createDTOSource(streamFactory, channalName,
+                                            dbHost + ":" + dsFactory.port + "_" + databaseName
+                                            , flinkCDCPipelineEnable, sourceFunction);
                                 }).collect(Collectors.toList());
 
                             }));

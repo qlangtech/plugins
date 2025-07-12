@@ -18,20 +18,17 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.plugin.incr.TISRateLimiter;
 import org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy;
-import org.apache.kafka.connect.data.Field;
-
-import java.io.Serializable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-14 09:46
+ * @create: 2025-07-06 12:18
+ * @see com.qlangtech.plugins.incr.flink.cdc.impl.NoRateLimiter
+ * @see com.qlangtech.plugins.incr.flink.cdc.impl.PerSecondRateLimiter
  **/
-public class DefaultSourceValConvert implements ISourceValConvert, Serializable {
-    @Override
-    public Object convert(DTO dto, Field field, Object val) {
+public abstract class BasicRateLimiter extends TISRateLimiter {
 
-        return val;
-    }
+    @Override
+    public abstract RateLimiterStrategy getStrategy();
 }

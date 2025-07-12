@@ -24,11 +24,13 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsUpdate.UpdatedColVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DBDataXChildTask;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
@@ -52,6 +54,7 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -110,6 +113,7 @@ public abstract class CUDCDCTestSuit {
     final Date now = new Date();
     private final Calendar calendar;
     private final AtomicInteger timeGetterCount = new AtomicInteger();
+    private final IncrStreamFactory streamFactory;
 
     public CUDCDCTestSuit(CDCTestSuitParams suitParam) {
         this(suitParam, Optional.empty());
@@ -121,6 +125,7 @@ public abstract class CUDCDCTestSuit {
         this.splitTabSuffix = splitTabSuffix;
         calendar = Calendar.getInstance();
         calendar.setTime(now);
+        this.streamFactory = new TISFlinkCDCStreamFactory();
     }
 
     protected final TargetResName dataxName = new TargetResName("x");
@@ -255,7 +260,9 @@ public abstract class CUDCDCTestSuit {
 
         DataxProcessor process = createProcess();
         boolean flinkCDCPipelineEnable = false;
-        AsyncMsg<List<ReaderSource>> readerSource = imqListener.start(flinkCDCPipelineEnable, dataxName, dataxReader, tabs, process);
+
+        AsyncMsg<List<ReaderSource>> readerSource = imqListener.start(this.streamFactory, flinkCDCPipelineEnable
+                , DataXName.createDataXPipeline(dataxName.getName()), dataxReader, tabs, process);
 
         consumerHandle.getConsumerHandle().consume(flinkCDCPipelineEnable, dataxName, readerSource, process);
         Thread.sleep(4000);

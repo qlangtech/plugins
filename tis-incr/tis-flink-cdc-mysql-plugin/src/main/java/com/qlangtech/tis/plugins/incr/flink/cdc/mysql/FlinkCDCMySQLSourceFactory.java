@@ -67,8 +67,12 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions startupOptions;
 
-//    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String timeZone;
+    /**
+     * binlog监听在独立的slot中执行
+     */
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public boolean independentBinLogMonitor;
+
 
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
@@ -78,11 +82,6 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
         return flinkColCreator;
     }
 
-    /**
-     * binlog监听在独立的slot中执行
-     */
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public boolean independentBinLogMonitor;
 
     StartupOptions getStartupOptions() {
         return startupOptions.getOptionsType();
@@ -137,7 +136,7 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
                 SourceChannel.getSourceFunction(
                         dsFactory,
                         tabs,
-                        new MySQLReaderSourceCreator((BasicDataSourceFactory) dsFactory, sourceFactory) {
+                        new MySQLReaderSourceCreator(dataXName, null, (BasicDataSourceFactory) dsFactory, sourceFactory) {
                             @Override
                             protected List<ReaderSource> createReaderSources(String dbHost, HostDBs dbs, MySqlSource<DTO> sourceFunc) {
                                 if (count.getAndIncrement() > 0) {

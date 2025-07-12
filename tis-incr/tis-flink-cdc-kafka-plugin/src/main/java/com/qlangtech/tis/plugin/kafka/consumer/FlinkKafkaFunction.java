@@ -23,13 +23,14 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.kafka.reader.DataXKafkaReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.DTOSourceTagProcessFunction;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.ReaderSource.SideOutputReaderSource;
@@ -66,12 +67,12 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
     }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(
-            boolean flinkCDCPipelineEnable, TargetResName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory,
+                                              boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         DataXKafkaReader kafkaReader = (DataXKafkaReader) dataSource;
 
-        IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
+        IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getPipelineName());
         Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
                 = RecordTransformerRules.contextParamValsGetterMapper(
                 dataXProcessor, pluginContext, kafkaReader, tabs);
@@ -85,7 +86,7 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
         KafkaSource<DTO> source = kafkaSourceBuilder.build();
         try {
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
-                    createKafkaSource(kafkaReader.bootstrapServers, source));
+                    createKafkaSource(streamFactory, dataxName, kafkaReader.bootstrapServers, source));
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> createDispatched(tabName, sourceFactory.independentBinLogMonitor));
@@ -101,8 +102,8 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
         return new KafkaDispatchedDTOStream(table, startNewChain);
     }
 
-    public static ReaderSource<DTO> createKafkaSource(String tokenName, Source<DTO, ?, ?> sourceFunc) {
-        return new SideOutputReaderSource<DTO>(tokenName) {
+    public static ReaderSource<DTO> createKafkaSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, Source<DTO, ?, ?> sourceFunc) {
+        return new SideOutputReaderSource<DTO>(streamFactory, dataXName, tokenName) {
             @Override
             protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
                 return env.fromSource(sourceFunc, WatermarkStrategy.noWatermarks(), tokenName);
@@ -112,7 +113,7 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
             protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
                 TreeMap<String, OutputTag<DTO>> caseInsensitiveMapper = Maps.newTreeMap(String.CASE_INSENSITIVE_ORDER);
                 caseInsensitiveMapper.putAll(tab2OutputTag);
-                return new DTOSourceTagProcessFunction(caseInsensitiveMapper);
+                return new DTOSourceTagProcessFunction(dataXName, caseInsensitiveMapper);
             }
         };
     }

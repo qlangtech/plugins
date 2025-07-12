@@ -21,8 +21,10 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
@@ -35,6 +37,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType;
 import com.qlangtech.tis.realtime.dto.DTOStream;
@@ -106,6 +109,8 @@ public class TestChunjunClickhouseSinkFactory
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    IncrStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
 
     @Test
     public void testDescriptorsJSONGenerate() {
@@ -255,7 +260,7 @@ public class TestChunjunClickhouseSinkFactory
             // rowStream.addStream(env.fromElements(new RowData[]{d}));
             for (Map.Entry<TableAlias, TabSinkFunc<?, ?, RowData>> entry : sinkFuncs.entrySet()) {
 
-                ReaderSource<RowData> readerSource = ReaderSource.createRowDataSource("testStreamSource", totalpayinfo
+                ReaderSource<RowData> readerSource = ReaderSource.createRowDataSource(streamFactory,DataXName.createDataXPipeline(testDataX), "testStreamSource", totalpayinfo
                         , env.fromElements(new RowData[]{d}));
 
                 readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), rowStream)));

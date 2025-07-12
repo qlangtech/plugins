@@ -39,12 +39,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
+import com.qlangtech.tis.plugin.incr.TISRateLimiter;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -96,9 +96,21 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 6, validate = {Validator.require})
     public CheckpointFactory checkpoint;
 
-
     @FormField(ordinal = 7, validate = {Validator.require})
     public StateBackendFactory stateBackend;
+
+    @FormField(ordinal = 2, advance = false, validate = {Validator.require})
+    public TISRateLimiter rateLimiter;
+
+    @Override
+    public org.apache.flink.api.connector.source.util.ratelimit.RateLimiterStrategy getRateLimiterStrategy() {
+        return Objects.requireNonNull(this.rateLimiter, "rateLimiter can not be null").getStrategy();
+    }
+
+    @Override
+    public boolean supportRateLimiter() {
+        return rateLimiter.supportRateLimiter();
+    }
 
     @Override
     public Optional<ISavePointSupport> restorable() {
@@ -107,6 +119,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         }
         return Optional.empty();
     }
+
 
     @Override
     public Integer getParallelism() {

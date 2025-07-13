@@ -1,0 +1,24 @@
+{
+  "throwErrorNotMatch": {
+    "help": "如果模式没有匹配，则主动抛出异常终止处理",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  },
+  "pattern": {
+    "label": "模式",
+    "placeholder": "([^-]+?)-([^-]+?)-([^-]+?)"
+  },
+  "replaceContent": {
+    "label": "替换内容",
+    "placeholder": "$1-$2"
+  }
+}

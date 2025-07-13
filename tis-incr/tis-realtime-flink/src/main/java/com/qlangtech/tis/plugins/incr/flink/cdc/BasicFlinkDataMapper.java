@@ -271,7 +271,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public FlinkCol bitType(DataType type) {
             return new FlinkCol(meta, type, DataTypes.TINYINT()
                     , FlinkCol.Byte()
-                    , FlinkCol.NoOp()
+                    , FlinkCol.Byte()
                     , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.BOOLEAN(), new PipelineBooleanProcess())
                     , new ByteGetter(meta.getName(), colIndex));
         }

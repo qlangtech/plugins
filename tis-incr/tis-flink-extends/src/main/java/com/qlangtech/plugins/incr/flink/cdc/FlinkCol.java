@@ -63,7 +63,7 @@ public class FlinkCol implements Serializable {
     /**
      * @see RowData (处理从DTO中取数据组装RowData中的列内容处理器)
      */
-    public BiFunction rowDataProcess;
+    public final BiFunction rowDataProcess;
 
     /**
      * (处理从DTO中取数据组装DataChangeEvent中 before 或者 after的列内容处理器)
@@ -73,7 +73,7 @@ public class FlinkCol implements Serializable {
     /**
      * @see Row (处理从DTO中取数据组装Row中的列内容处理器)
      */
-    public BiFunction rowProcess;
+    public final BiFunction rowProcess;
 
     public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType
             , DataType type, FlinkCDCPipelineEventProcess cdcPipelineEventProcess, RowData.FieldGetter rowDataValGetter) {

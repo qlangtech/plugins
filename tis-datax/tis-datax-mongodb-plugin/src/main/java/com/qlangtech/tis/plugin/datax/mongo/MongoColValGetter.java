@@ -61,7 +61,7 @@ public abstract class MongoColValGetter<RESULT_TYPE> implements Function<BsonDoc
         @Override
         public Object apply(BsonDocument document) {
             BsonValue val = cmeta.getBsonVal(document);
-            if (val == null || (val.getBsonType() == BsonType.NULL)) {
+            if (val == null ||  (val.getBsonType() == BsonType.NULL)) {
                 return null;
             }
             return MongoDataXColUtils.createCol(cmeta, val, false, zone);

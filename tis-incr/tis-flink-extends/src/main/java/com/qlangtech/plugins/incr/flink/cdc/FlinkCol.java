@@ -23,7 +23,6 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
@@ -40,6 +39,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -90,14 +90,30 @@ public class FlinkCol implements Serializable {
     public static List<FlinkCol> createSourceCols(IPluginContext pluginContext
             , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
             , Optional<SelectedTableTransformerRules> transformerOpt) {
+        return createCols(pluginContext, tab, sourceFlinkColCreator, transformerOpt, (rules) -> {
+            return rules.originColsWithContextParamsFlinkCol();
+        });
+    }
+
+    /**
+     *
+     * @param pluginContext
+     * @param tab
+     * @param sourceFlinkColCreator
+     * @param transformerOpt
+     * @param transformerColOverwrite 使用flink-cdc pipeline模式同步模式下，由于直接使用source表的col meta 来映射 sink端表的列类型,需要使用  rules.overwriteColsWithContextParams()
+     * @return
+     */
+    public static List<FlinkCol> createCols(IPluginContext pluginContext
+            , final ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
+            , Optional<SelectedTableTransformerRules> transformerOpt, Function<SelectedTableTransformerRules, List<FlinkCol>> transformerColOverwrite) {
         List<FlinkCol> sourceColsMeta = null;
         if (transformerOpt.isPresent()) {
             SelectedTableTransformerRules rules = transformerOpt.get();
-            sourceColsMeta = rules.originColsWithContextParamsFlinkCol();
+            sourceColsMeta = transformerColOverwrite.apply(rules);
         } else {
             sourceColsMeta = getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
         }
-
         return sourceColsMeta;
     }
 
@@ -170,27 +186,6 @@ public class FlinkCol implements Serializable {
         return this;
     }
 
-    public Object processVal(DTOConvertTo convertTo, Object val) {
-        if (val == null) {
-            return null;
-        }
-        return convertTo.targetValGetter.apply(this, val);
-    }
-
-    public enum DTOConvertTo {
-        RowData((flinkCol, val) -> {
-            return flinkCol.rowDataProcess.apply(val);
-        }),
-        FlinkCDCPipelineEvent((flinkCol, val) -> {
-            return flinkCol.flinkCDCPipelineEventProcess.apply(val);
-        });
-
-        private final java.util.function.BiFunction<FlinkCol, Object, Object> targetValGetter;
-
-        private DTOConvertTo(java.util.function.BiFunction<FlinkCol, Object, Object> targetValGetter) {
-            this.targetValGetter = targetValGetter;
-        }
-    }
 
     public static BiFunction ByteBuffer() {
         return new ByteBufferProcess();
@@ -265,6 +260,7 @@ public class FlinkCol implements Serializable {
 
     public static class LocalDateProcess extends BiFunction {
         public final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
+        public final static DateTimeFormatter dateFormatterFull = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         @Override
         public Object apply(Object o) {
@@ -276,18 +272,28 @@ public class FlinkCol implements Serializable {
         }
 
         @Override
+        public String toStringVal(Object val) {
+            return dateFormatterFull.format((LocalDate) val);
+        }
+
+        @Override
         public Object deApply(Object o) {
             return dateFormatter.format((LocalDate) o);
         }
     }
 
     public static class DateTimeProcess extends BiFunction {
-        private final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        protected final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         private final static DateTimeFormatter datetimeFormatter_with_zone = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
         @Override
         public Object deApply(Object o) {
             return datetimeFormatter.format((LocalDateTime) o);
+        }
+
+        @Override
+        public String toStringVal(Object val) {
+            return datetimeFormatter.format((LocalDateTime) val);
         }
 
         @Override

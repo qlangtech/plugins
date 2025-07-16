@@ -20,10 +20,8 @@ package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.debuzium.DebuziumPropAssist;
-
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -36,14 +34,10 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import io.debezium.config.Field;
 import io.debezium.connector.oracle.OracleConnectorConfig;
-import io.debezium.connector.oracle.OracleConnectorConfig.LogMiningStrategy;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.cdc.connectors.base.options.StartupOptions;
-import org.apache.kafka.common.config.ConfigDef.Importance;
-import org.apache.kafka.common.config.ConfigDef.Width;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 

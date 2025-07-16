@@ -20,7 +20,10 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.alibaba.datax.common.element.ICol2Index;
+import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -30,18 +33,40 @@ import java.util.Objects;
 public abstract class AbstractTransformerRecord<Type> implements ColumnAwareRecord<Object> {
 
     protected static final Object NULL = new Object();
-
+    protected final List<FlinkCol> cols;
     protected Type row;
     protected FlinkCol2Index col2IndexMapper;
+    protected final DTOConvertTo dtoConvert2Type;
 
-    public AbstractTransformerRecord(Type row) {
+    public AbstractTransformerRecord(DTOConvertTo dtoConvert2Type, Type row, List<FlinkCol> cols) {
         this.row = Objects.requireNonNull(row, "param row can not be null");
+        this.cols = Objects.requireNonNull(cols, "cols can not be null");
+        this.dtoConvert2Type = Objects.requireNonNull(dtoConvert2Type, "dtoConvert2Type can not be null");
     }
 
     @Override
     public void setCol2Index(ICol2Index mapper) {
         this.col2IndexMapper = (FlinkCol2Index) mapper;
     }
+
+    protected final FlinkCol getFlinkCol(String field) {
+        FlinkCol col = cols.get(getPos(field));
+        return col;
+    }
+
+    @Override
+    public final void setString(String field, final String val) {
+        this.setColumn(field, this.dtoConvert2Type.stringValProcessor, val);
+    }
+
+    @Override
+    public final void setColumn(String field, Object colVal) {
+        FlinkCol col = getFlinkCol(field);
+        //  this.row.setField(field, col.rowProcess.apply(colVal));
+        this.setColumn(field, col.rowProcess, colVal);
+    }
+
+    protected abstract void setColumn(String field, BiFunction rowProcess, Object colVal);
 
     @Override
     public ICol2Index getCol2Index() {
@@ -58,9 +83,23 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
     }
 
     @Override
-    public String getString(String field, boolean origin) {
-        Object  colVal = this.getColumn(field);
-        return colVal != null ? String.valueOf(colVal) : null;
+    public final String getString(String field) {
+        return ColumnAwareRecord.super.getString(field);
+    }
+
+    /**
+     * @param field
+     * @param origin 取被替换前的值
+     * @return
+     * @see BasicFlinkDataMapper
+     */
+    @Override
+    public final String getString(String field, boolean origin) {
+        Object colVal = this.getColumn(field);
+        FlinkCol col = getFlinkCol(field);
+        return this.dtoConvert2Type.toString(col, colVal);
+
+        //  return colVal != null ? String.valueOf(colVal) : null;
     }
 
     public abstract Type getDelegate();

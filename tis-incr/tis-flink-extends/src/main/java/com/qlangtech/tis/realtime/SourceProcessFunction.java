@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.qlangtech.tis.realtime.yarn.rpc.IncrRateControllerCfgDTO.RateControllerType.SkipProcess;
+
 /**
  * 负责给主数据流打标，提供给后续流程 {@link com.qlangtech.tis.realtime.dto.DTOStream.DispatchedDTOStream} 实现分流
  *
@@ -93,6 +95,12 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
 //        BroadcastState<String, Double> broadcastState = context.getBroadcastState(broadcastStateDesc);
 //        broadcastState.put("rate", rate);
 //        rateLimiter.setRate(newRate);
+
+        RateControllerType controllerType
+                = Objects.requireNonNull(rate.getControllerType(), "controller type can not be null");
+        if (controllerType == SkipProcess) {
+            return;
+        }
         IResettableRateLimiter rateLimiter = getRateLimiter();
         if (rate.getPause()) {
             rateLimiter.pauseConsume();
@@ -100,13 +108,10 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
             rateLimiter.resumeConsume();
         }
 
-        RateControllerType controllerType
-                = Objects.requireNonNull(rate.getControllerType(), "controller type can not be null");
+
         Map<String, Object> params = rate.getPayloadParams();
         drain.set(false);
         switch (controllerType) {
-            case SkipProcess:
-                return;
             case RateLimit:
                 Integer rateRecordsPerSecond = (Integer) params.get(IncrRateControllerCfgDTO.KEY_RATE_LIMIT_PER_SECOND);
                 resetLimitRate(Objects.requireNonNull(rateRecordsPerSecond, "param rateRecordsPerSecond can not be null"));

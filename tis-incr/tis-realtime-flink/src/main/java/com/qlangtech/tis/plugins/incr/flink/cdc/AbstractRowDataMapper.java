@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.table.data.GenericRowData;
@@ -59,7 +58,7 @@ public abstract class AbstractRowDataMapper extends BasicFlinkDataMapper<Generic
         for (FlinkCol col : cols) {
             try {
                 val = vals.get(col.name);
-                setRowDataVal(index++, row, (val == null) ? null : col.processVal(dtoConvert2Type, val));
+                setRowDataVal(index++, row, (val == null) ? null : dtoConvert2Type.processVal(col, val));
             } catch (Exception e) {
                 throw new IllegalStateException("colName:" + col.name + ",index:" + index, e);
             }

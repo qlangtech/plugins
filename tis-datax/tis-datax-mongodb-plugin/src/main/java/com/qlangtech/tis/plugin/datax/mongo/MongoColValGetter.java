@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.mongo;
 
 import org.bson.BsonDocument;
+import org.bson.BsonType;
 import org.bson.BsonValue;
 
 import java.time.ZoneId;
@@ -60,7 +61,7 @@ public abstract class MongoColValGetter<RESULT_TYPE> implements Function<BsonDoc
         @Override
         public Object apply(BsonDocument document) {
             BsonValue val = cmeta.getBsonVal(document);
-            if (val == null) {
+            if (val == null || (val.getBsonType() == BsonType.NULL)) {
                 return null;
             }
             return MongoDataXColUtils.createCol(cmeta, val, false, zone);

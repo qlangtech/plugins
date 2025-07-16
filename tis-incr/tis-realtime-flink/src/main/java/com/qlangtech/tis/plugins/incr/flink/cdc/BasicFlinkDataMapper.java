@@ -24,7 +24,6 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkCD
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineDecimalConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess.FlinkPipelineStringConvert;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.PipelineBooleanProcess;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory.ByteGetter;
@@ -38,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
@@ -71,6 +71,9 @@ import java.util.stream.Collectors;
  * @create: 2025-05-22 11:11
  **/
 public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implements MapFunction<DTO, DATA>, Serializable {
+
+    public static Triple<BiFunction/*rowDataProcess*/, BiFunction/*rowProcess*/, BiFunction/*flinkCDCPipelineEventProcess*/> STRING_FUNC_PROCESS
+            = Triple.of(new StringConvert(), FlinkCol.NoOp(), new FlinkPipelineStringConvert());
 
     protected final DTOConvertTo dtoConvert2Type;
 
@@ -197,8 +200,8 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , type
                     // , DataTypes.TIME(3) //
                     , DataTypes.TIME()
-                    , new DTOLocalTimeConvert()
-                    , new LocalTimeConvert()
+                    , new DTOLocalTimeConvert() // rowDataProcess
+                    , new LocalTimeConvert() // rowProcess
                     , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.TIME(), new DTOLocalTimeConvert())
                     // , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L))
                     , new RowFieldGetterFactory.TimeGetter(meta.getName(), colIndex));
@@ -308,17 +311,19 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         }
 
 
+
+
         @Override
         public FlinkCol varcharType(DataType type) {
             return new FlinkCol(meta //
                     , type
                     , new AtomicDataType(new VarCharType(nullable, type.getColumnSize()))
                     //, DataTypes.VARCHAR(type.columnSize)
-                    , new StringConvert()
-                    , FlinkCol.NoOp()
+                    , STRING_FUNC_PROCESS.getLeft()
+                    , STRING_FUNC_PROCESS.getMiddle()
                     , new FlinkCDCPipelineEventProcess(
                     org.apache.flink.cdc.common.types.DataTypes.VARCHAR(type.getColumnSize())
-                    , new FlinkPipelineStringConvert())
+                    , STRING_FUNC_PROCESS.getRight())
                     , new RowFieldGetterFactory.StringGetter(meta.getName(), colIndex));
         }
 
@@ -397,6 +402,13 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             LocalDate localDate = (LocalDate) super.apply(o);
             return (int) localDate.toEpochDay();
         }
+
+        @Override
+        public String toStringVal(Object val) {
+            //  return super.toStringVal(val);
+            LocalDate localDate = LocalDate.ofEpochDay(((Number) val).intValue());
+            return dateFormatterFull.format(localDate);
+        }
     }
 
     //  private static final ZoneId sysDefaultZone = ZoneId.systemDefault();
@@ -406,6 +418,13 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public Object apply(Object o) {
             LocalDateTime v = (LocalDateTime) super.apply(o);
             return TimestampData.fromLocalDateTime(v);
+        }
+
+        @Override
+        public Object deApply(Object o) {
+            return datetimeFormatter.format(((TimestampData) o).toLocalDateTime());
+
+            // return datetimeFormatter.format((LocalDateTime) o);
         }
     }
 
@@ -510,6 +529,12 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             }
             return (LocalTime) o;
         }
+
+        @Override
+        public String toStringVal(Object val) {
+            LocalTime localTime = (LocalTime) val;
+            return localTime.format(TIME_FORMATTER);
+        }
     }
 
     static class DTOLocalTimeConvert extends LocalTimeConvert {
@@ -517,6 +542,14 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public Object apply(Object o) {
             LocalTime time = (LocalTime) super.apply(o);
             return DateTimeUtils.toInternal(time);
+        }
+
+        // private final DateTimeFormatter shortFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        @Override
+        public String toStringVal(Object val) {
+            LocalTime localTime = DateTimeUtils.toLocalTime(((Number) val).intValue());
+            return localTime.format(TIME_FORMATTER);
         }
     }
 

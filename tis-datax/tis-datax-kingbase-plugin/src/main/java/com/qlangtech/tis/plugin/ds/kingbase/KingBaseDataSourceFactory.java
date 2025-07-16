@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.kingbase;
 
 import com.alibaba.citrus.turbine.Context;
+import com.kingbase8.KBProperty;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -70,6 +71,10 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     @Override
     protected java.util.Properties extractSetJdbcProps(java.util.Properties props) {
         Objects.requireNonNull(this.dispatch, "dispatch can not be null").extractSetJdbcProps(props);
+        if (StringUtils.isEmpty(this.encode)) {
+            throw new IllegalStateException("param encode can not be empty");
+        }
+        props.setProperty(KBProperty.CLIENT_ENCODING.getName(), this.encode);
         return props;
     }
 
@@ -178,6 +183,7 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
 
             // return super.validateAll(msgHandler, context, postFormVals);
         }
+
         @Override
         public Optional<String> getDefaultDataXReaderDescName() {
             return Optional.of(KingBaseDataSourceFactory.KingBase_NAME);

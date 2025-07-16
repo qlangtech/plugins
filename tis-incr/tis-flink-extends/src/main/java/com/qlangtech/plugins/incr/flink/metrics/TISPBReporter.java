@@ -25,6 +25,7 @@ import com.qlangtech.tis.realtime.SourceProcessFunction;
 import com.qlangtech.tis.realtime.transfer.IIncreaseCounter;
 import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
 import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
+import com.qlangtech.tis.realtime.yarn.rpc.PipelineFlinkTaskId;
 import com.qlangtech.tis.realtime.yarn.rpc.UpdateCounterMap;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
@@ -164,27 +165,27 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         for (Map.Entry<Counter, String> entry : counters.entrySet()) {
             Counter counter = entry.getKey();
             String metricID = entry.getValue();
-            System.out.println(metricID + ": " + counter.getCount());
+            // System.out.println(metricID + ": " + counter.getCount());
             metricGroup = metricIdentifierMapper.get(metricID);
             if (metricGroup != null) {
-                System.out.println(metricGroup);
+               // System.out.println(metricGroup);
 
-                metrics.add(new UseableMetricForTIS(entry.getKey(), metricGroup.getKey(), metricGroup.getRight()));
+                metrics.add(new UseableMetricForTIS(counter, /**metricName*/metricGroup.getKey(), metricGroup.getRight()));
             }
         }
 
-        sendMetric2TISAssemble(metrics);
+        this.sendMetric2TISAssemble(metrics);
     }
 
     private void sendMetric2TISAssemble(List<UseableMetricForTIS> metrics) {
         // 汇总一个索引中所有focus table的增量信息
-        Map<String, TableSingleDataIndexStatus> tabCounterMapper = Maps.newHashMap();
+        Map<PipelineFlinkTaskId, TableSingleDataIndexStatus> tabCounterMapper = Maps.newHashMap();
 
-        String pipelineName = null;
+        PipelineFlinkTaskId pipelineName = null;
         TableSingleDataIndexStatus singleDataIndexStatus = null;
         String host = null;
         for (UseableMetricForTIS metric : metrics) {
-            pipelineName = metric.getPipelineName();
+            pipelineName = new PipelineFlinkTaskId(metric.getPipelineName(), metric.getFlinkTaskId());
             if (host == null) {
                 host = metric.getHost();
             }
@@ -195,26 +196,22 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
                 tabCounterMapper.put(pipelineName, singleDataIndexStatus);
             }
             singleDataIndexStatus.put(metric.metricName, metric.counter.getCount());
-            // IncrCounter tableIncrCounter = new
-            // IncrCounter((int)entry.getValue().getIncreasePastLast());
-            // tableIncrCounter.setAccumulationCount(entry.getValue().getAccumulation());
-            // tableUpdateCounter.put(entry.getKey(), tableIncrCounter);
-            // 只记录一个消费总量和当前时间
         }
 
         if (MapUtils.isNotEmpty(tabCounterMapper)) {
-            UpdateCounterMap updateCounterMap = new UpdateCounterMap();
+            UpdateCounterMap pipelineUpdateCounterMap = new UpdateCounterMap();
             if (StringUtils.isEmpty(host)) {
                 throw new IllegalStateException("host can not be empty");
             }
-            updateCounterMap.setFrom(host);
+            pipelineUpdateCounterMap.setFrom(host);
             tabCounterMapper.forEach((tisPipeline, tabCounter) -> {
-                updateCounterMap.addTableCounter(tisPipeline, tabCounter);
+
+                pipelineUpdateCounterMap.setPipelineTableCounterMetric(tisPipeline, tabCounter);
             });
             /**
              * 服务端：IncrStatusUmbilicalProtocolImpl
              */
-            getRpcService().reportStatus(updateCounterMap);
+            getRpcService().reportStatus(pipelineUpdateCounterMap);
         }
     }
 
@@ -232,7 +229,7 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         }
 
         String getFlinkTaskId() {
-            return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_TASK_VERTEX_ID);
+            return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_TASK_SUBTASK_INDEX);
         }
 
         public UseableMetricForTIS(Counter counter, String metricName, MetricGroup metricGroup) {

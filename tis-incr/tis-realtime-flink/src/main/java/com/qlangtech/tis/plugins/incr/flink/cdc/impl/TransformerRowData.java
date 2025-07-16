@@ -18,7 +18,9 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
+import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.plugins.incr.flink.cdc.DTOConvertTo;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import org.apache.flink.table.data.ArrayData;
 import org.apache.flink.table.data.DecimalData;
@@ -39,18 +41,18 @@ import java.util.Objects;
  **/
 public class TransformerRowData extends AbstractTransformerRecord<RowData> implements RowData {
     protected Object[] rewriteVals;
-    protected List<FlinkCol> rewriteCols;
+    //  protected List<FlinkCol> rewriteCols;
     protected List<FlinkCol> originColsWithContextParamsFlinkCol;
     private final int delegateArity;
 
     public TransformerRowData(RowData row, List<FlinkCol> rewriteCols, List<FlinkCol> originColsWithContextParamsFlinkCol, int delegateArity) {
-        super(row);
+        super(DTOConvertTo.RowData, row, rewriteCols);
         if (!(row instanceof GenericRowData)) {
             throw new IllegalArgumentException("param row must be type of " + GenericRowData.class);
         }
         this.delegateArity = delegateArity;
         this.originColsWithContextParamsFlinkCol = originColsWithContextParamsFlinkCol;
-        this.rewriteCols = rewriteCols;
+        //  this.rewriteCols = rewriteCols;
         int newSize = rewriteCols.size();
         this.rewriteVals = new Object[newSize];
         if (this.delegateArity > newSize) {
@@ -58,22 +60,29 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
         }
     }
 
-    @Override
-    public void setString(String field, String val) {
-        setColumn(field, (val == null) ? null : val);
-    }
+//    @Override
+//    public void setString(String field, String val) {
+//        setColumn(field, (val == null) ? null : val);
+//    }
+
+//    @Override
+//    public void setColumn(String field, Object val) {
+//        Integer pos = getPos(field);
+//        FlinkCol flinkCol = this.cols.get(pos);
+//        rewriteVals[pos] = (val == null ? NULL : flinkCol.rowDataProcess.apply(val));
+//    }
 
     @Override
-    public void setColumn(String field, Object val) {
+    protected void setColumn(String field, BiFunction rowProcess, Object val) {
         Integer pos = getPos(field);
-        FlinkCol flinkCol = rewriteCols.get(pos);
-        rewriteVals[pos] = (val == null ? NULL : flinkCol.rowDataProcess.apply(val));
+       // FlinkCol flinkCol = this.cols.get(pos);
+        rewriteVals[pos] = (val == null ? NULL : rowProcess.apply(val));
     }
 
     @Override
     public Object getColumn(String field) {
         Integer pos = getPos(field);
-        FlinkCol flinkCol = rewriteCols.get(pos);
+        FlinkCol flinkCol = this.cols.get(pos);
         if (rewriteVals[pos] != null) {
             Object overWrite = rewriteVals[pos];
             return overWrite == NULL ? null : flinkCol.getRowDataVal(this);
@@ -82,14 +91,14 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
         return getColVal(originColsWithContextParamsFlinkCol.get(pos));
     }
 
-    @Override
-    public String getString(String field) {
-        StringData val = this.getString(getPos(field));
-        if (val == null) {
-            return null;
-        }
-        return val.toString();
-    }
+//    @Override
+//    public String getString(String field) {
+//        StringData val = this.getString(getPos(field));
+//        if (val == null) {
+//            return null;
+//        }
+//        return val.toString();
+//    }
 
     @Override
     public RowData getDelegate() {

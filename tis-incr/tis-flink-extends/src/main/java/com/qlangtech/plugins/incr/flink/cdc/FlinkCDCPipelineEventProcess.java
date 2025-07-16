@@ -46,6 +46,10 @@ public class FlinkCDCPipelineEventProcess extends BiFunction {
         return this.dataType;
     }
 
+    @Override
+    public String toStringVal(Object val) {
+        return fieldProcessDelegate.toStringVal(val);
+    }
 
     public static class FlinkPipelineStringConvert extends BiFunction {
         @Override
@@ -61,7 +65,6 @@ public class FlinkCDCPipelineEventProcess extends BiFunction {
             return org.apache.flink.cdc.common.data.binary.BinaryStringData.fromString(String.valueOf(o));
         }
     }
-
 
 
     public static class FlinkPipelineDecimalConvert extends BiFunction {
@@ -96,6 +99,11 @@ public class FlinkCDCPipelineEventProcess extends BiFunction {
         public Object apply(Object o) {
             LocalDateTime v = (LocalDateTime) super.apply(o);
             return org.apache.flink.cdc.common.data.TimestampData.fromLocalDateTime(v);
+        }
+
+        @Override
+        public String toStringVal(Object val) {
+            return datetimeFormatter.format(((org.apache.flink.cdc.common.data.TimestampData) val).toLocalDateTime());
         }
     }
 }

@@ -53,6 +53,7 @@ import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.realtime.yarn.rpc.MasterJob;
+import com.qlangtech.tis.realtime.yarn.rpc.PipelineFlinkTaskId;
 import com.qlangtech.tis.realtime.yarn.rpc.UpdateCounterMap;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
@@ -223,7 +224,7 @@ public class DataxExecutor {
                 logger.info("start to listen the dataX job taskId:{},jobName:{},dataXName:{} overseer cancel", jobId, jobInfo, dataXName);
                 TableSingleDataIndexStatus dataXStatus = new TableSingleDataIndexStatus();
                 dataXStatus.setUUID(jobInfo.jobFileName);
-                status.addTableCounter(IAppSourcePipelineController.DATAX_FULL_PIPELINE + dataXName, dataXStatus);
+                status.setPipelineTableCounterMetric(new PipelineFlinkTaskId(dataXName, IAppSourcePipelineController.DATAX_FULL_PIPELINE), dataXStatus);
 
                 while (true) {
                     status.setUpdateTime(System.currentTimeMillis());

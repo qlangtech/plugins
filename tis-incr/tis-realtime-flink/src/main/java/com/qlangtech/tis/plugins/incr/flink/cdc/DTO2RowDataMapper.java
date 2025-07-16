@@ -20,10 +20,8 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.DTOConvertTo;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.table.data.GenericRowData;
-import org.apache.flink.table.data.RowData;
 
 import java.util.List;
 

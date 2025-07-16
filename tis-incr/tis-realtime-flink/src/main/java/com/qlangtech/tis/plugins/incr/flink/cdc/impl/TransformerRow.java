@@ -18,7 +18,9 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
+import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.plugins.incr.flink.cdc.DTOConvertTo;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import org.apache.flink.types.Row;
 
@@ -29,30 +31,33 @@ import java.util.List;
  * @create: 2024-06-20 17:12
  **/
 public class TransformerRow extends AbstractTransformerRecord<Row> {
-    final List<FlinkCol> cols;
+    //final List<FlinkCol> cols;
 
     public TransformerRow(Row row, List<FlinkCol> cols) {
-        super(row);
-        this.cols = cols;
+        super(DTOConvertTo.Row, row, cols);
+        //  this.cols = cols;
     }
-
-
 
     @Override
     public Row getDelegate() {
         return this.row;
     }
 
-    @Override
-    public void setString(String field, String val) {
-       // FlinkCol col = cols.get(this.col2IndexMapper.get(field));
-        this.setColumn(field, val);
-    }
+//    @Override
+//    public void setString(String field, String val) {
+//        this.setColumn(field, val);
+//    }
+
+//    @Override
+//    public void setColumn(String field, Object colVal) {
+//        FlinkCol col = getFlinkCol(field);
+//        //  this.row.setField(field, col.rowProcess.apply(colVal));
+//        this.setColumn(field, col.rowProcess, colVal);
+//    }
 
     @Override
-    public void setColumn(String field, Object colVal) {
-        FlinkCol col = cols.get(this.col2IndexMapper.get(field));
-        this.row.setField(field, col.rowProcess.apply(colVal));
+    protected void setColumn(String field, BiFunction rowProcess, Object colVal) {
+        this.row.setField(field, rowProcess.apply(colVal));
     }
 
     @Override
@@ -60,12 +65,12 @@ public class TransformerRow extends AbstractTransformerRecord<Row> {
         return this.row.getField(field);
     }
 
-    @Override
-    public String getString(String field) {
-        Object val = this.row.getField(field);
-        if (val == null) {
-            return null;
-        }
-        return String.valueOf(val);
-    }
+//    @Override
+//    public String getString(String field) {
+//        Object val = this.row.getField(field);
+//        if (val == null) {
+//            return null;
+//        }
+//        return String.valueOf(val);
+//    }
 }

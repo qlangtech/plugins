@@ -27,4 +27,14 @@ import java.util.function.Function;
  **/
 public abstract class BiFunction implements Function<Object, Object>, Serializable, DeFunction {
 
+    /**
+     * 在Transformer中使用getString方法取值
+     * //@see AbstractTransformerRecord.getString(String field, boolean origin)
+     * @param val
+     * @return
+     */
+    public String toStringVal(Object val) {
+
+        return val != null ? String.valueOf(val) : null;
+    }
 }

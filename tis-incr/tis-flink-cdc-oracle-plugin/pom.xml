@@ -71,6 +71,10 @@
                     <groupId>org.apache.flink</groupId>
                     <artifactId>flink-connector-debezium</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

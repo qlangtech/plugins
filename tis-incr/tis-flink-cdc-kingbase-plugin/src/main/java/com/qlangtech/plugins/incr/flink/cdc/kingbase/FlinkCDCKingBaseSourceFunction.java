@@ -52,6 +52,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * @create: 2025-01-14 19:11
  **/
 public class FlinkCDCKingBaseSourceFunction extends FlinkCDCPGLikeSourceFunction {
+
     public FlinkCDCKingBaseSourceFunction(FlinkCDCKingBaseSourceFactory sourceFactory) {
         super(sourceFactory);
     }
@@ -109,6 +110,7 @@ public class FlinkCDCKingBaseSourceFunction extends FlinkCDCPGLikeSourceFunction
         configFactory.startupOptions(StartupOptionUtils.getStartupOptions(sourceFactory.startupOptions));
 //             .deserializer(new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper, sourceFactory.getRepIdentity()))
 //                .build();
+
 
         PostgreSQLDeserializationSchema deserializer = new PostgreSQLDeserializationSchema(tabs, flinkColCreator, contextParamValsGetterMapper, sourceFactory.getRepIdentity());
 

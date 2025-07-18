@@ -76,6 +76,20 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
             // 当记录为更新时候会有before，after两条，所以需要将before那条记录过滤掉
             return;
         }
+        switch (in.getEventType()) {
+            case ADD: {
+                this.tisInsertNumRecordsIn.inc();
+                break;
+            }
+            case UPDATE_AFTER: {
+                this.tisUpdateNumRecordsIn.inc();
+                break;
+            }
+            case DELETE: {
+                this.tisDeleteNumRecordsIn.inc();
+                break;
+            }
+        }
         super.increaseNumRecordsMetric(in);
     }
 

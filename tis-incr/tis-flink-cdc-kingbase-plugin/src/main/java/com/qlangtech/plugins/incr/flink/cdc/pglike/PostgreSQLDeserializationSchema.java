@@ -27,6 +27,8 @@ import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,7 @@ import java.util.function.Function;
  **/
 public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
     private final ReplicaIdentity replicaIdentity;
+    private static final Logger logger = LoggerFactory.getLogger(PostgreSQLDeserializationSchema.class);
 
     /**
      * @param tabs
@@ -51,6 +54,7 @@ public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
     ) {
         super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert(), contextParamValsGetterMapper);
         this.replicaIdentity = replicaIdentity;
+        logger.info("create deserializationSchema with replicaIdentity:{}", replicaIdentity);
     }
 
     @Override

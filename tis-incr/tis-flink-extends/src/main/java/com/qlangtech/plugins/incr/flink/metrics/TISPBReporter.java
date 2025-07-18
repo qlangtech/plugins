@@ -110,7 +110,7 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         super.notifyOfAddedMetric(metric, metricName, group);
         String name = group.getMetricIdentifier(metricName, this);
         if (scope.length > 1 && TaskExecutor.TASK_MANAGER_NAME.equals(scope[1])) {
-            if (IIncreaseCounter.TABLE_CONSUME_COUNT.equals(metricName)) {
+            if (IIncreaseCounter.COLLECTABLE_TABLE_COUNT_METRIC.contains(metricName)) {
                 //  System.out.println(metricName);
                 metricIdentifierMapper.put(name, Pair.of(metricName, group));
             }
@@ -168,7 +168,7 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
             // System.out.println(metricID + ": " + counter.getCount());
             metricGroup = metricIdentifierMapper.get(metricID);
             if (metricGroup != null) {
-               // System.out.println(metricGroup);
+                // System.out.println(metricGroup);
 
                 metrics.add(new UseableMetricForTIS(counter, /**metricName*/metricGroup.getKey(), metricGroup.getRight()));
             }

@@ -56,6 +56,9 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
      * 包括所有的数据流量（增删改）
      */
     private transient Counter tisNumRecordsIn;
+    protected transient Counter tisInsertNumRecordsIn;
+    protected transient Counter tisUpdateNumRecordsIn;
+    protected transient Counter tisDeleteNumRecordsIn;
     private final AtomicBoolean drain = new AtomicBoolean(false);
     // private String taskId;
 
@@ -83,6 +86,18 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
         this.tisNumRecordsIn = getRuntimeContext()
                 .getMetricGroup()
                 .counter(IIncreaseCounter.TABLE_CONSUME_COUNT);
+
+        this.tisInsertNumRecordsIn = getRuntimeContext()
+                .getMetricGroup()
+                .counter(IIncreaseCounter.TABLE_INSERT_COUNT);
+
+        this.tisUpdateNumRecordsIn = getRuntimeContext()
+                .getMetricGroup()
+                .counter(IIncreaseCounter.TABLE_UPDATE_COUNT);
+
+        this.tisDeleteNumRecordsIn = getRuntimeContext()
+                .getMetricGroup()
+                .counter(IIncreaseCounter.TABLE_DELETE_COUNT);
 
         // 获取广播状态
         //   ValueStateDescriptor<Double> descriptor = new ValueStateDescriptor<>("rate", Double.class);

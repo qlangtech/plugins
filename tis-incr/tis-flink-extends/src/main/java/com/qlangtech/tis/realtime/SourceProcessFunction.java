@@ -27,6 +27,8 @@ import com.qlangtech.tis.realtime.yarn.rpc.IncrRateControllerCfgDTO.RateControll
 import org.apache.flink.api.connector.source.util.ratelimit.RateLimiter;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.Gauge;
+import org.apache.flink.runtime.checkpoint.CompletedCheckpointStats;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
@@ -60,6 +62,10 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
     protected transient Counter tisUpdateNumRecordsIn;
     protected transient Counter tisDeleteNumRecordsIn;
     private final AtomicBoolean drain = new AtomicBoolean(false);
+
+    private short limitRateControllerType = -1;
+    private int rateRecordsPerSecondGauge;
+    private int parallelNum;
     // private String taskId;
 
     // private transient RateLimiter rateLimiter;
@@ -82,6 +88,7 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
 
     @Override
     public void open(Configuration parameters) throws Exception {
+        this.parallelNum = getRuntimeContext().getTaskInfo().getNumberOfParallelSubtasks();
         // this.taskId = getRuntimeContext().getTaskInfo().getAllocationIDAsString();
         this.tisNumRecordsIn = getRuntimeContext()
                 .getMetricGroup()
@@ -99,9 +106,30 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
                 .getMetricGroup()
                 .counter(IIncreaseCounter.TABLE_DELETE_COUNT);
 
+        getRuntimeContext()
+                .getMetricGroup().gauge(IIncreaseCounter.METRIC_LIMIT_RATE_CONTROLLER_TYPE, new LimitRateControllerTypeGauge());
+
+        getRuntimeContext()
+                .getMetricGroup().gauge(IIncreaseCounter.METRIC_LIMIT_RATE_PER_SECOND_NUMS, new RateRecordsPerSecondGauge());
+
+
         // 获取广播状态
         //   ValueStateDescriptor<Double> descriptor = new ValueStateDescriptor<>("rate", Double.class);
         // broadcastState = getRuntimeContext().getBroadcastState(descriptor);
+    }
+
+    private class LimitRateControllerTypeGauge implements Gauge<Short> {
+        @Override
+        public Short getValue() {
+            return limitRateControllerType;
+        }
+    }
+
+    private class RateRecordsPerSecondGauge implements Gauge<Integer> {
+        @Override
+        public Integer getValue() {
+            return rateRecordsPerSecondGauge;
+        }
     }
 
 
@@ -117,30 +145,41 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
             return;
         }
         IResettableRateLimiter rateLimiter = getRateLimiter();
-        if (rate.getPause()) {
-            rateLimiter.pauseConsume();
-        } else {
-            rateLimiter.resumeConsume();
-        }
-
+//        if (rate.getPause()) {
+//            rateLimiter.pauseConsume();
+//        } else {
+//            rateLimiter.resumeConsume();
+//        }
 
         Map<String, Object> params = rate.getPayloadParams();
         drain.set(false);
+        this.limitRateControllerType = controllerType.getTypeToken();
         switch (controllerType) {
-            case RateLimit:
-                Integer rateRecordsPerSecond = (Integer) params.get(IncrRateControllerCfgDTO.KEY_RATE_LIMIT_PER_SECOND);
-                resetLimitRate(Objects.requireNonNull(rateRecordsPerSecond, "param rateRecordsPerSecond can not be null"));
-                logger.info("set rateRecordsPerSecond:{}", rateRecordsPerSecond);
+            case Paused: {
+                rateLimiter.pauseConsume();
                 break;
-            case NoLimitParam:
+            }
+            case RateLimit: {
+                rateLimiter.resumeConsume();
+                Integer rateRecordsPerSecond = (Integer) params.get(IncrRateControllerCfgDTO.KEY_RATE_LIMIT_PER_SECOND);
+                this.rateRecordsPerSecondGauge = rateRecordsPerSecond * parallelNum;
+                resetLimitRate(Objects.requireNonNull(rateRecordsPerSecond, "param rateRecordsPerSecond can not be null"));
+                logger.info("set rateRecordsPerSecond:{},rateRecordsPerSecondGauge:{}", rateRecordsPerSecond, this.rateRecordsPerSecondGauge);
+                break;
+            }
+            case NoLimitParam: {
+                rateLimiter.resumeConsume();
                 resetLimitRate(Integer.MAX_VALUE);
                 logger.info("set NoLimitParam");
                 break;
-            case FloodDischargeRate:
+            }
+            case FloodDischargeRate: {
+                rateLimiter.resumeConsume();
                 resetLimitRate(Integer.MAX_VALUE);
                 drain.set(true);
                 logger.info("set FloodDischargeRate");
                 break;
+            }
             default:
                 throw new IllegalStateException("pipeline:" + this.dataXName.getPipelineName() + ",illegal controllerType:" + controllerType);
         }

@@ -19,9 +19,13 @@
 package com.qlangtech.plugins.incr.flink.cdc.kingbase.source;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zaxxer.hikari.HikariDataSource;
+import io.debezium.config.Configuration;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.flink.cdc.connectors.base.options.StartupOptions;
 import org.apache.flink.cdc.connectors.postgres.source.config.PostgresSourceConfig;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -64,8 +69,13 @@ public class KingBaseConnectionPoolFactoryTest {
      */
 
     private static class StubPostgresSourceConfig extends PostgresSourceConfig {
-        public StubPostgresSourceConfig() {
-            super(0, null, Lists.newArrayList("test"), Lists.newArrayList("public"), null, 0, 0, 0d, 0d, true, true, null, null, null, "192.168.28.201", 4321, "kingbase", "123456", 0, "Asia/Shanghai", Duration.ofSeconds(10), 1, 1, null, true, true);
+//        public StubPostgresSourceConfig() {
+//            super(0, null, Lists.newArrayList("test"), Lists.newArrayList("public"), null, 0, 0, 0d, 0d, true, true, null, null, null, "192.168.28.201", 4321, "kingbase", "123456", 0, "Asia/Shanghai", Duration.ofSeconds(10), 1, 1, null, true, true);
+//        }
+
+        public StubPostgresSourceConfig( //int subtaskId, StartupOptions startupOptions, List<String> databaseList, List<String> schemaList, List<String> tableList, int splitSize, int splitMetaGroupSize, double distributionFactorUpper, double distributionFactorLower, boolean includeSchemaChanges, boolean closeIdleReaders, Properties dbzProperties, Configuration dbzConfiguration, String driverClassName, String hostname, int port, String username, String password, int fetchSize, String serverTimeZone, Duration connectTimeout, int connectMaxRetries, int connectionPoolSize, @Nullable String chunkKeyColumn, boolean skipSnapshotBackfill, boolean isScanNewlyAddedTableEnabled, int lsnCommitCheckpointsDelay, boolean assignUnboundedChunkFirst
+        ) {
+            super(0, null, Lists.newArrayList("test"), Lists.newArrayList("public"), null, 0, 0, 0d, 0d, true, true, new Properties(), Configuration.from(Maps.newHashMap()), null, "192.168.28.201", 4321, "kingbase", "123456", 0, "Asia/Shanghai", Duration.ofSeconds(10), 1, 1, null, true, false, 1, true);
         }
     }
 }

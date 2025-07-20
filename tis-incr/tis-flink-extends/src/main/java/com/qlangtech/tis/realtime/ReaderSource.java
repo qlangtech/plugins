@@ -106,7 +106,7 @@ public abstract class ReaderSource<T> {
         public IncrRateControllerCfgDTO map(Long aLong) throws Exception {
             IncrRateControllerCfgDTO mockRateControllerCfg = new IncrRateControllerCfgDTO();
             mockRateControllerCfg.setControllerType(RateControllerType.SkipProcess);
-            mockRateControllerCfg.setPause(false);
+            //mockRateControllerCfg.setPause(false);
             mockRateControllerCfg.setLastModified(System.currentTimeMillis());
             return mockRateControllerCfg;
         }

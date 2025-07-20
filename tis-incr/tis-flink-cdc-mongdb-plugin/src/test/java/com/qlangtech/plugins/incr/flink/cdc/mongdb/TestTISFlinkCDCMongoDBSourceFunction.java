@@ -59,6 +59,8 @@ import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory.MongoJDBCConnection;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugin.timezone.DefaultTISTimeZone;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -169,7 +171,9 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
                     }
                 };
                 mongoReader.selectedTabs = rdbmsReader.selectedTabs;
-                mongoReader.timeZone = MQListenerFactory.dftZoneId();
+                DefaultTISTimeZone timeZone = new DefaultTISTimeZone();
+                timeZone.timeZone = TISTimeZone.dftZoneId();
+                mongoReader.timeZone = timeZone;
                 return mongoReader;
 //                DataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName, this.splitTabSuffix.isPresent());
 //                BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {

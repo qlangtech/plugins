@@ -115,19 +115,19 @@ public abstract class ReaderSource<T> {
     protected abstract DataStreamSource<T> addAsSource(StreamExecutionEnvironment env);
 
 
-    public static ReaderSource<DTO> createDTOSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, SourceFunction<DTO> sourceFunc) {
-        return new SideOutputReaderSource<DTO>(streamFactory, dataXName, tokenName) {
-            @Override
-            protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
-                return env.addSource(sourceFunc, TypeInformation.of(DTO.class));
-            }
-
-            @Override
-            protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
-                return new DTOSourceTagProcessFunction(dataXName, tab2OutputTag);
-            }
-        };
-    }
+//    public static ReaderSource<DTO> createDTOSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, SourceFunction<DTO> sourceFunc) {
+//        return new SideOutputReaderSource<DTO>(streamFactory, dataXName, tokenName) {
+//            @Override
+//            protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
+//                return env.addSource(sourceFunc, TypeInformation.of(DTO.class));
+//            }
+//
+//            @Override
+//            protected SourceProcessFunction<DTO> createStreamTagFunction(Map<String, OutputTag<DTO>> tab2OutputTag) {
+//                return new DTOSourceTagProcessFunction(dataXName, tab2OutputTag);
+//            }
+//        };
+//    }
 
 
     public static ReaderSource<DTO> createDTOSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName

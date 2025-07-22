@@ -23,6 +23,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.cdc.connectors.mongodb.MongoDBSource.Builder;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 import org.apache.flink.types.RowKind;
 
 /**
@@ -37,9 +38,9 @@ public class FullChangelog extends UpdateRecordComplete {
     }
 
     @Override
-    public void setProperty(Builder<DTO> builder) {
+    public void setProperty(MongoDBSourceBuilder<DTO> builder) {
         builder.scanFullChangelog(true);
-        builder.updateLookup(false);
+       // builder.updateLookup(false);
     }
 
     @TISExtension

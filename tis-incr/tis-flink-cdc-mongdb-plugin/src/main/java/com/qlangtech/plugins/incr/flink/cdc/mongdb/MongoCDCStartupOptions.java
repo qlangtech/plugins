@@ -21,10 +21,11 @@ package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.cdc.connectors.base.options.StartupOptions;
-import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 
 /**
  * https://nightlies.apache.org/flink/flink-cdc-docs-master/docs/connectors/flink-sources/mongodb-cdc/#startup-reading-position
+ * MongoDBSourceBuilder<DTO> builder
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-04 14:08
@@ -33,12 +34,12 @@ public abstract class MongoCDCStartupOptions implements Describable<MongoCDCStar
 
     protected abstract StartupOptions getOptionsType();
 
-    public final void setProperty(MongoDBSource.Builder<DTO> builder) {
+    public final void setProperty(MongoDBSourceBuilder<DTO> builder) {
         builder.startupOptions(this.getOptionsType());
         this.appendProperty(builder);
     }
 
-    protected void appendProperty(MongoDBSource.Builder<DTO> builder) {
+    protected void appendProperty(MongoDBSourceBuilder<DTO> builder) {
     }
 
 }

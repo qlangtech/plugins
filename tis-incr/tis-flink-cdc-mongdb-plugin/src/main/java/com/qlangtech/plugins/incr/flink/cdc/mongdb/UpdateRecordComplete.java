@@ -20,7 +20,8 @@ package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
+
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 import org.apache.flink.types.RowKind;
 
 /**
@@ -40,6 +41,6 @@ public abstract class UpdateRecordComplete implements Describable<UpdateRecordCo
      */
     public abstract RowKind[] getUpdateRowkindsForTest();
 
-    public abstract void setProperty(MongoDBSource.Builder<DTO> builder);
+    public abstract void setProperty(MongoDBSourceBuilder<DTO> builder);
 
 }

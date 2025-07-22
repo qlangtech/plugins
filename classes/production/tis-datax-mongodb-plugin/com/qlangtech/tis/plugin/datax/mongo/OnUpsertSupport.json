@@ -1,0 +1,7 @@
+{
+  "upsertKey": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.SelectedTab.getDftPks():uncache_true",
+    "enum": "com.qlangtech.tis.plugin.datax.SelectedTab.getColsCandidate():uncache_true",
+    "help": "replaceKey指定了每行记录的业务主键。用来做更新时使用"
+  }
+}

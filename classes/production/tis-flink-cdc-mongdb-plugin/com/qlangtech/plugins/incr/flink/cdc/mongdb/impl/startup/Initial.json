@@ -1,0 +1,12 @@
+{
+  "copyExistingMaxThreads": {
+  },
+  "copyExistingQueueSize": {
+  },
+  "pollMaxBatchSize": {
+  },
+  "pollAwaitTimeMillis": {
+  },
+  "heartbeatIntervalMillis": {
+  }
+}

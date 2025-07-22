@@ -1,0 +1,19 @@
+{
+  "connectionOptions": {
+    "label": "Conn Options"
+  },
+  "copyExistingPipeline": {
+    "placeholder": "[{\"$match\": {\"closed\": \"false\"}}]",
+    "style": "codemirror",
+    "mode": "application/ld+json",
+    "rows": 2
+  },
+  "updateRecordComplete": {
+    "label": "补全策略",
+    "dftVal": "UPDATE_LOOKUP"
+  },
+  "startupOption": {
+    "label": "起始位点",
+    "dftVal": "LATEST_OFFSET"
+  }
+}

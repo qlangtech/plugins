@@ -1,0 +1,11 @@
+# informational; use java -jar sezpoz.jar to see authoritative contents
+com.qlangtech.tis.plugin.HttpEndpoint$DefaultDescriptor
+com.qlangtech.tis.plugin.aliyun.AccessKey$DefaultDescriptor
+com.qlangtech.tis.plugin.aliyun.AliyunEndpoint$DefaultDescriptor
+com.qlangtech.tis.plugin.aliyun.NoneToken$DefaultDescriptor
+com.qlangtech.tis.plugin.aliyun.UsernamePassword$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.DataFlowDataXProcessor$DescriptorImpl
+com.qlangtech.tis.plugin.datax.DataXGlobalConfig$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.DefaultDataxProcessor$DescriptorImpl
+com.qlangtech.tis.plugin.datax.format.guesstype.GuessOff$DftDesc
+com.qlangtech.tis.plugin.datax.format.guesstype.GuessOn$DftDesc

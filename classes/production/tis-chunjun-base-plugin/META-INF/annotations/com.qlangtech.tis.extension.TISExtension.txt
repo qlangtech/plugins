@@ -1,0 +1,14 @@
+# informational; use java -jar sezpoz.jar to see authoritative contents
+com.qlangtech.tis.plugins.incr.flink.chunjun.offset.DesignatedLocation$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.offset.LatestLocation$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.offset.ScanAll$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.poll.RunInterval$DftDesc
+com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.script.StreamApiScript$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter$DefaultDescriptor
+com.qlangtech.tis.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends$DftDesc
+com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType$DftDescriptor
+com.qlangtech.tis.plugins.incr.flink.connector.impl.ReplaceType$DftDescriptor
+com.qlangtech.tis.plugins.incr.flink.connector.impl.UpdateType$DftDescriptor
+com.qlangtech.tis.plugins.incr.flink.connector.impl.UpsertType$DftDescriptor

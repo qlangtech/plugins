@@ -53,8 +53,8 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 10, advance = true, type = FormFieldType.INPUTTEXT)
     public String connectionOptions;
 
-    @FormField(ordinal = 11, advance = true, type = FormFieldType.TEXTAREA)
-    public String copyExistingPipeline;
+//    @FormField(ordinal = 11, advance = true, type = FormFieldType.TEXTAREA)
+//    public String copyExistingPipeline;
 
     //private transient IConsumerHandle consumerHandle;
 

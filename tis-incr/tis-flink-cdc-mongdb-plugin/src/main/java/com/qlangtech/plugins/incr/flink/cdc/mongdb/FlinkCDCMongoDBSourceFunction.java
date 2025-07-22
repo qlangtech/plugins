@@ -26,15 +26,12 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.MongoDBDeserializationSchema;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -49,8 +46,8 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSource;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
@@ -100,6 +97,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
                     , new DefaultTableNameConvert()
                     , contextParamValsGetterMapper);
 
+
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
                         List<ReaderSource> sourceFunctions = createSourceFunctions(streamFactory, dataxName, dsFactory, tabs, deserializationSchema);
@@ -125,32 +123,36 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
                 .toArray(String[]::new);
 //        for (ISelectedTab tab : tabs) {
 //        }
-        MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
-                .hosts(dsFactory.address)
-                .databaseList(dsFactory.dbName)
-                //  .startupOptions(sourceFactory.getStartupOptions())
 
+        MongoDBSourceBuilder<DTO> b = new org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder();//.<DTO>builder();
+        MongoDBSourceBuilder<DTO> builder = b.hosts(dsFactory.address)
+                .databaseList(dsFactory.dbName)
                 .collectionList(collectionList)
                 .connectionOptions(sourceFactory.connectionOptions)
-                .copyExistingPipeline(sourceFactory.copyExistingPipeline)
-
-                // .fullDocumentBeforeChange(sourceFactory.fullDocumentBeforeChange)
-//                .scanFullChangelog(true)
-//                .updateLookup(true)
-                // .copyExisting(sourceFactory.copyExisting)
-                //.errorsTolerance(sourceFactory.errorsTolerance)
+                // .copyExistingPipeline(sourceFactory.copyExistingPipeline)
                 .username(dsFactory.getUserName())
                 .password(dsFactory.getPassword())
                 .deserializer(deserializationSchema);
 
 
+//        MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
+//                .hosts(dsFactory.address)
+//                .databaseList(dsFactory.dbName)
+//                .collectionList(collectionList)
+//                .connectionOptions(sourceFactory.connectionOptions)
+//                .copyExistingPipeline(sourceFactory.copyExistingPipeline)
+//                .username(dsFactory.getUserName())
+//                .password(dsFactory.getPassword())
+//                .deserializer(deserializationSchema);
+
+
         Objects.requireNonNull(sourceFactory.startupOption, "startupOption can not be null").setProperty(builder);
         Objects.requireNonNull(sourceFactory.updateRecordComplete, "updateRecordComplete can not be null").setProperty(builder);
-
-        SourceFunction<DTO> source = builder.build();
+        MongoDBSource<DTO> source = builder.build();
+        //   SourceFunction<DTO> source = builder.build();
 
         sourceFuncs.add(ReaderSource.createDTOSource(
-                streamFactory, dataXName, dsFactory.address + "_" + dsFactory.dbName, source));
+                streamFactory, dataXName, dsFactory.address + "_" + dsFactory.dbName, false, source));
 
         return sourceFuncs;
     }

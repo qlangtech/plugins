@@ -109,7 +109,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     @Override
     public boolean supportRateLimiter() {
-        return rateLimiter.supportRateLimiter();
+        return Objects.requireNonNull(this.rateLimiter, "rateLimiter can not be null").supportRateLimiter();
     }
 
     @Override

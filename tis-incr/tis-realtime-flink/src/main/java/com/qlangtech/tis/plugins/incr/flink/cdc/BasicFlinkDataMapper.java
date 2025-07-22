@@ -304,13 +304,12 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
         public FlinkCol blobType(DataType type) {
             FlinkCol col = new FlinkCol(meta, type, DataTypes.BYTES()
                     , new BinaryRawValueDataConvert()
-                    , FlinkCol.NoOp()
-                    , new FlinkCDCPipelineEventProcess(org.apache.flink.cdc.common.types.DataTypes.VARBINARY(type.getColumnSize()), new BinaryRawValueDataConvert())
+                    , new BinaryRawValueDataConvert()
+                    , new FlinkCDCPipelineEventProcess(
+                            org.apache.flink.cdc.common.types.DataTypes.VARBINARY(type.getColumnSize()), new BinaryRawValueDataConvert())
                     , new RowFieldGetterFactory.BlobGetter(meta.getName(), colIndex));
             return col.setSourceDTOColValProcess(new BinaryRawValueDTOConvert());
         }
-
-
 
 
         @Override

@@ -1,0 +1,17 @@
+{
+  "powerJobWorkerImagePath": {
+    "label": "workerImage",
+    "dftVal": "com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage.dftPowerJobWorkerImagePath()",
+    "help": "Powerjob Worker Image Path 由TIS定制"
+  },
+  "embeddedMetaDataImagePath": {
+    "label": "metaImage",
+    "dftVal": "com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage.powerjobMetaStoreImagePath()",
+    "help": "Powerjob Server MetaStore 持久化存储 PowerJob机群配置化信息"
+  },
+  "imagePath": {
+    "label": "serverImage",
+    "dftVal": "com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage.powerjobServerImagePath()",
+    "help": "Powerjob Server 镜像地址"
+  }
+}

@@ -91,6 +91,7 @@
                                         <exclude>io/debezium/relational/RelationalTableFilters*</exclude>
                                     </excludes>
                                 </filter>
+
                             </filters>
                         </configuration>
                     </execution>

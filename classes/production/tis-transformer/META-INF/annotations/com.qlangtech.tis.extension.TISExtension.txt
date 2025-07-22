@@ -1,0 +1,8 @@
+# informational; use java -jar sezpoz.jar to see authoritative contents
+com.qlangtech.tis.plugin.datax.transformer.impl.AutoGenerateBigIntIDUDF$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.ConcatUDF$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.CopyValUDF$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.DataMaskingUDF$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.JSONSplitterUDF$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.RegexPatternReplace$DefaultDescriptor
+com.qlangtech.tis.plugin.datax.transformer.impl.SubStrUDF$DefaultSubStrDescriptor

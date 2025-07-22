@@ -1,0 +1,3 @@
+# informational; use java -jar sezpoz.jar to see authoritative contents
+com.qlangtech.plugins.incr.flink.cdc.impl.NoRateLimiter$Desc
+com.qlangtech.plugins.incr.flink.cdc.impl.PerSecondRateLimiter$Desc

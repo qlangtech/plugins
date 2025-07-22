@@ -217,7 +217,7 @@ public abstract class TableRegisterFlinkSourceHandle
         DataXName dataX = this.getCollectionName();
         final IPluginContext namedContext = IPluginContext.namedContext(dataX.getPipelineName());
         Optional<RecordTransformerRules> transformers
-                = (RecordTransformerRules.loadTransformerRules(namedContext, DataxProcessor.load(namedContext, dataX), tabName));
+                = (RecordTransformerRules.loadTransformerRules(namedContext, dataX, tabName));
         RecordTransformerRules tRules = null;
         RowTransformerMapper transformerMapper = null;
         List<FlinkCol> cols = null;

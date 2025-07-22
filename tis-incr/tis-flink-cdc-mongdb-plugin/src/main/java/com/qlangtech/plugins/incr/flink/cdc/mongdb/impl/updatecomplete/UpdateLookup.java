@@ -22,9 +22,8 @@ import com.qlangtech.plugins.incr.flink.cdc.mongdb.UpdateRecordComplete;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.cdc.connectors.mongodb.MongoDBSource.Builder;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 import org.apache.flink.types.RowKind;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-04 14:10
@@ -38,9 +37,9 @@ public class UpdateLookup extends UpdateRecordComplete {
     }
 
     @Override
-    public void setProperty(Builder<DTO> builder) {
+    public void setProperty(MongoDBSourceBuilder<DTO> builder) {
         builder.scanFullChangelog(false);
-        builder.updateLookup(true);
+      //  builder.updateLookup(true);
     }
 
     @TISExtension

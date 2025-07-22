@@ -1,0 +1,17 @@
+{
+  "name":"mongodbreader",
+  "parameter":{
+    "collectionName":"orderdetail",
+    "column":[
+      "`col1`",
+      "`col2`",
+      "`col3`",
+      "`doc_type_split_field1`",
+      "`doc_type_split_field2`",
+      "`document_type_field`"
+    ],
+    "dataSourceFactoryId":"testMongoDS",
+    "dbName":"tis",
+    "storeResType":"ap"
+  }
+}

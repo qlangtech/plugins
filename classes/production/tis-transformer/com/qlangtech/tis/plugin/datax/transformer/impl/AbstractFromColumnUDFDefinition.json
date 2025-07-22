@@ -1,0 +1,6 @@
+{
+  "from": {
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.AbstractFromColumnUDFDefinition.colsCandidate():uncache_true",
+    "help": "从下拉列表中选择记录中的某一列，作为需要转换的值来源"
+  }
+}

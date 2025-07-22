@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.connector.source.util.ratelimit.RateLimiter;
 
 import java.util.Map;
@@ -30,8 +31,12 @@ import java.util.concurrent.atomic.AtomicReference;
  **/
 public class RateLimiterRegistry {
     private static final Map<String, AtomicReference<RateLimiter>> RATE_REGISTRY = new ConcurrentHashMap<>();
+
     // 注册限流器
-    public static void registerRateLimiter(String sourceUid,  RateLimiter rateStrategy) {
+    public static void registerRateLimiter(String sourceUid, RateLimiter rateStrategy) {
+        if (StringUtils.isEmpty(sourceUid)) {
+            throw new IllegalArgumentException("param sourceUid can not be empty");
+        }
         RATE_REGISTRY.computeIfAbsent(sourceUid, k -> new AtomicReference<>(rateStrategy));
     }
 

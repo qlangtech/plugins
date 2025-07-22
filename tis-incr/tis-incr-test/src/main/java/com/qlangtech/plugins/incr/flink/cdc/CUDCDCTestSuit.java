@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsUpdate.UpdatedColVal;
+import com.qlangtech.plugins.incr.flink.cdc.impl.NoRateLimiter;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
@@ -113,7 +114,7 @@ public abstract class CUDCDCTestSuit {
     final Date now = new Date();
     private final Calendar calendar;
     private final AtomicInteger timeGetterCount = new AtomicInteger();
-    private final IncrStreamFactory streamFactory;
+    protected final TISFlinkCDCStreamFactory streamFactory;
 
     public CUDCDCTestSuit(CDCTestSuitParams suitParam) {
         this(suitParam, Optional.empty());
@@ -126,6 +127,8 @@ public abstract class CUDCDCTestSuit {
         calendar = Calendar.getInstance();
         calendar.setTime(now);
         this.streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.rateLimiter = new NoRateLimiter();
+        streamFactory.parallelism = 1;
     }
 
     protected final TargetResName dataxName = new TargetResName("x");
@@ -398,7 +401,8 @@ public abstract class CUDCDCTestSuit {
             @Override
             public Pair<List<RecordTransformerRules>, IPluginStore>
             getRecordTransformerRulesAndPluginStore(IPluginContext pluginCtx, String tableName) {
-                throw new UnsupportedOperationException();
+                // throw new UnsupportedOperationException();
+                return Pair.of(Collections.emptyList(), null);
             }
 
             @Override
@@ -428,7 +432,8 @@ public abstract class CUDCDCTestSuit {
 
             @Override
             public String identityValue() {
-                throw new UnsupportedOperationException();
+                return dataxName.getName();
+                // throw new UnsupportedOperationException();
             }
         };
         TableAlias.testTabAlias = Lists.newArrayList(new TableAlias(this.tabName));

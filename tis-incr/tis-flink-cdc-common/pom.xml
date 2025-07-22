@@ -30,7 +30,17 @@
 
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-flink-cdc-common</artifactId>
-    <packaging>tpi</packaging>
+    <!--
+       需要是 tpi类型的，不然会报以下错误
+           Caused by: java.lang.NullPointerException: convertingEngineClassloader can not null
+        at java.util.Objects.requireNonNull(Objects.java:246) ~[?:?]
+        at com.qlangtech.plugins.incr.debezium.embedded.TISConvertingEngineBuilderFactory.setClassloader(TISConvertingEngineBuilderFactory.java:59) ~[?:?]
+        at com.qlangtech.plugins.incr.debezium.embedded.TISConvertingEngineBuilderFactory.builder(TISConvertingEngineBuilderFactory.java:50) ~[?:?]
+        at io.debezium.engine.DebeziumEngine.create(DebeziumEngine.java:300) ~[?:?]
+        at io.debezium.engine.DebeziumEngine.create(DebeziumEngine.java:287) ~[?:?]
+        at io.debezium.engine.DebeziumEngine.create(DebeziumEngine.java:273) ~[?:?]
+        at org.apache.flink.cdc.debezium.DebeziumSourceFunction.run(DebeziumSourceFunction.java:412) ~[?:?]-->
+      <packaging>tpi</packaging>
 
     <dependencies>
 
@@ -52,12 +62,12 @@
         <!--            <version>${flink.cdc.version}</version>-->
         <!--        </dependency>-->
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.flink</groupId>-->
-<!--            <artifactId>flink-core</artifactId>-->
-<!--            <version>${flink.version}</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.flink</groupId>-->
+        <!--            <artifactId>flink-core</artifactId>-->
+        <!--            <version>${flink.version}</version>-->
+        <!--            <scope>provided</scope>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

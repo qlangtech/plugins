@@ -38,22 +38,18 @@ import com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.updatecomplete.UpdateLoo
 import com.qlangtech.plugins.incr.flink.cdc.mongdb.utils.MongoDBTestUtils;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
-import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory.IConnProcessor;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
@@ -76,7 +72,6 @@ import org.junit.runners.Parameterized;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -130,8 +125,9 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
 //        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 //        env.enableCheckpointing(200L);
 //        env.setParallelism(1);
-        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
-        streamFactory.parallelism = 1;
+//        TISFlinkCDCStreamFactory streamFactorys = new TISFlinkCDCStreamFactory();
+//        streamFactory.rateLimiter = new NoRateLimiter();
+//        streamFactory.parallelism = 1;
         FlinkCDCMongoDBSourceFactory mongoDBCDCFactory = new FlinkCDCMongoDBSourceFactory();
         mongoDBCDCFactory.startupOption = new LatestOffset();
         //mongoDBCDCFactory.timeZone = MQListenerFactory.dftZoneId();
@@ -196,7 +192,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
 
             @Override
             protected DataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
-                dataSourceFactory = createMySqlDataSourceFactory(dataxName, createdDB);
+                dataSourceFactory = createMongoDataSourceFactory(dataxName, createdDB);
                 TIS.dsFactoryPluginStoreGetter = (p) -> {
                     DSKey key = new DSKey(StoreResourceTypeConstants.DB_GROUP_NAME, p, DataSourceFactory.class);
                     return new DataSourceFactoryPluginStore(key, false) {
@@ -305,6 +301,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
 
             @Override
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
+                RecordTransformerRules.transformerRulesLoader4Test = (tableName) -> null;
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
@@ -336,7 +333,7 @@ public class TestTISFlinkCDCMongoDBSourceFunction extends MongoDBSourceTestBase 
         Thread.sleep(999999999);
     }
 
-    protected DataSourceFactory createMySqlDataSourceFactory(TargetResName dataxName, String createdDB) {
+    protected DataSourceFactory createMongoDataSourceFactory(TargetResName dataxName, String createdDB) {
         MangoDBDataSourceFactory mongoSourceFactory = new MangoDBDataSourceFactory() {
 //            @Override
 //            public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {

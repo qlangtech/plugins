@@ -1,0 +1,38 @@
+{
+  "coreDS": {
+    "dftVal": "Embedded"
+  },
+  "serverPortExport": {
+    "label": "服务暴露",
+    "help": "Powerjob 启动之后将默认7700端口对外部暴露，可选择K8S相应暴露服务端口方式，如：NodePort，Ingress，LoadBalance"
+  },
+  "appName": {
+    "label": "宿主应用名称",
+    "help": "宿主应用名称，需要提前在控制台完成注册, 必填项，否则启动报错",
+    "placeholder": "tis_pipeline"
+  },
+  "password": {
+    "label": "宿主应用密码",
+    "help": "宿主应用密码，需要提前在控制台完成注册, 必填项，否则启动报错"
+  },
+  "k8sImage": {
+    "dftVal": "datax-worker",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "powerjob-image",
+          "descName": "powerjob-image"
+        }
+      ]
+    }
+  },
+  "omsProfile": {
+    "help": "OMS相关配置",
+    "dftVal": "OMSProfile"
+  },
+  "omsStorage": {
+    "help": "PowerJob 当前支持多套存储（MongoDB、AliyunOSS、MySQL等数据库），接入放可自由选择合适的存储介质。",
+    "dftVal": "None"
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "mongodbreader",
+    "parameter": {
+      "dbName": "${reader.dbName}",
+      "dataSourceFactoryId":"${reader.dataSourceFactoryId}",
+      "storeResType": "ap",
+      "collectionName": "${reader.sourceTableName}",
+      "column": [ ${reader.colsQuotes} ]
+    }
+}

@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.cdc.connectors.base.options.StartupOptions;
 import org.apache.flink.cdc.connectors.mongodb.MongoDBSource.Builder;
+import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,11 +35,11 @@ import org.apache.flink.cdc.connectors.mongodb.MongoDBSource.Builder;
  **/
 public class Initial extends MongoCDCStartupOptions {
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer copyExistingMaxThreads;
+//    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+//    public Integer copyExistingMaxThreads;
 
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer copyExistingQueueSize;
+//    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+//    public Integer copyExistingQueueSize;
 
     @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer pollMaxBatchSize;
@@ -51,13 +52,14 @@ public class Initial extends MongoCDCStartupOptions {
 
 
     @Override
-    public void appendProperty(Builder<DTO> builder) {
-        if (this.copyExistingMaxThreads != null) {
-            builder.copyExistingMaxThreads(this.copyExistingMaxThreads);
-        }
-        if (this.copyExistingQueueSize != null) {
-            builder.copyExistingQueueSize(this.copyExistingQueueSize);
-        }
+    public void appendProperty(MongoDBSourceBuilder<DTO> builder) {
+//        if (this.copyExistingMaxThreads != null) {
+//
+//            builder.copyExistingMaxThreads(this.copyExistingMaxThreads);
+//        }
+//        if (this.copyExistingQueueSize != null) {
+//            builder.copyExistingQueueSize(this.copyExistingQueueSize);
+//        }
         if (this.pollMaxBatchSize != null) {
             builder.pollMaxBatchSize(this.pollMaxBatchSize);
         }

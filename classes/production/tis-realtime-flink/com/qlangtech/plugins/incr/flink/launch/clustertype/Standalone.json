@@ -1,0 +1,13 @@
+{
+  "flinkCluster": {
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "Flink-Cluster"
+        }
+      ]
+    }
+  }
+}

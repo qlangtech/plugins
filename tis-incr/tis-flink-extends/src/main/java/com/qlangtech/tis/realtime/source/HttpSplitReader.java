@@ -87,12 +87,12 @@ public class HttpSplitReader implements SplitReader<IncrRateControllerCfgDTO, Ht
             }
             SimpleRecords records = new SimpleRecords(null);
             records.emitted = true;
-            logger.info("skip rateCfg");
+           // logger.info("skip rateCfg");
             return records;
         } else {
             SimpleRecords records = new SimpleRecords(rateLimit);
             this.lastModified = rateLimit.getLastModified();
-            logger.info("send rateCfg:{},pause:{}", rateLimit.getControllerType());
+            logger.info("send rateCfg:{}", rateLimit.getControllerType());
             return records;
         }
     }

@@ -67,6 +67,25 @@
                     <groupId>org.mongodb</groupId>
                     <artifactId>mongodb-driver-sync</artifactId>
                 </exclusion>
+
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-runtime</artifactId>
+                </exclusion>
+
+                <!--与tis-flink-cdc-common 中引入的jackson的依赖冲突了-->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

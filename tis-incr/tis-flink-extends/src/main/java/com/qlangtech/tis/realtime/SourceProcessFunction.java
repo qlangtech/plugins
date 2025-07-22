@@ -193,6 +193,9 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
 
     private IResettableRateLimiter getRateLimiter() {
         RateLimiter currentRate = RateLimiterRegistry.getCurrentRate(this.dataXName.getPipelineName());
+        if (currentRate == null) {
+            throw new NullPointerException("pipe:" + this.dataXName.getPipelineName() + ",relevant currentRate can not be null");
+        }
         if (!(currentRate instanceof IResettableRateLimiter)) {
             throw new IllegalStateException("currentRate must be type of "
                     + IResettableRateLimiter.class.getSimpleName() + " but now is " + currentRate.getClass().getClass());

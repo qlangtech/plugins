@@ -1,0 +1,18 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V8\")",
+    "creator": {
+      "routerLink": "/offline/ds",
+      "label": "配置",
+      "assistType": "dbQuickManager",
+      "plugin": [
+        {
+          "hetero": "datasource",
+          "extraParam": "type_detailed,update_false,disableBizStore_true",
+          "descName": "MySQL-V8",
+          "endType": "mysql"
+        }
+      ]
+    }
+  }
+}

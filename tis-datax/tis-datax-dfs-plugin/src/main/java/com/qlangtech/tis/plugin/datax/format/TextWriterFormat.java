@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax.format;
 
-import com.alibaba.datax.plugin.unstructuredstorage.reader.TEXTFormat;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.TextWriterImpl;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
@@ -28,18 +27,17 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.util.List;
 
 /**
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-10-14 17:03
+ * @create: 2025-07-22 10:18
  **/
-public class TextFormat extends BasicPainFormat {
-
-
+public class TextWriterFormat extends BasicPainFormat {
     @Override
     public UnstructuredWriter createWriter(Writer writer) {
         return new TextWriterImpl(writer, this.getDateFormat(), this.nullFormat, this.getFieldDelimiter()) {
@@ -52,19 +50,21 @@ public class TextFormat extends BasicPainFormat {
                     this.writeOneRecord(headers);
                 }
             }
-
             @Override
             public void writeOneRecord(List<String> splitedRows) throws IOException {
                 this.textWriter.write(String.format("%s%s", StringUtils.join(splitedRows, getFieldDelimiter()), IOUtils.LINE_SEPARATOR));
             }
         };
     }
-
     @Override
-    public UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) {
-        return new TEXTFormat(reader, !header, sourceCols.size(), getFieldDelimiter());
+    public UnstructuredReader createReader(InputStream input, List<CMeta> cols) {
+      throw new UnsupportedOperationException();
     }
 
+    @Override
+    public FileHeader readHeader(InputStream input) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     @TISExtension
     public static class Desc extends BasicPainFormatDescriptor {

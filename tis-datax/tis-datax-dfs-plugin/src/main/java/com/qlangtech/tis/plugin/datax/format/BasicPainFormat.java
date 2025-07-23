@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,9 +86,6 @@ public abstract class BasicPainFormat extends FileFormat implements IGuessColTyp
 
     @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {Validator.require})
     public boolean header;
-
-    @FormField(ordinal = 17, validate = {Validator.require})
-    public GuessFieldType guessFieldType;
 
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
@@ -250,23 +248,6 @@ public abstract class BasicPainFormat extends FileFormat implements IGuessColTyp
 
     protected abstract UnstructuredWriter createWriter(Writer writer);
 
-    @Override
-    public UnstructuredReader createReader(InputStream input, List<CMeta> sourceCols) {
-        try {
-            return createReader(Compress.parse(compress).decorate(input, encoding), sourceCols);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    protected abstract UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) throws IOException;
-
-    @Override
-    public final FileHeader readHeader(InputStream input) throws IOException {
-        return readHeader(createReader(input, Collections.emptyList()));
-    }
-
-    // protected abstract FileHeader readHeader(UnstructuredReader reader) throws IOException;
 
     @Override
     public Descriptor<FileFormat> getDescriptor() {
@@ -277,34 +258,29 @@ public abstract class BasicPainFormat extends FileFormat implements IGuessColTyp
         return descriptor;
     }
 
-    // @Override
-    protected final FileHeader readHeader(UnstructuredReader reader) throws IOException {
-        UnstructuredReader textFormat = reader;
-        String[] header = textFormat.getHeader();
-        int colCount;
-        if (header == null) {
-            if (textFormat.hasNext()) {
-                colCount = textFormat.next().length;
-            } else {
-                throw new IllegalStateException("can not read content from textFormat");
-            }
-        } else {
-            colCount = header.length;
-        }
-
-        // guess all col types
-        DataType[] types = new DataType[colCount];
-        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null")
-                .processUnStructGuess(types, this, textFormat);
-        return new FileHeader(colCount, header == null ? null : Lists.newArrayList(header), Lists.newArrayList(types));
-    }
-
     public static List<Option> supportCompress() {
         return Arrays.stream(Compress.values()).map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
     }
 
-    protected static class BasicPainFormatDescriptor extends Descriptor<FileFormat> {
+    public static class BasicPainFormatDescriptor extends Descriptor<FileFormat> {
 
+        public static List<? extends Descriptor> supportedFormat(boolean reader, List<? extends Descriptor> descs) {
+            if (CollectionUtils.isEmpty(descs)) {
+                return Collections.emptyList();
+            }
+            return descs.stream().filter((desc) -> {
+                return reader ^ ((BasicPainFormatDescriptor) desc).isSupportWriterConnector();
+            }).collect(Collectors.toList());
+        }
+
+        /**
+         * 是否支持writer的fromat，由于reader需要支持guessSupport功能
+         *
+         * @return
+         */
+        public boolean isSupportWriterConnector() {
+            return true;
+        }
 
         public boolean validateDateFormat(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             try {

@@ -29,20 +29,18 @@ import com.qlangtech.tis.config.hive.meta.IHiveTableParams;
 import com.qlangtech.tis.hive.DefaultHiveMetaStore.HiveStoredAs;
 import com.qlangtech.tis.hive.shim.IHiveSerDe;
 import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
-import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.datax.format.TextReaderFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 
 import java.io.BufferedReader;
@@ -50,7 +48,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -58,7 +55,7 @@ import java.util.Objects;
  * @create: 2024-11-07 15:55
  * @see com.qlangtech.tis.hive.reader.HiveDFSLinker#getInputFileFormat Create By
  **/
-public abstract class HadoopInputFormat<K, V extends Writable> extends TextFormat {
+public abstract class HadoopInputFormat<K, V extends Writable> extends TextReaderFormat {
     protected final org.apache.hadoop.mapred.InputFormat inputFormat;
     protected final HiveOutputFormat outputFormat;
     protected final JobConf conf;

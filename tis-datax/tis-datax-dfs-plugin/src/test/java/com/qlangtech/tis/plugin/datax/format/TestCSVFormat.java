@@ -38,7 +38,7 @@ public class TestCSVFormat extends BasicFormatTest {
 
     @Test
     public void testCreateWriter() throws Exception {
-        CSVFormat csvFormat = new CSVFormat();
+        CSVReaderFormat csvFormat = new CSVReaderFormat();
         csvFormat.header = true;
         csvFormat.fieldDelimiter = Delimiter.Comma.token;
         csvFormat.dateFormat = "yyyy-MM-dd";
@@ -57,7 +57,7 @@ public class TestCSVFormat extends BasicFormatTest {
 
     @Test
     public void testReadHeader() throws Exception {
-        CSVFormat csvFormat = new CSVFormat();
+        CSVReaderFormat csvFormat = new CSVReaderFormat();
         csvFormat.header = true;
         csvFormat.fieldDelimiter = Delimiter.Comma.token;
         csvFormat.encoding = TisUTF8.getName();

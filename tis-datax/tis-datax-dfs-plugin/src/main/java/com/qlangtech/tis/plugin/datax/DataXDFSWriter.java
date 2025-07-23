@@ -29,6 +29,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
@@ -37,6 +38,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.format.BasicPainFormat.BasicPainFormatDescriptor;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -45,8 +47,10 @@ import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,6 +79,10 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
     @FormField(ordinal = 14, validate = {Validator.require})
     public FileFormat fileFormat;
+
+    public static List<? extends Descriptor> supportedWriterFormat(List<? extends Descriptor> descs) {
+        return BasicPainFormatDescriptor.supportedFormat(false, descs);
+    }
 
     @Override
     public ExecutePhaseRange getPhaseRange() {

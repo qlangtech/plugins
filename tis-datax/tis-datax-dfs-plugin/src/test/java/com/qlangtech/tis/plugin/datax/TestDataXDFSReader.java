@@ -19,15 +19,23 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil.Type;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.format.CSVReaderFormat;
+import com.qlangtech.tis.plugin.datax.format.CSVWriterFormat;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.format.TextReaderFormat;
+import com.qlangtech.tis.plugin.datax.format.TextWriterFormat;
 import com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter;
 import com.qlangtech.tis.plugin.datax.resmatcher.MetaAwareDFSResMatcher;
 import com.qlangtech.tis.plugin.datax.resmatcher.TestMetaAwareDFSResMatcher.MockTDFSLinker;
@@ -47,6 +55,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.datax.TestDataXDFSWriter.containDescClass;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -91,8 +101,18 @@ public class TestDataXDFSReader {
     private UnstructuredStorageReaderUtil.Type map2Type(DataType type) {
         return type.accept(new DataType.TypeVisitor<UnstructuredStorageReaderUtil.Type>() {
             @Override
+            public Type intType(DataType type) {
+                return Type.INT;
+            }
+
+            @Override
             public UnstructuredStorageReaderUtil.Type bigInt(DataType type) {
                 return UnstructuredStorageReaderUtil.Type.LONG;
+            }
+
+            @Override
+            public Type floatType(DataType type) {
+                return Type.DOUBLE;
             }
 
             @Override
@@ -101,8 +121,18 @@ public class TestDataXDFSReader {
             }
 
             @Override
+            public Type decimalType(DataType type) {
+                return Type.DOUBLE;
+            }
+
+            @Override
             public UnstructuredStorageReaderUtil.Type dateType(DataType type) {
                 return UnstructuredStorageReaderUtil.Type.DATE;
+            }
+
+            @Override
+            public Type timeType(DataType type) {
+                return Type.DATE;
             }
 
             @Override
@@ -124,7 +154,31 @@ public class TestDataXDFSReader {
             public UnstructuredStorageReaderUtil.Type varcharType(DataType type) {
                 return UnstructuredStorageReaderUtil.Type.STRING;
             }
+
+            @Override
+            public Type tinyIntType(DataType dataType) {
+                return Type.INT;
+            }
+
+            @Override
+            public Type smallIntType(DataType dataType) {
+                return Type.INT;
+            }
+
+            @Override
+            public Type boolType(DataType dataType) {
+                return Type.BOOLEAN;
+            }
         });
+    }
+
+    @Test
+    public void testSupportedReaderFormat() {
+        List<? extends Descriptor> descriptors = DataXDFSReader.supportedReaderFormat(TIS.get().getDescriptorList(FileFormat.class));
+        Assert.assertEquals(2, descriptors.size());
+        Assert.assertTrue(containDescClass(descriptors, CSVReaderFormat.Desc.class));
+        Assert.assertTrue(containDescClass(descriptors, TextReaderFormat.Desc.class));
+
     }
 
     @Test

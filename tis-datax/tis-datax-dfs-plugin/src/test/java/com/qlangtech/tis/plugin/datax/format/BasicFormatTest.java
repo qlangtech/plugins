@@ -122,6 +122,41 @@ public class BasicFormatTest {
             }
 
             @Override
+            public Column intType(DataType type) {
+                return new LongColumn(literia);
+            }
+
+            @Override
+            public Column floatType(DataType type) {
+                return doubleType(type);
+            }
+
+            @Override
+            public Column decimalType(DataType type) {
+                return doubleType(type);
+            }
+
+            @Override
+            public Column timeType(DataType type) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Column tinyIntType(DataType dataType) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Column smallIntType(DataType dataType) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Column boolType(DataType dataType) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public Column timestampType(DataType type) {
                 throw new UnsupportedOperationException();
             }

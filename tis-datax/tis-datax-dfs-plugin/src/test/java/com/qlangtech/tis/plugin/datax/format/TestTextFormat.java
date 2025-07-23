@@ -33,7 +33,7 @@ public class TestTextFormat extends BasicFormatTest {
 
     @Test
     public void testCreateWriter() throws Exception {
-        TextFormat txtFormat = new TextFormat();
+        TextReaderFormat txtFormat = new TextReaderFormat();
         txtFormat.header = true;
         txtFormat.fieldDelimiter = Delimiter.Comma.token;
         txtFormat.dateFormat = "yyyy-MM-dd";

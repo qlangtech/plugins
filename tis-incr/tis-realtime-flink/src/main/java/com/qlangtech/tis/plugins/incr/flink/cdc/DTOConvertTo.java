@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 
+import java.util.Objects;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-07-15 10:26
@@ -51,8 +53,12 @@ public enum DTOConvertTo {
         if (val == null) {
             return null;
         }
+        return getValGetter(flinkCol).apply(val);
+    }
 
-        return this.targetValGetter.apply(flinkCol).apply(val);
+    public BiFunction getValGetter(FlinkCol flinkCol) {
+        BiFunction valGetter = this.targetValGetter.apply(Objects.requireNonNull(flinkCol, "flinkCol can not be null"));
+        return valGetter;
     }
 
     public String toString(FlinkCol flinkCol, Object val) {

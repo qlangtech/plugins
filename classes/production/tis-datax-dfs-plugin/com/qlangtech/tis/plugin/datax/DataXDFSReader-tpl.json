@@ -1,0 +1,24 @@
+{
+    "name": "ftpreader",
+    "parameter": {
+        "path": "${reader.path}"
+#if($reader.containPort)
+,"port": ${reader.port}
+#end
+#if($reader.containTimeout)
+,"timeout": ${reader.timeout}
+#end
+#if($reader.containConnectPattern)
+,"connectPattern": "${reader.connectPattern}"
+#end
+#if($reader.containFieldDelimiter)
+,"fieldDelimiter": "${reader.fieldDelimiter}"
+#end
+#if($reader.containCompress)
+,"compress": "${reader.compress}"
+#end
+#if($reader.containEncoding)
+,"encoding": "${reader.encoding}"
+#end
+    }
+}

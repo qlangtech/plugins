@@ -62,8 +62,7 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
     @Override
     public final void setColumn(String field, Object colVal) {
         FlinkCol col = getFlinkCol(field);
-        //  this.row.setField(field, col.rowProcess.apply(colVal));
-        this.setColumn(field, col.rowProcess, colVal);
+        this.setColumn(field, this.dtoConvert2Type.getValGetter(col), colVal);
     }
 
     protected abstract void setColumn(String field, BiFunction rowProcess, Object colVal);

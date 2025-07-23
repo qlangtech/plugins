@@ -28,7 +28,6 @@ import org.apache.flink.api.connector.source.util.ratelimit.RateLimiter;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.Gauge;
-import org.apache.flink.runtime.checkpoint.CompletedCheckpointStats;
 import org.apache.flink.streaming.api.functions.co.BroadcastProcessFunction;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
@@ -75,14 +74,6 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
     public SourceProcessFunction(DataXName dataXName, Map<String, OutputTag<RECORD_TYPE>> tab2OutputTag) {
         this.tab2OutputTag = tab2OutputTag;
         this.dataXName = Objects.requireNonNull(dataXName, "dataXName can not be null");
-        // 定义状态描述符（必须在构造函数中初始化）
-//        this.broadcastStateDesc = new MapStateDescriptor<>(
-//                "broadcast-rate-state",
-//                BasicTypeInfo.STRING_TYPE_INFO,
-//                BasicTypeInfo.DOUBLE_TYPE_INFO
-//        );
-        //   rateLimiter = RateLimiter.
-
     }
 
 
@@ -231,7 +222,8 @@ public abstract class SourceProcessFunction<RECORD_TYPE> extends BroadcastProces
 
         if (drain.get()) {
             // 泄洪
-            increaseNumRecordsMetric(in);
+            // increaseNumRecordsMetric(in);
+            tisNumRecordsIn.inc();
             return;
         }
         //  shallPause();

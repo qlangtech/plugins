@@ -1,0 +1,10 @@
+{
+  "name":"ftpwriter",
+  "parameter":{
+    "fileFormat":"csv",
+    "fileName":"orderinfo_new",
+    "path":"/admin/test",
+    "suffix":".csv",
+    "writeMode":"truncate"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name":"ftpwriter",
+  "parameter":{
+    "fileFormat":"text",
+    "fileName":"orderinfo_new",
+    "header":[
+      "col1",
+      "col2",
+      "col3"
+    ],
+    "path":"/admin/test",
+    "suffix":".text",
+    "writeMode":"truncate"
+  }
+}

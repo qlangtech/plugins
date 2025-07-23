@@ -55,52 +55,24 @@ import java.util.regex.Matcher;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-14 17:03
  **/
-public class CSVFormat extends BasicPainFormat {
-    private static final Logger logger = LoggerFactory.getLogger(CSVFormat.class);
+public class CSVReaderFormat extends BasicReaderPainFormat {
+    private static final Logger logger = LoggerFactory.getLogger(CSVReaderFormat.class);
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {}, advance = true)
     public String csvReaderConfig;
 
-    private static Map<String, Object> parseCsvReaderConfig(String csvReaderConfig) {
+     static Map<String, Object> parseCsvReaderConfig(String csvReaderConfig) {
         return JSON.parseObject(StringUtils.defaultString(csvReaderConfig, "{}"), new TypeReference<HashMap<String, Object>>() {
         });
     }
 
     @Override
     public UnstructuredWriter createWriter(Writer writer) {
-        //Writer writer, DateFormat dateParse, String nullFormat, char fieldDelimiter
-        return new TISCsvWriterImpl(writer, this.getDateFormat(), this.nullFormat, this.getFieldDelimiter());
+//        //Writer writer, DateFormat dateParse, String nullFormat, char fieldDelimiter
+//        return new TISCsvWriterImpl(writer, this.getDateFormat(), this.nullFormat, this.getFieldDelimiter());
+        throw new UnsupportedOperationException();
     }
 
-    private class TISCsvWriterImpl extends CsvWriterImpl {
-        public TISCsvWriterImpl(Writer writer, DateFormat dateParse, String nullFormat, char fieldDelimiter) {
-            super(writer, dateParse, nullFormat, fieldDelimiter);
-            Map<String, Object> csvCfg = parseCsvReaderConfig(csvReaderConfig);
 
-            if (MapUtils.isNotEmpty(csvCfg)) {
-                try {
-
-                    BeanUtils.populate(csvWriter, csvCfg);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        @Override
-        public void writeHeader(List<String> headers) throws IOException {
-            if (containHeader()) {
-                if (CollectionUtils.isEmpty(headers)) {
-                    throw new IllegalArgumentException("header cols can not be null");
-                }
-                this.writeOneRecord(headers);
-            }
-        }
-
-        @Override
-        public void writeOneRecord(List<String> splitedRows) throws IOException {
-            this.csvWriter.writeRecord((String[]) splitedRows.toArray(new String[0]));
-        }
-    }
 
 
     @Override
@@ -168,6 +140,11 @@ public class CSVFormat extends BasicPainFormat {
 
     @TISExtension
     public static class Desc extends BasicPainFormatDescriptor {
+
+        @Override
+        public boolean isSupportWriterConnector() {
+            return false;
+        }
 
         public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 

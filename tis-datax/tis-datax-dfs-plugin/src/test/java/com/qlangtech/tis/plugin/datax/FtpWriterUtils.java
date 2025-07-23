@@ -19,8 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.ftp.common.FtpHelper;
-import com.qlangtech.tis.plugin.datax.format.CSVFormat;
-import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.datax.format.CSVReaderFormat;
+import com.qlangtech.tis.plugin.datax.format.TextReaderFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 
@@ -38,12 +38,12 @@ public class FtpWriterUtils {
 
     public static final String ftpLink = "ftpLinker";
 
-    public static TextFormat createTextFormat() {
+    public static TextReaderFormat createTextFormat() {
         return createTextFormat(null, null);
     }
 
-    public static TextFormat createTextFormat(String compress, String encoding) {
-        TextFormat tformat = new TextFormat();
+    public static TextReaderFormat createTextFormat(String compress, String encoding) {
+        TextReaderFormat tformat = new TextReaderFormat();
         tformat.compress = compress;
         tformat.encoding = encoding;
         tformat.header = true;
@@ -51,8 +51,8 @@ public class FtpWriterUtils {
         return tformat;
     }
 
-    public static CSVFormat createCsvFormat() {
-        CSVFormat format = new CSVFormat();
+    public static CSVReaderFormat createCsvFormat() {
+        CSVReaderFormat format = new CSVReaderFormat();
 
         format.compress = "bzip2";
         format.encoding = "utf-8";

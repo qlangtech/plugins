@@ -25,14 +25,12 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
-import com.qlangtech.tis.extension.impl.SuFormProperties.SuFormGetterContext;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
+import com.qlangtech.tis.plugin.datax.format.BasicPainFormat.BasicPainFormatDescriptor;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.resmatcher.MetaAwareDFSResMatcher;
 import com.qlangtech.tis.plugin.datax.resmatcher.WildcardDFSResMatcher;
-import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
@@ -42,10 +40,8 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -69,6 +65,10 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         return descs.stream().filter((desc) -> {
             return !(desc instanceof IExclusiveTDFSType);
         }).collect(Collectors.toList());
+    }
+
+    public static List<? extends Descriptor> supportedReaderFormat(List<? extends Descriptor> descs) {
+        return BasicPainFormatDescriptor.supportedFormat(true, descs);
     }
 
 

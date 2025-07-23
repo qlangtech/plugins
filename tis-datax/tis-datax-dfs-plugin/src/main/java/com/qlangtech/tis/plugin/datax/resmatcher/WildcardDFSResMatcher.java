@@ -73,7 +73,7 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
 
     @Override
     public List<ColumnMetaData> getTableMetadata(IPluginContext pluginContext, String pipelineName, IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
-        Optional<TableMap> tabAlia = getTableMap(IPluginContext.getThreadLocalInstance(), pipelineName);
+        Optional<TableMap> tabAlia = getTableMap(pluginContext, pipelineName);
         return getTableMetadata(dfsReader, tabAlia.orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName())));
         //return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
     }
@@ -132,6 +132,8 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
                         throw new IllegalStateException("parseColsResult must be success");
                     }
                     return Collections.singletonList(parseColsResult.tabMeta);
+                } catch (Exception e) {
+                    throw new IllegalStateException("read path:" + res.fullPath, e);
                 }
             }
             throw new IllegalStateException("have not find any matchRes by resMatcher:" + this.toString());

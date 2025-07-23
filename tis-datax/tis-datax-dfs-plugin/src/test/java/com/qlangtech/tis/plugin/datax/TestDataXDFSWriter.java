@@ -19,19 +19,25 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
-import com.qlangtech.tis.plugin.datax.format.CSVFormat;
-import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.datax.format.CSVReaderFormat;
+import com.qlangtech.tis.plugin.datax.format.CSVWriterFormat;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.format.TextReaderFormat;
+import com.qlangtech.tis.plugin.datax.format.TextWriterFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -49,6 +55,24 @@ public class TestDataXDFSWriter {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXDFSWriter.class);
         Assert.assertTrue(extraProps.isPresent());
+    }
+
+    @Test
+    public void testSupportedWriterFormat() {
+        List<? extends Descriptor> descriptors = DataXDFSWriter.supportedWriterFormat(TIS.get().getDescriptorList(FileFormat.class));
+        Assert.assertEquals(2, descriptors.size());
+        Assert.assertTrue(containDescClass(descriptors, CSVWriterFormat.Desc.class));
+        Assert.assertTrue(containDescClass(descriptors, TextWriterFormat.Desc.class));
+
+    }
+
+    public static boolean containDescClass(List<? extends Descriptor> descriptors, Class descClass) {
+        for (Descriptor desc : descriptors) {
+            if (desc.getClass() == descClass) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test
@@ -89,7 +113,7 @@ public class TestDataXDFSWriter {
 
         DataxWriter.dataxWriterGetter = (name) -> dataXWriter;
 
-        TextFormat tformat = FtpWriterUtils.createTextFormat(Compress.none.token, "utf-8");
+        TextReaderFormat tformat = FtpWriterUtils.createTextFormat(Compress.none.token, "utf-8");
         dataXWriter.fileFormat = tformat;
 
         IDataxProcessor.TableMap tableMap = TestSelectedTabs.createTableMapper().get();
@@ -100,10 +124,10 @@ public class TestDataXDFSWriter {
         ftpServer.timeout = null;
         // dataXWriter.port = null;
         // dataXWriter.timeout = null;
-        CSVFormat csvFormat = FtpWriterUtils.createCsvFormat();
+        CSVReaderFormat csvFormat = FtpWriterUtils.createCsvFormat();
         // dataXWriter.fieldDelimiter = null;
         dataXWriter.fileFormat = csvFormat;
-       // dataXWriter.encoding = null;
+        // dataXWriter.encoding = null;
 //        dataXWriter.nullFormat = null;
 //        dataXWriter.dateFormat = null;
         //dataXWriter.fileFormat = null;

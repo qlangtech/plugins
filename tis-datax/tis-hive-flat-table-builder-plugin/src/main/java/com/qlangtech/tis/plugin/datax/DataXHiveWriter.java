@@ -95,7 +95,7 @@ public class DataXHiveWriter extends BasicFSWriter
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
     @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require})

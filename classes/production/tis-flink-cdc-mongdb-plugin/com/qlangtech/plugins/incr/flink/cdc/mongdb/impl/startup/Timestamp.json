@@ -1,8 +1,0 @@
-{
-  "startupTimestampMillis": {
-    "label": "开始时间",
-    "placeholder": "消费起始点",
-    "help": "timestamp for the startup offsets, as milliseconds from epoch.",
-    "dateTimeFormat": "yyyy-MM-dd HH:mm:ss"
-  }
-}

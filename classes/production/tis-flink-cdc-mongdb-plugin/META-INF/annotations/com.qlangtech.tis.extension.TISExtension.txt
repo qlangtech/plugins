@@ -1,7 +1,0 @@
-# informational; use java -jar sezpoz.jar to see authoritative contents
-com.qlangtech.plugins.incr.flink.cdc.mongdb.FlinkCDCMongoDBSourceFactory$DefaultDescriptor
-com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.startup.Initial$DftDescriptor
-com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.startup.LatestOffset$DftDescriptor
-com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.startup.Timestamp$DftDescriptor
-com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.updatecomplete.FullChangelog$DftDescriptor
-com.qlangtech.plugins.incr.flink.cdc.mongdb.impl.updatecomplete.UpdateLookup$DftDescriptor

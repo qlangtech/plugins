@@ -1,6 +1,0 @@
-{
-  "serverPort": {
-    "help": "SpringBoot配置，HTTP端口号，默认7700，不建议更改",
-    "dftVal": "com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport.dftExportPort():uncache_true"
-  }
-}

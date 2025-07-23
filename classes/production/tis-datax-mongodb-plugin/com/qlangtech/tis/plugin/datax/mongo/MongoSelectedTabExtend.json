@@ -1,7 +1,0 @@
-{
-  "filter": {
-    "label": "过滤",
-    "dftVal": "off",
-    "help": "遍历MongoDB Collection只读取部分记录集，需要填写合适的查询条件"
-  }
-}

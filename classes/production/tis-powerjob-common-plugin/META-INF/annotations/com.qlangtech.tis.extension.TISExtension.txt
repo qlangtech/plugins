@@ -1,2 +1,0 @@
-# informational; use java -jar sezpoz.jar to see authoritative contents
-com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient#registerApp()

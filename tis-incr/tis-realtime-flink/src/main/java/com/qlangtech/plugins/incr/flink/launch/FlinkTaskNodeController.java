@@ -30,6 +30,7 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory.ISavePointSupport;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.lang.StringUtils;
@@ -295,12 +296,15 @@ public class FlinkTaskNodeController {
      */
 
     public void triggerSavePoint(TargetResName collection) {
-        processFlinkJob(collection, (restClient, savePoint, status) -> {
-            String savepointDirectory = savePoint.createSavePointPath();
-            CompletableFuture<String> result
-                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory, SavepointFormatType.DEFAULT);
-            status.addSavePoint(result.get(25, TimeUnit.SECONDS), IFlinkIncrJobStatus.State.RUNNING);
-        });
+        processFlinkJob(collection,
+                new TriggerFlinkJobSavepointFunc(IFlinkIncrJobStatus.State.RUNNING)
+//                (restClient, savePoint, status) -> {
+//            String savepointDirectory = savePoint.createSavePointPath();
+//            CompletableFuture<String> result
+//                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory, SavepointFormatType.NATIVE);
+//            status.addSavePoint(result.get(25, TimeUnit.SECONDS), IFlinkIncrJobStatus.State.RUNNING);
+//        }
+        );
     }
 
 
@@ -323,14 +327,16 @@ public class FlinkTaskNodeController {
 
     }
 
-    private void processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
+    private IFlinkIncrJobStatus<JobID> processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
         ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection).valiate();
         IFlinkIncrJobStatus<JobID> status = validateFlinkJob.getStatus();
+        if (status.getLaunchJobID() == null) {
+            throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
+        }
         IncrStreamFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
         if (savePoint == null) {
             throw new NullPointerException("savePoint can not be null");
         }
-
 
         try (RestClusterClient restClient = (RestClusterClient) this.factory.getFlinkCluster()) {
             CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
@@ -344,7 +350,7 @@ public class FlinkTaskNodeController {
 //                        = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
 //                status.stop(result.get(25, TimeUnit.SECONDS));
             }
-
+            return status;
         } catch (Exception e) {
             throw new RuntimeException("appname:" + collection.getName(), e);
         }
@@ -357,52 +363,114 @@ public class FlinkTaskNodeController {
 
 
     public void stopInstance(TargetResName collection) {
-        processFlinkJob(collection, (restClient, savePoint, status) -> {
-            //job 任务没有终止，立即停止
-            String savepointDirectory = savePoint.createSavePointPath();
-            // advanceToEndOfTime - flag indicating if the source should inject a MAX_WATERMARK in the pipeline
-            CompletableFuture<String> result
-                    = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory, SavepointFormatType.DEFAULT);
-            status.stop(result.get(3, TimeUnit.MINUTES));
-            // status.stop(result.get());
-        });
+        processFlinkJob(collection,
+                (restClient, savePoint, status) -> {
+                    new TriggerFlinkJobSavepointFunc(State.STOPED).apply(restClient, savePoint, status);
+                    new CancelFlinkJobFunc(true).apply(restClient, savePoint, status);
+
+
+//            //job 任务没有终止，立即停止
+//            String savepointDirectory = savePoint.createSavePointPath();
+//            // advanceToEndOfTime - flag indicating if the source should inject a MAX_WATERMARK in the pipeline
+//
+//            CompletableFuture<String> result
+//                    = restClient.stopWithSavepoint(status.getLaunchJobID(), false, savepointDirectory, SavepointFormatType.NATIVE);
+                    //  status.stop(result.get(3, TimeUnit.MINUTES));
+//            // status.stop(result.get());
+                }
+        );
     }
 
+    private static class TriggerFlinkJobSavepointFunc implements FlinkJobFunc {
+        private final IFlinkIncrJobStatus.State state;
+
+        public TriggerFlinkJobSavepointFunc(State state) {
+            this.state = state;
+        }
+
+        @Override
+        public void apply(RestClusterClient restClient, ISavePointSupport savePoint, IFlinkIncrJobStatus<JobID> status) throws Exception {
+            String savepointDirectory = savePoint.createSavePointPath();
+            CompletableFuture<String> result
+                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory, SavepointFormatType.NATIVE);
+            status.addSavePoint(result.get(25, TimeUnit.SECONDS), this.state);
+        }
+    }
+
+    private static class CancelFlinkJobFunc implements FlinkJobFunc {
+        private final boolean wait2end;
+
+        public CancelFlinkJobFunc(boolean wait2end) {
+            this.wait2end = wait2end;
+        }
+
+        @Override
+        public void apply(RestClusterClient restClient, ISavePointSupport savePoint, IFlinkIncrJobStatus<JobID> status) throws Exception {
+            JobID jobID = status.getLaunchJobID();
+// 先删除掉，可能cluster中
+            //  CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
+//                JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
+//                if (s != null && !s.isTerminalState()) {
+            //job 任务没有终止，立即停止
+            CompletableFuture<Acknowledge> result = restClient.cancel(jobID);
+            if (wait2end) {
+                result.get();
+                CompletableFuture<JobDetailsInfo> jobDetails = null;
+                int tryCount = 0;
+                while (tryCount++ < 20) {
+                    jobDetails = restClient.getJobDetails(jobID);
+                    if (jobDetails.get().getJobStatus() != JobStatus.CANCELLING) {
+                        return;
+                    }
+                    Thread.sleep(3000);
+                }
+
+            } else {
+                result.get(5, TimeUnit.SECONDS);
+            }
+
+        }
+    }
 
     public void removeInstance(TargetResName collection) throws Exception {
-        IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
+        IFlinkIncrJobStatus<JobID> jobStat = null;
         try {
 
-            if (status.getLaunchJobID() == null) {
-                throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
-            }
+//            if (status.getLaunchJobID() == null) {
+//                throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
+//            }
 
-            // 将启动日志文件删除
-            ServerLaunchToken launchToken = this.factory.getLaunchToken(collection);
-            launchToken.deleteLaunchToken();
-
-            JobID jobID = status.getLaunchJobID();
-            try (ClusterClient restClient = this.factory.getFlinkCluster()) {
-                // 先删除掉，可能cluster中
-                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
-                JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
-                if (s != null && !s.isTerminalState()) {
-                    //job 任务没有终止，立即停止
-                    CompletableFuture<Acknowledge> result = restClient.cancel(jobID);
-                    result.get(5, TimeUnit.SECONDS);
-                }
-                status.cancel();
-            }
+            jobStat
+                    = processFlinkJob(collection, new CancelFlinkJobFunc(false));
+            jobStat.cancel();
+//            JobID jobID = status.getLaunchJobID();
+//            try (ClusterClient restClient = this.factory.getFlinkCluster()) {
+//                // 先删除掉，可能cluster中
+//                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
+//                JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
+//                if (s != null && !s.isTerminalState()) {
+//                    //job 任务没有终止，立即停止
+//                    CompletableFuture<Acknowledge> result = restClient.cancel(jobID);
+//                    result.get(5, TimeUnit.SECONDS);
+//                }
+//                status.cancel();
+//            }
         } catch (Exception e) {
             Throwable[] throwables = ExceptionUtils.getThrowables(e);
             for (Throwable cause : throwables) {
                 if (isNotFoundException(cause)) {
                     logger.warn(cause.getMessage() + ":" + collection.getName());
-                    status.cancel();
+                    if (jobStat != null) {
+                        jobStat.cancel();
+                    }
                     return;
                 }
             }
             throw new RuntimeException(e);
+        } finally {
+            // 将启动日志文件删除
+            ServerLaunchToken launchToken = this.factory.getLaunchToken(collection);
+            launchToken.deleteLaunchToken();
         }
     }
 

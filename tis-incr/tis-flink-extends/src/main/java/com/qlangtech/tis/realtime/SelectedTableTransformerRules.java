@@ -53,7 +53,7 @@ public class SelectedTableTransformerRules {
         this.rules = transformerRules.createTransformerBuildInfo(dataXContext,tab);
     }
 
-    List<OutputParameter> cols;
+    List<FlinkCol> cols;
 
     public static Optional<SelectedTableTransformerRules>
     createTransformerRules(String dataXName
@@ -69,9 +69,11 @@ public class SelectedTableTransformerRules {
         return transformerOpt;
     }
 
-    public List<OutputParameter> overwriteColsWithContextParams() {
+    public List<FlinkCol> overwriteColsWithContextParams() {
         if (cols == null) {
-            cols = rules.overwriteColsWithContextParams(this.tab.getCols());
+            List<OutputParameter> outputParameters = rules.overwriteColsWithContextParams(this.tab.getCols());
+            cols =    FlinkCol.getAllTabColsMeta(outputParameters //rule.overwriteCols(table.getCols())
+                    , Objects.requireNonNull(this.getSourceFlinkColCreator(), "flinkColCreator"));
         }
         return cols;
     }

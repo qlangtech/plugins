@@ -276,11 +276,5 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
             return true;
         }
 
-        @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            // return TIS.get().getDescriptor(DorisTabProps.class);
-            return null;
-        }
-
     }
 }

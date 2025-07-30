@@ -86,6 +86,11 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
     public abstract List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities();
 
     @Override
+    public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        return (List<T>) selectedTabs;
+    }
+
+    @Override
     public List<ISelectedTab> get() {
         return this.selectedTabs != null ? Collections.unmodifiableList(this.selectedTabs) : Collections.emptyList();
     }
@@ -110,8 +115,6 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
 //        Optional<TableMap> tabAlia = getTableMap(pluginContext);
 //        return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
     }
-
-
 
 
     @Override

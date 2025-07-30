@@ -26,7 +26,8 @@
     "enum": "com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory.allRestartStrategy()"
   },
   "checkpoint": {
-    "dftVal": "off"
+    "dftVal": "off",
+    "subDescEnumFilter": "return com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory.filterCheckpoint(desc);"
   },
   "stateBackend": {
     "dftVal": "FSState"

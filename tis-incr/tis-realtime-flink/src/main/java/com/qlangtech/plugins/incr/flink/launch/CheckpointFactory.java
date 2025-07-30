@@ -25,6 +25,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-01 16:15
+ * @see com.qlangtech.plugins.incr.flink.launch.ckpt.CKOff
+ * @see com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn
  **/
 @Public
 public abstract class CheckpointFactory implements Describable<CheckpointFactory> {

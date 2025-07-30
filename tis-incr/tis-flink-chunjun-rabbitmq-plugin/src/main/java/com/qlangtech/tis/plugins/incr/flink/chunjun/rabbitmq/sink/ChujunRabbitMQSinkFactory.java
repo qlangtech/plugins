@@ -171,9 +171,5 @@ public class ChujunRabbitMQSinkFactory extends ChunjunSinkFactory {
             return EndType.RabbitMQ;
         }
 
-        @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return null;
-        }
     }
 }

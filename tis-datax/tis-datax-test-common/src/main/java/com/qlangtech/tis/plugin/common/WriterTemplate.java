@@ -154,6 +154,11 @@ public class WriterTemplate {
             }
 
             @Override
+            public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+                return null;
+            }
+
+            @Override
             public void refresh() {
             }
 

@@ -108,10 +108,6 @@ public class KingBaseSinkFactory extends ChunjunSinkFactory {
             return super.validateAll(msgHandler, context, postFormVals);
         }
 
-        @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return null;
-        }
 
         @Override
         protected IEndTypeGetter.EndType getTargetType() {

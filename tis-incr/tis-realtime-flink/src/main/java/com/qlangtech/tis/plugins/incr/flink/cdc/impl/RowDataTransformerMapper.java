@@ -25,7 +25,6 @@ import com.qlangtech.tis.realtime.SelectedTableTransformerRules;
 import org.apache.flink.table.data.RowData;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -36,8 +35,7 @@ public class RowDataTransformerMapper extends ReocrdTransformerMapper<RowData> {
     private final int delegateArity;
 
     public RowDataTransformerMapper(SelectedTableTransformerRules triple, int delegateArity) {
-        super(FlinkCol.getAllTabColsMeta(triple.overwriteColsWithContextParams() //rule.overwriteCols(table.getCols())
-                , Objects.requireNonNull(triple.getSourceFlinkColCreator(), "flinkColCreator")), triple.getTransformerRules());
+        super(triple.overwriteColsWithContextParams(), triple.getTransformerRules());
         this.originColsWithContextParamsFlinkCol = triple.originColsWithContextParamsFlinkCol();
         this.delegateArity = delegateArity;
     }

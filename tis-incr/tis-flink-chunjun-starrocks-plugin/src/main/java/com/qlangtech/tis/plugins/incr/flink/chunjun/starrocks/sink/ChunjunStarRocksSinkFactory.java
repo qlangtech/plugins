@@ -119,37 +119,7 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
                 }
                 sconf.setLoadConf(cfg);
             }
-//            @Override
-//            public DataStreamSink<RowData> createSink(DataStream<RowData> dataSet) {
-//                return super.createSink(dataSet);
-//            }
-//            @Override
-//            protected DorisConfBuilder createDorisConfBuilder(OperatorConf parameter, LoadConf loadConf) {
-//                DorisConfBuilder builder = super.createDorisConfBuilder(parameter, loadConf);
-//                final OperatorConf params = syncConf.getWriter();
-//                List<String> fullCols = sinkTabCols.getColKeys();// (List<String>) params.getVal(KEY_FULL_COLS);
-//                if (CollectionUtils.isEmpty(fullCols)) {
-//                    throw new IllegalStateException("fullCols can not be empty");
-//                }
-//                builder.setFullCols(fullCols);
-//                builder.setUniqueKey((List<String>) params.getVal(SinkTabPropsExtends.KEY_UNIQUE_KEY));
-//                return builder;
-//            }
 
-//            @Override
-//            protected DorisHttpOutputFormatBuilder createDorisHttpOutputFormatBuilder() {
-//                DorisHttpOutputFormatBuilder builder = super.createDorisHttpOutputFormatBuilder();
-//                List<String> cols = sinkTabCols.getColKeys();// options.getColumn().stream().map((field) -> field.getName()).collect(Collectors.toList());
-//                builder.setColumns(cols);
-//                TISDorisColumnConverter columnConverter = TISDorisColumnConverter.create(sinkTabCols);
-//                columnConverter.setColumnNames(cols);
-//                if (CollectionUtils.isEmpty(options.getFullColumn())) {
-//                    throw new IllegalStateException("options.getFullColumn() can not be empty");
-//                }
-//                columnConverter.setFullColumn(options.getFullColumn());
-//                builder.setRowConverter(columnConverter);
-//                return builder;
-//            }
 
             @Override
             protected DataStreamSink<RowData> createOutput(DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
@@ -187,12 +157,6 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
         @Override
         protected IEndTypeGetter.EndType getTargetType() {
             return EndType.StarRocks;
-        }
-
-        @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            //   return TIS.get().getDescriptor(UniqueKeySetter.class);
-            return null;
         }
 
     }

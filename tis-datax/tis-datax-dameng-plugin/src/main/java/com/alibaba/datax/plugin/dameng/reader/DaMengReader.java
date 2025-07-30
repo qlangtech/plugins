@@ -29,7 +29,7 @@ public class DaMengReader extends Reader {
         @Override
         public void init() {
             this.originalConfig = super.getPluginJobConf();
-            this.commonRdbmsReaderJob = new CommonRdbmsReader.Job(DATABASE_TYPE, containerContext);
+            this.commonRdbmsReaderJob = CommonRdbmsReader.Job.create(DATABASE_TYPE, this, containerContext);
             this.commonRdbmsReaderJob.init(this.originalConfig);
         }
 

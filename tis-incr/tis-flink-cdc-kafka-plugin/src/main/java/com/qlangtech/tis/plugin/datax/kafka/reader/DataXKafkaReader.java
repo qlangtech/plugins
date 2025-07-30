@@ -449,6 +449,11 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     }
 
     @Override
+    public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        return (List<T>) getSelectedTabs();
+    }
+
+    @Override
     public void startScanDependency() {
 
     }

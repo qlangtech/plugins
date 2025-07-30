@@ -37,11 +37,11 @@ public class EarliestStartupOptions extends StartupOptions {
     }
 
 
-    @TISExtension
-    public static class DefaultDescriptor extends Descriptor<StartupOptions> {
-        @Override
-        public String getDisplayName() {
-            return option().startupMode.name();
-        }
-    }
+//    @TISExtension
+//    public static class DefaultDescriptor extends Descriptor<StartupOptions> {
+//        @Override
+//        public String getDisplayName() {
+//            return option().startupMode.name();
+//        }
+//    }
 }

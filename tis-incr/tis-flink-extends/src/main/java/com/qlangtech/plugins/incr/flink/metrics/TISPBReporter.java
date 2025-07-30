@@ -195,7 +195,7 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
                 tabCounterMapper.put(pipelineName, singleDataIndexStatus);
             }
             metric.putCounterMetric(singleDataIndexStatus);
-          //  metric.putGaugeMetric(pipelineUpdateCounterMap);
+            //  metric.putGaugeMetric(pipelineUpdateCounterMap);
         }
 
         if (MapUtils.isNotEmpty(tabCounterMapper)) {
@@ -235,15 +235,24 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
             return metricGroup.getAllVariables().get(ScopeFormat.SCOPE_TASK_SUBTASK_INDEX);
         }
 
+
+        protected abstract <VAL> VAL getMetricVal();
+
         public UseableMetricForTIS(METRIC_TYPE counter, String metricName, MetricGroup metricGroup) {
             this.metric = counter;
             this.metricName = metricName;
             this.metricGroup = metricGroup;
         }
 
+
         public abstract void putCounterMetric(TableSingleDataIndexStatus singleDataIndexStatus);
 
-       // public abstract void putGaugeMetric(UpdateCounterMap pipelineUpdateCounterMap);
+        @Override
+        public String toString() {
+            return "metricName='" + metricName + '\'' +
+                    ", metricVal=" + this.getMetricVal();
+        }
+// public abstract void putGaugeMetric(UpdateCounterMap pipelineUpdateCounterMap);
     }
 
     private static class UseableCounterMetricForTIS extends UseableMetricForTIS<Counter> {
@@ -252,8 +261,13 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         }
 
         @Override
+        protected Long getMetricVal() {
+            return this.metric.getCount();
+        }
+
+        @Override
         public void putCounterMetric(TableSingleDataIndexStatus singleDataIndexStatus) {
-            singleDataIndexStatus.put(this.metricName, this.metric.getCount());
+            singleDataIndexStatus.put(this.metricName, this.getMetricVal());
         }
     }
 
@@ -263,14 +277,19 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
         }
 
         @Override
+        protected <VAL> VAL getMetricVal() {
+            return (VAL) this.metric.getValue();
+        }
+
+        @Override
         public void putCounterMetric(TableSingleDataIndexStatus singleDataIndexStatus) {
             LimitRateTypeAndRatePerSecNums origin = singleDataIndexStatus.getIncrRateLimitConfig();
             LimitRateTypeAndRatePerSecNums config = null;
 
             if (METRIC_LIMIT_RATE_CONTROLLER_TYPE.equals(this.metricName)) {
-                config = new LimitRateTypeAndRatePerSecNums(RateControllerType.parse((short) this.metric.getValue()), origin.getPerSecRateNums());
+                config = new LimitRateTypeAndRatePerSecNums(RateControllerType.parse((short) getMetricVal()), origin.getPerSecRateNums());
             } else if (METRIC_LIMIT_RATE_PER_SECOND_NUMS.equals(this.metricName)) {
-                config = new LimitRateTypeAndRatePerSecNums(origin.getControllerType().orElse(null), (int) this.metric.getValue());
+                config = new LimitRateTypeAndRatePerSecNums(origin.getControllerType().orElse(null), (int) getMetricVal());
             } else {
                 throw new IllegalStateException("illegal metricName:" + this.metricName);
             }

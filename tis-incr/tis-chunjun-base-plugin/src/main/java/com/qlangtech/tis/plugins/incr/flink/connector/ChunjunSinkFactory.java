@@ -37,7 +37,6 @@ import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.dtstack.chunjun.sink.SinkFactory;
-import com.dtstack.chunjun.sink.WriteMode;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -45,7 +44,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXNameAware;
@@ -117,7 +115,7 @@ import java.util.stream.Collectors;
  * @create: 2022-08-10 13:45
  **/
 public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
-        implements IStreamTableMeataCreator.ISinkStreamMetaCreator, IStreamIncrGenerateStrategy, IDataXNameAware {
+        implements IStreamTableMeataCreator.ISinkStreamMetaCreator, IStreamIncrGenerateStrategy, IDataXNameAware, IWriteModeSupport {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Chunjun-Sink-";
     public static final String KEY_FULL_COLS = "fullColumn";
@@ -134,6 +132,15 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //    必选：否
 //    参数类型：int
 //    默认值：1
+
+
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String writeMode;
+
+    @Override
+    public WriteMode getWriteMode() {
+        return WriteMode.parse(this.writeMode);
+    }
 
     public static List<Option> getSupportSemantic() {
 
@@ -239,14 +246,14 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , IPluginContext.namedContext(dataxProcessor.identityValue())
                 , tab
                 , sourceFlinkColCreator
-                 /** sinkColsMeta*/
+                /** sinkColsMeta*/
                 , AbstractRowDataMapper.getAllTabColsMeta(
                 Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
                 , filterRowKinds
                 , this.parallelism
                 , SelectedTableTransformerRules.createTransformerRules(dataxProcessor.identityValue()
-              //  , tabName
+                //  , tabName
                 , tab
                 , Objects.requireNonNull(sourceFlinkColCreator, "sourceFlinkColCreator can not be null")));
     }
@@ -317,6 +324,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         } else if (dataxWriter instanceof IWriteModeSupport) {
             params.put(UpdateMode.KEY_CHUNJUN_WRITE_MODE
                     , getWriterMode((IWriteModeSupport) dataxWriter).getMode());
+        } else {
+            params.put(UpdateMode.KEY_CHUNJUN_WRITE_MODE
+                    , convertWriteMode(this.getWriteMode()).getMode());
         }
 
 
@@ -343,15 +353,18 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         return syncConf;
     }
 
-    private WriteMode getWriterMode(IWriteModeSupport dataxWriter) {
-        IWriteModeSupport.WriteMode writeMode = dataxWriter.getWriteMode();
+    private com.dtstack.chunjun.sink.WriteMode getWriterMode(IWriteModeSupport dataxWriter) {
+        return convertWriteMode(dataxWriter.getWriteMode());
+    }
+
+    private com.dtstack.chunjun.sink.WriteMode convertWriteMode(IWriteModeSupport.WriteMode writeMode) {
         switch (writeMode) {
             case Insert:
-                return WriteMode.INSERT;
+                return com.dtstack.chunjun.sink.WriteMode.INSERT;
             case Update:
-                return WriteMode.UPDATE;
+                return com.dtstack.chunjun.sink.WriteMode.UPDATE;
             case Replace:
-                return WriteMode.REPLACE;
+                return com.dtstack.chunjun.sink.WriteMode.REPLACE;
             default:
                 throw new IllegalStateException("illegal mode:" + writeMode);
         }
@@ -556,7 +569,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      *
      * @return
      */
-    public final Set<WriteMode> supportSinkWriteMode() {
+    public final Set<com.dtstack.chunjun.sink.WriteMode> supportSinkWriteMode() {
         Class<? extends JdbcDialect> dialectClass = this.getJdbcDialectClass();
         if (dialectClass == null) {
             return Sets.newHashSet();
@@ -564,8 +577,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         SupportUpdateMode supportMode = dialectClass.getAnnotation(SupportUpdateMode.class);
         Objects.requireNonNull(supportMode, "dialectClass:" + dialectClass.getClass().getName()
                 + " can not find annotation " + SupportUpdateMode.class);
-        Set<WriteMode> result = Sets.newHashSet(supportMode.modes());
-        result.add(WriteMode.INSERT);
+        Set<com.dtstack.chunjun.sink.WriteMode> result = Sets.newHashSet(supportMode.modes());
+        result.add(com.dtstack.chunjun.sink.WriteMode.INSERT);
         return result;
     }
 
@@ -717,8 +730,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
         @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return TIS.get().getDescriptor(SinkTabPropsExtends.class);
+        public final Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
+            //  return TIS.get().getDescriptor(SinkTabPropsExtends.class);
+            // 扩展自定义内容暂时没有什么价值先去掉了
+            return null;
         }
     }
 }

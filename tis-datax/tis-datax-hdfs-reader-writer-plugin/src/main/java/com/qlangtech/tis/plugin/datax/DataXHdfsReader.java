@@ -116,6 +116,11 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
         return false;
     }
 
+    @Override
+    public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        return (List<T>) getSelectedTabs();
+    }
+
 
     @Override
     public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
@@ -165,7 +170,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     }
 
 
-   // @TISExtension()
+    // @TISExtension()
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         private static final Pattern PATTERN_HDFS_RELATIVE_PATH = Pattern.compile("([\\w\\d\\.\\-_=]+/)*([\\w\\d\\.\\-_=]+|(\\*))");
 
@@ -183,7 +188,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 
         @Override
         public EndType getEndType() {
-           // return EndType.HDFS;
+            // return EndType.HDFS;
             throw new UnsupportedOperationException("EndType.HDFS");
         }
 

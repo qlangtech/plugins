@@ -27,17 +27,25 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
+import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.DataxReader.BaseDataxReaderDescriptor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.datax.impl.DataxWriter.BaseDataxWriterDescriptor;
 import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.AppAndRuntime;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable.BasicDescriptor;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISRateLimiter;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
@@ -56,6 +64,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.extension.Descriptor.SWITCH_ON;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -95,6 +105,18 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     public Boolean enableRestore;
     @FormField(ordinal = 6, validate = {Validator.require})
     public CheckpointFactory checkpoint;
+
+    public static List<Descriptor<CheckpointFactory>> filterCheckpoint(List<Descriptor<CheckpointFactory>> descs) {
+        AppAndRuntime appAndRuntime = AppAndRuntime.getAppAndRuntime();
+        DataXName appName = appAndRuntime.getAppName();
+        DataxWriter dataxWriter = DataxWriter.load(null, appName.getPipelineName());
+        BaseDataxWriterDescriptor desc = (BaseDataxWriterDescriptor) dataxWriter.getDescriptor();
+        if (desc.getEndType() == EndType.Paimon) {
+            // paimon端必须要开启checkpoint
+            return descs.stream().filter((d) -> SWITCH_ON.equals(d.getDisplayName())).collect(Collectors.toList());
+        }
+        return descs;
+    }
 
     @FormField(ordinal = 7, validate = {Validator.require})
     public StateBackendFactory stateBackend;

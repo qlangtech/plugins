@@ -36,11 +36,11 @@ public class InitialStartupOptions extends StartupOptions {
         return org.apache.flink.cdc.connectors.mysql.table.StartupOptions.initial();
     }
 
-    @TISExtension
-    public static class DefaultDescriptor extends Descriptor<StartupOptions> {
-        @Override
-        public String getDisplayName() {
-            return option().startupMode.name();
-        }
-    }
+//    @TISExtension
+//    public static class DefaultDescriptor extends Descriptor<StartupOptions> {
+//        @Override
+//        public String getDisplayName() {
+//            return option().startupMode.name();
+//        }
+//    }
 }

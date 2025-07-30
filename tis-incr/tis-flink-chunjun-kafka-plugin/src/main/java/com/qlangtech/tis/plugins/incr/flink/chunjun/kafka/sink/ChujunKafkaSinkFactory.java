@@ -289,10 +289,6 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
             return super.verify(msgHandler, context, postFormVals);
         }
 
-        @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return null;
-        }
     }
 
     private boolean validate(IControlMsgHandler msgHandler, Context context, String fieldName, DataxReader dataxReader) {

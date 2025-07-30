@@ -93,6 +93,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        return (List<T>) selectedTabs;
+    }
+
+    @Override
     public final List<SelectedTab> getSelectedTabs() {
 
         if (selectedTabs == null) {

@@ -69,7 +69,8 @@ public class HttpSource implements Source<IncrRateControllerCfgDTO, HttpSourceSp
     public SplitEnumerator<HttpSourceSplit, Collection<HttpSourceSplit>> restoreEnumerator(
             SplitEnumeratorContext<HttpSourceSplit> enumContext,
             Collection<HttpSourceSplit> checkpoint) {
-        return new HttpSourceEnumerator(new ArrayList<>(checkpoint), enumContext);
+        //  return new HttpSourceEnumerator(new ArrayList<>(checkpoint), enumContext);
+        return this.createEnumerator(enumContext);
     }
 
     @Override

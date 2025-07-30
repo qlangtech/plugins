@@ -15,4 +15,8 @@ TIS 为您自动生成 Flink Stream 脚本，现支持两种类型脚本：
 
 * `SQL`: **优点**逻辑清晰，便于用户自行修改执行逻辑
 * `Stream API`：**优点**基于系统更底层执行逻辑执行、轻量、高性能
+
+## writeMode
+
+控制写入数据到目标表采用 `insert into` 或者 `replace into` 或者 `ON DUPLICATE KEY UPDATE` 语句
     

@@ -1,4 +1,8 @@
 {
+  "writeMode": {
+    "dftVal": "insert",
+    "enum": "com.qlangtech.tis.plugin.datax.IWriteModeSupport.supportModes()"
+  },
   "semantic": {
     "dftVal": "at-least-once",
     "enum": "com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory.getSupportSemantic()"

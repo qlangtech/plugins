@@ -88,12 +88,6 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
         }
 
         @Override
-        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            // MySQL 在 DataXWriter中中已经设置了 WriteMode 不需要在增量设置流程中设置
-            return null;
-        }
-
-        @Override
         protected IEndTypeGetter.EndType getTargetType() {
             return IEndTypeGetter.EndType.MySQL;
         }

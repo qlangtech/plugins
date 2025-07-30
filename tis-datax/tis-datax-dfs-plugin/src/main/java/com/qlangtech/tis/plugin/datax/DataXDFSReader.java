@@ -133,6 +133,8 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
     }
 
 
+
+
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {
         return this.fileFormat;

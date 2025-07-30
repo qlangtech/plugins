@@ -111,6 +111,11 @@ public class TisDataXDataflowReader extends DataxReader {
     }
 
     @Override
+    public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        return (List<T>) this.selectedTabs;
+    }
+
+    @Override
     public List<SelectedTab> getSelectedTabs() {
         return this.selectedTabs;
     }

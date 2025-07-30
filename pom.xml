@@ -752,6 +752,15 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filter</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <!--
           Since new versions need to overwrite old versions, it's better
           not to have version number in the .hpi file name.

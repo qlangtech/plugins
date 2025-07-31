@@ -49,7 +49,7 @@ public class CKOn extends CheckpointFactory {
     public Integer ckpointInterval;
 
     // ExecutionCheckpointingOptions.CHECKPOINTING_MODE
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String checkpointMode;
 
     // ExecutionCheckpointingOptions.CHECKPOINTING_TIMEOUT

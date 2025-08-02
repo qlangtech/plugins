@@ -503,10 +503,11 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
     }
 
     protected JSONObject createInitNodeJson() {
-        JSONObject initNode = new JSONObject();
-        initNode.put(StoreResourceType.DATAX_NAME, dataxProcessor.identityValue());
-        // 是否是dataflow的处理类型
-        initNode.put(StoreResourceType.KEY_STORE_RESOURCE_TYPE, dataxProcessor.getResType().getType());
+        JSONObject initNode = dataxProcessor.createNode();
+//        new JSONObject();
+//        initNode.put(StoreResourceType.DATAX_NAME, dataxProcessor.identityValue());
+//        // 是否是dataflow的处理类型
+//        initNode.put(StoreResourceType.KEY_STORE_RESOURCE_TYPE, dataxProcessor.getResType().getType());
         return initNode;
     }
 

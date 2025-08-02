@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.ConfigFileContext.Header;

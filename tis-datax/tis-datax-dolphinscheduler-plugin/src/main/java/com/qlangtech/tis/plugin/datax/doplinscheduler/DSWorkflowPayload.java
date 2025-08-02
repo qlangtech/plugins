@@ -27,6 +27,7 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
@@ -123,7 +124,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected ReplicasSpec getResourceSeplicasSpec() {
-       //  return ReplicasSpec.createDftPowerjobServerReplicasSpec();
+        //  return ReplicasSpec.createDftPowerjobServerReplicasSpec();
         ExportTISPipelineToDolphinscheduler dsExport = Objects.requireNonNull(this.exportCfg, "exportCfg can not be null");
         return Objects.requireNonNull(dsExport.memorySpec, "memorySpec can not be null").getMemorySpec();
     }
@@ -135,7 +136,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     /**
      * 为了避免
-     *
+     * <p>
      * // @see com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer 中执行 synchronizTpisAndConfs方法processTaskIds由于
      * taskid不变导致停止本地文件更新本地配置，所以需要让 baseTisTaskIdWithLocalExecutor 参数每次来都往上递增
      */
@@ -283,7 +284,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         // https://github.com/apache/dolphinscheduler/blob/57c80f2af5d1f29417fdbea09b27221f54987655/dolphinscheduler-api/src/main/java/org/apache/dolphinscheduler/api/service/impl/TaskDefinitionServiceImpl.java#L855
         SelectedTabTriggers tabTriggers = null;
         ISelectedTab selectedTab = null;
-        JSONObject mrParams;
+
         boolean containPostTrigger = false;
         Optional<IWorkflowNode> changedWfNode = null;
 
@@ -310,7 +311,10 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
                         , createParam(IFullBuildContext.DRY_RUN, ParamType.BOOLEAN)
                         , createParam(PluginAndCfgsSnapshotUtils.KEY_PLUGIN_CFGS_METAS, ParamType.VARCHAR)
                         , createParam(JobParams.KEY_JAVA_MEMORY_SPEC, ParamType.VARCHAR)
-                        , createParam(JobParams.KEY_PREVIOUS_TASK_ID, ParamType.INTEGER)));
+                        , createParam(JobParams.KEY_PREVIOUS_TASK_ID, ParamType.INTEGER)
+                        //        , createParam(StoreResourceType.KEY_STORE_RESOURCE_TYPE, ParamType.VARCHAR)
+                ));
+
         JSONObject initNode = createInitNodeJson();
         this.setDisableGrpcRemoteServerConnect(initNode);
         //
@@ -331,7 +335,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             //======================================
             tabTriggers = entry.getValue();
             selectedTab = entry.getKey();
-            mrParams = new JSONObject(tabTriggers.createMRParams());
+            JSONObject mrParams = new JSONObject(tabTriggers.createMRParams());
             this.setDisableGrpcRemoteServerConnect(mrParams);
             if (tabTriggers.getPostTrigger() != null) {
                 containPostTrigger = true;

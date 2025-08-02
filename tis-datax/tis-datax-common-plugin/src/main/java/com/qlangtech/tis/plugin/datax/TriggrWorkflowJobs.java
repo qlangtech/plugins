@@ -145,13 +145,14 @@ public class TriggrWorkflowJobs {
 
 
     private void appendLog(WorkFlowBuildHistoryPayload workFlowBuildHistoryPayload, Optional<ExecResult> execResult) {
-        JSONObject wfHistory = new JSONObject();
+//        JSONObject wfHistory =  new JSONObject();
         IDataxProcessor dataxProcessor = Objects.requireNonNull(workFlowBuildHistoryPayload.dataxProcessor, "dataxProcessor can not be null");
+        JSONObject wfHistory = dataxProcessor.createNode();
         wfHistory.put(KEY_WORKFLOW_INSTANCE_ID, workFlowBuildHistoryPayload.getSPIWorkflowInstanceId());
         wfHistory.put(KEY_TIS_TASK_ID, workFlowBuildHistoryPayload.getTisTaskId());
         wfHistory.put(KEY_WORKFLOW_BUILD_HISTORY_FACTORY, workFlowBuildHistoryPayload.getFactory().getName());
-        wfHistory.put(StoreResourceType.KEY_STORE_RESOURCE_TYPE, dataxProcessor.getResType().getType());
-        wfHistory.put(IFullBuildContext.KEY_APP_NAME, dataxProcessor.identityValue());
+//        wfHistory.put(StoreResourceType.KEY_STORE_RESOURCE_TYPE, dataxProcessor.getResType().getType());
+//        wfHistory.put(IFullBuildContext.KEY_APP_NAME, dataxProcessor.identityValue());
 
         // DataxProcessor.load()
         execResult.ifPresent((er) -> {

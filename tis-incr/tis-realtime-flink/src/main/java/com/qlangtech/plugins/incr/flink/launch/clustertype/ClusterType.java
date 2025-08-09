@@ -38,8 +38,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.kubernetes.kubeclient.Endpoint;
 import org.apache.flink.runtime.client.JobStatusMessage;
+import org.apache.flink.util.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
@@ -102,8 +102,26 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
     }
 
     public static JSONObject createClusterMeta(
-            FlinkClusterType clusterType, Endpoint endpoint, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
+            FlinkClusterType clusterType, ClusterEndpoint endpoint, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
         return createClusterMeta(clusterType, Optional.of("http://" + endpoint.getAddress() + ":" + endpoint.getPort()), clusterClient, flinkK8SImage);
+    }
+
+    public static class ClusterEndpoint {
+        private final String address;
+        private final int port;
+
+        public ClusterEndpoint(String address, int port) {
+            this.address = (String) Preconditions.checkNotNull(address, "Address should not be null.");
+            this.port = port;
+        }
+
+        public String getAddress() {
+            return this.address;
+        }
+
+        public int getPort() {
+            return this.port;
+        }
     }
 
 

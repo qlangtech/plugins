@@ -19,7 +19,7 @@
 package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -94,7 +94,7 @@ public class BasicTISInitializeProcessor {
                 /**=======================================================================
                  *TriggerNewTask
                  =======================================================================*/
-                PowerjobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
+                DistributeJobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
                 svc.appendLog(LogLevel.INFO, triggerResult.getTaskid()
                         , Optional.empty()
                         , "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));

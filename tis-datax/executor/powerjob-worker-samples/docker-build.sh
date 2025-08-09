@@ -1,4 +1,4 @@
-tis_version="4.2.0"
+tis_version="4.3.0-SNAPSHOT"
 docker rmi registry.cn-hangzhou.aliyuncs.com/tis/tis-datax-executor:$tis_version
 docker rmi tis/tis-datax-executor:$tis_version
 docker build . -t tis/tis-datax-executor:$tis_version

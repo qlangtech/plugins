@@ -37,62 +37,12 @@ public class TISTableDumpProcessor extends BasicTISTableDumpProcessor implements
 
         this.processPostTask(new PowerJobTaskContext(context));
         return new ProcessResult(true);
-//        final OmsLogger omsLogger = context.getOmsLogger();
-//        if (CollectionUtils.isEmpty(taskResults)) {
-//            return new ProcessResult(false, "taskResults is empty,terminate");
-//        }
-//        for (TaskResult childResult : taskResults) {
-//            if (!childResult.isSuccess()) {
-//                return new ProcessResult(false,
-//                        "childResult faild:" + childResult.getResult() + ",taskid:" + childResult.getTaskId() + "  " + "skip reduce phase");
-//            }
-//        }
-//
-//
-//        RpcServiceReference statusRpc = getRpcServiceReference();
-//        StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
-//        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
-//
-//        DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
-//        SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
-//        // execContext.putTablePt( );
-//        //  IDataxProcessor processor = execContext.getProcessor(); // DataxProcessor.load(null, triggerCfg
-//        // .getDataXName());
-//        ISelectedTab tab = new DefaultTab(triggerCfg.getTabName());
-//        String postTrigger = null;
-//        Integer taskId = execContext.getTaskId();
-//        if (StringUtils.isNotEmpty(postTrigger = triggerCfg.getPostTrigger())) {
-//
-//            try {
-//                RpcUtils.setJoinStatus(taskId, false, false, svc, postTrigger);
-//                omsLogger.info("exec postTrigger:{}", postTrigger);
-//
-//                IRemoteTaskTrigger postTask = createDataXJob(execContext, Pair.of(postTrigger,
-//                        IDataXBatchPost.LifeCycleHook.Post), tab.getName());
-//                postTask.run();
-//                RpcUtils.setJoinStatus(taskId, true, false, svc, postTrigger);
-//            } catch (Exception e) {
-//                RpcUtils.setJoinStatus(taskId, true, true, svc, postTrigger);
-//                //  markFaildToken(context);
-//                omsLogger.error("postTrigger:" + postTrigger + " falid", e);
-//                //throw new RuntimeException(e);
-//                return new ProcessResult(false, e.getMessage());
-//            }
-//        }
-//
-//        addSuccessPartition(context, execContext, tab.getName());
-//
-//        return new ProcessResult(true);
+
     }
 
 
     @Override
     public ProcessResult process(TaskContext context) throws Exception {
-
-        // PowerJobTaskContext powerJobTaskContext = ;
-
-        // final OmsLogger logger = context.getOmsLogger();
-        //  ExecPhase execPhase = ;
 
         processSync(new PowerJobTaskContext(context), PowerJobTaskContext.parse(this, context));
         return new ProcessResult(true, "map success");

@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.common;
 
-import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.extension.TISExtension;
 import io.kubernetes.client.openapi.ApiClient;
@@ -46,11 +45,16 @@ public class FlinkK8SImage extends DefaultK8SImage {
         return new CoreV1Api(this.createApiClient());
     }
 
+    public static ImageCategory k8sImage() {
+        //FlinkK8SImage
+        return ImageCategory.DEFAULT_FLINK_DESC_NAME;
+    }
+
     @TISExtension()
     public static class FlinkDescriptorImpl extends DescriptorImpl {
         @Override
         protected ImageCategory getImageCategory() {
-            return BasicFlinkK8SClusterCfg.k8sImage();
+            return k8sImage();
         }
     }
 }

@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.MemorySize.MemoryUnit;
 import org.apache.flink.configuration.description.Description;
 import org.apache.flink.configuration.description.HtmlFormatter;
 
@@ -214,9 +215,9 @@ public class FlinkPropAssist<T extends Describable> {
             helperContent.append("\n\n 单位：`秒`");
         } else if (targetClazz == MemorySize.class) {
             if (dftVal != null) {
-                dftVal = ((MemorySize) dftVal).getKibiBytes();
+                dftVal = ((MemorySize) dftVal).getMebiBytes();
             }
-            helperContent.append("\n\n 单位：`kb`");
+            helperContent.append("\n\n 单位：`" + MemoryUnit.MEGA_BYTES.getUnits()[1] + "`");
         } else if (targetClazz.isEnum()) {
             List<Enum> enums = EnumUtils.getEnumList((Class<Enum>) targetClazz);
             opts = enums.stream().map((e) -> new Option(e.name())).collect(Collectors.toList());

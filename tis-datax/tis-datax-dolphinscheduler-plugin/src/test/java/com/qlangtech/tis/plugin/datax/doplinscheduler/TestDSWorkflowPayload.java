@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler;
 
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.assemble.TriggerType;
-import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -111,7 +111,7 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         CenterResource.setNotFetchFromCenterRepository();
         DSWorkflowPayload dsWorkflowPayload = createTriggerDsWorkflowPayload();
         Optional<Long> spiWorkflowInstanceIdOpt = Optional.of(dsWorkflowId); // Optional.empty();
-        PowerjobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.statusRpc);
+        DistributeJobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.statusRpc);
         Assert.assertNotNull("triggerBuildResult can not be null", triggerBuildResult);
         Thread.sleep(900000);
         verifyAll();

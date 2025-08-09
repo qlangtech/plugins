@@ -186,7 +186,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             ExecuteState event = null;
             boolean allConnectionDie = false;
-            while (!allConnectionDie && lineIt.hasNext()) {
+            while (!allConnectionDie && hasNextLine(lineIt)) {
                 event = ExecuteState.create(LogType.INCR_DEPLOY_STATUS_CHANGE, lineIt.nextLine());
                 // 如果所有的监听者都死了，这里也就不用继续监听日志了
                 allConnectionDie = sendMsg(indexName, event);
@@ -209,6 +209,17 @@ public class DefaultWatchPodLog extends WatchPodLog {
             this.clearStatConnection();
         }
         return true;
+    }
+
+    private boolean hasNextLine(LineIterator lineIt) {
+        try {
+            return lineIt.hasNext();
+        } catch (java.lang.IllegalStateException e) {
+            if (ExceptionUtils.indexOfThrowable(e, java.io.IOException.class) > -1) {
+                return false;
+            }
+            throw e;
+        }
     }
 
     private InputStream createMonitorLogStream() throws ApiException, IOException {

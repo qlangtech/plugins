@@ -36,7 +36,6 @@
     <dependencies>
 
 
-
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-cdc-common</artifactId>
@@ -58,6 +57,12 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-cdc-composer-tis</artifactId>
             <version>${flink.cdc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-kubernetes</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

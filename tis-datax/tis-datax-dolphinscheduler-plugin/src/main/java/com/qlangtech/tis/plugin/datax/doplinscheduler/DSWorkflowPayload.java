@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ICoordinator;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
@@ -141,7 +141,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
      * taskid不变导致停止本地文件更新本地配置，所以需要让 baseTisTaskIdWithLocalExecutor 参数每次来都往上递增
      */
     @Override
-    public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt, RpcServiceReference feedback) {
+    public DistributeJobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt, RpcServiceReference feedback) {
 
         if (exportCfg.createHistory) {
             return super.triggerWorkflow(workflowInstanceIdOpt, feedback);
@@ -150,7 +150,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             synchronized (baseTisTaskIdWithLocalExecutor) {
                 baseTisTaskIdWithLocalExecutor.incrementAndGet();
                 JSONObject instanceParams = createInstanceParams(baseTisTaskIdWithLocalExecutor.get());
-                PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
+                DistributeJobTriggerBuildResult buildResult = new DistributeJobTriggerBuildResult(true, instanceParams);
                 buildResult.taskid = baseTisTaskIdWithLocalExecutor.get();
                 return buildResult;
             }

@@ -188,148 +188,6 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
         return DistributedPowerJobDataXJobSubmit.getTISPowerJob();// this.submit.getTISPowerJob();
     }
 
-//    @Override
-//    protected List<IWorkflowNode> getDAGNodes(BasicWorkflowInstance powerJobWorkflowId) {
-//        return powerJobWorkflowId.getWorkflowNodes();
-//        WorkflowInfoDTO wfInfo = result(this.getTISPowerJob().fetchWorkflow(powerJobWorkflowId.getSPIWorkflowId()));
-//        List<IWorkflowNode> wfNodes = DistributedPowerJobDataXJobSubmit.convertWorkflowNodes(wfInfo);
-//        return wfNodes;
-//    }
-
-
-//    /**
-//     * @param daoContext
-//     * @param workflowInstanceIdOpt TIS 中触发历史taskId
-//     * @param feedback
-//     * @return
-//     */
-//    public PowerjobTriggerBuildResult triggerWorkflow(ICommonDAOContext daoContext, Optional<Long> workflowInstanceIdOpt
-//            , StatusRpcClientFactory.AssembleSvcCompsite feedback) {
-//        //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
-//
-//        WorkflowSPIInitializer<PowerJobWorkflow> workflowInitializer = new WorkflowSPIInitializer(this);
-//
-//        PowerJobWorkflow powerJobWorkflowId = workflowInitializer.initialize();
-//
-//        List<IWorkflowNode> wfNodes = getDAGNodes(powerJobWorkflowId);
-//        final List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
-//        final List<ISqlTask.SqlTaskCfg> joinNodeCfgs = Lists.newArrayList();
-//        vistWorkflowNodes(this.dataxProcessor.identityValue(), wfNodes, new WorkflowNodeVisit() {
-//            @Override
-//            public void vistStartInitNode(IWorkflowNode node) {
-//                return;
-//            }
-//
-//            @Override
-//            public void vistJoinWorkerNode(ISqlTask.SqlTaskCfg cfg, IWorkflowNode node) {
-//                joinNodeCfgs.add(cfg);
-//            }
-//
-//            @Override
-//            public void vistDumpWorkerNode(IWorkflowNode node) {
-//                triggerCfgs.add(SelectedTabTriggers.deserialize(JSONObject.parseObject(node.getNodeParams())));
-//            }
-//        });
-//
-//
-//        SPIExecContext chainContext = createSPIExecContext();
-//        chainContext.setExecutePhaseRange(powerJobWorkflowId.getExecutePhaseRange());
-//        //
-//        /**===================================================================
-//         * 创建 TIS的taskId
-//         ===================================================================*/
-//        CreateNewTaskResult newTaskResult
-//                = daoContext.createNewDataXTask(chainContext, workflowInstanceIdOpt.isPresent() ? TriggerType.CRONTAB : TriggerType.MANUAL);
-//
-//        final Integer tisTaskId = newTaskResult.getTaskid();
-//
-//        if (CollectionUtils.isEmpty(triggerCfgs)) {
-//            throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getSPIWorkflowId()
-//                    + " relevant nodes triggerCfgs can not be null empty");
-//        }
-//
-//        PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
-//        feedback.initSynJob(statusCollection);
-//
-//        JSONObject instanceParams = createInstanceParams(tisTaskId);
-//        // 取得powerjob instanceId
-//        Long workflowInstanceIdOfSPI = workflowInstanceIdOpt.orElseGet(() -> {
-//            /****************************************
-//             * 手动触发的情况
-//             ****************************************/
-//            Long createWorkflowInstanceId = result(this.getTISPowerJob()
-//                    .runWorkflow(powerJobWorkflowId.getSPIWorkflowId() /** wfInfo.getId()*/, JsonUtil.toString(instanceParams), 0));
-//            logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
-//            return createWorkflowInstanceId;
-//        });
-//
-//
-//        WorkFlowBuildHistoryPayload buildHistoryPayload = new WorkFlowBuildHistoryPayload(tisTaskId, this.commonDAOContext);
-//
-//        buildHistoryPayload.setSPIWorkflowInstanceId(workflowInstanceIdOfSPI);
-//
-//        PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
-//        buildResult.taskid = tisTaskId;
-//
-//        initializeService(commonDAOContext);
-//        triggrWorkflowJobs.offer(buildHistoryPayload);
-//        if (checkWorkflowJobsLock.tryLock()) {
-//
-//            scheduledExecutorService.schedule(() -> {
-//                checkWorkflowJobsLock.lock();
-//                try {
-//                    int count = 0;
-//                    WorkFlowBuildHistoryPayload pl = null;
-//                    List<WorkFlowBuildHistoryPayload> checkWf = Lists.newArrayList();
-//                    ExecResult execResult = null;
-//                    TISPowerJobClient powerJobClient = this.getTISPowerJob();
-//                    while (true) {
-//                        while ((pl = triggrWorkflowJobs.poll()) != null) {
-//                            checkWf.add(pl);
-//                            count++;
-//                        }
-//
-//                        if (CollectionUtils.isEmpty(checkWf)) {
-//                            logger.info("the turn all of the powerjob workflow job has been terminated,jobs count:{}", count);
-//                            return;
-//                        }
-//
-//                        // WorkflowInstanceInfoDTO wfStatus = null;
-//                        Iterator<WorkFlowBuildHistoryPayload> it = checkWf.iterator();
-//                        WorkFlowBuildHistoryPayload p;
-//                        int allWfJobsCount = checkWf.size();
-//                        int removed = 0;
-//                        while (it.hasNext()) {
-//                            p = it.next();
-//                            if ((execResult = p.processExecHistoryRecord(powerJobClient)) != null) {
-//                                // 说明结束了
-//                                it.remove();
-//                                removed++;
-//                                // 正常结束？ 还是失败导致？
-//                                if (execResult != ExecResult.SUCCESS) {
-//
-//                                }
-//                                triggrWorkflowJobs.taskFinal(p, execResult);
-//                            }
-//                        }
-//                        logger.info("start to wait next time to check job status,to terminate status count:{},allWfJobsCount:{}", removed, allWfJobsCount);
-//                        try {
-//                            Thread.sleep(4000);
-//                        } catch (InterruptedException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    }
-//                } finally {
-//                    checkWorkflowJobsLock.unlock();
-//                }
-//            }, 5, TimeUnit.SECONDS);
-//            checkWorkflowJobsLock.unlock();
-//        }
-//
-//
-//        return buildResult;
-//    }
-
 
     @Override
     protected WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId) {
@@ -596,14 +454,6 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
             return execContext;
         }
 
-//        private Application load() {
-//            if (this.app == null) {
-//                this.app = Objects.requireNonNull(//
-//                        applicationDAO.selectByName(appName), "appName:" + appName + " relevant app can not be null");
-//            }
-//            return this.app;
-//        }
-
         @Override
         protected String getTargetEntityName() {
             return Objects.requireNonNull(this.appName, "appName can not be null");
@@ -619,17 +469,6 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
         @Override
         protected void setSPIWorkflowPayload(JSONObject appPayload) {
             this.applicationStore.setSPIWorkflowPayload(appPayload);
-//            Application app = new Application();
-//            app.setFullBuildCronTime(JsonUtil.toString(Objects.requireNonNull(appPayload, "appPayload can not be null")));
-//
-//            Application application = this.load();
-//            application.setFullBuildCronTime(app.getFullBuildCronTime());
-//            ApplicationCriteria appCriteria = new ApplicationCriteria();
-//            appCriteria.createCriteria().andAppIdEqualTo(application.getAppId());
-//            if (applicationDAO.updateByExampleSelective(app, appCriteria) < 1) {
-//                throw new IllegalStateException("app:" + application.getProjectName() + " update workflowId in payload faild");
-//            }
-//            this.app = null;
         }
     }
 

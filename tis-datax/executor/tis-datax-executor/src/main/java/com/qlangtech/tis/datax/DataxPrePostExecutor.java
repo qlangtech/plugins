@@ -67,19 +67,14 @@ public class DataxPrePostExecutor {
             throw new IllegalArgumentException("arg 'incrStateCollectAddress' can not be null");
         }
 
-//        boolean isDisableGrpcRemoteServerConnect;
-//        if (isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[8])) {
-//            ITISCoordinator.disableRemoteServer();
-//        }
-//        logger.info("isDisableGrpcRemoteServerConnect:{}", isDisableGrpcRemoteServerConnect);
         boolean isDisableGrpcRemoteServerConnect = Boolean.parseBoolean(args[8]);
         RpcServiceReference statusRpc =
                 StatusRpcClientFactory.getService(ITISCoordinator.create(!isDisableGrpcRemoteServerConnect, Optional.of(incrStateCollectAddress)));
         AssembleSvcCompsite.statusRpc = (statusRpc);
 
         final String lifecycleHookName = args[3];
-        final ISelectedTab tab = new DefaultTab(args[4]);
-        final EntityName entity = EntityName.parse(tab.getName());
+       // final ISelectedTab tab = new DefaultTab(args[4]);
+        final EntityName entity = EntityName.parse(args[4]);
         if (StringUtils.isEmpty(entity.getTabName())) {
             throw new IllegalStateException("param table name can not be empty");
         }
@@ -102,6 +97,8 @@ public class DataxPrePostExecutor {
         IRemoteTaskTrigger hookTrigger = null;
         try {
             IDataxProcessor dataxProcessor = DataxProcessor.load(null, resType, dataXName);
+            IDataxReader reader = dataxProcessor.getReader(null);
+            ISelectedTab tab = reader.getSelectedTab(entity.getTableName());
             IDataXBatchPost batchPost =
                     IDataxWriter.castBatchPost(Objects.requireNonNull(dataxProcessor.getWriter(null), "dataXName" +
                             ":" + dataXName + " relevant dataXWriter can not be null"));

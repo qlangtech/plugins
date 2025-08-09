@@ -26,7 +26,7 @@ import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -178,7 +178,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
      * @param feedback
      * @return
      */
-    public PowerjobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
+    public DistributeJobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
             , RpcServiceReference feedback) {
         //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
@@ -241,7 +241,7 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
 
         buildHistoryPayload.setSPIWorkflowInstanceId(workflowInstanceIdOfSPI);
 
-        PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
+        DistributeJobTriggerBuildResult buildResult = new DistributeJobTriggerBuildResult(true, instanceParams);
         buildResult.taskid = tisTaskId;
 
         initializeService(commonDAOContext);

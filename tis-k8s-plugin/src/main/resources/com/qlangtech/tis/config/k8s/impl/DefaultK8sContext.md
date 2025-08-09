@@ -7,3 +7,9 @@
 
 > TIS中有较多组件是运行在K8S容器中的，需要在TIS运行环境中安装部署K8S环境。有多种方式安装K8S环境，[详细请查看](http://tis.pub/blog/k8s-using/)
 
+## kubeBasePath
+
+使用命令 `kubectl cluster-info` 获取当前K8S集群的根路径.
+
+
+

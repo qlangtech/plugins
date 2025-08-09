@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +73,8 @@ public class TriggrWorkflowJobs {
     }
 
 
-    public static TriggrWorkflowJobs create(ICommonDAOContext daoContext, Function<String, Class<?>> workflowBuildHistoryFactoryLoader) throws Exception {
+    public static TriggrWorkflowJobs create(ICommonDAOContext daoContext
+            , Function<String, Class<?>> workflowBuildHistoryFactoryLoader) throws Exception {
 
         WorkFlowBuildHistoryPayload history = null;
         File submitWorkflowJobs = createSubmitWorkflowJobsFile();
@@ -85,9 +87,18 @@ public class TriggrWorkflowJobs {
             WorkFlowBuildHistoryPayload.SubmitLog submitLog = null;
             WorkFlowBuildHistoryPayload.SubmitLog preSubmitLog = null;
             Integer execResult = null;
+            String line = null;
             while (lineIt.hasNext()) {
-
-                JSONObject info = JSONObject.parseObject(lineIt.nextLine());
+                line = lineIt.nextLine();
+                if (StringUtils.isEmpty(line)) {
+                    continue;
+                }
+                JSONObject info = JSONObject.parseObject(line);
+                String pipelineName = info.getString(IFullBuildContext.KEY_APP_NAME);
+                if (StringUtils.isEmpty(pipelineName)) {
+                    throw new IllegalStateException(
+                            "propKey:" + IFullBuildContext.KEY_APP_NAME + " relevant value can not be empty,jsonContent:" + line);
+                }
                 String workflowBuildHistoryFactory = info.getString(KEY_WORKFLOW_BUILD_HISTORY_FACTORY);
                 Class<?> clazz = workflowBuildHistoryFactoryLoader.apply(workflowBuildHistoryFactory);
                 if (clazz == null) {
@@ -98,7 +109,7 @@ public class TriggrWorkflowJobs {
                         () -> {
                             return DataxProcessor.load(null
                                     , StoreResourceType.parse(info.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE))
-                                    , info.getString(IFullBuildContext.KEY_APP_NAME));
+                                    , pipelineName);
                         },
                         info.getLong(KEY_WORKFLOW_INSTANCE_ID)
                         , info.getInteger(KEY_TIS_TASK_ID)

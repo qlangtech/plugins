@@ -23,6 +23,8 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.exec.impl.WorkflowExecContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
@@ -33,6 +35,7 @@ import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,9 +76,9 @@ public class DataxPrePostExecutor {
         AssembleSvcCompsite.statusRpc = (statusRpc);
 
         final String lifecycleHookName = args[3];
-       // final ISelectedTab tab = new DefaultTab(args[4]);
-        final EntityName entity = EntityName.parse(args[4]);
-        if (StringUtils.isEmpty(entity.getTabName())) {
+        // final ISelectedTab tab = new DefaultTab(args[4]);
+        final String entity = (args[4]);
+        if (StringUtils.isEmpty(entity)) {
             throw new IllegalStateException("param table name can not be empty");
         }
 
@@ -94,53 +97,54 @@ public class DataxPrePostExecutor {
         }
 
 
-        IRemoteTaskTrigger hookTrigger = null;
+        //  IRemoteTaskTrigger hookTrigger = null;
         try {
             IDataxProcessor dataxProcessor = DataxProcessor.load(null, resType, dataXName);
             IDataxReader reader = dataxProcessor.getReader(null);
-            ISelectedTab tab = reader.getSelectedTab(entity.getTableName());
+            ISelectedTab tab = reader.getSelectedTab(entity);
             IDataXBatchPost batchPost =
                     IDataxWriter.castBatchPost(Objects.requireNonNull(dataxProcessor.getWriter(null), "dataXName" +
                             ":" + dataXName + " relevant dataXWriter can not be null"));
             //  final EntityName tabEntity = batchPost.parseEntity(tab);
-            AbstractExecContext execContext = null;
-            switch (resType) {
-                case DataApp:
-                    execContext = new DataXPipelineExecContext(dataXName, execEpochMilli) {
-                        @Override
-                        public IDataxProcessor getProcessor() {
-                            return dataxProcessor;
-                        }
-                    };
-                    break;
-                case DataFlow:
-                    execContext = new WorkflowExecContext(null, execEpochMilli) {
-                        @Override
-                        public IDataxProcessor getProcessor() {
-                            return dataxProcessor;
-                        }
-                    };
-                    break;
-                default:
-                    throw new IllegalStateException("illegal resType:" + resType);
-            }
+
+            final AbstractExecContext execContext = createExecContext(execEpochMilli, dataxProcessor);
 
             // execContext.setResType(resType);
 
-            if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
-                hookTrigger = batchPost.createPostTask(
-                        execContext, entity, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
-            } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
-                hookTrigger = batchPost.createPreExecuteTask(execContext, entity, tab);
-            } else {
-                throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
-            }
-            if (!StringUtils.equals(hookTrigger.getTaskName(), jobName)) {
-                logger.warn("hookTrigger.getTaskName:{} is not equal with jobName:{}", hookTrigger.getTaskName(),
-                        jobName);
-            }
-            Objects.requireNonNull(hookTrigger, "hookTrigger can not be null");
-            hookTrigger.run();
+            IDataXBatchPost.process(dataxProcessor, tab, (batchPostTask, entryName) -> {
+                IRemoteTaskTrigger hookTrigger = null;
+                if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
+                    hookTrigger = batchPost.createPostTask(
+                            execContext, entryName, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
+                } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
+                    hookTrigger = batchPost.createPreExecuteTask(execContext, entryName, tab);
+                } else {
+                    throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
+                }
+                if (!StringUtils.equals(hookTrigger.getTaskName(), jobName)) {
+                    logger.warn("hookTrigger.getTaskName:{} is not equal with jobName:{}", hookTrigger.getTaskName(),
+                            jobName);
+                }
+                Objects.requireNonNull(hookTrigger, "hookTrigger can not be null");
+                hookTrigger.run();
+                return null;
+            });
+
+
+//            if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
+//                hookTrigger = batchPost.createPostTask(
+//                        execContext, entity, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
+//            } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
+//                hookTrigger = batchPost.createPreExecuteTask(execContext, entity, tab);
+//            } else {
+//                throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
+//            }
+//            if (!StringUtils.equals(hookTrigger.getTaskName(), jobName)) {
+//                logger.warn("hookTrigger.getTaskName:{} is not equal with jobName:{}", hookTrigger.getTaskName(),
+//                        jobName);
+//            }
+//            Objects.requireNonNull(hookTrigger, "hookTrigger can not be null");
+//            hookTrigger.run();
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
             try {
@@ -183,6 +187,33 @@ public class DataxPrePostExecutor {
         }
         logger.info("dataX:" + dataXName + ",taskid:" + jobId + " finished");
         System.exit(0);
+    }
+
+    private static AbstractExecContext createExecContext(long execEpochMilli, IDataxProcessor dataxProcessor) {
+        AbstractExecContext execContext;
+        StoreResourceType resType = dataxProcessor.getResType();
+        String dataXName = dataxProcessor.identityValue();
+        switch (resType) {
+            case DataApp:
+                execContext = new DataXPipelineExecContext(dataXName, execEpochMilli) {
+                    @Override
+                    public IDataxProcessor getProcessor() {
+                        return dataxProcessor;
+                    }
+                };
+                break;
+            case DataFlow:
+                execContext = new WorkflowExecContext(null, execEpochMilli) {
+                    @Override
+                    public IDataxProcessor getProcessor() {
+                        return dataxProcessor;
+                    }
+                };
+                break;
+            default:
+                throw new IllegalStateException("illegal resType:" + resType);
+        }
+        return execContext;
     }
 
 

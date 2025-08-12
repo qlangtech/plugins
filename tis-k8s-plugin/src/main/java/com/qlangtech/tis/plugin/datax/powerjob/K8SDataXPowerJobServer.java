@@ -774,7 +774,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         DefaultK8SImage powerjobServerImage = new DefaultK8SImage();
         powerjobServerImage.imagePath = powerImage.getImagePath();
         powerjobServerImage.namespace = powerImage.getNamespace();
-
+        powerjobServerImage.hostAliases = powerImage.hostAliases;
+        powerjobServerImage.useExternalIP = powerImage.useExternalIP;
         // boolean success = false;
         WaitReplicaControllerLaunch relevantPodNames = null;
         NamespacedEventCallCriteria resourceVer = null;

@@ -35,6 +35,7 @@ import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
@@ -164,6 +165,9 @@ public class BasicTISTableDumpProcessor {
 
         execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
         execContext.setDisableGrpcRemoteServerConnect(context.isDisableGrpcRemoteServerConnect());
+      //  execContext.setAttribute(JobCommon.KEY_TASK_ID, Objects.requireNonNull(taskId, "taskId can not be null"));
+
+
         /**
          * 同步必要的配置及tpi资源到本地
          */

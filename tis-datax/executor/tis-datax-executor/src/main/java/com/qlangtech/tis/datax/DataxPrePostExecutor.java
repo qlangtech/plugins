@@ -23,19 +23,14 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.exec.impl.WorkflowExecContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
-import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +56,10 @@ public class DataxPrePostExecutor {
      */
     public static void main(String[] args) throws Exception {
         if (args.length != 9) {
-            throw new IllegalArgumentException("args length must be 8,but now is " + String.join(",", args));
+            throw new IllegalArgumentException("args length must be 9,but now is " + String.join(",", args));
         }
-        Integer jobId = Integer.parseInt(args[0]);
-        String dataXName = args[1];
+        final Integer taskId = Integer.parseInt(args[0]);
+        String pipelineName = args[1];
         String incrStateCollectAddress = args[2];
         if (StringUtils.isEmpty(incrStateCollectAddress)) {
             throw new IllegalArgumentException("arg 'incrStateCollectAddress' can not be null");
@@ -90,25 +85,25 @@ public class DataxPrePostExecutor {
         final long execEpochMilli = Long.parseLong(args[7]);
 
 
-        JobCommon.setMDC(jobId, dataXName);
+        JobCommon.setMDC(taskId, pipelineName);
 
-        if (StringUtils.isEmpty(dataXName)) {
+        if (StringUtils.isEmpty(pipelineName)) {
             throw new IllegalArgumentException("arg 'dataXName' can not be null");
         }
 
 
         //  IRemoteTaskTrigger hookTrigger = null;
         try {
-            IDataxProcessor dataxProcessor = DataxProcessor.load(null, resType, dataXName);
+            IDataxProcessor dataxProcessor = DataxProcessor.load(null, resType, pipelineName);
             IDataxReader reader = dataxProcessor.getReader(null);
             ISelectedTab tab = reader.getSelectedTab(entity);
             IDataXBatchPost batchPost =
                     IDataxWriter.castBatchPost(Objects.requireNonNull(dataxProcessor.getWriter(null), "dataXName" +
-                            ":" + dataXName + " relevant dataXWriter can not be null"));
+                            ":" + pipelineName + " relevant dataXWriter can not be null"));
             //  final EntityName tabEntity = batchPost.parseEntity(tab);
 
-            final AbstractExecContext execContext = createExecContext(execEpochMilli, dataxProcessor);
-
+            final AbstractExecContext execContext = createExecContext(taskId, execEpochMilli, dataxProcessor);
+            //execContext.getTaskId()
             // execContext.setResType(resType);
 
             IDataXBatchPost.process(dataxProcessor, tab, (batchPostTask, entryName) -> {
@@ -130,21 +125,6 @@ public class DataxPrePostExecutor {
                 return null;
             });
 
-
-//            if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
-//                hookTrigger = batchPost.createPostTask(
-//                        execContext, entity, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
-//            } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
-//                hookTrigger = batchPost.createPreExecuteTask(execContext, entity, tab);
-//            } else {
-//                throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
-//            }
-//            if (!StringUtils.equals(hookTrigger.getTaskName(), jobName)) {
-//                logger.warn("hookTrigger.getTaskName:{} is not equal with jobName:{}", hookTrigger.getTaskName(),
-//                        jobName);
-//            }
-//            Objects.requireNonNull(hookTrigger, "hookTrigger can not be null");
-//            hookTrigger.run();
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
             try {
@@ -158,9 +138,9 @@ public class DataxPrePostExecutor {
                             joinStatus.setFaild(true);
                             joinStatus.setComplete(true);
                             joinStatus.setStart();
-                            statusRpc.reportJoinStatus(jobId, joinStatus);
+                            statusRpc.reportJoinStatus(taskId, joinStatus);
                         } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
-                            statusRpc.reportDumpJobStatus(true, true, false, jobId, jobName, -1, -1);
+                            statusRpc.reportDumpJobStatus(true, true, false, taskId, jobName, -1, -1);
                         } else {
                             throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
                         }
@@ -185,11 +165,11 @@ public class DataxPrePostExecutor {
             //            } catch (Throwable e) {
             //            }
         }
-        logger.info("dataX:" + dataXName + ",taskid:" + jobId + " finished");
+        logger.info("dataX:" + pipelineName + ",taskid:" + taskId + " finished");
         System.exit(0);
     }
 
-    private static AbstractExecContext createExecContext(long execEpochMilli, IDataxProcessor dataxProcessor) {
+    private static AbstractExecContext createExecContext(Integer taskId, long execEpochMilli, IDataxProcessor dataxProcessor) {
         AbstractExecContext execContext;
         StoreResourceType resType = dataxProcessor.getResType();
         String dataXName = dataxProcessor.identityValue();
@@ -213,6 +193,7 @@ public class DataxPrePostExecutor {
             default:
                 throw new IllegalStateException("illegal resType:" + resType);
         }
+        execContext.setAttribute(JobCommon.KEY_TASK_ID, Objects.requireNonNull(taskId));
         return execContext;
     }
 

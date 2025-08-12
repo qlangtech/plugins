@@ -130,8 +130,11 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         // tisPowerJob.registerPowerJobApp();
         PowerJobK8SImage powerJobImage = pjServer.getImage();
         DefaultK8SImage powerjobServerImage = new DefaultK8SImage();
-        powerjobServerImage.imagePath = powerJobImage.powerJobWorkerImagePath;// "registry.cn-hangzhou.aliyuncs.com/tis/powerjob-worker:4.0.0";
-        powerjobServerImage.namespace = powerJobImage.getNamespace();// this.getK8SImage().getNamespace();
+        powerjobServerImage.imagePath = powerJobImage.powerJobWorkerImagePath;
+        powerjobServerImage.namespace = powerJobImage.getNamespace();
+        powerjobServerImage.useExternalIP = powerJobImage.useExternalIP;
+        powerjobServerImage.hostAliases = powerJobImage.hostAliases;
+
         ReplicasSpec replicasSpec = Objects.requireNonNull(this.getReplicasSpec(), "ReplicasSpec can not be null");
 
 
@@ -159,7 +162,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
          */
         //  --powerjob.worker.server-address=powerjob-server:7700
         final String powerJobServerHostReplacement = K8S_DATAX_POWERJOB_SERVER_SERVICE.getHostPortReplacement(powerJobImage);
-         // properties setter ref: tech.powerjob.worker.autoconfigure.PowerJobProperties
+        // properties setter ref: tech.powerjob.worker.autoconfigure.PowerJobProperties
         List<Option> params = Lists.newArrayList(new Option("powerjob.worker.app-name", pjServer.appName),
                 new Option("powerjob.worker.server-address", powerJobServerHostReplacement),
                 new Option("powerjob.worker.port", this.port),

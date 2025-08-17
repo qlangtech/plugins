@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
@@ -43,6 +44,7 @@ import org.apache.flink.runtime.client.JobStatusMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
@@ -95,14 +97,27 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         return createFlinkRestClusterClient(Optional.empty(), Optional.of(2000l));
     }
 
+    public static Configuration setNoAttamptsForClient(Configuration configuration, Long timeoutMillis) {
+        configuration.set(RestOptions.CONNECTION_TIMEOUT, Duration.ofMillis(timeoutMillis));
+        configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
+        configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(0l));
+        return configuration;
+    }
+
     /**
      * @param connTimeout The maximum time in ms for the client to establish a TCP connection.
      * @return
      */
     public ClusterClient createFlinkRestClusterClient(Optional<String> clusterId, Optional<Long> connTimeout) {
+        JobManagerAddress managerAddress = this.getJobManagerAddress();
+        try {
+            managerAddress.telnet();
+        } catch (SocketTimeoutException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
-            JobManagerAddress managerAddress = this.getJobManagerAddress();
+
             Configuration configuration = new Configuration();
             configuration.setString(JobManagerOptions.ADDRESS, managerAddress.host);
             configuration.setInteger(JobManagerOptions.PORT, managerAddress.port);
@@ -111,9 +126,10 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(this.retryDelay));
 
             if (connTimeout.isPresent()) {
-                configuration.set(RestOptions.CONNECTION_TIMEOUT, Duration.ofSeconds(connTimeout.get()));
-                configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
-                configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(0l));
+                setNoAttamptsForClient(configuration, connTimeout.get());
+//                configuration.set(RestOptions.CONNECTION_TIMEOUT, Duration.ofSeconds(connTimeout.get()));
+//                configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
+//                configuration.set(RestOptions.RETRY_DELAY, Duration.ofMillis(0l));
             }
 
 

@@ -40,21 +40,6 @@ public class K8sExceptionUtils {
     }
 
     public static TisException convert(ErrorValue errCode, String msg, ApiException e) {
-
-//        final ClassLoader current = Thread.currentThread().getContextClassLoader();
-//        try {
-//            Thread.currentThread().setContextClassLoader(V1Status.class.getClassLoader());
-//            V1Status v1Status = JSON.parseObject(e.getResponseBody(), V1Status.class);
-//            String errMsg = msg;
-//            if (v1Status != null) {
-//                errMsg = (msg == null) ? v1Status.getMessage() : msg + ":" + v1Status.getMessage();
-//            }
-//            return TisException.create(errCode, StringUtils.defaultIfEmpty(errMsg, e.getMessage()), e);
-//
-//        } finally {
-//            Thread.currentThread().setContextClassLoader(current);
-//        }
-
         try {
             return ClassloaderUtils.processByResetThreadClassloader(V1Status.class, () -> {
                 V1Status v1Status = JSON.parseObject(e.getResponseBody(), V1Status.class);

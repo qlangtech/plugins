@@ -56,6 +56,36 @@
             </exclusions>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-cdc-common</artifactId>-->
+<!--            <version>${flink.cdc.version}</version>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-cdc-runtime</artifactId>-->
+<!--            <version>${flink.cdc.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.apache.calcite</groupId>-->
+<!--                    <artifactId>calcite-core</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.flink</groupId>-->
+<!--            <artifactId>flink-cdc-composer-tis</artifactId>-->
+<!--            <version>${flink.cdc.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.apache.flink</groupId>-->
+<!--                    <artifactId>flink-kubernetes</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
+
         <!--        <dependency>-->
         <!--            <groupId>org.apache.flink</groupId>-->
         <!--            <artifactId>flink-connector-debezium</artifactId>-->

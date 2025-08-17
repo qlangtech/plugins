@@ -49,7 +49,7 @@ public abstract class StateBackendFactory implements Describable<StateBackendFac
 
 
     /**
-     * 缺的当前执行任务的状态
+     * 取得当前执行任务的状态
      *
      * @return
      */

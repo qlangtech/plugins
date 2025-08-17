@@ -64,6 +64,9 @@
                                     <exclude>log4j:log4j</exclude>
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                     <exclude>org.codehaus.groovy:groovy-all</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-common</exclude>
+                                    <exclude>org.apache.flink:flink-cdc-runtime</exclude>
+                                    <exclude>org.apache.flink:flink-shaded-guava</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>

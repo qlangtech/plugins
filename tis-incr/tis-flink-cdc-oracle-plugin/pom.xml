@@ -72,6 +72,14 @@
                     <artifactId>flink-connector-debezium</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-cdc-runtime</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>io.debezium</groupId>
                     <artifactId>debezium-core</artifactId>
                 </exclusion>

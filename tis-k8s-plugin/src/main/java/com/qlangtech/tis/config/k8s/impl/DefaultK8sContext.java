@@ -20,6 +20,7 @@ package com.qlangtech.tis.config.k8s.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.flink.JobManagerAddress;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -43,6 +44,9 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -88,6 +92,15 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     public ApiClient createConfigInstance() {
 
         ApiClient client = null;
+        URL basePath = null;
+        try {
+            basePath = new URL(this.kubeBasePath);
+            (new JobManagerAddress(basePath.getHost(), basePath.getPort())).telnet();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (SocketTimeoutException e) {
+            throw new RuntimeException("basePath:" + basePath, e);
+        }
         try {
             try (Reader reader = new StringReader(this.kubeConfigContent)) {
                 client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(reader)).setBasePath(this.kubeBasePath).build();
@@ -138,8 +151,8 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
                 } else {
                     msgHandler.addActionMessage(context
                             , "exist namespace is:" + namespaceList.getItems().stream().map((ns) -> {
-                        return ns.getMetadata().getName();
-                    }).collect(Collectors.joining(",")));
+                                return ns.getMetadata().getName();
+                            }).collect(Collectors.joining(",")));
                 }
             } catch (Throwable e) {
                 logger.warn(e.getMessage(), e);

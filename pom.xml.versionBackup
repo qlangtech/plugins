@@ -25,7 +25,7 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis</artifactId>
-        <version>4.2.0</version>
+        <version>4.3.0-SNAPSHOT</version>
     </parent>
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-plugin-parent</artifactId>
@@ -51,7 +51,7 @@
 
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
-        <module>tis-plugin-test/customer-plugin-test</module>
+<!--        <module>tis-plugin-test/customer-plugin-test</module>-->
 
 
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
@@ -68,7 +68,7 @@
         <module>tis-transformer</module>
         <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>
         <module>tis-datax/tis-hive-shim-common</module>
-        <module>tis-datax/tis-datax-paimon-plugin</module>
+
 
 
         <!--        <module>tis-solr-plugin</module>
@@ -228,6 +228,7 @@
         <testcontainers.version>1.18.3</testcontainers.version>
         <powerjob.version>4.3.6</powerjob.version>
         <mariadb-java-client.version>3.4.1</mariadb-java-client.version>
+        <flink.cdc.version>3.4.0</flink.cdc.version>
     </properties>
 
 
@@ -751,6 +752,15 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filter</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <!--
           Since new versions need to overwrite old versions, it's better
           not to have version number in the .hpi file name.

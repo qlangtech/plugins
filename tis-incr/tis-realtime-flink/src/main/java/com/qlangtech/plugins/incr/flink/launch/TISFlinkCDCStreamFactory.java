@@ -105,6 +105,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     public static List<Descriptor<CheckpointFactory>> filterCheckpoint(List<Descriptor<CheckpointFactory>> descs) {
         AppAndRuntime appAndRuntime = AppAndRuntime.getAppAndRuntime();
+        if (appAndRuntime == null) {
+            return descs;
+        }
         DataXName appName = appAndRuntime.getAppName();
         DataxWriter dataxWriter = DataxWriter.load(null, appName.getPipelineName());
         BaseDataxWriterDescriptor desc = (BaseDataxWriterDescriptor) dataxWriter.getDescriptor();

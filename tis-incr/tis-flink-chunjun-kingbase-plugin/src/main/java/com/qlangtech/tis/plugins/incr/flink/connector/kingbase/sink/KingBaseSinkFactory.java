@@ -59,19 +59,6 @@ public class KingBaseSinkFactory extends ChunjunSinkFactory {
         KingBaseDataSourceFactory dsFactory = kingBaseWriter.getDataSourceFactory();
         Class<JdbcDialect> jdbcDialectClass = (Class<JdbcDialect>) dsFactory.dbMode.getJdbcDialectClass();
         return Objects.requireNonNull(jdbcDialectClass, "jdbcDialectClass can not be null");
-//        EndType endType = dsFactory.dbMode.getEndType();
-//        switch (endType) {
-//            case MySQL:
-//                throw new IllegalStateException(endType.getVal());
-//            case Oracle:
-//                return KingBaseDialect.class;
-//            case Postgres:
-//                throw new IllegalStateException(endType.getVal());
-//            default:
-//                throw new IllegalStateException("illegal dbMode:" + endType);
-//        }
-
-        // return KingBaseDialect.class;
     }
 
     @Override

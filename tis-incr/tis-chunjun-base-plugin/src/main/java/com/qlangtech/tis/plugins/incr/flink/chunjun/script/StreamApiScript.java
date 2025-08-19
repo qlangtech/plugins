@@ -21,7 +21,11 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.script;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
+
+import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -32,6 +36,11 @@ public class StreamApiScript extends ChunjunStreamScriptType {
     public BasicFlinkStreamScriptCreator createStreamTableCreator(
             IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator) {
         return new StreamAPIStreamScriptCreator(sinkStreamMetaCreator);
+    }
+
+    @Override
+    public boolean preValidate(EndType endType, ChunjunSinkFactory sinkFactory, Consumer<String> errorMsgConsumer) {
+        return true;
     }
 
     static class StreamAPIStreamScriptCreator extends BasicFlinkStreamScriptCreator {

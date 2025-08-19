@@ -54,6 +54,7 @@ import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -105,6 +106,8 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -679,7 +682,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler
                 , Context context, PostFormVals postFormVals) {
-            return super.validateAll(msgHandler, context, postFormVals);
+            ChunjunSinkFactory sinkFactory = postFormVals.newInstance();
+            Consumer<String> errorMsgConsumer = (errorMsg) -> msgHandler.addFieldError(context, "scriptType", errorMsg);
+            return sinkFactory.scriptType.preValidate(this.getChunjunEndType(), sinkFactory, errorMsgConsumer);
         }
 
         @Override

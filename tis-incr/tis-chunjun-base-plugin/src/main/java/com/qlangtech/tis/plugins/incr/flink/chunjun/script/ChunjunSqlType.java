@@ -24,13 +24,19 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.sql.parser.tuple.creator.AdapterStreamTemplateData;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import org.apache.commons.lang.StringUtils;
+import org.apache.flink.table.factories.Factory;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -40,6 +46,24 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
 
     public static String getTableSinkTypeName(IEndTypeGetter.EndType endType) {
         return "tis-" + endType.getVal() + "-x";
+    }
+
+    @Override
+    public boolean preValidate(EndType endType, ChunjunSinkFactory sinkFactory, Consumer<String> errorMsgConsumer) {
+        String tableSinkTypeName = getTableSinkTypeName(endType);
+        // 校验是否已经定义了对应table DynamicTableSinkFactory
+        ServiceLoader<Factory> factoriesLoader = ServiceLoader.load(Factory.class, sinkFactory.getClass().getClassLoader());
+
+        Iterator<Factory> iterator = factoriesLoader.iterator();
+        Factory factory = null;
+        while (iterator.hasNext()) {
+            factory = iterator.next();
+            if (StringUtils.equalsIgnoreCase(tableSinkTypeName, factory.factoryIdentifier())) {
+                return true;
+            }
+        }
+        errorMsgConsumer.accept("未定义对应的Table Sink:'" + tableSinkTypeName + "'，请联系系统管理员");
+        return false;
     }
 
     @Override

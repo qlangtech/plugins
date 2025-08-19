@@ -46,8 +46,8 @@ public class DebuziumPropAssist extends AbstractPropAssist<Describable, Field> {
     }
 
     @Override
-    protected String getDescription(Field configOption) {
-        return configOption.description();
+    protected MarkdownHelperContent getDescription(Field configOption) {
+        return new MarkdownHelperContent(configOption.description());
     }
 
     @Override

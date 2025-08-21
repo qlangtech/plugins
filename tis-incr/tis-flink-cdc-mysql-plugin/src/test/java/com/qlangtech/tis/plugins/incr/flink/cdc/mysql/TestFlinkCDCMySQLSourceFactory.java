@@ -54,6 +54,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.LatestStartupOptions;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -500,7 +501,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
      */
     @Test
     public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
+        final FlinkCDCMySQLSourceFactory mysqlCDCFactory = createCDCFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
         // final String tabName = "instancedetail";
 
@@ -548,7 +549,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 exampleRows.add(this.parseTestRow(RowKind.INSERT, TestFlinkCDCMySQLSourceFactory.class, tabName + "/insert1.txt"));
 
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(false, DataXName.createDataXPipeline(dataxName.getName()), dataxReader, tabs, createProcess());
+                imqListener.start(IConsumerRateLimiter.unsuppoted(), false, DataXName.createDataXPipeline(dataxName.getName()), dataxReader, tabs, createProcess());
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
@@ -759,6 +760,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+                return List.of();
             }
 
             @Override

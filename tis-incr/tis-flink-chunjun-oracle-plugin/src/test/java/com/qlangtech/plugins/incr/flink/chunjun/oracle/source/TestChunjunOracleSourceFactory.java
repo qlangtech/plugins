@@ -24,10 +24,12 @@ import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.ScanAll;
 import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -118,7 +120,8 @@ public class TestChunjunOracleSourceFactory {
             protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<List<ReaderSource>> imqListener) throws Exception {
                 //   super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-                imqListener.start(false, dataxName, dataxReader, Collections.singletonList(tab), createProcess());
+                imqListener.start(IConsumerRateLimiter.unsuppoted(),false
+                        , DataXName.createDataXPipeline(dataxName.getName()) , dataxReader, Collections.singletonList(tab), createProcess());
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
                 waitForSnapshotStarted(snapshot);
                 while (snapshot.hasNext()) {

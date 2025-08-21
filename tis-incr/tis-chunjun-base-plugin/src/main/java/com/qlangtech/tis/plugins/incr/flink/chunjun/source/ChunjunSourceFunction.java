@@ -46,6 +46,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
@@ -98,7 +99,7 @@ public abstract class ChunjunSourceFunction
 
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName names, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IConsumerRateLimiter streamFactory, boolean flinkCDCPipelineEnable, DataXName names, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         Objects.requireNonNull(dataXProcessor, "dataXProcessor can not be null");
         BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;

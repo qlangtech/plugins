@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory.ISchemaSupported;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
@@ -74,7 +75,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
 //    }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory,
+    public AsyncMsg<List<ReaderSource>> start(IConsumerRateLimiter streamFactory,
                                               boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {

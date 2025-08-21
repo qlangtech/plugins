@@ -22,6 +22,7 @@ import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.dto.DTOStream.DispatchedDTOStream;
@@ -55,9 +56,9 @@ import java.util.Objects;
 public abstract class ReaderSource<T> {
     public final String tokenName;
     private final DataXName dataXName;
-    protected final IncrStreamFactory streamFactory;
+    protected final IConsumerRateLimiter streamFactory;
 
-    private ReaderSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName) {
+    private ReaderSource(IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName) {
         if (StringUtils.isEmpty(tokenName)) {
             throw new IllegalArgumentException("param tokenName can not be empty");
         }
@@ -130,7 +131,7 @@ public abstract class ReaderSource<T> {
 //    }
 
 
-    public static ReaderSource<DTO> createDTOSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName
+    public static ReaderSource<DTO> createDTOSource(IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName
             , boolean flinkCDCPipelineEnable, Source<DTO, ?, ?> sourceFunc) {
 
         return new SideOutputReaderSource<DTO>(streamFactory, dataXName, tokenName) {
@@ -171,7 +172,7 @@ public abstract class ReaderSource<T> {
          *
          * @param tokenName
          */
-        public SideOutputReaderSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName) {
+        public SideOutputReaderSource(IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName) {
             super(streamFactory, dataXName, tokenName);
         }
 
@@ -210,7 +211,7 @@ public abstract class ReaderSource<T> {
 
 
     public static ReaderSource<RowData> createRowDataSource(
-            IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab, SourceFunction<RowData> sourceFunc) {
+            IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab, SourceFunction<RowData> sourceFunc) {
         return new RowDataOutputReaderSource(streamFactory, dataXName, tokenName, tab) {
             @Override
             protected DataStreamSource<RowData> addAsSource(StreamExecutionEnvironment env) {
@@ -220,7 +221,7 @@ public abstract class ReaderSource<T> {
     }
 
     public static ReaderSource<RowData> createRowDataSource(
-            IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab, DataStreamSource<RowData> streamSource) {
+            IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab, DataStreamSource<RowData> streamSource) {
         return new RowDataOutputReaderSource(streamFactory, dataXName, tokenName, tab) {
             @Override
             protected DataStreamSource<RowData> addAsSource(StreamExecutionEnvironment env) {
@@ -232,7 +233,7 @@ public abstract class ReaderSource<T> {
     private static abstract class RowDataOutputReaderSource extends ReaderSource<RowData> {
         private ISelectedTab tab;
 
-        public RowDataOutputReaderSource(IncrStreamFactory streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab) {
+        public RowDataOutputReaderSource(IConsumerRateLimiter streamFactory, DataXName dataXName, String tokenName, ISelectedTab tab) {
             super(streamFactory, dataXName, tokenName);
             this.tab = tab;
         }

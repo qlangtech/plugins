@@ -45,6 +45,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -189,7 +190,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
      * @see JobExecutionResult
      */
     @Override
-    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IConsumerRateLimiter streamFactory, boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             Objects.requireNonNull(dataXProcessor, "param dataXProcessor can not be null");
@@ -239,13 +240,13 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
         private static final Logger logger = LoggerFactory.getLogger(MySQLReaderSourceCreator.class);
         private final boolean flinkCDCPipelineEnable;
         private final DataXName dataXName;
-        private final IncrStreamFactory streamFactory;
+        private final IConsumerRateLimiter streamFactory;
 
-        public MySQLReaderSourceCreator(DataXName dataXName, IncrStreamFactory streamFactory, BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory) {
+        public MySQLReaderSourceCreator(DataXName dataXName, IConsumerRateLimiter streamFactory, BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory) {
             this(dataXName, streamFactory, false, dsFactory, sourceFactory, new TISDeserializationSchema());
         }
 
-        public MySQLReaderSourceCreator(DataXName dataXName, IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, BasicDataSourceFactory dsFactory
+        public MySQLReaderSourceCreator(DataXName dataXName, IConsumerRateLimiter streamFactory, boolean flinkCDCPipelineEnable, BasicDataSourceFactory dsFactory
                 , FlinkCDCMySQLSourceFactory sourceFactory, TISDeserializationSchema deserializationSchema) {
             this.dsFactory = dsFactory;
             this.dataXName = Objects.requireNonNull(dataXName, "dataXName can not be null");

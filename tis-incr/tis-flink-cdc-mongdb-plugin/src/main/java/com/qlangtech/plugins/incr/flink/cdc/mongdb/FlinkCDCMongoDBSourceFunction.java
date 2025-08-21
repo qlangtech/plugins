@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -70,7 +71,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
     }
 
     @Override
-    public AsyncMsg<List<ReaderSource>> start(IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
+    public AsyncMsg<List<ReaderSource>> start(IConsumerRateLimiter streamFactory, boolean flinkCDCPipelineEnable, DataXName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
@@ -113,7 +114,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
         }
     }
 
-    private List<ReaderSource> createSourceFunctions(IncrStreamFactory streamFactory, DataXName dataXName,
+    private List<ReaderSource> createSourceFunctions(IConsumerRateLimiter streamFactory, DataXName dataXName,
                                                      MangoDBDataSourceFactory dsFactory, List<ISelectedTab> tabs, TISDeserializationSchema deserializationSchema) {
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
 

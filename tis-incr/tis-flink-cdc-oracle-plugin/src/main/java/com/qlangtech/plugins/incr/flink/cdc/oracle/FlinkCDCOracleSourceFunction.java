@@ -39,6 +39,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -83,7 +84,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
 
     @Override
     public AsyncMsg<List<ReaderSource>> start(
-            IncrStreamFactory streamFactory, boolean flinkCDCPipelineEnable, DataXName channalName, IDataxReader dataSource
+            IConsumerRateLimiter streamFactory, boolean flinkCDCPipelineEnable, DataXName channalName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
 

@@ -32,7 +32,6 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -58,16 +57,18 @@ public class GuessOn extends GuessFieldType {
 
 
     @Override
-    public Map<String, Map<String, DataType>> processStructGuess(
+    public Map<KafkaLogicalTableName, Map<String, DataType>>
+    processStructGuess(
+            TargetTabsEntities targetTabs,
             IGuessColTypeFormatConfig textFormat, StructuredReader<StructuredRecord> reader) throws IOException {
-        Map<String, Map<String, PriorityDataType>> result = Maps.newHashMap();
+        Map<KafkaLogicalTableName, Map<String, PriorityDataType>> result = Maps.newHashMap();
         Map<String, PriorityDataType> priorityResult = null;
         //  priorityResult = Maps.newHashMap();
         int lineIndex = 0;
         StructuredRecord row = null;
-//        Map<String, Object> rowVals;
-//        PriorityDataType guessType = null;
-        String tabName = null;
+
+        PhysicsTable2LogicalTableMapper p2lMapper = new PhysicsTable2LogicalTableMapper(targetTabs);
+        KafkaLogicalTableName tabName = null;
         while (reader.hasNext() && lineIndex++ < maxInspectLine) {
             if (lineIndex % 1000 == 0) {
                 logger.info("has scan rows:{}", lineIndex);
@@ -76,8 +77,8 @@ public class GuessOn extends GuessFieldType {
             if (row == null) {
                 continue;
             }
-            tabName = row.tabName;// StringUtils.defaultString(, DEFAUTL_TABLE_NAME);
-            if (StringUtils.isEmpty(tabName)) {
+            tabName = p2lMapper.parseLogicalTableName(row.tabName);
+            if (tabName == null) {
                 throw new IllegalStateException("tableName can not be empty");
             }
             if ((priorityResult = result.get(tabName)) == null) {
@@ -92,16 +93,20 @@ public class GuessOn extends GuessFieldType {
         }
         return result.entrySet().stream().collect(Collectors.toMap((e) -> e.getKey()
                 , (e) -> {
-                    return e.getValue().entrySet().stream().collect(Collectors.toMap((col) -> col.getKey(), (col) -> {
-                        DataType type = null;
-                        if ((type = col.getValue().type) != null) {
-                            return type;
-                        } else {
-                            return defaultDataTypeForNullVal();
-                        }
-                    }));
+                    return e.getValue().entrySet().stream().collect(
+                            Collectors.toMap(
+                                    (col) -> col.getKey()
+                                    , (col) -> {
+                                        DataType type = null;
+                                        if ((type = col.getValue().type) != null) {
+                                            return type;
+                                        } else {
+                                            return defaultDataTypeForNullVal();
+                                        }
+                                    }));
                 }));
     }
+
 
     private void parseStructedRecordColType(
             IGuessColTypeFormatConfig textFormat, StructuredRecord row, Map<String, PriorityDataType> priorityResult) {

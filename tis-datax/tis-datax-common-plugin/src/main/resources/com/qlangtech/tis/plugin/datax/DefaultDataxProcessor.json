@@ -6,6 +6,7 @@
   "dptId": {
     "label": "所属部门",
     "enum": "com.qlangtech.tis.coredefine.module.action.DataxAction.getDepartments():uncache_true",
+    "dftVal": "com.qlangtech.tis.manage.biz.dal.pojo.Department.dftDepartmentId()",
     "creator": {
       "routerLink": "/base/departmentlist",
       "label": "部门管理"
@@ -13,7 +14,9 @@
   },
   "recept": {
     "label": "接口人",
-    "placeholder": "小明"
+    "placeholder": "小明",
+    "dftVal": "com.qlangtech.tis.manage.common.UserUtils.currentLoginUserName():uncache_true",
+    "help": "数据通道的业务联系人，如运行生命周期内有任何问题可以向他咨询"
   },
   "globalCfg": {
     "label": "全局配置",

@@ -66,8 +66,6 @@ import static org.apache.flink.util.Preconditions.checkArgument;
  **/
 public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClusterEntryPoint {
     protected static final Logger logger = LoggerFactory.getLogger(KubernetesApplicationClusterEntrypointOfTIS.class);
-    //  private static final PluginAndCfgSnapshotLocalCache snapshotLocalCache = new PluginAndCfgSnapshotLocalCache();
-
     private KubernetesApplicationClusterEntrypointOfTIS(Configuration configuration, PackagedProgram program) {
         super(configuration, program, KubernetesResourceManagerFactory.getInstance());
     }

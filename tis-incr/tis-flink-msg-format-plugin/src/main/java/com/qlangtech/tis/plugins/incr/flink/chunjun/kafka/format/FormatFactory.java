@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol.LocalDateProcess;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
@@ -33,7 +34,9 @@ import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.format.guesstype.FocusWildcardTabName;
 import com.qlangtech.tis.plugin.datax.format.guesstype.IGuessColTypeFormatConfig;
+import com.qlangtech.tis.plugin.datax.format.guesstype.TargetTabsEntities;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -55,10 +58,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static com.qlangtech.tis.plugin.annotation.Validator.db_col_name;
 import static com.qlangtech.tis.plugin.annotation.Validator.require;
 import static org.apache.flink.formats.common.TimeFormats.ISO8601_TIMESTAMP_FORMAT;
 
@@ -102,9 +104,7 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     @Override
     public boolean isDateFormat(String literiaVal) {
         try {
-            // LocalDateProcess.
             LocalDate.parse(literiaVal, LocalDateProcess.dateFormatter);
-            // dataFormatLocal.get().parse(literiaVal);
             return true;
         } catch (DateTimeParseException e) {
         }
@@ -198,14 +198,6 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     public abstract boolean acceptMultipleTable();
 
     /**
-     * kafka 反序列化工具
-     *
-     * @return
-     */
-    // public abstract DeserializationSchema<DTO> createDecodingFormat();
-    //  public abstract DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(final String targetTabName);
-
-    /**
      * @param targetTabName 目标表名称
      * @return
      */
@@ -224,8 +216,8 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     /**
      * 通过遍历消息获得目标表
      */
-    public List<String> parseTargetTabsEntities() {
-        return Lists.newArrayList(splitTabEntities(this.tabEntities));
+    public TargetTabsEntities parseTargetTabsEntities() {
+        return new TargetTabsEntities(splitTabEntities(this.tabEntities));
     }
 
     protected static String[] splitTabEntities(String value) {
@@ -291,13 +283,27 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
                 return true;
             }
 
+            Set<FocusWildcardTabName> wildcardTabNamePatterns = Sets.newHashSet();
             for (String tab : tabs) {
                 if (!require.validate(msgHandler, context, fieldName, tab)) {
                     return false;
                 }
-                if (!db_col_name.validate(msgHandler, context, fieldName, tab)) {
+
+                try {
+                    wildcardTabNamePatterns.add(new FocusWildcardTabName(tab));
+                } catch (Exception e) {
+                    // throw new RuntimeException(e);
+                    msgHandler.addFieldError(context, fieldName, e.getMessage());
                     return false;
                 }
+//                if (!db_col_name.validate(msgHandler, context, fieldName, tab)) {
+//                    return false;
+//                }
+            }
+
+            if (wildcardTabNamePatterns.size() < tabs.length) {
+                msgHandler.addFieldError(context, fieldName, "请检查是否存在重复的模式？例如：aaa,aaa*");
+                return false;
             }
 
             return true;

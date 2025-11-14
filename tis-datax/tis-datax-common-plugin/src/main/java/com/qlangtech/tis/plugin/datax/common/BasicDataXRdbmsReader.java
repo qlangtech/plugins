@@ -31,7 +31,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -211,7 +210,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     @Override
     public DS getDataSourceFactory() {
-        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
+        return DataSourceFactory.load(this.dbName);
     }
 
     public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {

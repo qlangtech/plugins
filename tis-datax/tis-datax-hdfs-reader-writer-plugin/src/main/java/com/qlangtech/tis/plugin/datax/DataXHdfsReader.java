@@ -143,6 +143,11 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
         public boolean validateBizLogic(BizLogic logicType, Context context, String fieldName, String value) {
             return false;
         }
+
+        @Override
+        public BasicPipelineValidator getPipelineValidator(BizLogic logicType) {
+           throw new UnsupportedOperationException();
+        }
     }
 
     @Override

@@ -80,11 +80,6 @@ public class TISSourceDebeziumJsonFormatFactory extends TISSinkDebeziumJsonForma
         return reuse;
     }
 
-//    @Override
-//    public DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(String targetTabName) {
-//        return this.createFormat(targetTabName, (factory, cfg) -> factory.createDecodingFormat(null, cfg));
-//    }
-
     @TISExtension
     public static final class DftDescriptor extends TISSinkDebeziumJsonFormatFactory.DftDescriptor {
         public DftDescriptor() {

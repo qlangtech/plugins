@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax.doris;
 
 import com.alibaba.datax.plugin.writer.doriswriter.DorisWriterKeys;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -40,7 +39,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -114,16 +112,19 @@ public class DataXDorisWriter extends BasicDorisWriter {
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor implements DataxWriter.IRewriteSuFormProperties {
+        private final Descriptor<SelectedTab> dorisTabDesc;
 
         public DefaultDescriptor() {
             super();
+            this.dorisTabDesc = new DorisSelectedTab.DefaultDescriptor();
         }
 
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
-            Class targetClass = DorisSelectedTab.class;
-            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
-                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+//            Class targetClass = DorisSelectedTab.class;
+//            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
+//                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+            return this.dorisTabDesc;
         }
 
         @Override

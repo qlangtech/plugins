@@ -21,11 +21,11 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
@@ -37,10 +37,19 @@ import com.qlangtech.tis.extension.util.PluginExtraProps.RouterAssistType;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
-import com.qlangtech.tis.plugin.ds.*;
-import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataDumpers;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
+import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -52,6 +61,7 @@ import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,6 +89,33 @@ public class TestDataxMySQLReader extends BasicTest {
     public void setUp() throws Exception {
         TIS.dataXReaderPluginStore.clear();
     }
+
+    @Test
+    public void testPluginDescPropsRefs() {
+        DataxMySQLReader mySQLReader = new DataxMySQLReader();
+        Descriptor<DataxReader> descriptor = mySQLReader.getDescriptor();
+        Map<String, Descriptor.PropsImplRefs> propsImplRefs = descriptor.getPropsImplRefs();
+        Descriptor.PropsImplRefs dbNameRef = propsImplRefs.get(BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME);
+        Assert.assertNotNull(
+                BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME + " relevant ref can not be null", dbNameRef);
+
+        Assert.assertEquals(2, dbNameRef.getCandidatePlugins().size());
+        CollectionUtils.isEqualCollection(Sets.newHashSet(MySQLDataSourceFactory.DS_TYPE_MYSQL_V5, DataSourceFactory.DS_TYPE_MYSQL_V8)
+                , dbNameRef.getCandidatePlugins().stream().map((candidate) -> candidate.getDisplayName()).collect(Collectors.toSet()));
+        for (PluginExtraProps.CandidatePlugin candidate : dbNameRef.getCandidatePlugins()) {
+            Assert.assertNotNull(candidate.getHetero());
+//            Assert.assertNotNull(candidate.getDisplayName() + " relevant plugin descriptor can not be null"
+//                    , candidate.getInstalledPluginDescriptor());
+
+        }
+
+    }
+
+//    @Test
+//    public void testAIPromote(){
+//        DescriptorsJSONForAIPromote jsonForAIPromote = new DescriptorsJSONForAIPromote(new DataxMySQLReader.DefaultDescriptor());
+//        System.out.println( JsonUtil.toString(jsonForAIPromote.getDescriptorsJSON(),true));
+//    }
 
     /**
      * 这个单元测试很重要

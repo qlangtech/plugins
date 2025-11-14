@@ -57,6 +57,11 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
                 });
     }
 
+    public void testSplitTables() {
+        MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
+        dataSourceFactory.splitTableStrategy = null;
+    }
+
 
     @Ignore
     public void testAliyunAdsSource() {

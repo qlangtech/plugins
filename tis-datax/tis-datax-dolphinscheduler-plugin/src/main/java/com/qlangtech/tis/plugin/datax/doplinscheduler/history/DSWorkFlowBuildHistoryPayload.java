@@ -23,6 +23,7 @@ import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
@@ -45,7 +46,7 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
     public DSWorkFlowBuildHistoryPayload(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
         super(dataxProcessor, tisTaskId, daoContext);
         Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>> pluginStorePair
-                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, this.dataxProcessor.getDataXName());
+                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, ((IAppSource) this.dataxProcessor).getDataXName());
         for (ExportTISPipelineToDolphinscheduler exportDSCfg : pluginStorePair.getLeft()) {
             this.exportDSCfg = exportDSCfg;
             return;

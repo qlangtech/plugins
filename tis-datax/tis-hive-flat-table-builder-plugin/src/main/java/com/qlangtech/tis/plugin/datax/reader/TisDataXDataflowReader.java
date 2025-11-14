@@ -158,7 +158,7 @@ public class TisDataXDataflowReader extends DataxReader {
 
         @Override
         public EndType getEndType() {
-            return EndType.DataFlow;
+            return EndType.Workflow;
         }
     }
 }

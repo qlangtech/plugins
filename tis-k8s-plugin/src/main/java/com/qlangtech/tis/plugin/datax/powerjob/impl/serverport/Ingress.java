@@ -131,11 +131,6 @@ public class Ingress extends ServerPortExport {
 
     }
 
-//    @Override
-//    public String getPowerjobHost() {
-//        return "http://" + host;
-//    }
-
     @Override
     protected ServiceType getServiceType() {
         return ServiceType.ClusterIP;

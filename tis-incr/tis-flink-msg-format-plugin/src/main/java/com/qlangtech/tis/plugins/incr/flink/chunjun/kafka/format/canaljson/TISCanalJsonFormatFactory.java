@@ -20,26 +20,21 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
 import com.qlangtech.tis.plugin.kafka.consumer.KafkaStructuredRecord;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.formats.json.JsonFormatOptions;
 import org.apache.flink.formats.json.canal.CanalJsonFormatFactory;
 import org.apache.flink.formats.json.canal.CanalJsonFormatOptions;
-import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 
@@ -131,7 +126,6 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
         return true;
     }
 
-
     private static final String FIELD_OLD = "old";
     private static final String OP_INSERT = "INSERT";
     private static final String OP_UPDATE = "UPDATE";
@@ -192,22 +186,6 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
         return true;
     }
 
-//    @Override
-//    public List<String> parseTargetTabsEntities() {
-//        throw new UnsupportedOperationException();
-//    }
-
-//    /**
-//     * @return
-//     * @see org.apache.flink.formats.json.canal.CanalJsonDeserializationSchema#deserialize(byte[], org.apache.flink.util.Collector <RowData> )
-//     */
-//    @Override
-//    public DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(final String targetTabName) {
-//        return createFormat(targetTabName, (factory, cfg) -> {
-//            return factory.createDecodingFormat(null, cfg);
-//        });
-//    }
-
     @Override
     public EncodingFormat<SerializationSchema<RowData>> createEncodingFormat(final String targetTabName) {
         return createFormat(targetTabName, (factory, cfg) -> {
@@ -223,23 +201,7 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
         return formatCreator.apply(canalFormatFactory
                 , desc.options.createFlinkCfg(this)
                         .set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
-
-//        return canalFormatFactory.createEncodingFormat(null
-//                , desc.options.createFlinkCfg(this).set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
     }
-
-//    public static class DefaultDescriptor extends FlinkDescriptor<CompactionConfig> {
-//        public DefaultDescriptor() {
-//            addFieldDescriptor("payloadClass", FlinkOptions.PAYLOAD_CLASS_NAME);
-//            addFieldDescriptor("targetIOPerInMB", FlinkOptions.COMPACTION_TARGET_IO);
-//            addFieldDescriptor("triggerStrategy", FlinkOptions.COMPACTION_TRIGGER_STRATEGY);
-//            addFieldDescriptor("maxNumDeltaCommitsBefore", FlinkOptions.COMPACTION_DELTA_COMMITS);
-//            addFieldDescriptor("maxDeltaSecondsBefore", FlinkOptions.COMPACTION_DELTA_SECONDS);
-//            addFieldDescriptor("asyncClean", FlinkOptions.CLEAN_ASYNC_ENABLED);
-//            addFieldDescriptor("retainCommits", FlinkOptions.CLEAN_RETAIN_COMMITS);
-//            addFieldDescriptor(KEY_archiveMinCommits, FlinkOptions.ARCHIVE_MIN_COMMITS);
-//            addFieldDescriptor(KEY_archiveMaxCommits, FlinkOptions.ARCHIVE_MAX_COMMITS);
-//        }
 
 
     @TISExtension

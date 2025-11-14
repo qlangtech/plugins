@@ -43,6 +43,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -82,7 +83,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -421,11 +421,16 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
 
 
     @TISExtension()
-    public static class DescriptorImpl extends Descriptor<IAppSource> {
+    public static class DescriptorImpl extends Descriptor<IAppSource> implements IEndTypeGetter {
 
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(DefaultDataxProcessor.KEY_FIELD_NAME, () -> ParamsConfig.getItems(IDataxGlobalCfg.KEY_DISPLAY_NAME));
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Workflow;
         }
 
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.kafka.consumer;
 
+import com.qlangtech.tis.plugin.datax.format.guesstype.KafkaLogicalTableName;
+import com.qlangtech.tis.plugin.datax.format.guesstype.PhysicsTable2LogicalTableMapper;
 import com.qlangtech.tis.plugin.ds.RdbmsRunningContext;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.RunningContext.RunningContextParamSetter;
@@ -25,7 +27,6 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import org.apache.commons.lang.StringUtils;
-
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.util.Collector;
@@ -50,10 +51,12 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
 
     private final KafkaStructuredRecord reuseReocrd;
     private final Map<String /**tableName*/, RunningContextParamSetter> contextParamValsGetterMapper;
+    private final PhysicsTable2LogicalTableMapper physicsTable2LogicalTableMapper;
 
     public KafkaDTODeserializationSchema(FormatFactory msgFormat
             , Map<String /**tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
         this.msgFormat = Objects.requireNonNull(msgFormat, "msgFormat can not be null");
+        this.physicsTable2LogicalTableMapper = new PhysicsTable2LogicalTableMapper(msgFormat.parseTargetTabsEntities());
         this.reuseReocrd = new KafkaStructuredRecord();
         this.contextParamValsGetterMapper =
                 Objects.requireNonNull(contextParamValsGetterMapper, "contextParamValsGetterMapper can not be null")
@@ -81,14 +84,16 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
             return;
         }
         dto = new DTO();
-        dto.setTableName(record.tabName);
+        final KafkaLogicalTableName logicalTableName
+                = physicsTable2LogicalTableMapper.parseLogicalTableName(record.tabName);
+        dto.setTableName(logicalTableName.getLogicalTableName());
         EventType event = record.getEventType();
         dto.setEventType(event);
 
         if (event == null) {
             throw new IllegalStateException("event can not be null");
         }
-        Map<String, Object> afterVals = getAfterVals(record.tabName, record.vals);
+        Map<String, Object> afterVals = getAfterVals(logicalTableName, record.vals);
         Map<String, Object> beforeVals = record.getOldVals();
         switch (event) {
             case DELETE: {
@@ -123,12 +128,12 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
         //  return dto;
     }
 
-    protected Map<String, Object> getAfterVals(String tabName, Map<String, Object> vals) {
+    protected Map<String, Object> getAfterVals(KafkaLogicalTableName tabName, Map<String, Object> vals) {
 
         /**==========================
          * 设置环境绑定参数值
          ==========================*/
-        RunningContextParamSetter contextParamsGetter = this.contextParamValsGetterMapper.get(tabName);
+        RunningContextParamSetter contextParamsGetter = this.contextParamValsGetterMapper.get(tabName.getLogicalTableName());
         if (contextParamsGetter != null) {
             // RdbmsRunningContext runningParamsContext = new RdbmsRunningContext(StringUtils.EMPTY, tabName);
             contextParamsGetter.setContextParam(vals);

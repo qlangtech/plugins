@@ -2,13 +2,13 @@
 
 Standalone 集群: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/standalone/overview/)
    
-[安装说明](http://tis.pub/docs/install/flink-cluster/standalone/):
+[安装说明](https://tis.pub/docs/install/flink-cluster/standalone/):
 1. 下载、解压
 
    ```shell script
-     wget http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.18.1-bin.tar.gz && rm -rf flink-tis-1.18.1 && mkdir flink-tis-1.18.1 && tar xvf flink-tis-1.18.1-bin.tar.gz -C ./flink-tis-1.18.1
+     wget http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.20.1-bin.tar.gz && rm -rf flink-tis-1.20.1 && mkdir flink-tis-1.20.1 && tar xvf flink-tis-1.20.1-bin.tar.gz -C ./flink-tis-1.20.1
    ```
-2. 修改 `$FLINK_HOME/conf/flink-conf.yaml`
+2. 修改 `$FLINK_HOME/conf/config.yaml`
 
    ```yaml
    # The address that the REST & web server binds to
@@ -24,7 +24,8 @@ Standalone 集群: [详细请查看](https://nightlies.apache.org/flink/flink-do
    
    ```yaml
    # The number of task slots that each TaskManager offers. Each slot runs one parallel pipeline.
-   taskmanager.numberOfTaskSlots: 1
+   taskmanager:
+     numberOfTaskSlots: 1
    ```
    默认值是1，需要在单个Flink节点上运行多个Flink任务，可修改成大于1的值就行（一般情况slot代表了服务节点的资源并行处理能力，一般配置于节点CPU核数相一致即可）
    

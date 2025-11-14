@@ -19,9 +19,9 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Sets;
-
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -31,11 +31,13 @@ import com.qlangtech.tis.plugin.ds.SplitableTableInDB;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.commons.collections.CollectionUtils;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
@@ -45,6 +47,52 @@ import java.util.function.Function;
  * @create: 2024-09-20 16:20
  **/
 public class TestSourceChannel {
+
+    @Test
+    public void testGetSourceFunctionXX() {
+        Descriptor mysqlV5Desc = TIS.get().getDescriptor("com.qlangtech.tis.plugin.ds.mysql.MySQLV5DataSourceFactory");
+        Descriptor.FormData formData = new Descriptor.FormData();
+
+        Descriptor.FormData splitTableData = new Descriptor.FormData();
+        splitTableData.addProp("nodeDesc", "rm-2zeraf77tcjw3fyn4.mysal.rds.aliyuncs.com[0008-0010]");
+        splitTableData.addProp("tabPattern", "(\\S+)(_\\w+)");
+        splitTableData.addProp("testTab", "t_ord_order");
+        splitTableData.addProp("prefixWildcardStyle", String.valueOf(false));
+        formData.addSubForm("splitTableStrategy"
+                , "com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy", splitTableData);
+        formData.addProp("port", "3306");
+        formData.addProp("name", "test");
+        formData.addProp("userName", "tata");
+        formData.addProp("password", "123456");
+        formData.addProp("dbName", "center_order_yyos_");
+        formData.addProp("encode", "utf8");
+        formData.addProp("useCompression", String.valueOf(false));
+        formData.addSubForm("timeZone", "com.qlangtech.tis.plugin.timezone.DefaultTISTimeZone"
+                , new Descriptor.FormData("timeZone", "Asia/Shanghai"));
+
+        DataSourceFactory dsFactory
+                = (DataSourceFactory) Objects.requireNonNull(mysqlV5Desc).newInstance(null, formData).getInstance();
+
+        final String logicTabNameOrderDetail = "t_ord_order";
+        SelectedTab tab = new SelectedTab();
+        tab.name = logicTabNameOrderDetail;
+        final String splitTab1 = "orderdetail_02";
+        List<ISelectedTab> tabs = Collections.singletonList(tab);
+
+        Set<String> actualSplitTabs = Sets.newHashSet();
+        ReaderSourceCreator sourceFunctionCreator = new ReaderSourceCreator() {
+            @Override
+            public List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties) {
+                actualSplitTabs.addAll(tbs);
+                return Collections.emptyList();
+            }
+        };
+
+        List<ReaderSource> sourceFunction = SourceChannel.getSourceFunction(dsFactory, tabs, sourceFunctionCreator);
+        System.out.println("sourceFunction size:" + sourceFunction.size());
+        System.out.println("actualSplitTabs:" + String.join(",", actualSplitTabs));
+    }
+
 
     @Test
     public void testGetSourceFunction() {

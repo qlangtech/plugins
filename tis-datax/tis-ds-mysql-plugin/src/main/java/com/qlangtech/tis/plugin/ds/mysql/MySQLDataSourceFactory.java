@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -31,7 +30,6 @@ import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.FacadeDataSource;
@@ -76,7 +74,7 @@ import java.util.stream.Collectors;
  **/
 public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory implements IFacadeDataSource {
 
-    protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
+    public static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
     protected static final String JDBC_PARAM_AUTO_RECONNECT = "autoReconnect=true";
     /**
      * 分表策略

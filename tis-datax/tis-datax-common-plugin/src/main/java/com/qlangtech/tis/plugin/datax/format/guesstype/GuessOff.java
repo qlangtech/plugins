@@ -32,7 +32,7 @@ import java.util.Map;
  **/
 public class GuessOff extends GuessFieldType {
     @Override
-    public Map<String, DataType> processStructGuess(IGuessColTypeFormatConfig textFormat, StructuredReader reader) throws IOException {
+    public Map<String, DataType> processStructGuess(TargetTabsEntities targetTabs, IGuessColTypeFormatConfig textFormat, StructuredReader reader) throws IOException {
         return Collections.emptyMap();
     }
 

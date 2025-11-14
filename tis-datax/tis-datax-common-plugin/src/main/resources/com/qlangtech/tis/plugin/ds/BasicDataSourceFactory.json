@@ -25,6 +25,7 @@
         "val": "utf8"
       }
     ],
+    "dftVal": "utf8",
     "help": "数据数据"
   },
   "extraParams": {

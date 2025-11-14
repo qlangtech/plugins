@@ -106,6 +106,11 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     }
 
     @Override
+    public String getTaskName() {
+        return IEndTypeGetter.EndType.PowerJob.getVal() + "_launch";
+    }
+
+    @Override
     public List<ExecuteStep> getExecuteSteps() {
         List<ExecuteStep> launchSteps = Lists.newArrayList();
         for (SubJobResName rcRes : powerJobRes) {

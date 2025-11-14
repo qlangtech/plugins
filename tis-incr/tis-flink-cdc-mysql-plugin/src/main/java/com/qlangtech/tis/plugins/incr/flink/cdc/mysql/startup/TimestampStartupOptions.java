@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -39,6 +38,16 @@ public class TimestampStartupOptions extends StartupOptions {
 
     @Override
     public org.apache.flink.cdc.connectors.mysql.table.StartupOptions getOptionsType() {
+        /**
+         * COMMENT copy from org.apache.flink.cdc.connectors.mysql.table.StartupOptions.timestamp: <br/>
+         * Never to perform snapshot on the monitored database tables upon first startup, and directly
+         * read binlog from the specified timestamp.
+         *
+         * <p>The consumer will traverse the binlog from the beginning and ignore change events whose
+         * timestamp is smaller than the specified timestamp.
+         *
+         * @param startupTimestampMillis timestamp for the startup offsets, as milliseconds from epoch.
+         */
         return org.apache.flink.cdc.connectors.mysql.table.StartupOptions.timestamp(startupTimestampMillis);
     }
 

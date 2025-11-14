@@ -27,9 +27,6 @@ import com.qlangtech.tis.extension.TISExtension;
 public class TISSourceCanalJsonFormatFactory extends TISCanalJsonFormatFactory {
 
 
-
-
-
     @TISExtension
     public static final class DftDescriptor extends TISCanalJsonFormatFactory.DftDescriptor {
         public DftDescriptor() {

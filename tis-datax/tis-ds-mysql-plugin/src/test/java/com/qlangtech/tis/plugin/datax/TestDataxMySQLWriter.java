@@ -93,10 +93,14 @@ public class TestDataxMySQLWriter extends BasicTest {
             public void startScanDependency() {
 
             }
-
             @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 return null;
+            }
+
+            @Override
+            public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+                return List.of();
             }
 
             @Override

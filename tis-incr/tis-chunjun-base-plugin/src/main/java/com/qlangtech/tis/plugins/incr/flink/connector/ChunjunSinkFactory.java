@@ -54,8 +54,8 @@ import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -107,7 +107,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -230,7 +229,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
 //String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
-        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.getDataXName());
+        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(((IAppSource) dataxProcessor).getDataXName());
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator
                 = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator(reader);
         //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);

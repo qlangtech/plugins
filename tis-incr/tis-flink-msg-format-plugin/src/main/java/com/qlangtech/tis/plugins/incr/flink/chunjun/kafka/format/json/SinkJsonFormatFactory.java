@@ -19,8 +19,8 @@
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json;
 
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.format.guesstype.TargetTabsEntities;
 
-import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,7 +38,7 @@ public class SinkJsonFormatFactory extends SourceJsonFormatFactory {
 //    }
 
     @Override
-    public List<String> parseTargetTabsEntities() {
+    public TargetTabsEntities parseTargetTabsEntities() {
         throw new UnsupportedOperationException("sink end not supported");
     }
 

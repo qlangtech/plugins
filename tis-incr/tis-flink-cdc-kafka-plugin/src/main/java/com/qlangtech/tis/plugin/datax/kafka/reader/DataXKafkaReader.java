@@ -23,9 +23,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
@@ -45,9 +43,12 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.format.guesstype.FocusWildcardTabName;
 import com.qlangtech.tis.plugin.datax.format.guesstype.GuessFieldType;
+import com.qlangtech.tis.plugin.datax.format.guesstype.KafkaLogicalTableName;
 import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader;
 import com.qlangtech.tis.plugin.datax.format.guesstype.StructuredReader.StructuredRecord;
+import com.qlangtech.tis.plugin.datax.format.guesstype.TargetTabsEntities;
 import com.qlangtech.tis.plugin.datax.kafka.reader.subscriptionmethod.KafkaSubscriptionMethod;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ContextParamConfig;
@@ -79,7 +80,6 @@ import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,9 +95,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -138,6 +138,12 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     @FormField(ordinal = 6, validate = {require})
     public KafkaProtocol protocol;
 
+    /**
+     * invoke from DataXKafkaReader.json
+     *
+     * @param descs
+     * @return
+     */
     public static List<? extends Descriptor> supportedFormats(List<? extends Descriptor> descs) {
         if (CollectionUtils.isEmpty(descs)) {
             return Collections.emptyList();
@@ -151,10 +157,6 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
         return ContextParamConfig.defaultContextParams((param) -> !KEY_DB_CONTEXT_PARAM_NAME.equals(param.getKeyName()));
     }
 
-//    @FormField(ordinal = 5, advance = true, type = FormFieldType.INT_NUMBER, validate = {require})
-//    public Integer inspectRowCount;
-
-
     final KafkaConsumerFactory createKafkaFactory() {
         return KafkaConsumerFactory.getKafkaConfig(this, true);
     }
@@ -163,28 +165,20 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {})
     public Boolean enableAutoCommit;
 
-
     @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
     public String clientDnsLookup;
 
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer requestTimeoutMs;
 
-
     @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
     public String clientId;
-
 
     @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer retryBackoffMs;
 
-
     @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer autoCommitIntervalMs;
-
-//    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {}, advance = true)
-//    public String autoOffsetReset;
-
 
     @FormField(ordinal = 16, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer maxPollRecords;
@@ -201,7 +195,6 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     /**
      * 增量执行过程需要的配置参数
      */
-
     @FormField(ordinal = 20, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer maxRecordsProcess;
     @FormField(ordinal = 21, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
@@ -214,12 +207,14 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
             , idListGetScript = "return com.qlangtech.tis.plugin.datax.kafka.reader.DataXKafkaReader.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
-    private transient Set<String> _targetTabsEntities;
+    private transient TargetTabsEntities _targetTabsEntities;
     private transient Map<String /**tabName*/, Map<String /**colName*/, ColumnMetaData>> _tabColsMeta;
 
     public static List<String> getTablesInDB(SubFormFilter filter) {
         DataXKafkaReader reader = DataxReader.getDataxReader(filter);
-        return Lists.newArrayList(reader.getTargetTabsEntities());
+        return reader.getTargetTabsEntities().getLogicalTableEntites()
+                .stream().map(FocusWildcardTabName::getLogicalTableName).collect(Collectors.toList());
+        // return Lists.newArrayList();
     }
 
     @Override
@@ -281,10 +276,11 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
         return new DataXKafkaGroupChildTaskIterator(this, tabs);
     }
 
-    public Set<String> getTargetTabsEntities() {
+    public TargetTabsEntities getTargetTabsEntities() {
         if (this._targetTabsEntities == null) {
-            this._targetTabsEntities = Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
-            this._targetTabsEntities.addAll(this.format.parseTargetTabsEntities());
+            this._targetTabsEntities = this.format.parseTargetTabsEntities();
+//                    Sets.newTreeSet(String.CASE_INSENSITIVE_ORDER);
+//            this._targetTabsEntities.addAll();
 
         }
         return this._targetTabsEntities;
@@ -296,23 +292,22 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
         this._tabColsMeta = null;
     }
 
-    private static final Cache<String, Map<String/*tableName*/, List<ColumnMetaData>>> tableColsTypeCache
+    private static final Cache<String, Map<KafkaLogicalTableName/*tableName*/, List<ColumnMetaData>>> tableColsTypeCache
             = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build();
 
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, IPluginContext pluginContext, EntityName table) throws TableNotFoundException {
-        //  return super.getTableMetadata(inSink, table);
-        return parseTableMetadataFromKafkaHistoryEvents(table);
+        return parseTableMetadataFromKafkaHistoryEvents(new KafkaLogicalTableName(table.getTableName()));
     }
 
-    private List<ColumnMetaData> parseTableMetadataFromKafkaHistoryEvents(EntityName table) {
+    private List<ColumnMetaData> parseTableMetadataFromKafkaHistoryEvents(KafkaLogicalTableName table) {
         if (StringUtils.isEmpty(this.dataXName)) {
             throw new IllegalStateException("property dataXName can not be null");
         }
         try {
 
-            Map<String/*tableName*/, List<ColumnMetaData>> tabColMeta = tableColsTypeCache.get(this.dataXName, () -> {
+            Map<KafkaLogicalTableName/*tableName*/, List<ColumnMetaData>> tabColMeta = tableColsTypeCache.get(this.dataXName, () -> {
                 KafkaConsumerFactory kafkaFactory = KafkaConsumerFactory.getKafkaConfig(DataXKafkaReader.this, (props) -> {
                     Map<String, Object> rewrite = Maps.newHashMap(props);
                     // 默认从事件流最前开始读
@@ -335,41 +330,51 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
                 try (KafkaConsumer<byte[], byte[]> consumer = kafkaFactory.getConsumer()) {
                     //  subscription.setSubscription(consumer);
                     consumer.assign(topicPartitions);
-                    // 确保从最先的地方 开始消费
-//                    for (TopicPartition partition : topicPartitions) {
-//                        consumer.seek(partition, 0);
-//                    }
-//                    consumer.listTopics()
+
                     consumer.seekToBeginning(topicPartitions);
 
                     // reference:https://github.com/airbytehq/airbyte/blob/fefbb72efa10c695c80ed04cbb564ad85aa39705/airbyte-integrations/connectors/source-kafka/src/main/java/io/airbyte/integrations/source/kafka/format/JsonFormat.java#L118C91-L118C103
                     GuessStructuredReader consumerRecords = new GuessStructuredReader(consumer.poll(Duration.of(pollingTime, ChronoUnit.MILLIS)));
-                    //                                int readCount = 0;
-                    //                                byte[] val = null;
-                    //                                Map<String, Object> row = null;
-                    // IGuessColTypeFormatConfig formatConfig = null;
+
 
                     try {
 
-                        Set<String> targetTabs = getTargetTabsEntities();
+                        TargetTabsEntities targetTabs = getTargetTabsEntities();
 
-                        Map<String/*tableName*/, Map<String/*colName*/, DataType>> colMeta = guessFieldType.processStructGuess(format, consumerRecords);
+                        Map<KafkaLogicalTableName/*tableName*/, Map<String/*colName*/, DataType>> colMeta
+                                = guessFieldType.processStructGuess(targetTabs, format, consumerRecords);
 
                         int[] index = new int[1];
-                        //                                    return colMeta.entrySet().stream().map((entry) -> {
-                        //                                        return new ColumnMetaData(index[0]++, entry.getKey(), entry.getValue(), false);
-                        //                                    }).collect(Collectors.toList());
 
-                        return colMeta.entrySet().stream()//.filter((e) -> StructuredRecord.DEFAUTL_TABLE_NAME.equals(e.getKey()) || targetTabs.contains(e.getKey()))
-                                .collect(Collectors.toMap((e) -> {
-                                            index[0] = 0;
-                                            return e.getKey();
-                                        }
-                                        , (e) -> e.getValue().entrySet().stream()
-                                                .map((colEntry) -> new ColumnMetaData(index[0]++, colEntry.getKey(), colEntry.getValue(), false))
-                                                .collect(Collectors.toList()), (u, v) -> {
-                                            throw new IllegalStateException(String.format("Duplicate key %s", u));
-                                        }, () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)));
+                        return colMeta.entrySet().stream().collect(Collectors.toMap(
+                                (e) -> {
+                                    index[0] = 0;
+                                    return e.getKey();
+                                }
+                                , (e) -> e.getValue().entrySet().stream()
+                                        .map((colEntry)
+                                                -> new ColumnMetaData(index[0]++, colEntry.getKey(), colEntry.getValue(), false))
+                                        .collect(Collectors.toList())
+                                , new BinaryOperator<List<ColumnMetaData>>() {
+                                    @Override
+                                    public List<ColumnMetaData> apply(List<ColumnMetaData> c1, List<ColumnMetaData> c2) {
+                                        throw new IllegalStateException(String.format("Duplicate key %s", c1.size()));
+                                    }
+                                }
+                        ));
+
+
+//                        return colMeta.entrySet().stream()
+//                                .collect(Collectors.toMap((e) -> {
+//                                            index[0] = 0;
+//                                            return e.getKey();
+//                                        }
+//                                        , (e) -> e.getValue().entrySet().stream()
+//                                                .map((colEntry) -> new ColumnMetaData(index[0]++, colEntry.getKey(), colEntry.getValue(), false))
+//                                                .collect(Collectors.toList())
+//                                        , (u, v) -> {
+//                                            throw new IllegalStateException(String.format("Duplicate key %s", u));
+//                                        }, () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER)));
 
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -377,11 +382,13 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
                 }
             });
 
-            List<ColumnMetaData> cols = tabColMeta.get(table.getTableName());
+            List<ColumnMetaData> cols = tabColMeta.get(table);
             if (CollectionUtils.isEmpty(cols)) {
                 tableColsTypeCache.invalidate(this.dataXName);
-                throw TisException.create("扫描Kafka历史消息，没有发现表：" + table.getTableName()
-                        + "所对应的记录，当前扫描到的表记录为：“" + String.join(",", tabColMeta.keySet()) + "”，请对Topic中导入相应记录再执行此操作");
+                throw TisException.create("扫描Kafka历史消息，没有发现表：" + table.getLogicalTableName()
+                        + "所对应的记录，当前扫描到的表记录为：“"
+                        + tabColMeta.keySet().stream()
+                        .map(KafkaLogicalTableName::getLogicalTableName).collect(Collectors.joining(",")) + "”，请对Topic中导入相应记录再执行此操作");
             }
             return cols;
         } catch (ExecutionException e) {
@@ -439,9 +446,9 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     public List<SelectedTab> getSelectedTabs() {
 
         if (this.selectedTabs == null) {
-            this.selectedTabs = this.getTargetTabsEntities()
+            this.selectedTabs = this.getTargetTabsEntities().getLogicalTableEntites()
                     .stream().map((tab) -> {
-                        return new SelectedTab(tab);
+                        return new SelectedTab(tab.getLogicalTableName());
                     }).collect(Collectors.toList());
         }
 
@@ -537,8 +544,8 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
             }
 
             try {
-                for (String targetTab : kafkaReader.format.parseTargetTabsEntities()) {
-                    kafkaReader.parseTableMetadataFromKafkaHistoryEvents(EntityName.parse(targetTab));
+                for (FocusWildcardTabName targetTab : kafkaReader.format.parseTargetTabsEntities().getLogicalTableEntites()) {
+                    kafkaReader.parseTableMetadataFromKafkaHistoryEvents(new KafkaLogicalTableName(targetTab.getLogicalTableName()));
                 }
             } catch (Exception e) {
                 logger.warn("pipelineName:" + kafkaReader.dataXName, e);

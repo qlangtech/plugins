@@ -32,16 +32,13 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -56,6 +53,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -246,17 +244,23 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                 if (valid) {
 
                     final DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
-
+                    final Duration socketReadTimeout = Duration.ofSeconds(5);
                     for (String feLoadHost : dorisDS.getLoadUrls()) {
                         //利用doris的clusterAction： https://doris.apache.org/zh-CN/docs/1.2/admin-manual/http-actions/fe/cluster-action
                         // 对:{"msg":"success","code":0,"data":{"http":["192.168.28.200:8030"],"mysql":["192.168.28.200:9030"]},"count":0}
                         StringBuffer clusterInfoApiUrl = new StringBuffer("http://");
                         clusterInfoApiUrl.append(feLoadHost).append("/rest/v2/manager/cluster/cluster_info/conn_info");
+
                         try {
                             Boolean success = HttpUtils.get(new URL(clusterInfoApiUrl.toString()), new PostFormStreamProcess<Boolean>() {
                                 @Override
                                 public ContentType getContentType() {
                                     return ContentType.JSON;
+                                }
+
+                                @Override
+                                public Duration getSocketReadTimeout() {
+                                    return socketReadTimeout;
                                 }
 
                                 @Override

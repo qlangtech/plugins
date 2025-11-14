@@ -108,35 +108,11 @@ import java.util.function.BiFunction;
  * @create: 2023-04-15 12:25
  **/
 public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
-//    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = true)
-//    public Boolean schemaInclude;
-
-//    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
-//    public Boolean ignoreParseErrors;
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = Validator.require)
-//    public String timestampFormat;
-
-//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
-//    public String nullKeyMode;
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
-//    public String nullKeyLiteral;
-//    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true)
-//    public Boolean encodeDecimal;
 
     @Override
     public boolean validateFormtField(IControlMsgHandler msgHandler, Context context, String fieldName, DataxReader dataxReader) {
         return true;
     }
-
-//    @Override
-//    protected String getTimestampFormat() {
-//        return this.timestampFormat;
-//    }
-//
-//    @Override
-//    public String getNullFormat() {
-//        return this.nullKeyLiteral;
-//    }
 
     @Override
     public KafkaStructuredRecord parseRecord(KafkaStructuredRecord reuse, byte[] record) {
@@ -159,9 +135,6 @@ public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
         return formatCreator.apply(debeziumJsonFormatFactory
                 , desc.options.createFlinkCfg(this)
                         .set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
-
-//        return canalFormatFactory.createEncodingFormat(null
-//                , desc.options.createFlinkCfg(this).set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
     }
 
     @Override
@@ -169,10 +142,6 @@ public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
         return true;
     }
 
-//    @Override
-//    public DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(String targetTabName) {
-//        throw new UnsupportedOperationException("createDecodingFormat");
-//    }
 
     @TISExtension
     public static class DftDescriptor extends BasicFormatDescriptor {

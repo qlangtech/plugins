@@ -37,7 +37,6 @@ import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -79,7 +78,8 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         this(flinkCDCPipelineEnable, Collections.singletonList(sourceFunction));
     }
 
-    public static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+    public static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory
+            , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
 

@@ -34,6 +34,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
@@ -113,7 +114,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     public Map<TableAlias, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
-        MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.getDataXName());
+        MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(((IAppSource) dataxProcessor).getDataXName());
 
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         ElasticEndpoint token = dataXWriter.getToken();

@@ -4,8 +4,9 @@
       {
         "describable":false,
         "eprops":{
-          "help":"导入流实体名称，目标端以此作为表名",
+          "asyncHelp":true,
           "label":"Table Name",
+          "placeholder":"tab-a,tab-b*",
           "validators":"require"
         },
         "key":"tabEntities",
@@ -13,6 +14,29 @@
         "pk":false,
         "required":true,
         "type":1
+      },
+      {
+        "advance":true,
+        "describable":false,
+        "eprops":{
+          "asyncHelp":true,
+          "dftVal":false,
+          "enum":[
+            {
+              "label":"是",
+              "val":true
+            },
+            {
+              "label":"否",
+              "val":false
+            }
+          ]
+        },
+        "key":"ignoreParseErrors",
+        "ord":1,
+        "pk":false,
+        "required":false,
+        "type":5
       },
       {
         "advance":true,
@@ -42,22 +66,22 @@
         "describable":false,
         "eprops":{
           "asyncHelp":true,
-          "dftVal":false,
+          "dftVal":"SQL",
           "enum":[
             {
-              "label":"是",
-              "val":true
+              "label":"SQL",
+              "val":"SQL"
             },
             {
-              "label":"否",
-              "val":false
+              "label":"ISO-8601",
+              "val":"ISO-8601"
             }
           ]
         },
-        "key":"ignoreParseErrors",
+        "key":"timestampFormat",
         "ord":2,
         "pk":false,
-        "required":false,
+        "required":true,
         "type":5
       },
       {
@@ -65,13 +89,27 @@
         "describable":false,
         "eprops":{
           "asyncHelp":true,
-          "dftVal":"FAIL"
+          "dftVal":"FAIL",
+          "enum":[
+            {
+              "label":"FAIL",
+              "val":"FAIL"
+            },
+            {
+              "label":"DROP",
+              "val":"DROP"
+            },
+            {
+              "label":"LITERAL",
+              "val":"LITERAL"
+            }
+          ]
         },
-        "key":"mapNullKeyMode",
-        "ord":3,
+        "key":"nullKeyMode",
+        "ord":5,
         "pk":false,
         "required":false,
-        "type":1
+        "type":5
       },
       {
         "advance":true,
@@ -80,47 +118,11 @@
           "asyncHelp":true,
           "dftVal":"null"
         },
-        "key":"mapNullKeyLiteral",
-        "ord":4,
-        "pk":false,
-        "required":false,
-        "type":1
-      },
-      {
-        "advance":true,
-        "describable":false,
-        "eprops":{
-          "asyncHelp":true,
-          "dftVal":"SQL"
-        },
-        "key":"timestampFormat",
-        "ord":5,
-        "pk":false,
-        "required":false,
-        "type":1
-      },
-      {
-        "advance":true,
-        "describable":false,
-        "eprops":{
-          "asyncHelp":true,
-          "dftVal":false,
-          "enum":[
-            {
-              "label":"是",
-              "val":true
-            },
-            {
-              "label":"否",
-              "val":false
-            }
-          ]
-        },
-        "key":"encodeDecimalAsPlanNumber",
+        "key":"nullKeyLiteral",
         "ord":6,
         "pk":false,
         "required":false,
-        "type":5
+        "type":1
       },
       {
         "advance":true,
@@ -140,6 +142,29 @@
           ]
         },
         "key":"encodeJsonParserEnabled",
+        "ord":7,
+        "pk":false,
+        "required":false,
+        "type":5
+      },
+      {
+        "advance":true,
+        "describable":false,
+        "eprops":{
+          "asyncHelp":true,
+          "dftVal":false,
+          "enum":[
+            {
+              "label":"是",
+              "val":true
+            },
+            {
+              "label":"否",
+              "val":false
+            }
+          ]
+        },
+        "key":"encodeDecimal",
         "ord":7,
         "pk":false,
         "required":false,

@@ -355,6 +355,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
     @Override
+    public String getTaskName() {
+        return IEndTypeGetter.EndType.PowerJob + "_launch";
+    }
+
+    @Override
     public List<ExecuteStep> getExecuteSteps() {
         List<ExecuteStep> launchSteps = Lists.newArrayList();
 
@@ -614,7 +619,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         powerjobWorker.setReplicaScalable(true);
         ServerLaunchToken workerPodsTokenFile
                 = this.getProcessTokenFile(K8S_DATAX_POWERJOB_WORKER, true, K8SWorkerCptType.K8SPods);
-        ServerLaunchLog serverLaunchLog = workerPodsTokenFile.buildWALLog(Collections.emptyList());
+        ServerLaunchLog serverLaunchLog = workerPodsTokenFile.buildWALLog(new ExecuteSteps(this.getTaskName(), this, Collections.emptyList()));
         powerjobWorker.setRcScalaLog(serverLaunchLog);
 
         ArrayList<RcDeployment> rcs = Lists.newArrayList(powerjobServer, powerjobWorker);

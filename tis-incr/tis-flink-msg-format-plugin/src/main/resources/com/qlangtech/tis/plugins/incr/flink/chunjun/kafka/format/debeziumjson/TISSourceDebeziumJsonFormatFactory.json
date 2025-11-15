@@ -2,7 +2,6 @@
   "tabEntities": {
     "label": "Table Name(s)",
     "validators": "require",
-    "help": "导入流实体名称，目标端以此作为表名，多个表以逗号分隔",
-    "placeholder": "tab-a,tab-b"
+    "placeholder": "tab-a,tab-b*,tab-c*"
   }
 }

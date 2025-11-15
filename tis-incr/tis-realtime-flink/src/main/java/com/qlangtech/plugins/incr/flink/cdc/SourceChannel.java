@@ -78,31 +78,42 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         this(flinkCDCPipelineEnable, Collections.singletonList(sourceFunction));
     }
 
+    private static Optional<DataSourceFactory.ISchemaSupported> schemaSupported(DataSourceFactory dsFactory) {
+        if (dsFactory instanceof DataSourceFactory.ISchemaSupported) {
+            return Optional.of((DataSourceFactory.ISchemaSupported) dsFactory);
+        }
+        return Optional.empty();
+    }
+
+
     public static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory
             , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
-        final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
-
+        final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = schemaSupported(dsFactory);
+        TableInDB tabsInDB = dsFactory.getTablesInDB();
         return getSourceFunction(dsFactory, (tab) -> {
-            TableInDB tabsInDB = dsFactory.getTablesInDB();
             DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()), true);
             Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
 
-            List<String> physicsTabNames = targetTableNames.map((tabNames) -> Lists.newArrayList(tabNames)).orElseGet(() -> Lists.newArrayList(tab.getTabName()));
+            List<String> physicsTabNames = targetTableNames.map(Lists::newArrayList).orElseGet(() -> Lists.newArrayList(tab.getTabName()));
 
             return physicsTabNames.stream().map((t) -> {
                 EntityName entity = EntityName.parse(t, true);
                 if (!entity.useDftDbName()) {
                     return entity.getFullName();
                 }
-                return schemaSupport.map((schema) -> schema.getDBSchema()).orElse(tab.dbNanme) + "." + t;
+                return DataSourceFactory.ISchemaSupported.getCDCTableTokens(schemaSupport, tab.dbNanme, t);
+//                return schemaSupport
+//                        .filter((schema) -> !schema.isUseDBNameAsSchemaName())
+//                        .map(DataSourceFactory.ISchemaSupported::getDBSchema).orElse(tab.dbNanme) + "." + t;
             });
         }, tabs, sourceFunctionCreator);
     }
 
 
     //https://ververica.github.io/flink-cdc-connectors/master/
-    private static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory, Function<DBTable, Stream<String>> tabnameCreator, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+    private static List<ReaderSource> getSourceFunction(DataSourceFactory dsFactory
+            , Function<DBTable, Stream<String>> tabnameCreator, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();

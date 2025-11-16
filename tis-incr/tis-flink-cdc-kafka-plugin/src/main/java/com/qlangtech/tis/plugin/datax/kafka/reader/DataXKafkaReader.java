@@ -211,9 +211,13 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
     private transient Map<String /**tabName*/, Map<String /**colName*/, ColumnMetaData>> _tabColsMeta;
 
     public static List<String> getTablesInDB(SubFormFilter filter) {
-        DataXKafkaReader reader = DataxReader.getDataxReader(filter);
-        return reader.getTargetTabsEntities().getLogicalTableEntites()
-                .stream().map(FocusWildcardTabName::getLogicalTableName).collect(Collectors.toList());
+        try {
+            DataXKafkaReader reader = DataxReader.getDataxReader(filter);
+            return reader.getTargetTabsEntities().getLogicalTableEntites()
+                    .stream().map(FocusWildcardTabName::getLogicalTableName).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(String.valueOf(filter.uploadPluginMeta), e);
+        }
         // return Lists.newArrayList();
     }
 

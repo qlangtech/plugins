@@ -23,15 +23,12 @@ import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.manage.IAppSource;
-import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.dolphinscheduler.common.enums.WorkflowExecutionStatus;
-
-import java.util.List;
 
 /**
  * DS 触发的任务执行状态追踪
@@ -45,9 +42,16 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
 
     public DSWorkFlowBuildHistoryPayload(IDataxProcessor dataxProcessor, Integer tisTaskId, ICommonDAOContext daoContext) {
         super(dataxProcessor, tisTaskId, daoContext);
-        Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>> pluginStorePair
-                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, ((IAppSource) this.dataxProcessor).getDataXName());
-        for (ExportTISPipelineToDolphinscheduler exportDSCfg : pluginStorePair.getLeft()) {
+        //Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>>
+        DefaultDataXProcessorManipulate.ProcessorManipulateManager<ExportTISPipelineToDolphinscheduler> pluginStorePair
+                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, ((IAppSource) this.dataxProcessor).getDataXName()
+                , new IDescribableManipulate.IManipulateStorable() {
+                    @Override
+                    public boolean isManipulateStorable() {
+                        return true;
+                    }
+                });
+        for (ExportTISPipelineToDolphinscheduler exportDSCfg : pluginStorePair.getTargetInstancePlugin()) {
             this.exportDSCfg = exportDSCfg;
             return;
         }

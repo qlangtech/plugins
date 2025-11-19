@@ -1,0 +1,10 @@
+{
+  "smtpHost": {
+    "lable": "SmtpHost",
+    "placehold": "smtp.163.com",
+    "help": "SMTP协议服务端host地址"
+  },
+  "alertTpl": {
+    "dftVal": "com.qlangtech.plugins.incr.flink.alert.EmailAlterChannel.loadDefaultTpl()"
+  }
+}

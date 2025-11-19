@@ -242,7 +242,10 @@ public class DefaultDataxProcessor extends DataxProcessor {
             if (appName == null) {
                 return Optional.empty();
             }
-            return Optional.of(DefaultDataXProcessorManipulate.loadPlugins(null, DefaultDataXProcessorManipulate.class, appName).getValue());
+
+            return Optional.of(DefaultDataXProcessorManipulate.getPluginStore(null, appName));
+
+            //  return Optional.of(DefaultDataXProcessorManipulate.loadPlugins(null, DefaultDataXProcessorManipulate.class, appName).getValue());
         }
     }
 

@@ -1,0 +1,57 @@
+{
+  "name": {
+    "readonly": true,
+    "dftVal": "alert",
+    "help": "一个数据管道只能定义一个监控"
+  },
+  "turnOn": {
+    "label": "启用",
+    "help": "配置完成之后，使用过程中可以控制报警渠道暂时失效，可选择‘否’",
+    "dftVal": true,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  },
+  "alertChannel": {
+    "label": "报警渠道",
+    "enumMode": "multiple",
+    "help": "选择需要的报警发送渠道",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "targetItemDesc": "AlertChannel",
+          "descName": "WeCom_Chan"
+        },
+        {
+          "hetero": "params-cfg",
+          "targetItemDesc": "AlertChannel",
+          "descName": "DingTalk_Chan"
+        },
+        {
+          "hetero": "params-cfg",
+          "targetItemDesc": "AlertChannel",
+          "descName": "Lark_Chan"
+        },
+        {
+          "hetero": "params-cfg",
+          "targetItemDesc": "AlertChannel",
+          "descName": "Email_Chan"
+        },
+        {
+          "hetero": "params-cfg",
+          "targetItemDesc": "AlertChannel",
+          "descName": "Http_Chan"
+        }
+      ]
+    }
+  }
+}

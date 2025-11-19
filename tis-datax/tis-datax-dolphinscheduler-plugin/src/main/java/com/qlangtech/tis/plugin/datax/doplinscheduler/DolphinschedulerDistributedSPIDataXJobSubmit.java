@@ -23,13 +23,12 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
-import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.BasicWorkflowPayload;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
@@ -39,7 +38,6 @@ import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta.SqlDataFlowTopology;
-import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -88,16 +86,24 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
 //        if (!(module instanceof IPluginContext)) {
 //            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
 //        }
-        Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>> pair
-                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, appName);
+
+
+        DefaultDataXProcessorManipulate.ProcessorManipulateManager<ExportTISPipelineToDolphinscheduler> pair
+                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, appName, new IDescribableManipulate.IManipulateStorable() {
+            @Override
+            public boolean isManipulateStorable() {
+                return true;
+            }
+        });
         ExportTISPipelineToDolphinscheduler exportCfg = null;
-        for (ExportTISPipelineToDolphinscheduler cfg : pair.getKey()) {
+        List<ExportTISPipelineToDolphinscheduler> existPlugins = pair.getTargetInstancePlugin();
+        for (ExportTISPipelineToDolphinscheduler cfg : existPlugins) {
             exportCfg = cfg;
         }
 
         DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
         return new DSWorkflowPayload(Objects.requireNonNull(exportCfg
-                , "load export ds scheduler instance size:" + pair.getKey().size() + ",appName:" + appName)
+                , "load export ds scheduler instance size:" + existPlugins.size() + ",appName:" + appName)
                 , dataxProcessor, commonDAOContext, submit) {
             @Override
             public void innerCreatePowerjobWorkflow(boolean updateProcess, Optional<Pair<Map<ISelectedTab, SelectedTabTriggers>

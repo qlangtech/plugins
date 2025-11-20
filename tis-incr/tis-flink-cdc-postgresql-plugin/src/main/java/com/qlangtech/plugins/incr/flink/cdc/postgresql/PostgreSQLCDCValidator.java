@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * PostgreSQL CDC 先验校验工具类
  * 在Flink CDC任务启动前检查PostgreSQL数据源是否满足CDC运行条件
- *
+ * see  requirment/add-validator-before-pg-cdc-launching.md
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-19 20:00
  **/
@@ -80,12 +80,12 @@ public class PostgreSQLCDCValidator {
             // 6. 检查解码插件配置
             validateDecodingPlugin(conn, sourceFactory, result);
 
-            // 7. 检查监听表结构
-            if (selectedTables != null && !selectedTables.isEmpty()) {
-                for (String tableName : selectedTables) {
-                    validateTableStructure(conn, tableName, result);
-                }
-            }
+            // 7. 检查监听表结构, 表存在先不监听
+//            if (selectedTables != null && !selectedTables.isEmpty()) {
+//                for (String tableName : selectedTables) {
+//                    validateTableStructure(conn, tableName, result);
+//                }
+//            }
 
         } catch (SQLException e) {
             logger.error("Database error occurred during PostgreSQL CDC validation", e);

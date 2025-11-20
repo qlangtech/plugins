@@ -1,5 +1,5 @@
 {
   "autoCreateTable": {
-    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"kingbase\",\"mysql\");"
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"mysql\");"
   }
 }

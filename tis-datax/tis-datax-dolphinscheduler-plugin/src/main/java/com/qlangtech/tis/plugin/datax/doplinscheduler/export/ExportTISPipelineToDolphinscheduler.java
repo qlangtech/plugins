@@ -66,8 +66,8 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
     public static final String FIELD_PROJECT_CODE = "projectCode";
 
 
-    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
-    public String processName;
+//    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
+//    public String processName;
 
     @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String dsEndpoint;
@@ -126,10 +126,10 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         //    return new StringBuffer("http://192.168.28.201:12345/dolphinscheduler/projects/" + this.projectCode + "/process-definition");
     }
 
-    @Override
-    public String identityValue() {
-        return this.processName;
-    }
+//    @Override
+//    public String identityValue() {
+//        return this.processName;
+//    }
 
     public DolphinSchedulerEndpoint getDSEndpoint() {
         DolphinSchedulerEndpoint dsEndpoint = ParamsConfig.getItem(this.dsEndpoint, DolphinSchedulerEndpoint.DISPLAY_NAME);
@@ -362,7 +362,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
                  ********************************************************/
                 DolphinSchedulerResponse response = export.processDefinition()
                         .appendSubPath("query-by-name")
-                        .appendQueryParam("name", export.processName).applyGet();
+                        .appendQueryParam("name", export.name).applyGet();
                 if (!response.isSuccess()) {
                     Status status = Status.findStatusBy(response.getCode());
                     switch (status) {
@@ -386,7 +386,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
                 //http://192.168.28.201:12345/dolphinscheduler/swagger-ui/index.html?language=zh_CN&lang=cn#/%E6%B5%81%E7%A8%8B%E5%AE%9A%E4%B9%89%E7%9B%B8%E5%85%B3%E6%93%8D%E4%BD%9C/verifyProcessDefinitionName
                 DolphinSchedulerResponse response = export.processDefinition()
                         .appendSubPath("verify-name")
-                        .appendQueryParam("name", export.processName).applyGet();
+                        .appendQueryParam("name", export.name).applyGet();
 
                 if (!response.isSuccess()) {
                     Status status = Status.findStatusBy(response.getCode());

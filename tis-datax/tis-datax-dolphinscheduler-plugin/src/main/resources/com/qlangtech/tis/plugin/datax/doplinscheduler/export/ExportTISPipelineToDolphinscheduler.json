@@ -27,7 +27,7 @@
     "dftVal": "Default",
     "help": "对应的dolphinscheduler中工作流执行过程中需要回调TIS，设置相应参数"
   },
-  "processName": {
+  "name": {
     "label": "工作流名称",
     "help": "对应的dolphinscheduler中工作流名称，确保同一项目下工作流名称唯一，不能重复",
     "dftVal": "com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler.dftProcessName():uncache_true"

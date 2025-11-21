@@ -27,7 +27,6 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
@@ -396,7 +395,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
         //  URL url = new URL(this.exportCfg.processDefinition().toString());
         List<PostParam> params = Lists.newArrayList();
         // params.add(new PostParam("projectCode", 117370558003456l));
-        params.add(new PostParam("name", this.exportCfg.processName));
+        params.add(new PostParam("name", this.exportCfg.name));
         params.add(new PostParam("description", this.exportCfg.processDescription));
         params.add(new PostParam("globalParams", "[]"));
         params.add(new PostParam("locations", JsonUtil.toString(locationArray)));

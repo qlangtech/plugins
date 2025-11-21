@@ -26,8 +26,8 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate impleme
 
     private static final String KEY_ALERT_CHANNEL = "alertChannel";
 
-    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
-    public String name;
+//    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
+//    public String name;
 
     /**
      * 是否启效
@@ -95,10 +95,10 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate impleme
 
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
+//    @Override
+//    public String identityValue() {
+//        return this.name;
+//    }
 
     @TISExtension
     public static class DefaultDesc extends DefaultDataXProcessorManipulate.BasicDesc implements IEndTypeGetter {

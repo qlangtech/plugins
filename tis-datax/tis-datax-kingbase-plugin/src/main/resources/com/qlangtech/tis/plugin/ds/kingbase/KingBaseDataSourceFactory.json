@@ -6,5 +6,8 @@
   "dispatch": {
     "label": "读写分离",
     "dftVal": "off"
+  },
+  "port": {
+    "dftVal": 4321
   }
 }

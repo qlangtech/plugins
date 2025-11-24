@@ -52,8 +52,14 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
         return getJobStatus() == JobStatus.RUNNING;
     }
 
+    @Override
     public String getJobId() {
         return jobDetailsInfo.getJobId().toHexString();
+    }
+
+    @Override
+    public String getJobName() {
+        return this.getName();
     }
 
     public String getName() {

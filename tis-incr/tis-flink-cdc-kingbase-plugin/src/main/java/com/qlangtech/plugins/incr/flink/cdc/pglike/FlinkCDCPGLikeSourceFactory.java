@@ -18,16 +18,23 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.pglike;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.PGDTOColValProcess.PGCDCTypeVisitor;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.datax.DataXName;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -35,6 +42,9 @@ import java.util.Objects;
  * @create: 2025-01-19 18:14
  **/
 public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
+
+    public static final String FIELD_REPLICA_RULE = "replicaRule";
+
     /**
      * The name of the Postgres logical decoding plug-in installed on the server. Supported values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming, wal2json_rds_streaming and pgoutput.
      */
@@ -47,12 +57,12 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
     // REPLICA IDENTITY
-    @FormField(ordinal = 2, advance = false, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String replicaIdentity;
+    @FormField(ordinal = 2, advance = false, validate = {Validator.require})
+    public PGLikeReplicaIdentity replicaRule;
 
 
-    public ReplicaIdentity getRepIdentity() {
-        return ReplicaIdentity.parse(this.replicaIdentity);
+    public final PGLikeReplicaIdentity getRepIdentity() {
+        return Objects.requireNonNull(replicaRule, "replicaIdentity can not be null");
     }
 
 
@@ -72,6 +82,15 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
             return PluginVender.FLINK_CDC;
         }
 
-
+        @Override
+        protected boolean validateMQListenerForm(
+                IControlMsgHandler msgHandler, Context context, MQListenerFactory sourceFactory) {
+            FlinkCDCPGLikeSourceFactory incrSource = (FlinkCDCPGLikeSourceFactory) sourceFactory;
+            DataXName pipeline = msgHandler.getCollectionName();
+            DataxReader dataxReader = DataxReader.load((IPluginContext) msgHandler, pipeline.getPipelineName());
+            IDataSourceFactoryGetter dataSourceGetter = (IDataSourceFactoryGetter) dataxReader;
+            List<ISelectedTab> selectedTabs = dataxReader.getSelectedTabs();
+            return incrSource.replicaRule.validateSelectedTabs(msgHandler, context, dataSourceGetter, selectedTabs);
+        }
     }
 }

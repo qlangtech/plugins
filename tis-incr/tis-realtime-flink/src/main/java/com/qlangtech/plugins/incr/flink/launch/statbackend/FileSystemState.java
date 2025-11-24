@@ -50,6 +50,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.function.Consumer;
 
+import static com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus.KEY_INCR_JOB_LOG;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-04-11 21:52
@@ -76,7 +78,7 @@ public class FileSystemState extends StateBackendFactory implements IncrStreamFa
         IDataxProcessor processor = DataxProcessor.load(null, collection.getName());
         File dataXWorkDir = processor.getDataXWorkDir(null);
 
-        return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log")
+        return new FlinkIncrJobStatus(new File(dataXWorkDir, KEY_INCR_JOB_LOG)
                 , (jobId) -> {
             return FlinkTaskNodeController.getRestoreCheckpointPath(jobId, this, "{CheckpointId}");
         });

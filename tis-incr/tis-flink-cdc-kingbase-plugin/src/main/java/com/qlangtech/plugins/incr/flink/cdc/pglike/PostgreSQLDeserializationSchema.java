@@ -39,7 +39,7 @@ import java.util.function.Function;
  * @create: 2024-02-21 19:02
  **/
 public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
-    private final ReplicaIdentity replicaIdentity;
+    private final PGLikeReplicaIdentity replicaIdentity;
     private static final Logger logger = LoggerFactory.getLogger(PostgreSQLDeserializationSchema.class);
 
     /**
@@ -50,7 +50,7 @@ public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
      */
     public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs, IFlinkColCreator<FlinkCol> flinkColCreator
             , Map<String /*tableName*/, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper
-            , ReplicaIdentity replicaIdentity
+            , PGLikeReplicaIdentity replicaIdentity
     ) {
         super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert(), contextParamValsGetterMapper);
         this.replicaIdentity = replicaIdentity;

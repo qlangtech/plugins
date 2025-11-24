@@ -1,6 +1,7 @@
 package com.qlangtech.plugins.incr.flink.alert;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.extension.TISExtension;
@@ -11,6 +12,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
@@ -22,13 +24,9 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2025/11/17
  */
-public class AddMonitorForEvents extends DefaultDataXProcessorManipulate implements IdentityName {
+public class AddMonitorForEvents extends DefaultDataXProcessorManipulate implements IdentityName, DefaultDataXProcessorManipulate.MonitorForEventsManager {
 
     private static final String KEY_ALERT_CHANNEL = "alertChannel";
-
-//    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
-//    public String name;
-
     /**
      * 是否启效
      */
@@ -41,54 +39,15 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate impleme
     @FormField(ordinal = 3, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public List<String> alertChannel;
 
+    @Override
+    public boolean isActivate() {
+        return this.turnOn;
+    }
 
-//    @Override
-//    public void manipuldateProcess(IPluginContext pluginContext, Optional<Context> context) {
-//        // 将TIS的数据同步通道配置同步到DS中
-//        // String[] originId = new String[1];
-//        /**
-//         * 校验
-//         */
-//        ManipulateItemsProcessor itemsProcessor
-//                = ManipuldateUtils.instance(pluginContext, context.get(), null
-//                , (meta) -> {
-//                });
-//        if (StringUtils.isEmpty(itemsProcessor.getOriginIdentityId())) {
-//            throw new IllegalStateException("originId can not be null");
-//        }
-//        if (itemsProcessor == null) {
-//            return;
-//        }
-//
-//        Pair<List<AddMonitorForEvents>, IPluginStore<DefaultDataXProcessorManipulate>>
-//                pair = DefaultDataXProcessorManipulate.loadPlugins(pluginContext
-//                , AddMonitorForEvents.class, DataXName.createDataXPipeline(itemsProcessor.getOriginIdentityId()));
-//
-//        /**
-//         * 是否需要删除
-//         */
-//        if (itemsProcessor.isDeleteProcess()) {
-//            pair.getRight().setPlugins(pluginContext, context, Collections.emptyList());
-//            return;
-//        }
-//
-//
-//        if (!itemsProcessor.isUpdateProcess()) {
-//            // 添加操作
-//            if (pair.getLeft().size() > 0) {
-//                for (AddMonitorForEvents i : pair.getLeft()) {
-//                    pluginContext.addErrorMessage(context.get(), "报警实例'" + i.name + "'已经配置，不能再创建新实例");
-//                }
-//                //  throw TisException.create("实例已经配置不能重复创建");
-//                return;
-//            }
-//        }
-//
-//        /**
-//         *2. 并且将实例持久化在app管道下，当DS端触发会调用 DolphinschedulerDistributedSPIDataXJobSubmit.createPayload()方法获取DS端的WorkflowDAG拓扑视图
-//         */
-//        pair.getRight().setPlugins(pluginContext, context, Collections.singletonList(new Descriptor.ParseDescribable(this)));
-//    }
+    @Override
+    public List<AlertChannel> getAlertChannels() {
+        return AlertChannel.load(Sets.newHashSet(alertChannel));
+    }
 
     @Override
     protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
@@ -105,6 +64,15 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate impleme
         public DefaultDesc() {
             super();
             this.registerSelectOptions(KEY_ALERT_CHANNEL, () -> ParamsConfig.getItems(AlertChannel.KEY_CATEGORY));
+        }
+
+        public boolean validateName(
+                IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            if (!MonitorForEventsManager.KEY_ALERT.equals(value)) {
+                msgHandler.addFieldError(context, fieldName, "名称必须为：" + MonitorForEventsManager.KEY_ALERT);
+                return false;
+            }
+            return true;
         }
 
         @Override

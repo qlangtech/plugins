@@ -88,7 +88,7 @@ public class Standalone extends AbstractClusterType {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             try {
                 Standalone standalone = postFormVals.newInstance();
-                standalone.checkUseable(null);
+                standalone.checkUseable(null, false, -1);
             } catch (TisException e) {
                 msgHandler.addFieldError(context, KEY_FIELD_FLINK_CLUSTER, e.getMessage());
                 return false;
@@ -100,11 +100,5 @@ public class Standalone extends AbstractClusterType {
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return this.verify(msgHandler, context, postFormVals);
         }
-
-        //        @Override
-//        public boolean secondVerify(IControlMsgHandler msgHandler
-//                , Context context, PostFormVals postFormVals, PostFormVals parentPostFormVals) {
-//            return super.secondVerify(msgHandler, context, postFormVals, parentPostFormVals);
-//        }
     }
 }

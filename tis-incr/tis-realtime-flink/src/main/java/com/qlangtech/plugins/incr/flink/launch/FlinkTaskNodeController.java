@@ -26,6 +26,7 @@ import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus.State;
 import com.qlangtech.tis.coredefine.module.action.IRCController.SupportTriggerSavePointResult;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
@@ -38,7 +39,6 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
-import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.core.execution.SavepointFormatType;
 import org.apache.flink.runtime.messages.Acknowledge;
@@ -220,7 +220,8 @@ public class FlinkTaskNodeController {
 //        };
         if (incrJobStatus.getState() == IFlinkIncrJobStatus.State.NONE) {
             // stop 或者压根没有创建
-            return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
+            return FlinkJobDeploymentDetails.noneState(
+                    DataXName.createDataXPipeline(collection.getName()), factory.getClusterCfg(), incrJobStatus);
         }
         JobID launchJobID = incrJobStatus.getLaunchJobID();
         try {
@@ -229,7 +230,7 @@ public class FlinkTaskNodeController {
                 JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
                 if (status == null || status.isTerminalState()) {
                     incrJobStatus.setState(convertTerminalFlinkJobStatus(status));
-                    return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
+                    return FlinkJobDeploymentDetails.noneState(DataXName.createDataXPipeline(collection.getName()), factory.getClusterCfg(), incrJobStatus);
                 }
 
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
@@ -246,7 +247,7 @@ public class FlinkTaskNodeController {
             if (isNotFoundException(cause)) {
                 logger.warn(e.getMessage(), e);
                 incrJobStatus.setState(State.FAILED);
-                return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
+                return FlinkJobDeploymentDetails.noneState(DataXName.createDataXPipeline(collection.getName()), factory.getClusterCfg(), incrJobStatus);
             }
             throw new RuntimeException(e);
         } catch (Exception e) {

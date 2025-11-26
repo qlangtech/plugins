@@ -200,8 +200,8 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
      * ==========================================================================
      */
     @Override
-    public void checkUseable(TargetResName collection) {
-        this.getClusterCfg().checkUseable(collection);
+    public void checkUseable(TargetResName collection, boolean deploying) {
+        this.getClusterCfg().checkUseable(collection, deploying, parallelism);
     }
 
     @Override

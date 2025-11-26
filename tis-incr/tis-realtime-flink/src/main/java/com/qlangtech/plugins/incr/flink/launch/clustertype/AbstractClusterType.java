@@ -76,6 +76,16 @@ public abstract class AbstractClusterType extends ClusterType {
         Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
         try (ClusterClient restClient = createRestClusterClient()) {
 
+            // Validate available slots before deploying the job
+//            if (restClient instanceof RestClusterClient) {
+//                RestClusterClient<?> restClusterClient = (RestClusterClient<?>) restClient;
+//                int requiredSlots = factory.parallelism;
+//                logger.info("Validating Flink cluster slots before deploying job: {}, required parallelism: {}",
+//                        collection.getName(), requiredSlots);
+//                FlinkSlotValidator.validateAvailableSlots(restClusterClient, requiredSlots, collection);
+//            } else {
+//                logger.warn("Unable to validate slots: restClient is not an instance of RestClusterClient");
+//            }
 
             FlinkClient flinkClient = new FlinkClient();
 

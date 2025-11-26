@@ -41,18 +41,13 @@ import java.util.function.Function;
  **/
 public class FlinkIncrJobStatus extends BasicFinkIncrJobStatus {
     static final String KEY_SAVEPOINT_DISCARD_PREFIX = "discard";
-    //    private final File incrJobFile;
-//    private JobID jobID;
-    private List<FlinkSavepoint> savepointPaths = Lists.newArrayList();
-    // 当前job的状态
-    // private State state;
 
+    private List<FlinkSavepoint> savepointPaths = Lists.newArrayList();
     // 已经废弃的savepoint路径集合
     private final Set<String> discardPaths = Sets.newHashSet();
     private final Function<JobID, String> savePointRootPathCreator;
 
     public Optional<FlinkSavepoint> containSavepoint(String path) {
-
         for (FlinkSavepoint sp : savepointPaths) {
             if (StringUtils.equals(path, sp.getPath())) {
                 return Optional.of(sp);

@@ -77,13 +77,26 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
     /**
      *
      * @param collection
+     * @param deploying
+     * @param requiredSlots
+     * @return skip flowing check?
+     */
+    protected boolean skipFlowingCheck(TargetResName collection, boolean deploying, int requiredSlots) {
+        return false;
+    }
+
+    /**
+     *
+     * @param collection
      * @param deploying  是否是在部署流程中
      * @throws TisException
      */
     public final void checkUseable(TargetResName collection, boolean deploying, int requiredSlots) throws TisException {
 
+        if (this.skipFlowingCheck(collection, deploying, requiredSlots)) {
+            return;
+        }
 
-        // String webInterfaceURL = null;
         try {
             try (ClusterClient restClient = createRestClusterClient()) {
                 //       webInterfaceURL = restClient.getWebInterfaceURL();

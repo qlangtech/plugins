@@ -21,9 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc.pglike;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,6 +51,8 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
     protected String convertTime(Object input) {
         if (input != null) {
             System.out.println("convertTime:" + input.getClass());
+            throw new UnsupportedOperationException(input.getClass().getName() + ",value:" + input);
+
         }
         return null;
     }
@@ -60,13 +60,14 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
     @Override
     protected String convertDateTime(Object input) {
         if (input != null) {
-            System.out.println("convertDateTime:" + input.getClass());
-            throw new UnsupportedOperationException();
+//            System.out.println("convertDateTime:" + input.getClass());
+//            throw new UnsupportedOperationException();
+            return datetimeFormatter.format(LocalDateTime.ofInstant((Instant) input, this.timestampZoneId));
         }
         return null;
     }
 
-    private static final ZoneId zof = ZoneId.of("Z");
+    // private static final ZoneId zof = ZoneId.of("Z");
 
     @Override
     protected String convertTimestamp(Object input) {
@@ -76,7 +77,7 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
 //            }
 
             // System.out.println("timestampZoneId:" + timestampZoneId);
-            return timestampFormatter.format(LocalDateTime.ofInstant((Instant) input, zof));
+            return timestampFormatter.format(LocalDateTime.ofInstant((Instant) input, this.timestampZoneId));
 
 //                System.out.println(">>>>convertTimestamp:" + input.getClass().getName());
 //                System.out.println(">>>>convertTimestamp:" + input.getClass() + ",time:" + timestampFormatter.format((Instant) input));

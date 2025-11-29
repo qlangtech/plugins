@@ -328,6 +328,8 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
                 }
             }
 
+            plugin.checkUseable(TargetResName.createTargetName(msgHandler.getCollectionName()), true);
+
 
             return super.validateAll(msgHandler, context, postFormVals);
         }

@@ -83,8 +83,13 @@ public class K8SController implements IRCController {
         this.api = client;
     }
 
+//    @Override
+//    public void checkUseable(TargetResName name) {
+//
+//    }
+
     @Override
-    public void checkUseable(TargetResName name) {
+    public void checkUseable(TargetResName collection, boolean deploying) {
 
     }
 

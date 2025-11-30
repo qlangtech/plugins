@@ -60,9 +60,13 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
     @Override
     protected String convertDateTime(Object input) {
         if (input != null) {
-//            System.out.println("convertDateTime:" + input.getClass());
-//            throw new UnsupportedOperationException();
-            return datetimeFormatter.format(LocalDateTime.ofInstant((Instant) input, this.timestampZoneId));
+            if (input instanceof java.sql.Timestamp) {
+                return datetimeFormatter.format(((java.sql.Timestamp) input).toLocalDateTime());
+            } else if (input instanceof Instant) {
+                return datetimeFormatter.format(LocalDateTime.ofInstant((Instant) input, this.timestampZoneId));
+            } else {
+                throw new UnsupportedOperationException("convertDateTime:" + input.getClass() + ",val:" + String.valueOf(input));
+            }
         }
         return null;
     }

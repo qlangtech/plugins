@@ -23,6 +23,7 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 import io.debezium.jdbc.JdbcConfiguration;
 import io.debezium.jdbc.JdbcConnection;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +36,7 @@ import java.util.Properties;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-21 11:17
- * @see com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory
+ * @see BasicKingBaseDataSourceFactory
  **/
 public class KingBaseConnectionFactory implements JdbcConnection.ConnectionFactory {
     @Override

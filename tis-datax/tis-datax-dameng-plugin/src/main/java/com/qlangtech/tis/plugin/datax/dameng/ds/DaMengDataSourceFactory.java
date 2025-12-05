@@ -10,7 +10,6 @@ import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -20,10 +19,10 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import dm.jdbc.driver.DmdbType;
+import dm.jdbc.desc.Configuration;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
@@ -32,6 +31,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -56,6 +56,9 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     @FormField(ordinal = 1, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
 
+    @FormField(ordinal = 12, validate = {Validator.require})
+    public TISTimeZone timeZone;
+
     //https://blog.csdn.net/Shadow_Light/article/details/100749537
 
     @Override
@@ -67,6 +70,11 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     @Override
     protected String getNodeDesc() {
         return Objects.requireNonNull(splitTableStrategy, "splitTableStrategy can not be null").getNodeDesc();
+    }
+
+    @Override
+    public final Optional<ZoneId> getTimeZone() {
+        return Optional.of(timeZone.getTimeZone());
     }
 
     @Override
@@ -106,12 +114,14 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         java.util.Properties info = props.orElse(new java.util.Properties());
 
         if (this.userName != null) {
-            info.put("user", this.userName);
+            info.put(Configuration.user.getName(), this.userName);
         }
         if (password != null) {
-            info.put("password", password);
+            info.put(Configuration.password.getName(), password);
         }
         //info.put("connectTimeout", "60000");
+        info.setProperty(Configuration.localTimezone.getName() //
+                , Objects.requireNonNull(this.timeZone, "timezone can not be null").getTimeZone().getId());
         Connection connect = driver.connect(jdbcUrl, info);
         connect.setAutoCommit(true);
         return new JDBCConnection(connect, jdbcUrl);
@@ -524,6 +534,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         public Optional<String> getDefaultDataXReaderDescName() {
             return Optional.of(DataXDaMengReader.DATAX_NAME);
         }
+
         @Override
         public boolean supportFacade() {
             return false;

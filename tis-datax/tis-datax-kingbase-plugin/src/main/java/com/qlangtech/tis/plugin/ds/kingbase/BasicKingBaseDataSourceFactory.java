@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.ds.kingbase;
 
 import com.alibaba.citrus.turbine.Context;
 import com.kingbase8.KBProperty;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -53,9 +52,12 @@ import java.util.function.Consumer;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 14:34
  **/
-public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
+public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     public static final String KingBase_NAME = "KingBase";
-    public static final String JDBC_SCHEMA_TYPE = "kingbase8";
+    public static final String KingBase_Ver8 = "-V8.x";
+    public static final String KingBase_Ver9 = "-V9.x";
+    public static final String JDBC_SCHEMA_TYPE_V9 = "kingbase8";
+    public static final String JDBC_SCHEMA_TYPE_V8 = "kingbase";
     public static final String FIELD_DB_MODE = "dbMode";
     @FormField(ordinal = 8, validate = {Validator.require})
     public KingBaseCompatibleMode dbMode;
@@ -63,10 +65,6 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     @FormField(ordinal = 9, validate = {Validator.require})
     public KingBaseDispatch dispatch;
 
-    @Override
-    protected java.sql.Driver createDriver() {
-        return new com.kingbase8.Driver();
-    }
 
     @Override
     protected java.util.Properties extractSetJdbcProps(java.util.Properties props) {
@@ -87,8 +85,8 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
                 DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
                     @Override
                     public DataType bitType(DataType type) {
-                       // if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
-                            return DataType.create(Types.BOOLEAN, type.typeName, type.getColumnSize());
+                        // if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
+                        return DataType.create(Types.BOOLEAN, type.typeName, type.getColumnSize());
                         //}
                         //return null;
                     }
@@ -112,10 +110,10 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
         return Objects.requireNonNull(dbMode, "dbMode can not be null").getEscapeChar();
     }
 
-    @Override
-    protected String getDBType() {
-        return JDBC_SCHEMA_TYPE;
-    }
+//    @Override
+//    protected String getDBType() {
+//        return JDBC_SCHEMA_TYPE_V8;
+//    }
 
 
     @Override
@@ -141,7 +139,7 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
         return conn;
     }
 
-    private static void validateEndTypeMatch(KingBaseDataSourceFactory dataSource, JDBCConnection conn, Consumer<String> notifyNotMatch) {
+    private static void validateEndTypeMatch(BasicKingBaseDataSourceFactory dataSource, JDBCConnection conn, Consumer<String> notifyNotMatch) {
         try {
             // 校验是否
             boolean hasResult = conn.query("SHOW database_mode", (result) -> {
@@ -164,12 +162,9 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
         }
     }
 
-    @TISExtension
-    public static class KingBaseDSDescriptor extends BasicPGLikeDefaultDescriptor {
-        @Override
-        protected String getDataSourceName() {
-            return KingBase_NAME;
-        }
+    //  @TISExtension
+    public static abstract class BaiscKingBaseDSDescriptor extends BasicPGLikeDefaultDescriptor {
+
 
         @Override
         public EndType getEndType() {
@@ -186,15 +181,19 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
 
         @Override
         public Optional<String> getDefaultDataXReaderDescName() {
-            return Optional.of(KingBaseDataSourceFactory.KingBase_NAME);
+            return Optional.of(BasicKingBaseDataSourceFactory.KingBase_NAME);
         }
 
         @Override
         protected boolean validateConnection(JDBCConnection conn
                 , BasicDataSourceFactory dsFactory, IControlMsgHandler msgHandler, Context context) throws TisException {
-            KingBaseDataSourceFactory dataSource = (KingBaseDataSourceFactory) dsFactory;
+            BasicKingBaseDataSourceFactory dataSource = (BasicKingBaseDataSourceFactory) dsFactory;
             Objects.requireNonNull(dataSource.dbMode, "dbMode can not be null");
 
+//            validateKingbaseVersion(conn, msgHandler, context, dataSource);
+//            if (context.hasErrors()) {
+//                return false;
+//            }
             validateEndTypeMatch(dataSource, conn, (realDBMode) -> {
                 msgHandler.addFieldError(context, FIELD_DB_MODE, "DB实际模式为：" + realDBMode);
             });
@@ -204,6 +203,63 @@ public class KingBaseDataSourceFactory extends PGLikeDataSourceFactory {
             }
             return super.validateConnection(conn, dsFactory, msgHandler, context);
         }
+// 先不对版本进行校验
+//        protected void validateKingbaseVersion(JDBCConnection conn, IControlMsgHandler msgHandler, Context context, BasicKingBaseDataSourceFactory dataSource) {
+//            // 检查 Kingbase 数据库版本
+//            try {
+//                boolean hasVersionCheck = conn.query("SELECT version()", (result) -> {
+//                    String versionInfo = result.getString(1);
+//                    // 解析版本号，例如: "KingbaseES V008R006C008B0014" 或 "KingbaseES V009R001C001B0001"
+//                    if (versionInfo != null) {
+//                        // 判断数据库版本
+//                        boolean isDBV9OrAbove = versionInfo.contains("V009")
+//                                || versionInfo.contains("V010")
+//                                || versionInfo.contains("V011")
+//                                || versionInfo.contains("V012");
+//
+//                        // 判断当前连接器类型
+//                        // 如果 getDBType() 返回 JDBC_SCHEMA_TYPE_V8，说明是 v8 连接器
+//                        // 否则认为是 v9+ 连接器
+//                        boolean isV8Connector = JDBC_SCHEMA_TYPE_V8.equals(dataSource.getDBType());
+//
+//                        // 版本不匹配的情况
+//                        if (!isDBV9OrAbove && !isV8Connector) {
+//                            // 数据库是 v8 或更低，但使用的不是 v8 连接器
+//                            msgHandler.addErrorMessage(context, "请使用kingbase v8连接器连接");
+//                        }
+//                    }
+//                    return false;
+//                });
+//
+//                if (!hasVersionCheck) {
+//                    // 如果无法通过 version() 获取版本信息，尝试其他方式
+//                    conn.query("SHOW server_version", (result) -> {
+//                        String versionInfo = result.getString("server_version");
+//                        if (versionInfo != null) {
+//                            // 解析版本号 例如: "8.6" 或 "9.0"
+//                            String[] parts = versionInfo.split("\\.");
+//                            if (parts.length > 0) {
+//                                try {
+//                                    int majorVersion = Integer.parseInt(parts[0]);
+//                                    boolean isV8Connector = JDBC_SCHEMA_TYPE_V8.equals(dataSource.getDBType());
+//
+//                                    if (majorVersion < 9 && !isV8Connector) {
+//                                        // 数据库版本低于 v9，但使用的不是 v8 连接器
+//                                        msgHandler.addErrorMessage(context, "请使用kingbase v8连接器连接");
+//                                    }
+//                                } catch (NumberFormatException e) {
+//                                    // 版本号解析失败，忽略
+//                                }
+//                            }
+//                        }
+//                        return false;
+//                    });
+//                }
+//            } catch (Exception e) {
+//                // 获取版本信息失败，记录错误但不阻止连接
+//                // 可以选择记录日志或忽略
+//            }
+//        }
 
         @Override
         protected String getConnectionSchema(JDBCConnection c) throws SQLException {

@@ -19,13 +19,12 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.kingbase.sink;
 
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.kingbase.DataXKingBaseWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.KingBaseDSFactoryContainer;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.junit.BeforeClass;
@@ -43,7 +42,7 @@ public class TestKingBaseSinkFactory extends TestChunjunFlinkSinkExecutor {
         super.testSinkSync();
     }
 
-    static KingBaseDataSourceFactory kingBaseDSFactory;
+    static BasicKingBaseDataSourceFactory kingBaseDSFactory;
 
     @Override
     protected DataxReader createDataxReader() {
@@ -56,7 +55,7 @@ public class TestKingBaseSinkFactory extends TestChunjunFlinkSinkExecutor {
     public static void initialize() throws Exception {
         //  MySqlSourceTestBase.startContainers();
 
-        kingBaseDSFactory = (KingBaseDataSourceFactory) KingBaseDSFactoryContainer.initialize((conn) -> {
+        kingBaseDSFactory = (BasicKingBaseDataSourceFactory) KingBaseDSFactoryContainer.initialize((conn) -> {
         });
         // tableName
         kingBaseDSFactory.visitAllConnection((conn) -> {
@@ -91,7 +90,7 @@ public class TestKingBaseSinkFactory extends TestChunjunFlinkSinkExecutor {
     protected BasicDataXRdbmsWriter createDataXWriter() {
         DataXKingBaseWriter dataXWriter = new DataXKingBaseWriter() {
             @Override
-            public KingBaseDataSourceFactory getDataSourceFactory() {
+            public BasicKingBaseDataSourceFactory getDataSourceFactory() {
                 return kingBaseDSFactory;
             }
         };

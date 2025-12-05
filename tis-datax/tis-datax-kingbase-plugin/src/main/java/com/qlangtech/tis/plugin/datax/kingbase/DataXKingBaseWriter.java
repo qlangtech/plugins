@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax.kingbase;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
-import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 
 import java.util.Objects;
 
@@ -32,8 +32,8 @@ import java.util.Objects;
 public class DataXKingBaseWriter extends DataXPostgresqlWriter {
 
     @Override
-    public KingBaseDataSourceFactory getDataSourceFactory() {
-        return (KingBaseDataSourceFactory) super.getDataSourceFactory();
+    public BasicKingBaseDataSourceFactory getDataSourceFactory() {
+        return (BasicKingBaseDataSourceFactory) super.getDataSourceFactory();
     }
 
 
@@ -50,7 +50,7 @@ public class DataXKingBaseWriter extends DataXPostgresqlWriter {
 
         @Override
         public String getDisplayName() {
-            return KingBaseDataSourceFactory.KingBase_NAME;
+            return BasicKingBaseDataSourceFactory.KingBase_NAME;
         }
 
         @Override

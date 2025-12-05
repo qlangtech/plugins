@@ -35,7 +35,10 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.DescribableJSON;
 import org.apache.flink.client.program.ClusterClient;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -99,6 +102,14 @@ public class Standalone extends AbstractClusterType {
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return this.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        public Optional<DescribableJSON<ParamsConfig>> getAIAssistSupport() {
+            StandaloneFlinkDeployingAIAssistSupport flinkDeployingAIAssistSupport = new StandaloneFlinkDeployingAIAssistSupport();
+            DescribableJSON<ParamsConfig> result = new DescribableJSON<>(
+                    flinkDeployingAIAssistSupport, new StandaloneFlinkDeployingAIAssistSupport.DefaultDesc());
+            return Optional.of(result);
         }
     }
 }

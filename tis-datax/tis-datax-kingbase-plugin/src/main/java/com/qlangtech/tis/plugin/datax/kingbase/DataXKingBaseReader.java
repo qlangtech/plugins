@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugin.datax.kingbase;
 
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
-import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 
 /**
  *
@@ -33,7 +33,7 @@ public class DataXKingBaseReader extends DataXPostgresqlReader {
     public static class KingBaseDescriptor extends DefaultDescriptor{
         @Override
         public String getDisplayName() {
-            return KingBaseDataSourceFactory.KingBase_NAME;
+            return BasicKingBaseDataSourceFactory.KingBase_NAME;
         }
 
         @Override

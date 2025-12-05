@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.kingbase.source;
 
-import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -37,7 +37,7 @@ public class KingBaseConnectionPoolFactory extends PostgresConnectionPoolFactory
         int port = sourceConfig.getPort();
         String database = sourceConfig.getDatabaseList().get(0);
         // String.format(JDBC_URL_PATTERN, hostName, port, database);
-        return PGLikeDataSourceFactory.buildJdbcUrl(KingBaseDataSourceFactory.JDBC_SCHEMA_TYPE, hostName, port, database);
+        return PGLikeDataSourceFactory.buildJdbcUrl(BasicKingBaseDataSourceFactory.JDBC_SCHEMA_TYPE_V9, hostName, port, database);
     }
 
     @Override

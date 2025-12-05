@@ -28,14 +28,12 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.kingbase.DataXKingBaseWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.kingbase.KingBaseDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.kingbase.BasicKingBaseDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -56,7 +54,7 @@ public class KingBaseSinkFactory extends ChunjunSinkFactory {
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
         DataXKingBaseWriter kingBaseWriter = (DataXKingBaseWriter) DataxWriter.load(null, this.getCollectionName());
-        KingBaseDataSourceFactory dsFactory = kingBaseWriter.getDataSourceFactory();
+        BasicKingBaseDataSourceFactory dsFactory = kingBaseWriter.getDataSourceFactory();
         Class<JdbcDialect> jdbcDialectClass = (Class<JdbcDialect>) dsFactory.dbMode.getJdbcDialectClass();
         return Objects.requireNonNull(jdbcDialectClass, "jdbcDialectClass can not be null");
     }

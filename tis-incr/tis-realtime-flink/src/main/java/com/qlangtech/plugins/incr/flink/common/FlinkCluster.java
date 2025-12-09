@@ -30,10 +30,10 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
@@ -60,6 +60,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     private static final Logger logger = LoggerFactory.getLogger(FlinkCluster.class);
 
     private static final String FLINK_DEFAULT_CLUSTER_ID = "default_cluster_id";
+    public static final int FLINK_DEFAULT_RETRY_MAX_ATTEMPTS = 1;
 
     public static void main(String[] args) {
         System.out.println(IFlinkCluster.class.isAssignableFrom(FlinkCluster.class));
@@ -77,6 +78,20 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     @FormField(ordinal = 3, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Long retryDelay;
+
+    public static IPluginStore<FlinkCluster> getFlinkClusterStore() {
+
+//        return getTargetPluginStore(
+//                UploadPluginMeta.TargetDesc.create(
+//                        UploadPluginMeta.parse( KEY_TARGET_PLUGIN_DESC, false)));
+
+
+        return getTargetPluginStore(IFlinkCluster.KEY_DISPLAY_NAME
+//                UploadPluginMeta.TargetDesc.create(
+//                        UploadPluginMeta.parse( KEY_TARGET_PLUGIN_DESC, false))
+        );
+
+    }
 
 
     @Override
@@ -162,7 +177,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             super(KEY_DISPLAY_NAME);
             // this.load();
             opts = FlinkPropAssist.createOpts(this);
-            opts.addFieldDescriptor("maxRetry", RestOptions.RETRY_MAX_ATTEMPTS, OverwriteProps.dft(1));
+            opts.addFieldDescriptor("maxRetry", RestOptions.RETRY_MAX_ATTEMPTS, OverwriteProps.dft(FLINK_DEFAULT_RETRY_MAX_ATTEMPTS));
             opts.addFieldDescriptor("retryDelay", RestOptions.RETRY_DELAY);
         }
 

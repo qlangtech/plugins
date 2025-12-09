@@ -31,13 +31,16 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.DescribableJSON;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.client.program.ClusterClient;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -106,9 +109,17 @@ public class Standalone extends AbstractClusterType {
 
         @Override
         public Optional<DescribableJSON<ParamsConfig>> getAIAssistSupport() {
+            IPluginStore<StandaloneFlinkDeployingAIAssistSupport> aiAssistSupport
+                    = StandaloneFlinkDeployingAIAssistSupport.getTargetPluginStore(StandaloneFlinkDeployingAIAssistSupport.KEY_IDENTITY_NAME);
             StandaloneFlinkDeployingAIAssistSupport flinkDeployingAIAssistSupport = new StandaloneFlinkDeployingAIAssistSupport();
+            for (StandaloneFlinkDeployingAIAssistSupport assistSupport : aiAssistSupport.getPlugins()) {
+                if (StringUtils.equals(assistSupport.name, StandaloneFlinkDeployingAIAssistSupport.KEY_IDENTITY_NAME)) {
+                    flinkDeployingAIAssistSupport = assistSupport;
+                }
+            }
             DescribableJSON<ParamsConfig> result = new DescribableJSON<>(
-                    flinkDeployingAIAssistSupport, new StandaloneFlinkDeployingAIAssistSupport.DefaultDesc());
+                    Objects.requireNonNull(flinkDeployingAIAssistSupport, "flinkDeployingAIAssistSupport can not be null")
+                    , new StandaloneFlinkDeployingAIAssistSupport.DefaultDesc());
             return Optional.of(result);
         }
     }

@@ -1,0 +1,25 @@
+{
+  "name": {
+    "dftVal": "flink_standalone_deploy_ai_assist",
+    "readonly": true
+  },
+  "flinkDeployDir": {
+    "label": "Flink部署目录",
+    "dftVal": "/opt/misc",
+    "help": "设置本地Flink部署目录"
+  },
+  "dataDir": {
+    "label": "插件目录",
+    "dftVal": "com.qlangtech.tis.manage.common.Config.getDataDir().getAbsolutePath()",
+    "readonly": true
+  },
+  "slot": {
+    "dftVal": 1,
+    "help": "默认Standalone部署方式slot数量，TaskManager需要的内存=tmMemory * slot（请慎重设置slot数量）"
+  },
+  "port": {
+    "label": "Flink Port",
+    "dftVal": "8081",
+    "help": "Flink 暴露的的REST API Http 端口"
+  }
+}

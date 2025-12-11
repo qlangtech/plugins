@@ -3,7 +3,7 @@ package com.qlangtech.tis.plugin.ds.kingbase;
 import com.qlangtech.tis.extension.TISExtension;
 
 /**
- *
+ * kingbase V8.x版本数据源
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2025/11/30
  */

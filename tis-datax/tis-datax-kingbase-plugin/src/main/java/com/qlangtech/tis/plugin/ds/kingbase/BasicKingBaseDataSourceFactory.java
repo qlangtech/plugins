@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.ds.kingbase;
 
 import com.alibaba.citrus.turbine.Context;
-import com.kingbase8.KBProperty;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -47,15 +46,15 @@ import java.util.function.Consumer;
  * Kingbase 数据库DataSource <br>
  * <p>
  * 读写分离配置：
- * https://bbs.kingbase.com.cn/docHtml?recId=218c307e5f3d72bf20bb84a51859344a&url=aHR0cHM6Ly9iYnMua2luZ2Jhc2UuY29tLmNuL2tpbmdiYXNlLWRvYy92OS4xLjEuMjQvZmFxL2ZhcS1uZXcvaW50ZXJmYWNlL2pkYmMuaHRtbCNpZDQ
+ * <a href="https://bbs.kingbase.com.cn/docHtml?recId=218c307e5f3d72bf20bb84a51859344a&url=aHR0cHM6Ly9iYnMua2luZ2Jhc2UuY29tLmNuL2tpbmdiYXNlLWRvYy92OS4xLjEuMjQvZmFxL2ZhcS1uZXcvaW50ZXJmYWNlL2pkYmMuaHRtbCNpZDQ">...</a>
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-14 14:34
  **/
 public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     public static final String KingBase_NAME = "KingBase";
-    public static final String KingBase_Ver8 = "-V8.x";
-    public static final String KingBase_Ver9 = "-V9.x";
+    public static final String KingBase_Ver8 = "-V8x";
+    public static final String KingBase_Ver9 = "-V9x";
     public static final String JDBC_SCHEMA_TYPE_V9 = "kingbase8";
     public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
     public static final String FIELD_DB_MODE = "dbMode";
@@ -72,7 +71,7 @@ public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFac
         if (StringUtils.isEmpty(this.encode)) {
             throw new IllegalStateException("param encode can not be empty");
         }
-        props.setProperty(KBProperty.CLIENT_ENCODING.getName(), this.encode);
+        props.setProperty(TISStubForKBProperty.CLIENT_ENCODING, this.encode);
         return props;
     }
 

@@ -1,15 +1,15 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase-V8.x\",\"KingBase-V9.x\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase-V8x\",\"KingBase-V9x\")",
     "creator": {
       "plugin": [
         {
-          "descName": "KingBase-V8.x",
+          "descName": "KingBase-V8x",
           "hetero": "datasource",
           "extraParam": "type_detailed,update_false,disableBizStore_true"
         },
         {
-          "descName": "KingBase-V9.x",
+          "descName": "KingBase-V9x",
           "hetero": "datasource",
           "extraParam": "type_detailed,update_false,disableBizStore_true"
         }

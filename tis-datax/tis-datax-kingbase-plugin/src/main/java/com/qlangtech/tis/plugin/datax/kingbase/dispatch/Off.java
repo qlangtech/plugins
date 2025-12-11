@@ -18,10 +18,10 @@
 
 package com.qlangtech.tis.plugin.datax.kingbase.dispatch;
 
-import com.kingbase8.KBProperty;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.kingbase.KingBaseDispatch;
+import com.qlangtech.tis.plugin.ds.kingbase.TISStubForKBProperty;
 
 import java.util.Properties;
 
@@ -32,7 +32,7 @@ import java.util.Properties;
 public class Off extends KingBaseDispatch {
     @Override
     public void extractSetJdbcProps(Properties props) {
-        props.setProperty(KBProperty.USEDISPATCH.getName(), String.valueOf(Boolean.FALSE));
+        props.setProperty(TISStubForKBProperty.USEDISPATCH, String.valueOf(Boolean.FALSE));
     }
 
     @TISExtension

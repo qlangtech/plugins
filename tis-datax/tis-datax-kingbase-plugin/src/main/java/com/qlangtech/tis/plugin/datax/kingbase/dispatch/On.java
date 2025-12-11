@@ -20,13 +20,13 @@ package com.qlangtech.tis.plugin.datax.kingbase.dispatch;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
-import com.kingbase8.KBProperty;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.kingbase.KingBaseDispatch;
+import com.qlangtech.tis.plugin.ds.kingbase.TISStubForKBProperty;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.AdapterFieldErrorHandler;
@@ -59,13 +59,13 @@ public class On extends KingBaseDispatch {
 
         List<KingBaseSlaver> nodes = parseSlaverNodes();
 
-        props.setProperty(KBProperty.USEDISPATCH.getName(), String.valueOf(Boolean.TRUE));
-        props.setProperty(KBProperty.SLAVE_ADD.getName()
+        props.setProperty(TISStubForKBProperty.USEDISPATCH, String.valueOf(Boolean.TRUE));
+        props.setProperty(TISStubForKBProperty.SLAVE_ADD
                 , nodes.stream().map((node) -> node.addr).collect(Collectors.joining(",")));
-        props.setProperty(KBProperty.SLAVE_PORT.getName()
+        props.setProperty(TISStubForKBProperty.SLAVE_PORT
                 , nodes.stream().map((node) -> String.valueOf(node.port)).collect(Collectors.joining(",")));
-        props.setProperty(KBProperty.HOSTLOADRATE.getName(), String.valueOf(this.loadRate));
-        props.setProperty(KBProperty.USECONNECT_POOL.getName(), String.valueOf(Boolean.FALSE));
+        props.setProperty(TISStubForKBProperty.HOSTLOADRATE, String.valueOf(this.loadRate));
+        props.setProperty(TISStubForKBProperty.USECONNECT_POOL, String.valueOf(Boolean.FALSE));
     }
 
     private List<KingBaseSlaver> parseSlaverNodes() {

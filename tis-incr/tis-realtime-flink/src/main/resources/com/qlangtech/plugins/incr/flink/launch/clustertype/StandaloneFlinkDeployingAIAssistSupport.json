@@ -21,5 +21,10 @@
     "label": "Flink Port",
     "dftVal": "8081",
     "help": "Flink 暴露的的REST API Http 端口"
+  },
+  "host": {
+    "label": "主机地址",
+    "dftVal": "com.qlangtech.tis.realtime.utils.NetUtils.getHost()",
+    "help": "部署flink所在的地址，需要是与TIS控制台同一个主机节点地址"
   }
 }

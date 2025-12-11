@@ -99,7 +99,10 @@ public class StandaloneFlinkDeployingAIAssistSupport extends AIAssistSupport<Sta
     @FormField(ordinal = 4, type = FormFieldType.MEMORY_SIZE_OF_MEGA, validate = {Validator.require})
     public com.qlangtech.tis.plugin.MemorySize tmMemory;
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require, Validator.hostWithoutPort})
+    public String host;
+
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer port;
 
 
@@ -492,7 +495,8 @@ public class StandaloneFlinkDeployingAIAssistSupport extends AIAssistSupport<Sta
         FlinkCluster flinkCluster = new FlinkCluster();
         IdentityName newClusterId = IdentityName.createNewPrimaryFieldValue(IFlinkCluster.KEY_DISPLAY_NAME, clusters);
         flinkCluster.name = newClusterId.identityValue();
-        flinkCluster.jobManagerAddress = LOCAL_HOST_VALUE + ":" + this.port;
+       // com.qlangtech.tis.realtime.utils.NetUtils.getHost()
+        flinkCluster.jobManagerAddress = this.host + ":" + this.port;
         flinkCluster.maxRetry = FLINK_DEFAULT_RETRY_MAX_ATTEMPTS;
         flinkCluster.retryDelay = RestOptions.RETRY_DELAY.defaultValue().toMillis();
 
@@ -583,6 +587,14 @@ public class StandaloneFlinkDeployingAIAssistSupport extends AIAssistSupport<Sta
             return true;
         }
 
+
+        public boolean validateHost(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            if (NetUtils.isReachable(value)) {
+                msgHandler.addFieldError(context, fieldName,  "地址不可用");
+                return false;
+            }
+            return true;
+        }
 
 //        public boolean validatePort(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 //            if (NetUtils.isPortAvailable(LOCAL_HOST_VALUE, Integer.parseInt(value))) {

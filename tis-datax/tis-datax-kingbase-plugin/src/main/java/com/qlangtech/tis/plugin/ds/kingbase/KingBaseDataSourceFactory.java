@@ -11,7 +11,7 @@ public class KingBaseDataSourceFactory extends BasicKingBaseDataSourceFactory {
 
     @Override
     protected String getDBType() {
-        return JDBC_SCHEMA_TYPE_V8;
+        return JDBC_SCHEMA_TYPE_V9;
     }
 
     @Override
@@ -23,7 +23,7 @@ public class KingBaseDataSourceFactory extends BasicKingBaseDataSourceFactory {
     public static class V8 extends BaiscKingBaseDSDescriptor {
         @Override
         protected String getDataSourceName() {
-            return KingBase_NAME + KingBase_Ver8;
+            return KingBase_NAME + KingBase_Ver9;
         }
     }
 }

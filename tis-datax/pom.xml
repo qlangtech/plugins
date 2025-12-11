@@ -93,7 +93,6 @@
         <module>executor/tis-datax-executor</module>
         <module>tis-datax-local-executor-utils</module>
         <module>tis-datax-kingbase-plugin</module>
-        <module>tis-datax-kingbase-v8-plugin</module>
 
 
     </modules>

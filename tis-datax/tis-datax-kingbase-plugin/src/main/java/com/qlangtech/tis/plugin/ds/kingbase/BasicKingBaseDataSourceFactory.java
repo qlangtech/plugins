@@ -53,10 +53,10 @@ import java.util.function.Consumer;
  **/
 public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     public static final String KingBase_NAME = "KingBase";
-    public static final String KingBase_Ver8 = "-V8x";
+ //   public static final String KingBase_Ver8 = "-V8x";
     public static final String KingBase_Ver9 = "-V9x";
     public static final String JDBC_SCHEMA_TYPE_V9 = "kingbase8";
-    public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
+   // public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
     public static final String FIELD_DB_MODE = "dbMode";
     @FormField(ordinal = 8, validate = {Validator.require})
     public KingBaseCompatibleMode dbMode;

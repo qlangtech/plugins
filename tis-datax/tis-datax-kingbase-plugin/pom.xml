@@ -39,7 +39,6 @@
             <groupId>cn.com.kingbase</groupId>
             <artifactId>kingbase8</artifactId>
             <version>9.0.1</version>
-            <scope>provided</scope>
         </dependency>
 
         

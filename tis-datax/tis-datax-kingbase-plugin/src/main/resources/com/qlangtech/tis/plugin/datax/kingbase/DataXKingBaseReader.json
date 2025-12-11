@@ -1,13 +1,8 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase-V8x\",\"KingBase-V9x\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase-V9x\")",
     "creator": {
       "plugin": [
-        {
-          "descName": "KingBase-V8x",
-          "hetero": "datasource",
-          "extraParam": "type_detailed,update_false,disableBizStore_true"
-        },
         {
           "descName": "KingBase-V9x",
           "hetero": "datasource",

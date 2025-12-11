@@ -6,3 +6,6 @@
 * KingBaseWriter
 
   实现批量写入数据到 `人大金仓` 库的目的表的功能。在底层实现上， KingBaseWriter 通过 JDBC 连接远程 `人大金仓` 数据库，并执行相应的 insert into ... 或者 ( replace into ...) 的 sql 语句将数据写入 `人大金仓`
+
+* 提供`人大金仓`数据源驱动
+  驱动版本为`kingbase8:${kingbase.version}`, 支持`人大金仓`服务端9.X的数据源以JDBC的方式连接

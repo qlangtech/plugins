@@ -113,7 +113,7 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
 
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable, readerSources);
             // for (ISelectedTab tab : tabs) {
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), DTOStream::createDispatched);
             //}
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);

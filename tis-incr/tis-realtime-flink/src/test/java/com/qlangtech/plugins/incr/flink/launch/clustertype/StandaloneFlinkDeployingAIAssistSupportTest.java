@@ -15,6 +15,7 @@ public class StandaloneFlinkDeployingAIAssistSupportTest {
     @Test
     public void testStartProcess() throws Exception {
         StandaloneFlinkDeployingAIAssistSupport assistSupport = new StandaloneFlinkDeployingAIAssistSupport();
+        assistSupport.host = com.qlangtech.tis.realtime.utils.NetUtils.getHost();
         assistSupport.port = 8081;
         assistSupport.slot = 1;
         assistSupport.tmMemory = com.qlangtech.tis.plugin.MemorySize.ofMebiBytes(1728);

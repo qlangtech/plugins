@@ -7,12 +7,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IDataxWriter;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.plugin.IPluginStore;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
@@ -113,7 +112,7 @@ public abstract class BasicTemplate {
             }
 
             @Override
-            public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
+            public TableAliasMapper getTabAlias(IPluginContext pluginCtx, boolean withDft) {
                 return tableAliasMapper;
             }
 

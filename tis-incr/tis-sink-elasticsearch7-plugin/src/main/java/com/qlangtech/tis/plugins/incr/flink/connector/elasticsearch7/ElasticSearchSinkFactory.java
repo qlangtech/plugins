@@ -120,7 +120,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         ElasticEndpoint token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
-        Optional<TableAlias> first = dataxProcessor.getTabAlias(null).findFirst();
+        Optional<TableAlias> first = dataxProcessor.getTabAlias(null, false).findFirst();
         if (first.isPresent()) {
             TableAlias value = first.get();
             if (!(value instanceof ESTableAlias)) {

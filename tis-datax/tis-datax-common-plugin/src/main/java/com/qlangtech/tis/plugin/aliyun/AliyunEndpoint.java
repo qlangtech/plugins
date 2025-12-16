@@ -7,6 +7,7 @@ import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.HttpEndpoint;
 import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,9 +44,14 @@ public class AliyunEndpoint extends HttpEndpoint implements IAliyunEndpoint {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends HttpEndpoint.DefaultDescriptor {
+    public static class DefaultDescriptor extends HttpEndpoint.DefaultDescriptor implements IEndTypeGetter {
         public DefaultDescriptor() {
             super(KEY_FIELD_ALIYUN_TOKEN);
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Aliyun;
         }
 
         @Override

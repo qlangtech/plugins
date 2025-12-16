@@ -27,15 +27,12 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -46,7 +43,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -55,7 +51,6 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
 import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
-import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 import org.apache.kafka.connect.data.Field;
@@ -224,7 +219,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
                             tabs
                             , new MySQLReaderSourceCreator(dataxName, streamFactory, flinkCDCPipelineEnable, dsFactory, this.sourceFactory, deserializationSchema)
                     ));
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);

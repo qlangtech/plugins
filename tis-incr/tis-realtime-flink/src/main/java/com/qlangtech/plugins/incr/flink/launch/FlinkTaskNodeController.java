@@ -240,14 +240,15 @@ public class FlinkTaskNodeController {
             }
         } catch (TimeoutException e) {
             ClusterType clusterCfg = this.factory.getClusterCfg();
-            throw TisException.create(//"flinkClusterId:" + clusterCfg.getClusterId()
+            throw TisException.create(
                     ",Address:" + clusterCfg.getJobManagerAddress().getUrl() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (isNotFoundException(cause)) {
-                logger.warn(e.getMessage(), e);
+                DataXName dataXName = DataXName.createDataXPipeline(collection.getName());
+                logger.warn("pipeline:" + dataXName + "," + e.getMessage(), e);
                 incrJobStatus.setState(State.FAILED);
-                return FlinkJobDeploymentDetails.noneState(DataXName.createDataXPipeline(collection.getName()), factory.getClusterCfg(), incrJobStatus);
+                return FlinkJobDeploymentDetails.noneState(dataXName, factory.getClusterCfg(), incrJobStatus);
             }
             throw new RuntimeException(e);
         } catch (Exception e) {

@@ -39,7 +39,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -49,7 +48,6 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSource;
 import org.apache.flink.cdc.connectors.mongodb.source.MongoDBSourceBuilder;
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
 import java.util.Map;
@@ -105,7 +103,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
                         return sourceFunctions;
                     }));
 
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), DTOStream::createDispatched);
             // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
             return sourceChannel;
             //   return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);

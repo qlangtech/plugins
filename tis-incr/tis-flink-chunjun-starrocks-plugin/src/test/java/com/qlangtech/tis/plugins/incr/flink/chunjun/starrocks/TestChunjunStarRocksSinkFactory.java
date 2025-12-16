@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
@@ -129,13 +128,13 @@ public class TestChunjunStarRocksSinkFactory extends TestChunjunFlinkSinkExecuto
                 });
 
                 List<ReaderSource> sourceFuncts = Lists.newArrayList();
-                dataxProcessor.getTabAlias().forEach((key, val) -> {
+                dataxProcessor.getTabAlias(null, true).forEach((key, val) -> {
                     Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val, this);
                     sourceFuncts.add(sourceStream.getRight());
                 });
 
-                SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
-                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
+                SourceChannel sourceChannel = new SourceChannel(false, sourceFuncts);
+                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(null, true), DTOStream::createDispatched);
                 boolean flinkCDCPipelineEnable = false;
                 tableRegisterHandle.consume(flinkCDCPipelineEnable, new TargetResName(dataXName), sourceChannel, dataxProcessor);
                 /**

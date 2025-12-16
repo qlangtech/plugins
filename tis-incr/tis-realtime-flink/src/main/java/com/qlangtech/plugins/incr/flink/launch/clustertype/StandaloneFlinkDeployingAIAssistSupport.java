@@ -99,10 +99,10 @@ public class StandaloneFlinkDeployingAIAssistSupport extends AIAssistSupport<Sta
     @FormField(ordinal = 4, type = FormFieldType.MEMORY_SIZE_OF_MEGA, validate = {Validator.require})
     public com.qlangtech.tis.plugin.MemorySize tmMemory;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require, Validator.hostWithoutPort})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = false, validate = {Validator.require, Validator.hostWithoutPort})
     public String host;
 
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, advance = false, validate = {Validator.require, Validator.integer})
     public Integer port;
 
 
@@ -589,7 +589,7 @@ public class StandaloneFlinkDeployingAIAssistSupport extends AIAssistSupport<Sta
 
 
         public boolean validateHost(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            if (NetUtils.isReachable(value)) {
+            if (!NetUtils.isReachable(value)) {
                 msgHandler.addFieldError(context, fieldName,  "地址不可用");
                 return false;
             }

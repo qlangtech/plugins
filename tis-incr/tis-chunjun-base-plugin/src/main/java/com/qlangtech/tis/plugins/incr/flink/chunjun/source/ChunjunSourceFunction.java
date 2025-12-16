@@ -29,10 +29,8 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXName;
@@ -50,7 +48,6 @@ import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 
@@ -132,7 +129,7 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(false, sourceFuncs);
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), (tabName) -> DTOStream.createRowData());
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(false, name, sourceChannel, dataXProcessor);
         } catch (Exception e) {

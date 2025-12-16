@@ -22,15 +22,12 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -38,13 +35,11 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory.ISchemaSupported;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
 import org.apache.flink.cdc.connectors.postgres.source.PostgresSourceBuilder.PostgresIncrementalSource;
 
@@ -117,11 +112,10 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
 
 
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable, readerSources);
-            // for (ISelectedTab tab : tabs) {
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-            //}
+
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), DTOStream::createDispatched);
+
             return sourceChannel;
-            // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

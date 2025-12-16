@@ -26,7 +26,6 @@ import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -40,7 +39,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -168,12 +166,10 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
                                 }).collect(Collectors.toList());
 
                             }));
-            // for (ISelectedTab tab : tabs) {
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
+
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
-            //}
             return sourceChannel;
-            // return (JobExecutionResult) getConsumerHandle().consume(channalName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

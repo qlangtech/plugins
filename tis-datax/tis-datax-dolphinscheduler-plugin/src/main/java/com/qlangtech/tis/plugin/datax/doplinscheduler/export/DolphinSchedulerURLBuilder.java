@@ -28,11 +28,9 @@ import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.HttpUtils.PostParam;
 import com.qlangtech.tis.manage.common.PostFormStreamProcess;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.datax.IWorkflowNode;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,11 +154,13 @@ public class DolphinSchedulerURLBuilder {
 
     private DolphinSchedulerResponse applyRequest(List<PostParam> params
             , Optional<StreamErrorProcess> streamErrorProcess, URL applyUrl, HTTPMethod httpMethod) {
-        return HttpUtils.process(applyUrl, params, new PostFormStreamProcess<DolphinSchedulerResponse>() {
-            @Override
-            public List<Header> getHeaders() {
-                return endpoint.appendToken(super.getHeaders());
-            }
+
+        return HttpUtils.process(applyUrl, params, new PostFormStreamProcess<DolphinSchedulerResponse>( //
+                endpoint.appendToken(Lists.newArrayList())) {
+//            @Override
+//            public List<Header> getHeaders() {
+//                return endpoint.appendToken(super.getHeaders());
+//            }
 
             @Override
             public void error(int status, InputStream errstream, IOException e) throws Exception {

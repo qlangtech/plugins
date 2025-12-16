@@ -244,7 +244,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @Override
     public List<ESColumn> initialIndex(IDataxProcessor dataxProcessor) {
         ESTableAlias esSchema = null;
-        Optional<TableAlias> first = dataxProcessor.getTabAlias(null).findFirst();
+        Optional<TableAlias> first = dataxProcessor.getTabAlias(null, true).findFirst();
         if (first.isPresent()) {
             TableAlias value = first.get();
             if (!(value instanceof ESTableAlias)) {

@@ -116,10 +116,6 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         throw new UnsupportedOperationException("dataflow processor not support single reader getter");
     }
 
-    @Override
-    public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
-        return TableAliasMapper.Null;
-    }
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
@@ -417,6 +413,11 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
     @Override
     public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx, Optional<JobTrigger> partialTrigger) {
         return DataxProcessor.getDataxCfgFileNames(pluginCtx, partialTrigger, this);
+    }
+
+    @Override
+    public TableAliasMapper getTabAlias(IPluginContext pluginCtx, boolean withDft) {
+        return TableAliasMapper.Null;
     }
 
 

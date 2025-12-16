@@ -171,7 +171,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
             final TableAliasMapper tableAliasMapper
                     = execContext.getAttribute(TableAlias.class.getSimpleName(), () -> {
-                return execContext.getProcessor().getTabAlias(null);
+                return execContext.getProcessor().getTabAlias(null, true);
             });
 
             BasicDataSourceFactory dsFactory = ((BasicDataSourceFactory) getDataSourceFactory());

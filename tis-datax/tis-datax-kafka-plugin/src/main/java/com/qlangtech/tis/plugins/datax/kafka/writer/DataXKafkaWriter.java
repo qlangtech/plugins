@@ -25,10 +25,7 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.ElementPluginDesc;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.extension.impl.PropertyType;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ValidatorCommons;
@@ -39,7 +36,9 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -51,6 +50,7 @@ import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -150,7 +150,7 @@ public class DataXKafkaWriter extends DataxWriter {
 
     @Override
     public IDataxContext getSubTask(
-            Optional<IDataxProcessor.TableMap> tableMap,Optional<RecordTransformerRules> transformerRules) {
+            Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         return null;
     }
 
@@ -196,12 +196,44 @@ public class DataXKafkaWriter extends DataxWriter {
     @TISExtension
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
 
-       // private transient SuFormProperties rewriteSubFormProperties;
+        // private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
         }
 
+        //  @Override
+        public boolean validateBootstrapServers(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            String[] servs = org.apache.commons.lang3.StringUtils.split(value, ",");
+            if (servs.length < 1) {
+                msgHandler.addFieldError(context, fieldName, ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
+                return false;
+            }
+
+            for (String host : servs) {
+                if (!Validator.host.validate(msgHandler, context, fieldName, host)) {
+                    return false;
+                }
+                String[] split = org.apache.commons.lang3.StringUtils.split(host, ":");
+                try {
+                    if (!NetUtils.isPortAvailable(split[0], Integer.parseInt(split[1]))) {
+                        msgHandler.addFieldError(context, fieldName, "地址：" + host + " 不可触达，请检查是否可用");
+                        return false;
+                    }
+                } catch (Exception e) {
+                    UnknownHostException unknownHostException = null;
+                    if ((unknownHostException = ExceptionUtils.throwableOfType(e, UnknownHostException.class)) != null) {
+                        msgHandler.addFieldError(context, fieldName, "主机地址：‘" + unknownHostException.getMessage() + "’无法识别");
+                        return false;
+                    }
+                    throw new RuntimeException(e);
+                }
+            }
+
+
+            return true;
+        }
 //        @Override
 //        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
 //

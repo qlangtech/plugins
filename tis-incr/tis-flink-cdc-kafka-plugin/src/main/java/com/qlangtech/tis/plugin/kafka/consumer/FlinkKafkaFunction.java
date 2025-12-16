@@ -31,7 +31,6 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.realtime.DTOSourceTagProcessFunction;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.ReaderSource.SideOutputReaderSource;
@@ -89,7 +88,7 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     createKafkaSource(streamFactory, dataxName, kafkaReader.bootstrapServers, source));
 
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
                     , (tabName) -> createDispatched(tabName, sourceFactory.independentBinLogMonitor));
 
             return sourceChannel;

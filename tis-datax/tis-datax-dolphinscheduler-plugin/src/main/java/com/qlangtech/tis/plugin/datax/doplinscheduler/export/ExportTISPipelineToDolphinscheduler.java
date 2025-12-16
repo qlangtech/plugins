@@ -210,7 +210,7 @@ public class ExportTISPipelineToDolphinscheduler extends DefaultDataXProcessorMa
         addProjectParameters();
 
 
-        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, itemsProcessor.getOriginIdentityId());
+        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, itemsProcessor.getOriginIdentityId().orElseThrow());
         DSWorkflowPayload workflowPayload = new DSWorkflowPayload(this, dataxProcessor
                 , BasicDistributedSPIDataXJobSubmit.getCommonDAOContext(pluginContext), new DolphinschedulerDistributedSPIDataXJobSubmit());
         WorkflowSPIInitializer<DSWorkflowInstance> workflowSPIInitializer = new WorkflowSPIInitializer<>(workflowPayload);

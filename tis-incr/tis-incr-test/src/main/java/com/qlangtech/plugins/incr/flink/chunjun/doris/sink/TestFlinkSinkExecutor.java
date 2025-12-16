@@ -73,7 +73,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
-import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -94,7 +93,6 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -353,7 +351,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             Map<String, TableAlias> mapper = Maps.newHashMap();
             mapper.put(tableName, new TableAlias(tableName));
             TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
-            EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper).anyTimes();
+            EasyMock.expect(dataxProcessor.getTabAlias(null, true)).andReturn(aliasMapper).anyTimes();
             EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
             EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
 

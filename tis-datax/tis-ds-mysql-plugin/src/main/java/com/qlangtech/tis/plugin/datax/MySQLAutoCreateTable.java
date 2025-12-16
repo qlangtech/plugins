@@ -221,10 +221,11 @@ public class MySQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
         AtomicBoolean usingMySqlCreateDDLDirectly = new AtomicBoolean(false);
         try {
-            if (threadBingDataXReader instanceof DataxMySQLReader //
+            // 默认必须执行
+            if (false && (threadBingDataXReader instanceof DataxMySQLReader //
                     // 没有使用别名
                     // && tableMapper.hasNotUseAlias() //
-                    && !transformers.isPresent()) {
+                    && !transformers.isPresent())) {
                 DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
                 List<ColumnMetaData> tableColsMeta = mySQLReader.getTableMetadata(EntityName.parse(tableMapper.getFrom()));

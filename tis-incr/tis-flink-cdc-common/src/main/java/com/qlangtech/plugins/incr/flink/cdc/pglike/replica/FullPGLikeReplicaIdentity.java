@@ -4,10 +4,10 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.PGLikeReplicaIdentity;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
-import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,11 +44,13 @@ public class FullPGLikeReplicaIdentity extends PGLikeReplicaIdentity {
             , Context context
             , IDataSourceFactoryGetter dataSourceGetter, List<ISelectedTab> selectedTabs) {
 
-        PGLikeDataSourceFactory ds = (PGLikeDataSourceFactory) dataSourceGetter.getDataSourceFactory();
+        DataSourceFactory ds =  dataSourceGetter.getDataSourceFactory();
 
+        // see PGLikeDataSourceFactory
+        DataSourceFactory.ISchemaSupported schemaSupported = (DataSourceFactory.ISchemaSupported)ds;
         boolean[] validate = new boolean[]{true};
         ds.visitFirstConnection((conn) -> {
-            validate[0] = validateReplicaIdentity(msgHandler, context, conn, ds.tabSchema, selectedTabs);
+            validate[0] = validateReplicaIdentity(msgHandler, context, conn, schemaSupported.getDBSchema(), selectedTabs);
         });
 
         return validate[0];

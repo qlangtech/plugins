@@ -71,7 +71,7 @@ public class PGDTOColValProcess implements ISourceValConvert, Serializable {
     }
 
 
-    static class PGCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisitor {
+    public static class PGCDCTypeVisitor extends AbstractRowDataMapper.DefaultTypeVisitor {
         public PGCDCTypeVisitor(IColMetaGetter meta, int colIndex) {
             super(meta, colIndex);
         }

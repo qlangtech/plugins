@@ -129,11 +129,13 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
             , ISchemaSupported schemaSupported, IFlinkColCreator<FlinkCol> flinkColCreator
             , Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
 
-        FlinkCDCPGLikeSourceFactory.debeziumProps //
-                .forEach((trip) -> {
-            // debeziumProperties.setProperty(trip.getMiddle().name(), String.valueOf(trip.getRight().apply(sourceFactory)));
-            trip.getValue().accept(debeziumProperties,sourceFactory);
-        });
+//        FlinkCDCPGLikeSourceFactory.debeziumProps //
+//                .forEach((trip) -> {
+//            // debeziumProperties.setProperty(trip.getMiddle().name(), String.valueOf(trip.getRight().apply(sourceFactory)));
+//            trip.getValue().accept(debeziumProperties,sourceFactory);
+//        });
+
+        sourceFactory.setDebeziumProperties(debeziumProperties,sourceFactory);
 
         return PostgresIncrementalSource.<DTO>builder()
                 .hostname(dbHost)

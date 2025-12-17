@@ -18,10 +18,16 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.kingbase;
 
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.FlinkCDCPGLikeSourceFactory;
+import com.qlangtech.plugins.incr.flink.cdc.pglike.PGDTOColValProcess;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import io.debezium.config.Field;
+import io.debezium.connector.postgresql.PostgresConnectorConfig;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,11 +40,29 @@ public class FlinkCDCKingBaseSourceFactory extends FlinkCDCPGLikeSourceFactory {
         return new FlinkCDCKingBaseSourceFunction(this);
     }
 
+        @Override
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
+        IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
+            return meta.getType().accept(new PGDTOColValProcess.PGCDCTypeVisitor(meta, colIndex));
+        };
+        return flinkColCreator;
+    }
+
     @TISExtension()
     public static class KingBaseDescriptor extends BasePGLikeDescriptor {
         @Override
         public String getDisplayName() {
             return "Flink-CDC-KingBase";
+        }
+
+        @Override
+        protected Field getSoltNameField() {
+            return PostgresConnectorConfig.SLOT_NAME;
+        }
+
+        @Override
+        protected Field getDropSoltOnStopField() {
+            return PostgresConnectorConfig.DROP_SLOT_ON_STOP;
         }
 
         @Override

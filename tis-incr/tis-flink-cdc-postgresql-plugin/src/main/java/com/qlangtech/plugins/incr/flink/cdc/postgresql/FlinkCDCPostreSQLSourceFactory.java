@@ -19,21 +19,27 @@
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.FlinkCDCPGLikeSourceFactory;
+import com.qlangtech.plugins.incr.flink.cdc.pglike.PGDTOColValProcess;
 import com.qlangtech.plugins.incr.flink.cdc.postgresql.PostgreSQLCDCValidator.ValidationResult;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import io.debezium.config.Field;
+import io.debezium.connector.postgresql.PostgresConnectorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +63,14 @@ public class FlinkCDCPostreSQLSourceFactory extends FlinkCDCPGLikeSourceFactory 
         return new FlinkCDCPostgreSQLSourceFunction(this);
     }
 
+    @Override
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
+        IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
+            return meta.getType().accept(new PGDTOColValProcess.PGCDCTypeVisitor(meta, colIndex));
+        };
+        return flinkColCreator;
+    }
+
 //    The name of the Postgres logical decoding plug-in installed on the server. Supported
 //         * values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming,
 //            * wal2json_rds_streaming and pgoutput.
@@ -75,7 +89,21 @@ public class FlinkCDCPostreSQLSourceFactory extends FlinkCDCPGLikeSourceFactory 
         }
 
         @Override
+        protected Field getSoltNameField() {
+            return PostgresConnectorConfig.SLOT_NAME;
+        }
+
+        @Override
+        protected Field getDropSoltOnStopField() {
+            return PostgresConnectorConfig.DROP_SLOT_ON_STOP;
+        }
+        
+
+        @Override
         protected boolean validateMQListenerForm(IControlMsgHandler msgHandler, Context context, MQListenerFactory postFormVals) {
+            if (!super.validateMQListenerForm(msgHandler, context, postFormVals)) {
+                return false;
+            }
             IPluginContext plugContext = (IPluginContext) msgHandler;
             if (!plugContext.isCollectionAware()) {
                 throw new IllegalStateException("plugContext must be collection aware");

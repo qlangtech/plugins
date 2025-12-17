@@ -20,7 +20,6 @@ package com.qlangtech.plugins.incr.flink.cdc.kingbase;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.kingbase.source.KingBaseDialect;
-import com.qlangtech.plugins.incr.flink.cdc.pglike.FlinkCDCPGLikeSourceFactory;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.FlinkCDCPGLikeSourceFunction;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.PostgreSQLDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.pglike.StartupOptionUtils;
@@ -108,12 +107,12 @@ public class FlinkCDCKingBaseSourceFunction extends FlinkCDCPGLikeSourceFunction
         configFactory.password(dsFactory.password);
         configFactory.debeziumProperties(debeziumProperties);
         // configFactory.slotName(sourceFactory.slotName);
-
-        FlinkCDCPGLikeSourceFactory.debeziumProps.forEach((trip) -> {
-           // debeziumProperties.setProperty(trip.getMiddle().name(), String.valueOf(trip.getRight().apply(sourceFactory)));
-
-            trip.getValue().accept(debeziumProperties,sourceFactory);
-        });
+        sourceFactory.setDebeziumProperties(debeziumProperties,sourceFactory);
+//        FlinkCDCPGLikeSourceFactory.debeziumProps.forEach((trip) -> {
+//           // debeziumProperties.setProperty(trip.getMiddle().name(), String.valueOf(trip.getRight().apply(sourceFactory)));
+//
+//            trip.getValue().accept(debeziumProperties,sourceFactory);
+//        });
 
 //        debeziumProperties.setProperty(
 //                io.debezium.connector.postgresql.PostgresConnectorConfig.DROP_SLOT_ON_STOP.name(), String.valueOf(sourceFactory.dropSolt));

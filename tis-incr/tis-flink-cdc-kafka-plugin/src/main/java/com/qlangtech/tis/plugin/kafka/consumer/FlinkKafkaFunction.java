@@ -92,7 +92,6 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
                     , (tabName) -> createDispatched(tabName, sourceFactory.independentBinLogMonitor));
 
             return sourceChannel;
-            //return (JobExecutionResult) this.getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

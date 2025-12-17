@@ -43,6 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.flink.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
 import org.apache.flink.cdc.connectors.postgres.source.PostgresSourceBuilder.PostgresIncrementalSource;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -94,7 +95,9 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
                          * https://stackoverflow.com/questions/59978213/debezium-could-not-access-file-decoderbufs-using-postgres-11-with-default-plug
                          */
                         debeziumProperties.put("plugin.name", "pgoutput");
-                        DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
+                        DateTimeConverter.setDatetimeConverters(
+                                PGDateTimeConverter.class.getName() //
+                                , debeziumProperties,dsFactory.getTimeZone().map(ZoneId::getId));
 
                         return dbs.getDbStream().map((dbname) -> {
 
@@ -125,6 +128,13 @@ public class FlinkCDCPGLikeSourceFunction implements IMQListener<List<ReaderSour
             , Properties debeziumProperties, String dbname, BasicDataSourceFactory dsFactory
             , ISchemaSupported schemaSupported, IFlinkColCreator<FlinkCol> flinkColCreator
             , Map<String, Map<String, Function<RunningContext, Object>>> contextParamValsGetterMapper) {
+
+        FlinkCDCPGLikeSourceFactory.debeziumProps //
+                .forEach((trip) -> {
+            // debeziumProperties.setProperty(trip.getMiddle().name(), String.valueOf(trip.getRight().apply(sourceFactory)));
+            trip.getValue().accept(debeziumProperties,sourceFactory);
+        });
+
         return PostgresIncrementalSource.<DTO>builder()
                 .hostname(dbHost)
                 .port(dsFactory.port)

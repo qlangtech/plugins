@@ -34,6 +34,7 @@ import java.util.List;
  * PostgreSQL CDC 先验校验工具类
  * 在Flink CDC任务启动前检查PostgreSQL数据源是否满足CDC运行条件
  * see  requirment/add-validator-before-pg-cdc-launching.md
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2025-01-19 20:00
  **/
@@ -48,14 +49,14 @@ public class PostgreSQLCDCValidator {
     /**
      * 执行完整的PostgreSQL CDC先验校验
      *
-     * @param conn JDBC连接对象
-     * @param sourceFactory CDC源工厂配置
+     * @param conn           JDBC连接对象
+     * @param sourceFactory  CDC源工厂配置
      * @param selectedTables 需要监听的表名集合
      * @return 校验结果
      */
     public static ValidationResult validate(Connection conn,
-                                           FlinkCDCPGLikeSourceFactory sourceFactory,
-                                           List<String> selectedTables) {
+                                            FlinkCDCPGLikeSourceFactory sourceFactory,
+                                            List<String> selectedTables) {
         ValidationResult result = new ValidationResult();
 
         try {
@@ -75,7 +76,7 @@ public class PostgreSQLCDCValidator {
             validatePgPublicationTableExists(conn, result);
 
             // 5. 检查复制槽状态
-            validateReplicationSlots(conn, result);
+            validateReplicationSlots(sourceFactory, conn, result);
 
             // 6. 检查解码插件配置
             validateDecodingPlugin(conn, sourceFactory, result);
@@ -165,10 +166,10 @@ public class PostgreSQLCDCValidator {
      */
     private static void validatePgPublicationTableExists(Connection conn, ValidationResult result) throws SQLException {
         String sql = "SELECT EXISTS (" +
-                     "  SELECT 1 FROM information_schema.tables " +
-                     "  WHERE table_schema = 'pg_catalog' " +
-                     "  AND table_name = 'pg_publication'" +
-                     ")";
+                "  SELECT 1 FROM information_schema.tables " +
+                "  WHERE table_schema = 'pg_catalog' " +
+                "  AND table_name = 'pg_publication'" +
+                ")";
 
         try (Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -183,28 +184,50 @@ public class PostgreSQLCDCValidator {
 
     /**
      * 校验复制槽状态
-     * 检查是否有残留的非活跃复制槽,给出警告信息
+     * 检查配置的 slotName 是否已经被其他 CDC 任务占用
+     * 如果 slot 正在运行（active = true），则报错，不允许启动任务
      */
-    private static void validateReplicationSlots(Connection conn, ValidationResult result) throws SQLException {
-        String sql = "SELECT slot_name, active, " +
-                     "pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)) as wal_lag " +
-                     "FROM pg_replication_slots " +
-                     "WHERE slot_type = 'logical' AND active = false";
+    private static void validateReplicationSlots(FlinkCDCPGLikeSourceFactory sourceFactory, Connection conn, ValidationResult result) throws SQLException {
+        // 检查 slotName 参数
+        if (StringUtils.isEmpty(sourceFactory.slotName)) {
+            throw new IllegalStateException("slotName can not be empty");
+        }
 
-        try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        // 查询指定 slotName 的状态
+        String sql = "SELECT slot_name, active, slot_type, " +
+                "pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)) as wal_lag " +
+                "FROM pg_replication_slots " +
+                "WHERE slot_name = ?";
 
-            while (rs.next()) {
-                String slotName = rs.getString("slot_name");
-                String walLag = rs.getString("wal_lag");
+        try (java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, sourceFactory.slotName);
 
-                result.addWarning(String.format(
-                        "发现非活跃的逻辑复制槽: %s, WAL延迟: %s, 建议及时清理以避免WAL日志堆积",
-                        slotName, walLag != null ? walLag : "未知"));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // slot 存在，检查是否处于活跃状态
+                    boolean isActive = rs.getBoolean("active");
+                    String walLag = rs.getString("wal_lag");
+
+                    if (isActive) {
+                        // slot 正在运行，报错
+                        result.addError(String.format(
+                                "Replication slot '%s' is currently active and being used by another CDC task. " +
+                                "Please use a different slot name or stop the conflicting CDC task.",
+                                sourceFactory.slotName));
+                    } else {
+                        // slot 存在但不活跃，给出警告
+                        result.addWarning(String.format(
+                                "Replication slot '%s' exists but is inactive. WAL lag: %s. " +
+                                "This slot will be reused when CDC task starts. Consider cleaning it if not needed.",
+                                sourceFactory.slotName, walLag != null ? walLag : "unknown"));
+                    }
+                }
+                // 如果 slot 不存在，这是正常情况，CDC 启动时会自动创建，无需处理
             }
         } catch (SQLException e) {
             // pg_replication_slots 在某些版本可能不存在,记录日志但不影响校验
-            logger.warn("Unable to query replication slots status: {}", e.getMessage());
+            logger.warn("Unable to query replication slot '{}' status: {}",
+                    sourceFactory.slotName, e.getMessage());
         }
     }
 
@@ -312,7 +335,7 @@ public class PostgreSQLCDCValidator {
      */
     private static boolean checkTableExists(Connection conn, String schema, String table) throws SQLException {
         String sql = "SELECT COUNT(1) FROM information_schema.tables " +
-                     "WHERE table_schema = ? AND table_name = ?";
+                "WHERE table_schema = ? AND table_name = ?";
 
         try (java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, schema);
@@ -329,7 +352,7 @@ public class PostgreSQLCDCValidator {
      */
     private static boolean checkTableHasPrimaryKey(Connection conn, String schema, String table) throws SQLException {
         String sql = "SELECT COUNT(1) FROM information_schema.table_constraints " +
-                     "WHERE table_schema = ? AND table_name = ? AND constraint_type = 'PRIMARY KEY'";
+                "WHERE table_schema = ? AND table_name = ? AND constraint_type = 'PRIMARY KEY'";
 
         try (java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, schema);
@@ -345,9 +368,9 @@ public class PostgreSQLCDCValidator {
      * 检查表的REPLICA IDENTITY设置
      */
     private static void checkReplicaIdentity(Connection conn, String schema, String table,
-                                            ValidationResult result) throws SQLException {
+                                             ValidationResult result) throws SQLException {
         String sql = "SELECT relreplident FROM pg_class " +
-                     "WHERE oid = (quote_ident(?) || '.' || quote_ident(?))::regclass";
+                "WHERE oid = (quote_ident(?) || '.' || quote_ident(?))::regclass";
 
         try (java.sql.PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, schema);

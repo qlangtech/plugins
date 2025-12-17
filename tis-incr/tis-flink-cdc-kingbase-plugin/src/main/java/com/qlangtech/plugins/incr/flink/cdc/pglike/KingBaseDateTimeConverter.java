@@ -76,17 +76,23 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
     @Override
     protected String convertTimestamp(Object input) {
         if (input != null) {
-//            if (input instanceof Instant) {
-//
-//            }
 
-            // System.out.println("timestampZoneId:" + timestampZoneId);
-            return timestampFormatter.format(LocalDateTime.ofInstant((Instant) input, this.timestampZoneId));
+            try {
+                Instant instant = null;
+                if (input instanceof Instant) {
+                    instant = (Instant) input;
+                } else if (input instanceof java.lang.Long) {
+                    // Convert millisecond timestamp to Instant
+                    long timestamp = (Long) input;
+                    instant = Instant.ofEpochMilli(timestamp);
+                } else {
+                    throw new UnsupportedOperationException("convertTimestamp:" + input.getClass() + ",val:" + String.valueOf(input));
+                }
+                return timestampFormatter.format(LocalDateTime.ofInstant(instant, this.timestampZoneId));
+            } catch (Exception e) {
+                throw new RuntimeException("input val:" + String.valueOf(input), e);
+            }
 
-//                System.out.println(">>>>convertTimestamp:" + input.getClass().getName());
-//                System.out.println(">>>>convertTimestamp:" + input.getClass() + ",time:" + timestampFormatter.format((Instant) input));
-////                return timestampFormatter.format((Instant) input);
-//                return null;
 
         }
         return null;

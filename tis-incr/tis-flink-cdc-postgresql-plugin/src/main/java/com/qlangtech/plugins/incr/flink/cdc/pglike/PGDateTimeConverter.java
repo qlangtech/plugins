@@ -68,7 +68,7 @@ public class PGDateTimeConverter extends DateTimeConverter {
 //            }
 
             // System.out.println("timestampZoneId:" + timestampZoneId);
-            return timestampFormatter.format(LocalDateTime.ofInstant((Instant) input, zof));
+            return timestampFormatter.format(LocalDateTime.ofInstant((Instant) input, timestampZoneId));
 
 //                System.out.println(">>>>convertTimestamp:" + input.getClass().getName());
 //                System.out.println(">>>>convertTimestamp:" + input.getClass() + ",time:" + timestampFormatter.format((Instant) input));

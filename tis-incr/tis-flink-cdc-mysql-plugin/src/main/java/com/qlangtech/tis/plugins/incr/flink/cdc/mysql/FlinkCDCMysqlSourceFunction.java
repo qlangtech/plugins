@@ -262,7 +262,9 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
         @Override
         public List<ReaderSource> create(String dbHost, HostDBs dbs, Set<String> tbs, Properties debeziumProperties) {
 
-            DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
+            DateTimeConverter.setDatetimeConverters(
+                    MySqlDateTimeConverter.class.getName()
+                    , debeziumProperties,dsFactory.getTimeZone().map(ZoneId::getId));
 
             debeziumProperties.setProperty(
                     CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()

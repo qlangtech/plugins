@@ -1,0 +1,11 @@
+{
+  "to": {
+    "elementCreator": "com.qlangtech.tis.plugin.datax.transformer.jdbcprop.JdbcPropertyElementCreatorFactory",
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.CopyValUDF.getCols():uncache_true",
+    "viewtype": "tuplelist"
+  },
+  "from": {
+    "label": "常量值",
+    "help": "用户设置常量内容，数据同步阶段会直接将该常量值同步到目标列中"
+  }
+}

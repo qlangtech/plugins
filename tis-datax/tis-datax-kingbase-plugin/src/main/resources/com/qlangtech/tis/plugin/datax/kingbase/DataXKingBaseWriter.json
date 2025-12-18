@@ -4,13 +4,13 @@
     "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.common.AutoCreateTable.descFilter(desc,\"kingbase\");"
   },
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"KingBase-V9x\")",
     "creator": {
       "plugin": [
         {
           "hetero": "datasource",
           "extraParam": "type_detailed,update_false,disableBizStore_true",
-          "descName": "KingBase"
+          "descName": "KingBase-V9x"
         }
       ]
     }

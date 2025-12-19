@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.trigger.util.UnCacheString;
 import com.qlangtech.tis.util.IPluginContext;
 import io.debezium.config.Field;
 import org.apache.commons.lang3.tuple.Pair;
@@ -113,7 +114,7 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
             this.debeziumProps = Lists.newArrayList(
                     Pair.of((opts) -> {
                                 opts.add(FIELD_KEY_SLOT_NAME, getSoltNameField()
-                                        , new OverwriteProps().setDftVal(IPluginContext.getThreadLocalInstance().getCollectionName().getPipelineName()));
+                                        , new OverwriteProps().setDftVal(new UnCacheString<>(() -> IPluginContext.getThreadLocalInstance().getCollectionName().getPipelineName())));
                             }
                             , (debeziumProperties, sourceFactory) -> {
                                 debeziumProperties.setProperty(getSoltNameField().name(), sourceFactory.slotName);

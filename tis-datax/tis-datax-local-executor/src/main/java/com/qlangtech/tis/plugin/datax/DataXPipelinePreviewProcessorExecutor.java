@@ -27,7 +27,6 @@ import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
 import com.qlangtech.tis.datax.DataXName;
-import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.preview.IPreviewRowsDataService;
@@ -42,6 +41,7 @@ import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria.Builder;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataResponse;
 import com.qlangtech.tis.rpc.grpc.datax.preview.StringValue;
+import com.qlangtech.tis.web.start.TisAppLaunch;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -260,7 +260,7 @@ public class DataXPipelinePreviewProcessorExecutor
 
     @Override
     protected File getWorkingDirectory() {
-        return DataXJobInfo.getDataXExecutorDir();
+        return TisAppLaunch.isTestMock() ? new File("/opt/tis/tis-datax-executor") : DataXJobInfo.getDataXExecutorDir();
     }
 
     @Override

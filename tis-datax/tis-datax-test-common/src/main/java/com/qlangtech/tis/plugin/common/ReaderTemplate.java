@@ -159,7 +159,7 @@ public class ReaderTemplate {
                 //"        \"print\": true\n" +
                 "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" //
                 + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
-        WriterPluginMeta.realExecute(dataXName, readerCfg, writerPluginMeta, transformer, Optional.empty());
+        WriterPluginMeta.realExecute(dataXName, "testTabName", readerCfg, writerPluginMeta, transformer, Optional.empty());
 
 //        Objects.requireNonNull(readerCfg);
 //        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});

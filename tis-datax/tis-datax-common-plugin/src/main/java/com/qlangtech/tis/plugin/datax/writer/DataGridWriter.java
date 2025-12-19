@@ -25,9 +25,7 @@ import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.spi.Writer;
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.Range;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -81,7 +79,8 @@ public class DataGridWriter extends Writer {
                 // gridRows.add(record);
                 //recordToString(record);
                 if (++readCount > queryCriteria.getPageSize()) {
-                    throw new IllegalStateException("readCount:" + readCount + " can not more than page size:" + queryCriteria.getPageSize());
+                    // throw new IllegalStateException("readCount:" + readCount + " can not more than page size:" + queryCriteria.getPageSize());
+                    return;
                 }
             }
         }

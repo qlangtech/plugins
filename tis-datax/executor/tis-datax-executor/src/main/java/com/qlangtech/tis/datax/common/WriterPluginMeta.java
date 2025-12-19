@@ -51,12 +51,12 @@ public class WriterPluginMeta {
         this.conf = conf;
     }
 
-    public static void realExecute(final String dataXName, final Configuration readerCfg
+    public static void realExecute(final String dataXName,String tableName ,final Configuration readerCfg
                                    // , IDataXPluginMeta dataxReader
             , WriterPluginMeta writerPluginMeta
             , Optional<Pair<String, List<String>>> transformer, Optional<JarLoader> jarLoader) throws IllegalAccessException {
         realExecute(dataXName, writerPluginMeta, jarLoader)
-                .startPipeline(readerCfg, transformer, (jobContainer) -> {
+                .startPipeline(tableName,readerCfg, transformer, (jobContainer) -> {
                 });
 
     }

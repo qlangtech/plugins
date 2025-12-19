@@ -157,7 +157,7 @@ public class DataXRealExecutor {
             Optional<Pair<String, List<String>>> transformer
                     = transformerRules.map((trule) -> Pair.of(tableName, trule.relevantColKeys()));
 
-            this.startPipeline(readerCfg, transformer, (jobContainer) -> {
+            this.startPipeline(tableName,readerCfg, transformer, (jobContainer) -> {
                 jobContainer.setAttr(ThreadLocalRows.class, rows);
             });
 
@@ -177,7 +177,7 @@ public class DataXRealExecutor {
      * @param transformer
      * @param jobContainerSetter
      */
-    public void startPipeline(Configuration readerCfg, Optional<Pair<String, List<String>>> transformer, Consumer<JobContainer> jobContainerSetter) {
+    public void startPipeline(String tableName,Configuration readerCfg, Optional<Pair<String, List<String>>> transformer, Consumer<JobContainer> jobContainerSetter) {
         Objects.requireNonNull(readerCfg);
         PerfTrace.getInstance(false, -1111, -1111, 0, false);
         Configuration allConf = IOUtils.loadResourceFromClasspath(DataxExecutor.class //
@@ -197,7 +197,7 @@ public class DataXRealExecutor {
 
 
                     Configuration c = Configuration.newDefault();
-                    c.set(CoreConstant.JOB_TRANSFORMER_NAME, transformer.map((p) -> p.getKey()).orElse("testTab"));
+                    c.set(CoreConstant.JOB_TRANSFORMER_NAME, tableName);
                     transformer.ifPresent((tt) -> {
                         Pair<String, List<String>> t = tt;
                         c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());

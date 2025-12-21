@@ -64,7 +64,7 @@ public class CopyConstantValUDF extends UDFDefinition {
 
         @Override
         public EndType getTransformerEndType() {
-            return EndType.Copy;
+            return EndType.Constant;
         }
 
 

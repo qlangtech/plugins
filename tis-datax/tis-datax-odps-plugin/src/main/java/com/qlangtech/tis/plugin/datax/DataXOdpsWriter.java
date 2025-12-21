@@ -26,7 +26,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
-import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
+import com.qlangtech.tis.config.aliyun.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;

@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.BasicPainFormat.BasicPainFormatDescriptor;
@@ -120,7 +121,7 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
                 ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
                     try {
                         return getColumnMetaData(IPluginContext.getThreadLocalInstance(), tab.getEntityName())
-                                .stream().collect(Collectors.toMap((col) -> col.getName(), (col) -> col));
+                                .stream().collect(Collectors.toMap(Option::getName, (col) -> col));
                     } catch (TableNotFoundException e) {
                         throw new RuntimeException(e);
                     }

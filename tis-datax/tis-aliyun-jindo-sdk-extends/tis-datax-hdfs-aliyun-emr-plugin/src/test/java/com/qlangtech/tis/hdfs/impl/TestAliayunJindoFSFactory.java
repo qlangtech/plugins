@@ -29,7 +29,7 @@ import com.qlangtech.tis.fs.TISFSDataOutputStream;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.aliyun.AliyunEndpoint;
 
-import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
+import com.qlangtech.tis.plugin.aliyun.IAliyunEndpoint;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

@@ -19,7 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.AuthToken;
-import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
+import com.qlangtech.tis.plugin.aliyun.IAliyunAccessKey;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

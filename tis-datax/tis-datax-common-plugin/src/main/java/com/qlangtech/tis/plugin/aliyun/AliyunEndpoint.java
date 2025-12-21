@@ -1,12 +1,12 @@
 package com.qlangtech.tis.plugin.aliyun;
 
 
+import com.qlangtech.tis.config.aliyun.IAliyunAccessKey;
+import com.qlangtech.tis.config.aliyun.IAliyunEndpoint;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
-import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.HttpEndpoint;
-import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;

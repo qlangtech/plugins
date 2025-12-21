@@ -75,16 +75,7 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
     public List<ColumnMetaData> getTableMetadata(IPluginContext pluginContext, String pipelineName, IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
         Optional<TableMap> tabAlia = getTableMap(pluginContext, pipelineName);
         return getTableMetadata(dfsReader, tabAlia.orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName())));
-        //return tabAlia.map((tab) -> ColumnMetaData.convert(tab.getSourceCols())).orElseThrow(() -> new TableNotFoundException(() -> "dfs", table.getTabName()));
     }
-
-
-//    private Optional<TableMap> getTableMap(String pipelineName, IPluginContext pluginContext) {
-//        IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, pipelineName);
-//        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext);
-//        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
-//        return tabAlia;
-//    }
 
 
     /**

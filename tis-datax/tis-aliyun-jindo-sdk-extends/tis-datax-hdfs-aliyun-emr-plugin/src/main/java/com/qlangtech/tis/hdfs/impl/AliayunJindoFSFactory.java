@@ -24,8 +24,8 @@ import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 
-import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
-import com.qlangtech.tis.plugin.HttpEndpoint.IAliyunEndpoint;
+import com.qlangtech.tis.config.aliyun.IAliyunAccessKey;
+import com.qlangtech.tis.config.aliyun.IAliyunEndpoint;
 
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;

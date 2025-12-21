@@ -239,10 +239,11 @@
                 <artifactId>mariadb-java-client</artifactId>
                 <version>${mariadb-java-client.version}</version>
             </dependency>
+            <!--https://github.com/aliyun/aliyun-oss-java-sdk-->
             <dependency>
                 <groupId>com.aliyun.oss</groupId>
                 <artifactId>aliyun-sdk-oss</artifactId>
-                <version>3.12.0</version>
+                <version>3.18.1</version>
             </dependency>
 
             <dependency>

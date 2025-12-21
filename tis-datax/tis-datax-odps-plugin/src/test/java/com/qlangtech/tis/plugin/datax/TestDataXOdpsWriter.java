@@ -10,7 +10,7 @@ import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import com.qlangtech.tis.plugin.AuthToken.IAliyunAccessKey;
+import com.qlangtech.tis.plugin.aliyun.IAliyunAccessKey;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;

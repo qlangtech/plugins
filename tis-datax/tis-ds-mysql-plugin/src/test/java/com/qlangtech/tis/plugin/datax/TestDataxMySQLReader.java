@@ -94,8 +94,8 @@ public class TestDataxMySQLReader extends BasicTest {
     public void testPluginDescPropsRefs() {
         DataxMySQLReader mySQLReader = new DataxMySQLReader();
         Descriptor<DataxReader> descriptor = mySQLReader.getDescriptor();
-        Map<String, Descriptor.PropsImplRefs> propsImplRefs = descriptor.getPropsImplRefs();
-        Descriptor.PropsImplRefs dbNameRef = propsImplRefs.get(BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME);
+        Map<String, PluginExtraProps.FieldRefCreateor> propsImplRefs = descriptor.getPropsImplRefs();
+        PluginExtraProps.FieldRefCreateor dbNameRef = propsImplRefs.get(BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME);
         Assert.assertNotNull(
                 BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME + " relevant ref can not be null", dbNameRef);
 

@@ -79,7 +79,7 @@ public class GuessOn extends GuessFieldType {
             }
             tabName = p2lMapper.parseLogicalTableName(row.tabName);
             if (tabName == null) {
-                throw new IllegalStateException("tableName can not be empty");
+                throw new IllegalStateException("tableName:“" + row.tabName + "” can not be empty");
             }
             if ((priorityResult = result.get(tabName)) == null) {
                 priorityResult = Maps.newHashMap();
@@ -91,11 +91,11 @@ public class GuessOn extends GuessFieldType {
             throw TisException.create("has not find any record, can not invoke guess field types process,priorityResult.size:"
                     + result.size() + ",lineIndex:" + lineIndex);
         }
-        return result.entrySet().stream().collect(Collectors.toMap((e) -> e.getKey()
+        return result.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey
                 , (e) -> {
                     return e.getValue().entrySet().stream().collect(
                             Collectors.toMap(
-                                    (col) -> col.getKey()
+                                    Map.Entry::getKey
                                     , (col) -> {
                                         DataType type = null;
                                         if ((type = col.getValue().type) != null) {

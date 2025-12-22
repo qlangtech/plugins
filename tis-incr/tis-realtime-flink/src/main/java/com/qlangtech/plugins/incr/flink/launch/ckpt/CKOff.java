@@ -35,6 +35,11 @@ public class CKOff extends CheckpointFactory {
 
     }
 
+    @Override
+    public boolean isOn() {
+        return false;
+    }
+
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<CheckpointFactory> {
         @Override

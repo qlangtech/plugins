@@ -20,16 +20,25 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.TISExtensible;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-01 16:15
  * @see com.qlangtech.plugins.incr.flink.launch.ckpt.CKOff
- * @see com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn
+ * //@see com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn
  **/
+@TISExtensible
 @Public
 public abstract class CheckpointFactory implements Describable<CheckpointFactory> {
+
+    /**
+     * 是否已经开启
+     *
+     * @return
+     */
+    public abstract boolean isOn();
 
     public abstract void setProps(StreamExecutionEnvironment env);
 

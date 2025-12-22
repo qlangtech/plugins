@@ -20,7 +20,6 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
@@ -149,7 +148,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     }
 
     private boolean isCheckpointEnable() {
-        return checkpoint instanceof CKOn;
+        return this.checkpoint.isOn();
     }
 
     @Override

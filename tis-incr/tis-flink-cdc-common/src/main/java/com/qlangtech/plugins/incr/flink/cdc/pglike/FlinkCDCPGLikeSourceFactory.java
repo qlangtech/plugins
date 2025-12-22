@@ -114,7 +114,10 @@ public abstract class FlinkCDCPGLikeSourceFactory extends MQListenerFactory {
             this.debeziumProps = Lists.newArrayList(
                     Pair.of((opts) -> {
                                 opts.add(FIELD_KEY_SLOT_NAME, getSoltNameField()
-                                        , new OverwriteProps().setDftVal(new UnCacheString<>(() -> IPluginContext.getThreadLocalInstance().getCollectionName().getPipelineName())));
+                                        , new OverwriteProps().setDftVal(new UnCacheString<>(() -> {
+                                            return IPluginContext.getThreadLocalInstance().getCollectionName().getPipelineName();
+                                        }))
+                                );
                             }
                             , (debeziumProperties, sourceFactory) -> {
                                 debeziumProperties.setProperty(getSoltNameField().name(), sourceFactory.slotName);

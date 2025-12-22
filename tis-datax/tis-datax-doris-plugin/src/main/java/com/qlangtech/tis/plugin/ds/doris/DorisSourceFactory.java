@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -246,13 +245,16 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                     final DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
                     final Duration socketReadTimeout = Duration.ofSeconds(5);
                     for (String feLoadHost : dorisDS.getLoadUrls()) {
-                        //利用doris的clusterAction： https://doris.apache.org/zh-CN/docs/1.2/admin-manual/http-actions/fe/cluster-action
+
+                        //利用doris的clusterAction：  https://doris.apache.org/zh-CN/docs/4.x/admin-manual/open-api/fe-http/cluster-action
                         // 对:{"msg":"success","code":0,"data":{"http":["192.168.28.200:8030"],"mysql":["192.168.28.200:9030"]},"count":0}
                         StringBuffer clusterInfoApiUrl = new StringBuffer("http://");
                         clusterInfoApiUrl.append(feLoadHost).append("/rest/v2/manager/cluster/cluster_info/conn_info");
 
                         try {
-                            Boolean success = HttpUtils.get(new URL(clusterInfoApiUrl.toString()), new PostFormStreamProcess<Boolean>() {
+                            Boolean success = HttpUtils.get(new URL(clusterInfoApiUrl.toString()) //
+                                    , new PostFormStreamProcess<Boolean>( //
+                                            ConfigFileContext.setAuthorizationHeader( dorisDS.getUserName(), dorisDS.getPassword())) { //
                                 @Override
                                 public ContentType getContentType() {
                                     return ContentType.JSON;
@@ -262,13 +264,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                                 public Duration getSocketReadTimeout() {
                                     return socketReadTimeout;
                                 }
-
-                                @Override
-                                public void preSet(HttpURLConnection conn) throws IOException {
-                                    super.preSet(conn);
-                                    ConfigFileContext.StreamProcess.setAuthorization(conn, dorisDS.getUserName(), dorisDS.getPassword());
-                                }
-
+                                
                                 @Override
                                 public Boolean p(int status, InputStream stream, Map<String, List<String>> headerFields) {
                                     try {

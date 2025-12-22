@@ -1,7 +1,7 @@
 {
   "name": {
     "label": "实例名称",
-    "placeholder": "MySQL-import"
+    "placeholder": "mysql_import"
   },
   "dptId": {
     "label": "所属部门",

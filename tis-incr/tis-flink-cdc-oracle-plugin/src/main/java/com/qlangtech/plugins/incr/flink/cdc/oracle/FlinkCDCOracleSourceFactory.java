@@ -18,28 +18,43 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
+import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.debuzium.DebuziumPropAssist;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.oracle.OracleCDCValidator.ValidationResult;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.datax.DataXName;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.AbstractPropAssist.Options;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCConnection;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.debezium.config.Field;
 import io.debezium.connector.oracle.OracleConnectorConfig;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.cdc.connectors.base.options.StartupOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Oracle监听踩坑记： https://mp.weixin.qq.com/s/IQiK7enF5fX0ighRE_i2sg
@@ -49,6 +64,7 @@ import java.util.function.Function;
  **/
 @Public
 public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
+    private static final Logger logger = LoggerFactory.getLogger(FlinkCDCOracleSourceFactory.class);
 
 
 //     opts.addFieldDescriptor("lob", OracleConnectorConfig.LOB_ENABLED);
@@ -103,6 +119,10 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
     public String failureHandle;
 
+    public OracleConnectorConfig.LogMiningStrategy parseMiningStrategy() {
+        return OracleConnectorConfig.LogMiningStrategy.parse(this.miningStrategy);
+    }
+
 
     /**
      * binlog监听在独立的slot中执行
@@ -144,6 +164,60 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
             for (Triple<String, Field, Function<FlinkCDCOracleSourceFactory, Object>> t : debeziumProps) {
                 opts.add(t.getLeft(), t.getMiddle());
             }
+        }
+
+        @Override
+        protected boolean validateMQListenerForm(IControlMsgHandler msgHandler, Context context, MQListenerFactory sourceFactory) {
+            DataXName pipe = msgHandler.getCollectionName();
+            FlinkCDCOracleSourceFactory oracleCDC = (FlinkCDCOracleSourceFactory) sourceFactory;
+            BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) DataxReader.load(null, pipe.getPipelineName());
+            List<ISelectedTab> unfilledSelectedTabs = reader.getUnfilledSelectedTabs();
+
+            // Get table names from selected tabs
+            List<String> tableNames = unfilledSelectedTabs.stream()
+                    .map(ISelectedTab::getName)
+                    .collect(Collectors.toList());
+
+            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) reader.getDataSourceFactory();
+
+            // Execute Oracle CDC pre-launch validation
+            final boolean[] validationPassed = {true};
+
+            dsFactory.visitFirstConnection(new BasicDataSourceFactory.IConnProcessor() {
+                @Override
+                public void vist(JDBCConnection conn) throws SQLException, TableNotFoundException {
+                    Connection connection = conn.getConnection();
+
+                    logger.info("Starting Oracle CDC validation, table count: {}", tableNames.size());
+
+                    // Call validator to perform complete validation
+                    ValidationResult result = OracleCDCValidator.validate(
+                            connection,
+                            oracleCDC,
+                            tableNames
+                    );
+
+                    // Add validation errors to msgHandler for frontend display
+                    if (!result.isValid()) {
+                        validationPassed[0] = false;
+                        for (String error : result.getErrors()) {
+                            msgHandler.addErrorMessage(context, error);
+                        }
+                        logger.error("Oracle CDC validation failed, error count: {}", result.getErrors().size());
+                    }
+
+                    // Log warning messages
+                    for (String warning : result.getWarnings()) {
+                        logger.warn("Oracle CDC validation warning: {}", warning);
+                    }
+
+                    if (result.isValid()) {
+                        logger.info("Oracle CDC validation passed");
+                    }
+                }
+            });
+
+            return validationPassed[0];
         }
 
         @Override

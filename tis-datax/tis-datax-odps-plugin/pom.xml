@@ -51,7 +51,8 @@
         <dependency>
             <groupId>com.aliyun.odps</groupId>
             <artifactId>odps-jdbc</artifactId>
-            <version>3.3.6</version>
+<!--            <version>3.3.6</version>-->
+            <version>3.10.1</version>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

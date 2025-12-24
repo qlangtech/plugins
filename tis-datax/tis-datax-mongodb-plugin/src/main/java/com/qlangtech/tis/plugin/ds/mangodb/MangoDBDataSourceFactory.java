@@ -157,7 +157,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         });
     }
 
-    protected final <RESULT> RESULT vistMongoClient(Function<MongoClient, RESULT> consumer) {
+    public final <RESULT> RESULT vistMongoClient(Function<MongoClient, RESULT> consumer) {
         try (MongoClient mongoClient = createMongoClient()) {
             return consumer.apply(mongoClient);
         }

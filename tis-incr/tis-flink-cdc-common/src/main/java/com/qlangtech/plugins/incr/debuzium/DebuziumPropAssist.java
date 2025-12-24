@@ -18,10 +18,11 @@
 
 package com.qlangtech.plugins.incr.debuzium;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.util.AbstractPropAssist;
+import com.qlangtech.tis.extension.util.OverwriteProps;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.Option;
 import io.debezium.config.Field;
 import io.debezium.config.Field.EnumRecommender;
@@ -47,7 +48,7 @@ public class DebuziumPropAssist extends AbstractPropAssist<Describable, Field> {
 
     @Override
     protected MarkdownHelperContent getDescription(Field configOption) {
-        return new MarkdownHelperContent(configOption.description());
+        return new MarkdownHelperContent(PluginExtraProps.AsynPropHelp.create( configOption.description()));
     }
 
     @Override
@@ -64,7 +65,7 @@ public class DebuziumPropAssist extends AbstractPropAssist<Describable, Field> {
                 throw new IllegalStateException("unsupported type:" + targetClazz);
             }
             case BOOLEAN: {
-                opts = Lists.newArrayList(new Option("是", true), new Option("否", false));
+                opts = OverwriteProps.ENUM_BOOLEAN;// Lists.newArrayList(new Option("是", true), new Option("否", false));
                 break;
             }
             case CLASS:

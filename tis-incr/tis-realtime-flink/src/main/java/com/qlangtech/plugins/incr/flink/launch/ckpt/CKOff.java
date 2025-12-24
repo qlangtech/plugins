@@ -32,7 +32,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class CKOff extends CheckpointFactory {
     @Override
     public void setProps(StreamExecutionEnvironment env) {
-
+        env.enableCheckpointing(-1);
     }
 
     @Override

@@ -61,7 +61,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.qlangtech.tis.extension.Descriptor.SWITCH_ON;
+import static com.qlangtech.tis.extension.Descriptor.SWITCH_OFF;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -112,7 +112,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         BaseDataxWriterDescriptor desc = (BaseDataxWriterDescriptor) dataxWriter.getDescriptor();
         if (desc.getEndType() == EndType.Paimon) {
             // paimon端必须要开启checkpoint
-            return descs.stream().filter((d) -> SWITCH_ON.equals(d.getDisplayName())).collect(Collectors.toList());
+            return descs.stream().filter((d) -> !SWITCH_OFF.equals(d.getDisplayName())).collect(Collectors.toList());
         }
         return descs;
     }

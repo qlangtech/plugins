@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.AbstractPropAssist.MarkdownHelperContent;
 import com.qlangtech.tis.extension.util.OverwriteProps;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.Option;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -201,7 +202,7 @@ public class FlinkPropAssist<T extends Describable> {
         Object dftVal = overwriteProps.processDftVal(configOption.defaultValue());
 
 
-        MarkdownHelperContent helperContent = new MarkdownHelperContent(htmlFormatter.format(desc));
+        MarkdownHelperContent helperContent = new MarkdownHelperContent(PluginExtraProps.AsynPropHelp.create(htmlFormatter.format(desc)));
         if (overwriteProps.appendHelper.isPresent()) {
             helperContent.append(overwriteProps);
             // helperContent.append("\n\n").append(overwriteProps.appendHelper.get());
@@ -214,22 +215,22 @@ public class FlinkPropAssist<T extends Describable> {
             if (dftVal != null) {
                 dftVal = ((Duration) dftVal).getSeconds();
             }
-            helperContent.append(new MarkdownHelperContent("单位：`秒`"));
+            helperContent.append(new MarkdownHelperContent(PluginExtraProps.AsynPropHelp.create("单位：`秒`")));
         } else if (targetClazz == MemorySize.class) {
             if (dftVal != null) {
                 dftVal = ((MemorySize) dftVal).getMebiBytes();
             }
-            helperContent.append(new MarkdownHelperContent("单位：`" + MemoryUnit.MEGA_BYTES.getUnits()[1] + "`"));
+            helperContent.append(new MarkdownHelperContent(PluginExtraProps.AsynPropHelp.create("单位：`" + MemoryUnit.MEGA_BYTES.getUnits()[1] + "`")));
         } else if (targetClazz.isEnum()) {
             List<Enum> enums = EnumUtils.getEnumList((Class<Enum>) targetClazz);
             opts = enums.stream().map((e) -> new Option(e.name())).collect(Collectors.toList());
         } else if (targetClazz == Boolean.class) {
-            opts = Lists.newArrayList(new Option("是", true), new Option("否", false));
+            opts = OverwriteProps.ENUM_BOOLEAN;
         }
 
         Optional<List<Option>> optsOp = overwriteProps.opts.isPresent() ? overwriteProps.opts : Optional.ofNullable(opts);
 
-        descriptor.addFieldDescriptor(fieldName, dftVal, null, helperContent, optsOp, overwriteProps.getDisabled());
+        descriptor.addFieldDescriptor(fieldName, dftVal, null, helperContent, optsOp, overwriteProps);
     }
 
     private static Method getClazzMethod;

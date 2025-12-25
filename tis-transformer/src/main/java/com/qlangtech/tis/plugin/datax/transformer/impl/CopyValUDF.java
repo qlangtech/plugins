@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax.transformer.impl;
 
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -66,8 +65,9 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
     public static List<CMeta> fromColsCandidate() {
         List<CMeta> colsCandidate = SelectedTab.getSelectedCols();
         ThreadCacheTableCols threadCacheTabCols = SelectedTab.getContextTableColsStream();
-        IDataxReader reader = threadCacheTabCols.plugin;
-        Map<String, ContextParamConfig> dbContextParams = reader.getDBContextParams();
+//        IDataxReader reader //
+//                = Objects.requireNonNull(threadCacheTabCols.plugin, "threadCacheTabCols.plugin can not be null");
+        Map<String, ContextParamConfig> dbContextParams = threadCacheTabCols.getDBContextParams();
         if (MapUtils.isNotEmpty(dbContextParams)) {
             colsCandidate = Lists.newArrayList(colsCandidate);
             for (Map.Entry<String, ContextParamConfig> entry : dbContextParams.entrySet()) {

@@ -29,6 +29,7 @@ import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
+import com.qlangtech.tis.extension.AIPromptEnhance;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
@@ -64,6 +65,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
+import static com.qlangtech.tis.extension.Descriptor.KEY_primaryVal;
 import static com.qlangtech.tis.plugin.datax.DataFlowDataXProcessor.addTransformerInfo;
 
 /**
@@ -75,7 +77,9 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
     public static final String KEY_FIELD_NAME = "globalCfg";
 
-    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity, Validator.forbid_start_with_number})
+    @AIPromptEnhance(prompt = "1. 没有抽取到对应值： 输出的`" + KEY_primaryVal + "`属性对应的值不要自动生成（切记）" +
+            "\n2.  抽取到对应的值：输出的`_primaryVal`属性值必须严格匹配正则式规范，如有非法字符须进行**合理替换**以符合正则式，例如：识别到“mysql-mysql-2”不符合正则式规范，**必须**进行**合理替换**变成“mysql_mysql_2”")
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity_strict})
     public String name;
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})

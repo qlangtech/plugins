@@ -55,7 +55,7 @@ import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import com.qlangtech.tis.util.DescriptorsJSONResult;
+import com.qlangtech.tis.util.DescriptorsMeta;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.collections.CollectionUtils;
@@ -242,7 +242,7 @@ public class TestDataxMySQLReader extends BasicTest {
         UploadPluginMeta pluginMeta
                 = UploadPluginMeta.parse("dataxReader:require,targetDescriptorName_MySQL,subFormFieldName_selectedTabs,dataxName_baisuitestTestcase");
 
-        DescriptorsJSONResult subFormDescriptorsJSON = descJson.getDescriptorsJSON(pluginMeta.getSubFormFilter());
+        DescriptorsMeta subFormDescriptorsJSON = descJson.getDescriptorsJSON(pluginMeta.getSubFormFilter());
 
         JsonUtil.assertJSONEqual(DataxMySQLReader.class, "mysql-datax-reader-selected-tabs-subform-descriptor.json"
                 , subFormDescriptorsJSON, (m, e, a) -> {

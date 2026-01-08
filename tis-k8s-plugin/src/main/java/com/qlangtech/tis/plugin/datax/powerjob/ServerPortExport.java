@@ -12,7 +12,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.util.DescriptorsJSONResult;
+import com.qlangtech.tis.util.DescriptorsMeta;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -53,7 +53,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 //    public Boolean usingClusterIP;
 
     public static Integer dftExportPort() {
-        return ((DefaultExportPortProvider) DescriptorsJSONResult.getRootDescInstance()).get();
+        return ((DefaultExportPortProvider) DescriptorsMeta.getRootDescInstance()).get();
     }
 
 

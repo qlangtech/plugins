@@ -415,7 +415,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             CreateTableSqlBuilder.CreateDDL createDDL = null;
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
                 createDDL = dataXWriter.generateCreateDDL(
-                        SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
+                        SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(Optional.empty(),totalpayInfo), Optional.empty());
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());

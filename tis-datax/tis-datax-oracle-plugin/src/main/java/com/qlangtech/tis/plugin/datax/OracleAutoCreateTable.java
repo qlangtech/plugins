@@ -46,7 +46,7 @@ public class OracleAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) rdbmsWriter;
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<>(tableMapper, dataXWriter.getDataSourceFactory(), transformers) {
+                = new CreateTableSqlBuilder<>(tableMapper, dataXWriter.getDataSourceFactory() ,transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (pks.isEmpty()) {

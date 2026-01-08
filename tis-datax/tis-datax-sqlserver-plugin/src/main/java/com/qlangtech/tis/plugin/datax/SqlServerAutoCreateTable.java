@@ -51,7 +51,7 @@ public class SqlServerAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> 
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) rdbmsWriter;
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<>(tableMapper, dataXWriter.getDataSourceFactory(), transformers) {
+                = new CreateTableSqlBuilder<>(tableMapper, dataXWriter.getDataSourceFactory() ,transformers) {
 
             private boolean isMulitPks() {
                 return this.pks.size() > 1;

@@ -65,9 +65,16 @@ public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
         final ITISFileSystem fileSystem = hiveWriter.getFs().getFileSystem();
         final CreateTableSqlBuilder createTableSqlBuilder
                 = new CreateTableSqlBuilder<ColWrapper>(tableMapper, hiveWriter.getDataSourceFactory(), transformers) {
+//            @Override
+//            protected String createTargetTableName(TableMap tableMapper) {
+//                // return appendTabPrefix(tableMapper.getTo());
+//                return tableMapper.createTargetTableName(HiveAutoCreateTable.this);
+//            }
+
             @Override
             protected String createTargetTableName(TableMap tableMapper) {
-                // return appendTabPrefix(tableMapper.getTo());
+                //  return super.createTargetTableName(tableMapper, autoCreateTable);
+
                 return tableMapper.createTargetTableName(HiveAutoCreateTable.this);
             }
 

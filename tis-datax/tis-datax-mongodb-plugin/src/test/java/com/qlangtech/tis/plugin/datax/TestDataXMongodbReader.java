@@ -25,7 +25,6 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -51,6 +50,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 import org.apache.commons.collections.CollectionUtils;
@@ -102,7 +102,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
                 Assert.assertEquals(assertCols.stream().map((c) -> "\"`" + c + "`\"").collect(Collectors.joining(",")), next.getColsQuotes());
 
                 // 这个保证下游DataXWriter 的cols 呈现何reader这边一致
-                IDataxProcessor.TableMap tabMapper = next.createTableMap(new TableAlias(next.mongoTable.getName()),
+                IDataxProcessor.TableMap tabMapper = next.createTableMap(Optional.empty(),//new TableAlias(next.mongoTable.getName()),
                         next.mongoTable);
                 Assert.assertTrue(CollectionUtils.isEqualCollection(assertCols,
                         tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList())));
@@ -124,7 +124,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
                 Assert.assertEquals(assertColsWithoutDocTypeField.stream().map((c) -> "\"`" + c + "`\"").collect(Collectors.joining(",")), next.getColsQuotes());
 
                 // 这个保证下游DataXWriter 的cols 呈现何reader这边一致
-                IDataxProcessor.TableMap tabMapper = next.createTableMap(new TableAlias(next.mongoTable.getName()),
+                IDataxProcessor.TableMap tabMapper = next.createTableMap( Optional.empty(), //new TableAlias(next.mongoTable.getName()),
                         next.mongoTable);
                 Assert.assertTrue(CollectionUtils.isEqualCollection(assertColsWithoutDocTypeField,
                         tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList())));
@@ -292,7 +292,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
     public void testDescriptorsJSONGenerate() {
         DataXMongodbReader reader = new DataXMongodbReader();
-        DescriptorsJSON descJson = new DescriptorsJSON(reader.getDescriptor());
+        DescriptorsJSON descJson = new DefaultDescriptorsJSON(reader.getDescriptor());
 
         JsonUtil.assertJSONEqual(DataXMongodbReader.class, "mongdodb-datax-reader-descriptor.json",
                 descJson.getDescriptorsJSON(), (m, e, a) -> {

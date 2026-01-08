@@ -117,13 +117,11 @@ public class OdpsAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
             , TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         final DataXOdpsWriter odpsWriter = (DataXOdpsWriter) rdbmsWriter;
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder<>(tableMapper, odpsWriter.getDataSourceFactory(), transformers) {
+                = new CreateTableSqlBuilder<>(tableMapper, odpsWriter.getDataSourceFactory() ,transformers) {
 
             @Override
             protected String createTargetTableName(TableMap tableMapper) {
                 return tableMapper.createTargetTableName(OdpsAutoCreateTable.this);
-                //  return tableMapper.isFromEqualTo() ? appendTabPrefix(tableMapper.getFrom()) : tableMapper.getTo();
-                // return appendTabPrefix(tableMapper.getTo());
             }
 
             @Override

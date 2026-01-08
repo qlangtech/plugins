@@ -25,7 +25,6 @@ import com.qlangtech.tis.plugin.datax.common.AutoCreateTableColCommentSwitch;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 

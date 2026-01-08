@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.element.Column;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -34,6 +34,7 @@ import org.bson.BsonDocument;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,12 +54,12 @@ public class MongoDBReaderContext extends RdbmsReaderContext<DataXMongodbReader,
 
 
     @Override
-    public IDataxProcessor.TableMap createTableMap(TableAlias tableAlias, ISelectedTab selectedTab) {
+    public IDataxProcessor.TableMap createTableMap(Optional<AutoCreateTable> tabCreator, ISelectedTab selectedTab) {
         if (!StringUtils.equals(this.mongoTable.getName(), selectedTab.getName())) {
             throw new IllegalStateException("this.mongoTable.getName():" + this.mongoTable.getName()//
                     + ",selectedTab" + ".getName():" + selectedTab.getName() + " shall be equal");
         }
-        return new IDataxProcessor.TableMap(tableAlias, selectedTab) {
+        return new IDataxProcessor.TableMap(Objects.requireNonNull(tabCreator, "tabCreator can not be null"), selectedTab) {
             @Override
             public List<CMeta> getSourceCols() {
                 DataXMongodbReader.DefaultMongoTable mtable =

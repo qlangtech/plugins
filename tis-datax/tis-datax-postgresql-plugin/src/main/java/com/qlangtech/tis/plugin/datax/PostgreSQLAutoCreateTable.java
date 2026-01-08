@@ -45,7 +45,8 @@ public class PostgreSQLAutoCreateTable extends ParamsAutoCreateTable<ColWrapper>
         PGLikeDataSourceFactory ds = (PGLikeDataSourceFactory) dataXWriter.getDataSourceFactory();
 
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new PostgreSQLCreateTableSqlBuilder(this.getAddComment(), sourceColMetaGetter, tableMapper, ds, transformers);
+                = new PostgreSQLCreateTableSqlBuilder( //
+                        this.getAddComment(), sourceColMetaGetter, tableMapper, ds, transformers);
         return createTableSqlBuilder;
     }
 

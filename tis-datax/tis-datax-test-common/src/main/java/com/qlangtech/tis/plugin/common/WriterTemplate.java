@@ -370,7 +370,7 @@ public class WriterTemplate {
 
     public static IDataxProcessor.TableMap createCustomer_order_relationTableMap(Optional<ISelectedTab> tab) {
         IDataxProcessor.TableMap tableMap
-                = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
+                = new IDataxProcessor.TableMap(Optional.empty(), tab.isPresent() ? tab.get() : new ISelectedTab() {
             List<CMeta> _cols;
 
             @Override

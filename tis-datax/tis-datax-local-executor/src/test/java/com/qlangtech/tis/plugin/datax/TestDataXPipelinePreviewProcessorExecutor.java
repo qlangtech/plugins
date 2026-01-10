@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.DataXName;
@@ -26,17 +25,15 @@ import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import java.util.List;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-25 14:29
  **/
 public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
     public void testPreviewRowsData() {
-        final DataXName dataXName = DataXName.createDataXPipeline("mysql_doris");
+        final DataXName dataXName = DataXName.createDataXPipeline("dfs_mysql2");
 
-        DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(44499);
+        DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(51509);
         PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName.getPipelineName(), 999999);
         previewExecutor.setCommitTracker(expireTracker);
         String identityVal = null;
@@ -47,8 +44,8 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
         queryCriteria.setPagerOffsetCursor(null);
         queryCriteria.setNextPakge(next);
         queryCriteria.setPageSize(pageSize);
-        queryCriteria.setTargetPreviewHost("192.168.28.201");
-        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "orderdetail", queryCriteria);
+        queryCriteria.setTargetPreviewHost("127.0.0.1");
+        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "totalpayinfo", queryCriteria);
         Assert.assertNotNull(previewRowsData);
     }
 

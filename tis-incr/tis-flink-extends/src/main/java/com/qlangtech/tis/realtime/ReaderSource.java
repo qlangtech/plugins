@@ -20,7 +20,7 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXName;
-import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IConsumerRateLimiter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
@@ -203,7 +203,7 @@ public abstract class ReaderSource<T> {
             /**
              * 利用标记从主事件流中分叉出子事件流
              */
-            for (Map.Entry<TableAlias, DTOStream<RECORD_TYPE>> e : tab2OutputStream.entrySet()) {
+            for (Map.Entry<IDataxProcessor.TableMap, DTOStream<RECORD_TYPE>> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }
         }

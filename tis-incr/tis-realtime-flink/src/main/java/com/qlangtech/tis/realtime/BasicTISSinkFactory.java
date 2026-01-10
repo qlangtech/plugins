@@ -20,7 +20,6 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
-    public abstract Map<TableAlias, TabSinkFunc<?, ?, TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator);
+    public abstract Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator);
 
 
 //    /**

@@ -24,10 +24,10 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.realtime.dto.DTOStream;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.realtime.TISTableEnvironment;
 import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -81,12 +81,12 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 
 
     @Override
-    protected void initWriterTable(TableAlias alias) {
+    protected void initWriterTable(IDataxProcessor.TableMap alias) {
         // super.initWriterTable(alias);
     }
 
     @Override
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, IDataxProcessor.TableMap tabName) {
         List<FlinkCol> flinkCols = super.getTabColMetas(dataxName, tabName);
         this.flinkColMap = flinkCols.stream().collect(Collectors.toMap((c) -> c.name, (c) -> c));
         return flinkCols;
@@ -130,7 +130,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 //    }
 
     @Override
-    protected void registerSourceTable(StreamTableEnvironment tabEnv, TableAlias alias, DTOStream sourceStream) {
+    protected void registerSourceTable(StreamTableEnvironment tabEnv, IDataxProcessor.TableMap alias, DTOStream sourceStream) {
         super.registerSourceTable(tabEnv, alias, sourceStream);
         if (tableCount++ > 1) {
             throw new IllegalStateException("testCase just test 1 table,pre:" + this.tabName + ",new:" + tabName);

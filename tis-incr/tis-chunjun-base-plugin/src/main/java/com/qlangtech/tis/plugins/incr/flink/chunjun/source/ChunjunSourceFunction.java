@@ -37,7 +37,6 @@ import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -79,10 +78,10 @@ public abstract class ChunjunSourceFunction
 //    }
 
     private SourceFunction<RowData> createSourceFunction(
-            String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
+            IDataxProcessor.TableMap tableMap, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
 
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-        IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(new TableAlias(sourceTabName));
+        IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(tableMap);
         JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, streamTableMeta, sourceFunc);
         Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();
@@ -119,7 +118,7 @@ public abstract class ChunjunSourceFunction
 
                 for (String physicsName : physicsNames) {
                     SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab, physicsName);
-                    SourceFunction<RowData> sourceFunc = createSourceFunction(tab.getName(), conf, sourceFactory, reader);
+                    SourceFunction<RowData> sourceFunc = createSourceFunction(dataXProcessor.findTableMap(null, tab.getName()), conf, sourceFactory, reader);
                     sourceFuncs.add(ReaderSource.createRowDataSource(streamFactory, names,
                             dbHost + ":" + sourceFactory.port + "_" + dbName + "." + physicsName, tab, sourceFunc));
                 }
@@ -129,7 +128,7 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(false, sourceFuncs);
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), (tabName) -> DTOStream.createRowData());
+            sourceChannel.setFocusTabs(tabs, dataXProcessor, (tabName) -> DTOStream.createRowData());
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(false, name, sourceChannel, dataXProcessor);
         } catch (Exception e) {

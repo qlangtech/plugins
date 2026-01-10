@@ -19,6 +19,6 @@
 cd /opt/tis/tis-datax-executor
 
 java -Ddata.dir=/opt/data/tis -Denv_props=true -Dlog.dir=/opt/logs/tis -Druntime=daily -Dlogback.configurationFile=logback-datax.xml -DexecTimeStamp=0 \
-   -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=50002 \
+   -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=50002 \
    -classpath ./lib/*:./tis-datax-executor.jar:./conf/ \
-   com.qlangtech.tis.plugin.datax.grpc.DefaultDataXPreviewRocrdsImpl mysql_elastic2
+   com.qlangtech.tis.plugin.datax.grpc.DefaultDataXPreviewRocrdsImpl dfs_mysql2

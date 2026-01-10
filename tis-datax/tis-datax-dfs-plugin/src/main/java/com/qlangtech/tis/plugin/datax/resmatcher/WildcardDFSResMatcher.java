@@ -65,9 +65,10 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
             throw new IllegalArgumentException("param dataXName can not be empty");
         }
         IDataxProcessor dataxProcessor = DataxProcessor.load(pluginContext, dataXName);
-        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext, true);
-        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
-        return tabAlia;
+      return   dataxProcessor.getFirstTableMap(pluginContext);
+//        TableAliasMapper tabAlias = dataxProcessor.getTabAlias(pluginContext, true);
+//        Optional<TableMap> tabAlia = tabAlias.getFirstTableMap();
+//        return tabAlia;
     }
 
 
@@ -85,10 +86,10 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
      */
     @Override
     public SourceColsMeta getSourceColsMeta(ITDFSSession hdfsSession, Optional<String> entityName, String path, IDataxProcessor processor) {
-        TableAliasMapper tabAlias = processor.getTabAlias(null, false);
-        Optional<TableAlias> findMapper = tabAlias.findFirst();
+       // TableAliasMapper tabAlias = processor.getTabAlias(null, false);
+        Optional<TableMap> findMapper = processor.getFirstTableMap(null); // tabAlias.findFirst();
         IDataxProcessor.TableMap tabMapper
-                = (IDataxProcessor.TableMap) findMapper.orElseThrow(() -> new NullPointerException("TableAlias can not be null"));
+                =  findMapper.orElseThrow(() -> new NullPointerException("TableAlias can not be null"));
         return new SourceColsMeta(tabMapper.getSourceCols());
     }
 
@@ -101,8 +102,8 @@ public class WildcardDFSResMatcher extends BasicDFSResMatcher {
         }
 
         IDataxProcessor processor = DataxProcessor.load(IPluginContext.getThreadLocalInstance(), reader.dataXName);
-        TableAliasMapper tabAlias = processor.getTabAlias(IPluginContext.getThreadLocalInstance(), false);
-        Optional<TableAlias> findMapper = tabAlias.findFirst();
+      //  TableAliasMapper tabAlias = processor.getTabAlias(IPluginContext.getThreadLocalInstance(), false);
+        Optional<TableMap> findMapper = processor.getFirstTableMap(IPluginContext.getThreadLocalInstance(),false); //tabAlias.findFirst();
         if (findMapper.isPresent()) {
             IDataxProcessor.TableMap tabMapper = (IDataxProcessor.TableMap) findMapper.get();
             return Collections.singletonList(

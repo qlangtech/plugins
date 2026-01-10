@@ -33,8 +33,7 @@ import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -43,7 +42,6 @@ import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -146,12 +144,15 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         private final IExecChainContext execContext;
         private final EntityName entity;
         private final ISelectedTab tab;
+        private final Optional<AutoCreateTable> writerTableExecutor;
 
         public PreAndPostSQLExecutor(boolean preExecute, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
             this.preExecute = preExecute;
             this.execContext = execContext;
             this.entity = entity;
             this.tab = tab;
+            IDataxWriter writer = execContext.getProcessor().getWriter(null);
+            this.writerTableExecutor = writer.getWriterTableExecutor();
         }
 
         @Override
@@ -169,14 +170,17 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         @Override
         public void run() {
 
-            final TableAliasMapper tableAliasMapper
-                    = execContext.getAttribute(TableAlias.class.getSimpleName(), () -> {
-                return execContext.getProcessor().getTabAlias(null, true);
-            });
+//            final TableAliasMapper tableAliasMapper
+//                    = execContext.getAttribute(TableAlias.class.getSimpleName(), () -> {
+//                return execContext.getProcessor().getTabAlias(null, true);
+//            });
+
+
+            ;
 
             BasicDataSourceFactory dsFactory = ((BasicDataSourceFactory) getDataSourceFactory());
             dsFactory.visitAllConnection((conn) -> {
-                SelectTable toTable = SelectTable.create(tableAliasMapper.get(tab).getTo(), dsFactory);
+                SelectTable toTable = SelectTable.create(new TableMap(writerTableExecutor, tab).getTo(), dsFactory);
                 String preSqlStatement = StringUtils.replace(validateSQL(this.preExecute ? preSql : postSql), TABLE_NAME_PLACEHOLDER, toTable.getTabName());
                 String checkTabExist = "select 1 from " + toTable.getTabName();
                 final AtomicBoolean tabExist = new AtomicBoolean(false);

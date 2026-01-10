@@ -35,22 +35,20 @@ import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.doris.DorisSelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -96,7 +94,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias,DataSourceFactory dsFactory, JdbcConf conf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(IDataxProcessor.TableMap tableAlias,DataSourceFactory dsFactory, JdbcConf conf) {
         throw new UnsupportedOperationException();
     }
 
@@ -108,7 +106,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, SelectedTab tab, Map<String, Object> params, final TableAlias targetTabName) {
+            , BasicDataXRdbmsWriter dataXWriter, ISelectedTab tab, Map<String, Object> params, final IDataxProcessor.TableMap targetTabName) {
         DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
         DataXDorisWriter dataxWriter = (DataXDorisWriter) dataXWriter;
 
@@ -164,7 +162,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, TableAlias tableAlias
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, IDataxProcessor.TableMap tableAlias
             , List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         IStreamTableMeta tabMeta = this.getStreamTableMeta(tableAlias);

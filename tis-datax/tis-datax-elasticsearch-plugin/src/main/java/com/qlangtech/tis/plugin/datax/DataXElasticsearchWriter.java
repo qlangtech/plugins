@@ -34,7 +34,6 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
@@ -136,7 +135,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, TableAlias tableAlias) {
+    public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, IDataxProcessor.TableMap tableAlias) {
         List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx, false);
 //        IColMetaGetter col = null;
 //        ISchemaField schemaCol = null;
@@ -244,9 +243,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @Override
     public List<ESColumn> initialIndex(IDataxProcessor dataxProcessor) {
         ESTableAlias esSchema = null;
-        Optional<TableAlias> first = dataxProcessor.getTabAlias(null, true).findFirst();
+
+        Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);
+
+       // Optional<TableAlias> first = dataxProcessor.getTabAlias(null, true).findFirst();
         if (first.isPresent()) {
-            TableAlias value = first.get();
+            IDataxProcessor.TableMap value = first.get();
             if (!(value instanceof ESTableAlias)) {
                 throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
             }
@@ -301,12 +303,13 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public ISchema projectionFromExpertModel(IPluginContext context, ISelectedTab esTab, TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
+    public ISchema projectionFromExpertModel(IPluginContext context, ISelectedTab esTab
+            , IDataxProcessor.TableMap tableAlias, Consumer<byte[]> schemaContentConsumer) {
         schemaContentConsumer.accept(((ESTableAlias) tableAlias).getSchemaByteContent());
         return convert2Schema(tableAlias);
     }
 
-    private ISchema convert2Schema(TableAlias tableAlias) {
+    private ISchema convert2Schema(IDataxProcessor.TableMap tableAlias) {
         ESTableAlias esTable = (ESTableAlias) tableAlias;
 
         JSONObject body = new JSONObject();

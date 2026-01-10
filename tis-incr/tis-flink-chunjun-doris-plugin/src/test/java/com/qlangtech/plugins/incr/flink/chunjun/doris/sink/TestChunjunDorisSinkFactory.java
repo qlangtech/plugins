@@ -26,17 +26,15 @@ import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -269,7 +267,7 @@ public class TestChunjunDorisSinkFactory extends TestChunjunFlinkSinkExecutor {
                     }
 
                     @Override
-                    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
+                    public IStreamTableMeta getStreamTableMeta(IDataxProcessor.TableMap tableName) {
                         return () -> {
                             return selectedTab.getCols().stream()
                                     .map((c) -> new HdfsColMeta(
@@ -279,13 +277,19 @@ public class TestChunjunDorisSinkFactory extends TestChunjunFlinkSinkExecutor {
                 });
 
                 List<ReaderSource> sourceFuncts = Lists.newArrayList();
-                dataxProcessor.getTabAlias().forEach((key, val) -> {
-                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(this, env, val);
+
+                dataxProcessor.visitAllTableMap( null, (tabMap)->{
+                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(this, env, tabMap);
                     sourceFuncts.add(sourceStream.getRight());
                 });
 
-                SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
-                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
+//                dataxProcessor.getTabAlias().forEach((key, val) -> {
+//                    Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(this, env, val);
+//                    sourceFuncts.add(sourceStream.getRight());
+//                });
+
+                SourceChannel sourceChannel = new SourceChannel(false,sourceFuncts);
+                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor, DTOStream::createDispatched);
                 tableRegisterHandle.consume(flinkCDCPipelineEnable, new TargetResName(dataXName), sourceChannel, dataxProcessor);
                 /**
                  * ===========================================

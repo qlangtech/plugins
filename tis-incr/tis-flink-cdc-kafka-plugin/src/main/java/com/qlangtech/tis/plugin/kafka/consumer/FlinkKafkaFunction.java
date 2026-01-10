@@ -88,7 +88,7 @@ public class FlinkKafkaFunction implements IMQListener<List<ReaderSource>> {
             SourceChannel sourceChannel = new SourceChannel(flinkCDCPipelineEnable,
                     createKafkaSource(streamFactory, dataxName, kafkaReader.bootstrapServers, source));
 
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
+            sourceChannel.setFocusTabs(tabs, dataXProcessor
                     , (tabName) -> createDispatched(tabName, sourceFactory.independentBinLogMonitor));
 
             return sourceChannel;

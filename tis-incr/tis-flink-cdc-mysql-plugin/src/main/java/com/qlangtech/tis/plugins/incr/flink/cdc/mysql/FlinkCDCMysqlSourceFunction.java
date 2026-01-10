@@ -219,7 +219,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<List<ReaderSourc
                             tabs
                             , new MySQLReaderSourceCreator(dataxName, streamFactory, flinkCDCPipelineEnable, dsFactory, this.sourceFactory, deserializationSchema)
                     ));
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
+            sourceChannel.setFocusTabs(tabs, dataXProcessor
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return sourceChannel;
             // return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);

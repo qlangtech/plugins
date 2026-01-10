@@ -8,7 +8,6 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.StoreResourceType;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.plugin.IPluginStore;
@@ -31,11 +30,9 @@ import java.util.Set;
  * @date 2023/9/17
  */
 public abstract class BasicTemplate {
-    public static DataXCfgGenerator createMockDataXCfgGenerator(String vmTplContent) {
-        return createMockDataXCfgGenerator(vmTplContent, TableAliasMapper.Null);
-    }
 
-    public static DataXCfgGenerator createMockDataXCfgGenerator(String vmTplContent, TableAliasMapper tableAliasMapper) {
+
+    public static DataXCfgGenerator createMockDataXCfgGenerator(String vmTplContent) {
         if (StringUtils.isEmpty(vmTplContent)) {
             throw new IllegalArgumentException("param vmTplContent can not be empty");
         }
@@ -110,11 +107,11 @@ public abstract class BasicTemplate {
             public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx, Optional<JobTrigger> partialTrigger) {
                 return null;
             }
-
-            @Override
-            public TableAliasMapper getTabAlias(IPluginContext pluginCtx, boolean withDft) {
-                return tableAliasMapper;
-            }
+//
+//            @Override
+//            public TableAliasMapper getTabAlias(IPluginContext pluginCtx, boolean withDft) {
+//                return tableAliasMapper;
+//            }
 
             @Override
             public String identityValue() {

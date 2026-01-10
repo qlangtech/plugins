@@ -18,12 +18,10 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.common;
 
-import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -52,7 +50,7 @@ public class ColMetaUtils {
 //    }
 
     public static SinkColMetas getColMetasMap(
-            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, TableAlias tableAlias
+            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, IDataxProcessor.TableMap tableAlias
             //        String tabName
     ) {
         // EntityName tab = EntityName.parse(tabName);

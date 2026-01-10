@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.solrdao.ISchema;
 import com.qlangtech.tis.solrdao.SchemaMetaContent;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
@@ -77,38 +78,16 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
     public void testDescriptorsJSONGenerate() {
 
-        //  DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
-        //List<ISelectedTab> selectedTabs = createSelectedTabs(dataxReader);
-        //EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs);
 
-
-        // EasyMock.replay(dataxReader);
         DataXElasticsearchWriter esWriter = new DataXElasticsearchWriter();
-        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
-//        descJson.getDescriptorsJSON().toJSONString();
+        DescriptorsJSON descJson = new DefaultDescriptorsJSON(esWriter.getDescriptor());
 
         JsonUtil.assertJSONEqual(DataXElasticsearchWriter.class, "es-datax-writer-descriptor.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
-
-
-        // EasyMock.verify(dataxReader);
     }
 
-//    protected List<ISelectedTab> createSelectedTabs(DataxReader dataxReader) {
-//        List<ISelectedTab> selectedTabs = Lists.newArrayList();
-//        SelectedTab tab = new SelectedTab();
-//        List<String> cols = Lists.newArrayList();
-//        cols.add("app_id");
-//        cols.add("project_name");
-//        tab.setCols(cols);
-//        List<CMeta> cols1 = tab.getCols();
-//        cols1.get(0).setType(DataXReaderColType.INT);
-//        cols1.get(1).setType(DataXReaderColType.STRING);
-//        selectedTabs.add(tab);
-//        return selectedTabs;
-//    }
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXElasticsearchWriter.getDftTemplate();
@@ -123,8 +102,6 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     public void testTemplateGenerate() throws Exception {
 
         DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
-//        List<ISelectedTab> selectedTabs = createSelectedTabs(dataxReader);
-//        EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs);
 
         final TestAliyunToken token = new TestAliyunToken("xxxxxxxxxxx", "accessKeykkkkkkkkkkkkkk");
 

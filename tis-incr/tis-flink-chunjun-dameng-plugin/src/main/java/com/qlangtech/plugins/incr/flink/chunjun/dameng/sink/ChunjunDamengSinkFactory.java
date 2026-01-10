@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.dameng.dialect.TISDamengDialect;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -56,7 +57,7 @@ public class ChunjunDamengSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf conf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(IDataxProcessor.TableMap tableAlias, DataSourceFactory dsFactory, JdbcConf conf) {
 
         return new TISJdbcOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, tableAlias));
     }

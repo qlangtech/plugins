@@ -103,7 +103,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<List<ReaderSou
                         return sourceFunctions;
                     }));
 
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true), DTOStream::createDispatched);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor, DTOStream::createDispatched);
             // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
             return sourceChannel;
             //   return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);

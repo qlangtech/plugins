@@ -25,9 +25,9 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
@@ -120,7 +120,7 @@ public class TestChunjunStarRocksSinkFactory extends TestChunjunFlinkSinkExecuto
                     }
 
                     @Override
-                    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
+                    public IStreamTableMeta getStreamTableMeta(IDataxProcessor.TableMap tableName) {
                         return () -> selectedTab.getCols().stream()
                                 .map((c) -> new HdfsColMeta(
                                         c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
@@ -128,13 +128,13 @@ public class TestChunjunStarRocksSinkFactory extends TestChunjunFlinkSinkExecuto
                 });
 
                 List<ReaderSource> sourceFuncts = Lists.newArrayList();
-                dataxProcessor.getTabAlias(null, true).forEach((key, val) -> {
+                dataxProcessor.visitAllTableMap(null, (val) -> {
                     Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val, this);
                     sourceFuncts.add(sourceStream.getRight());
                 });
 
                 SourceChannel sourceChannel = new SourceChannel(false, sourceFuncts);
-                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(null, true), DTOStream::createDispatched);
+                sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor, DTOStream::createDispatched);
                 boolean flinkCDCPipelineEnable = false;
                 tableRegisterHandle.consume(flinkCDCPipelineEnable, new TargetResName(dataXName), sourceChannel, dataxProcessor);
                 /**

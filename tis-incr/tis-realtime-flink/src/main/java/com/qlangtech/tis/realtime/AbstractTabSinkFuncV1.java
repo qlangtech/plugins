@@ -19,7 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -38,7 +38,7 @@ abstract class AbstractTabSinkFuncV1<
         extends TabSinkFunc<SINOPERATOR, ADD_SINK_RESULT, SINK_TRANSFER_OBJ> {
 
     private transient List<String> primaryKeys;
-    protected transient final TableAlias tab;
+    protected transient final IDataxProcessor.TableMap tab;
 
     protected final List<FlinkCol> sinkColsMeta;
     protected final List<FlinkCol> sourceColsMeta;
@@ -46,7 +46,7 @@ abstract class AbstractTabSinkFuncV1<
 
 
 
-    public AbstractTabSinkFuncV1(TableAlias tab, List<String> primaryKeys, SINOPERATOR sinkFunction
+    public AbstractTabSinkFuncV1(IDataxProcessor.TableMap tab, List<String> primaryKeys, SINOPERATOR sinkFunction
             , List<FlinkCol> sourceColsMeta, List<FlinkCol> sinkColsMeta, int sinkTaskParallelism, Optional<SelectedTableTransformerRules> transformerOpt) {
         super(sinkFunction, sinkTaskParallelism);
         this.primaryKeys = primaryKeys;

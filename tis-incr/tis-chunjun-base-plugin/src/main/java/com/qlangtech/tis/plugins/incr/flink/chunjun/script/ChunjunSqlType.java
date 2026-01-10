@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.script;
 
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
@@ -116,7 +117,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
             return alia.getTo() + KEY_STREAM_SOURCE_TABLE_SUFFIX;
         }
 
-        public List<IColMetaGetter> getCols(TableAlias alia) {
+        public List<IColMetaGetter> getCols(IDataxProcessor.TableMap alia) {
             return sinkStreamMetaGetter.getStreamTableMeta(alia).getColsMeta();
         }
 

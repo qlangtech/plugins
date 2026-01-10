@@ -43,7 +43,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-08-19 00:10
  **/
-public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProcessMeta.IRDBMSSupport {
+public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProcessMeta.IRDBMSSupport  {
 
 
     @FormField(ordinal = 8, validate = {Validator.require})
@@ -71,7 +70,10 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
     public static List<? extends Descriptor> supportedReaderFormat(List<? extends Descriptor> descs) {
         return BasicPainFormatDescriptor.supportedFormat(true, descs);
     }
-
+    @Override
+    public boolean isRDBMSSupport() {
+        return super.isRDBMSSupport();
+    }
 
     @Override
     public List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities() {
@@ -145,10 +147,7 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         return IOUtils.loadResourceFromClasspath(AbstractDFSReader.class, "DataXDFSReader-tpl.json");
     }
 
-    @Override
-    public boolean isRDBMSSupport() {
-        return Objects.requireNonNull(resMatcher, "resMatcher can not be null").isRDBMSSupport();
-    }
+
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {

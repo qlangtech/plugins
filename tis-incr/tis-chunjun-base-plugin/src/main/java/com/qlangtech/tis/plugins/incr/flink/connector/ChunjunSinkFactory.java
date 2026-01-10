@@ -51,8 +51,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.IAppSource;
@@ -175,30 +173,37 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
-        Map<TableAlias, TabSinkFunc<?, ?, RowData>> sinkFuncs = Maps.newHashMap();
+    public Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
+        Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>> sinkFuncs = Maps.newHashMap();
 
 
-        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias(null, true);
-        if (selectedTabs.isNull()) {
-            throw new IllegalStateException("selectedTabs can not be empty");
-        }
+//        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias(null, true);
+//        if (selectedTabs.isNull()) {
+//            throw new IllegalStateException("selectedTabs can not be empty");
+//        }
         // IDataxReader reader = dataxProcessor.getReader(null);
         // List<ISelectedTab> tabs = reader.getSelectedTabs();
 
         // 清空一下tabs的缓存以免有脏数据
         this.selTabs = null;
-
-        selectedTabs.forEach((key, val/*TableAlias*/) -> {
-
-            Objects.requireNonNull(val, "tableName can not be null");
-            if (StringUtils.isEmpty(val.getFrom())) {
+        dataxProcessor.visitAllTableMap(null, (tabMapper) -> {
+            Objects.requireNonNull(tabMapper, "tableName can not be null");
+            if (StringUtils.isEmpty(tabMapper.getFrom())) {
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
-            final TableAlias tabName = val;
-
-            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true));
+            // final TableAlias tabName = val;
+            sinkFuncs.put(tabMapper, createRowDataSinkFunc(dataxProcessor, tabMapper, true));
         });
+//        selectedTabs.forEach((key_, val/*TableAlias*/) -> {
+//
+//            Objects.requireNonNull(val, "tableName can not be null");
+//            if (StringUtils.isEmpty(val.getFrom())) {
+//                throw new IllegalStateException("tableName.getFrom() can not be empty");
+//            }
+//            final TableAlias tabName = val;
+//
+//            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true));
+//        });
 
         if (sinkFuncs.size() < 1) {
             throw new IllegalStateException("size of sinkFuncs can not be small than 1");
@@ -207,22 +212,22 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     public RowDataSinkFunc createRowDataSinkFunc(IDataxProcessor dataxProcessor
-            , final TableAlias tabName, boolean shallInitSinkTable) {
+            , final IDataxProcessor.TableMap tabName, boolean shallInitSinkTable) {
 
         IDataxReader reader = dataxProcessor.getReader(null);
-        List<ISelectedTab> tabs = reader.getSelectedTabs();
+        //  List<ISelectedTab> tabs = reader.getSelectedTabs();
 
-        Optional<ISelectedTab> selectedTab = tabs.stream()
-                .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
-        if (!selectedTab.isPresent()) {
-            throw new IllegalStateException("target table:" + tabName.getFrom()
-                    + " can not find matched table in:["
-                    + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
-        }
-        final SelectedTab tab = (SelectedTab) selectedTab.get();
+//        Optional<ISelectedTab> selectedTab = tabs.stream()
+//                .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
+//        if (!selectedTab.isPresent()) {
+//            throw new IllegalStateException("target table:" + tabName.getFrom()
+//                    + " can not find matched table in:["
+//                    + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
+//        }
+        final ISelectedTab tab = tabName.getSourceTab();// (SelectedTab) selectedTab.get();
         final CreateChunjunSinkFunctionResult sinkFunc
                 = createSinFunctionResult(dataxProcessor
-                , tab, tabName.getTo(), shallInitSinkTable);
+                , tabName, shallInitSinkTable);
 
         if (this.parallelism == null) {
             throw new IllegalStateException("param parallelism can not be null");
@@ -262,7 +267,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
 
     protected CreateChunjunSinkFunctionResult createSinFunctionResult(
-            IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName, boolean shallInitSinkTable) {
+            IDataxProcessor dataxProcessor, final IDataxProcessor.TableMap tabName, boolean shallInitSinkTable) {
 
         AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
         AtomicReference<CreateChunjunSinkFunctionResult> sinkFuncRef = new AtomicReference<>();
@@ -271,7 +276,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         if (dsFactory == null) {
             throw new IllegalStateException("dsFactory can not be null");
         }
-        TableAlias tableAlias = TableAlias.create(selectedTab.getName(), targetTabName);
+        // TableAlias tableAlias = TableAlias.create(selectedTab.getName(), targetTabName);
         DBConfig dbConfig = dsFactory.getDbConfig();
         dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             try {
@@ -279,11 +284,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     /**
                      * 需要先初始化表MySQL目标库中的表
                      */
-                    dataXWriter.initWriterTable(selectedTab, targetTabName, Collections.singletonList(jdbcUrl));
+                    dataXWriter.initWriterTable(tabName.getSourceTab(), tabName.getTo(), Collections.singletonList(jdbcUrl));
                 }
 
 // FIXME 这里不能用 MySQLSelectedTab
-                sinkFuncRef.set(createSinkFunction(dbName, tableAlias, selectedTab, jdbcUrl, dsFactory, dataXWriter));
+                sinkFuncRef.set(createSinkFunction(dbName, tabName, jdbcUrl, dsFactory, dataXWriter));
 
             } catch (Throwable e) {
                 exceptionLoader.set(new Object[]{jdbcUrl, e});
@@ -306,8 +311,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      */
     protected abstract boolean supportUpsetDML();
 
-    protected final SyncConf createSyncConf(SelectedTab tab, TableAlias tableAlias
+    protected final SyncConf createSyncConf(IDataxProcessor.TableMap tableAlias
             , Supplier<Map<String, Object>> paramsCreator, DataxWriter dataxWriter) {
+        SelectedTab tab = (SelectedTab) tableAlias.getSourceTab();
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
@@ -343,7 +349,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             cols.add(col);
         }
         params.put(ConfigConstant.KEY_COLUMN, cols);
-        params.put(KEY_FULL_COLS, colMetasMap.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        params.put(KEY_FULL_COLS, colMetasMap.getCols().stream().map(IColMetaGetter::getName).collect(Collectors.toList()));
         //    params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         params.put("batchSize", this.batchSize);
         params.put("flushIntervalMills", this.flushIntervalMills);
@@ -383,7 +389,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     /**
      * @param dbName
      * @param tabAlias
-     * @param tab
      * @param jdbcUrl
      * @param dsFactory
      * @param dataXWriter
@@ -391,10 +396,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * @see JdbcSinkFactory
      */
     private CreateChunjunSinkFunctionResult createSinkFunction(
-            String dbName, final TableAlias tabAlias, SelectedTab tab, String jdbcUrl
+            String dbName, final IDataxProcessor.TableMap tabAlias, String jdbcUrl
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
 
-        SyncConf syncConf = createSyncConf(tab, tabAlias, () -> {
+        SyncConf syncConf = createSyncConf(tabAlias, () -> {
             Map<String, Object> params = Maps.newHashMap();
             params.put("username", dsFactory.getUserName());
             params.put("password", dsFactory.getPassword());
@@ -405,13 +410,13 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             conn.put("table", Lists.newArrayList(tabAlias.getTo()));
             setSchema(conn, dbName, dsFactory);
             params.put("connection", Lists.newArrayList(conn));
-            setParameter(dsFactory, dataXWriter, tab, params, tabAlias);
+            setParameter(dsFactory, dataXWriter, tabAlias.getSourceTab(), params, tabAlias);
 
             return params;
         }, dataXWriter);
 
         CreateChunjunSinkFunctionResult sinkFunc
-                = createChunjunSinkFunction(jdbcUrl, tabAlias, tab.getPrimaryKeys(), dsFactory, dataXWriter, syncConf);
+                = createChunjunSinkFunction(jdbcUrl, tabAlias, tabAlias.getSourceTab().getPrimaryKeys(), dsFactory, dataXWriter, syncConf);
         return sinkFunc;
     }
 
@@ -421,11 +426,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     protected void setParameter(BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter
-            , SelectedTab tab, Map<String, Object> params, final TableAlias tableAlias) {
+            , ISelectedTab tab, Map<String, Object> params, final IDataxProcessor.TableMap tableAlias) {
     }
 
     private CreateChunjunSinkFunctionResult createChunjunSinkFunction(
-            String jdbcUrl, TableAlias tableAlias, List<String> primaryKeys, BasicDataSourceFactory dsFactory
+            String jdbcUrl, IDataxProcessor.TableMap tableAlias, List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         CreateChunjunSinkFunctionResult sinkFactory = createSinkFactory(jdbcUrl, tableAlias, primaryKeys, dsFactory, dataXWriter, syncConf);
         sinkFactory.initialize();
@@ -510,7 +515,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
     }
 
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, TableAlias tableAlias
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, IDataxProcessor.TableMap tableAlias
             , List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         final CreateChunjunSinkFunctionResult createResult = new CreateChunjunSinkFunctionResult();
@@ -605,7 +610,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
 
-    protected abstract JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf);
+    protected abstract JdbcOutputFormat createChunjunOutputFormat(IDataxProcessor.TableMap tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf);
 
 
     private transient LoadingCache<String, IStreamTableMeta> tabMetaCache;
@@ -616,8 +621,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * ===========================================================
      */
     @Override
-    public IStreamTableMeta getStreamTableMeta(TableAlias tableAlias) {
-
+    public IStreamTableMeta getStreamTableMeta(IDataxProcessor.TableMap tableMap) {
+        final String sourceTabName = tableMap.getFrom();
         if (tabMetaCache == null) {
             tabMetaCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS)
                     .build(new CacheLoader<String, IStreamTableMeta>() {
@@ -630,7 +635,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                             // 初始化表RDBMS的表，如果表不存在就创建表
                             //  DataxWriter.process(getCollectionName(), tableName, ds.getJdbcUrls());
                             // ISourceTable sourceTable, String sinkTargetTabName, List<String> jdbcUrls
-                            writer.initWriterTable(() -> tableAlias.getFrom(), targetTableName, ds.getJdbcUrls());
+                            writer.initWriterTable(() -> sourceTabName, targetTableName, ds.getJdbcUrls());
                             final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, null, EntityName.parse(targetTableName))
                                     .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                                     .collect(Collectors.toList());
@@ -650,7 +655,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
         try {
-            return tabMetaCache.get(tableAlias.getTo());
+            return tabMetaCache.get(tableMap.getTo());
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

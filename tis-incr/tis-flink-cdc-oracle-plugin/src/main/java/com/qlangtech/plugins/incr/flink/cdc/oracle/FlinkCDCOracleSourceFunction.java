@@ -167,7 +167,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<List<ReaderSour
 
                             }));
 
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null, true)
+            sourceChannel.setFocusTabs(tabs, dataXProcessor
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return sourceChannel;
         } catch (Exception e) {

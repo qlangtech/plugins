@@ -22,10 +22,12 @@ import com.dtstack.chunjun.connector.jdbc.table.JdbcDynamicTableFactory;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -82,9 +84,13 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
         }
         ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline(dataXName));
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
+        IDataxWriter writer = dataxProcessor.getWriter(null);
+        ISelectedTab selectedTab = dataxProcessor.getReader(null).getSelectedTab(sourceTableName);
 
         RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
-                , dataxProcessor.getTabAlias(null, true).getWithCheckNotNull(sourceTableName), false);
+                //, dataxProcessor.getTabAlias(null, true).getWithCheckNotNull(sourceTableName)
+                , new IDataxProcessor.TableMap(writer.getWriterTableExecutor(), selectedTab)
+                , false);
 
         // 3.封装参数
         return new TISJdbcDymaincTableSink(this.endType, rowDataSinkFunc);

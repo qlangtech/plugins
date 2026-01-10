@@ -144,7 +144,7 @@ public class WriterTemplate {
             }
 
             @Override
-            public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
+            public IStreamTableMeta getStreamTableMeta(IDataxProcessor.TableMap tableName) {
                 throw new UnsupportedOperationException();
             }
 

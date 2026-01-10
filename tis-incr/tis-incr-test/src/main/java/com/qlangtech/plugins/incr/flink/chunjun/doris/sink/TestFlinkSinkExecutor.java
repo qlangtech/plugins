@@ -35,7 +35,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -51,6 +50,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
@@ -175,7 +175,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
                 isFlinkCDCPipelineEnable()
                 , env.fromElements(new DTO[]{d, update}));
         //
-        readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(new TableAlias(tableName),
+        readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(new IDataxProcessor.TableMap(Optional.empty(), new DefaultTab(tableName)),
                 sourceStream)));
         //
         //
@@ -251,12 +251,12 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             public void runStream(DataxProcessor dataxProcessor, SINK_FACTORY sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception {
                 IFlinkColCreator flinkColCreator = null;
                 //Map<TableAlias, TabSinkFunc<?, ?, RowData>> sinkFunction =
-                Map<TableAlias, TabSinkFunc<?, ?, ROW>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
+                Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, ROW>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
                 Assert.assertEquals(1, sinkFunction.size());
                 TestFlinkSinkExecutor.this.startTestSinkSync(sinkFunction);
 
 
-                for (Map.Entry<TableAlias, TabSinkFunc<?, ?, ROW>> entry : sinkFunction.entrySet()) {
+                for (Map.Entry<IDataxProcessor.TableMap, TabSinkFunc<?, ?, ROW>> entry : sinkFunction.entrySet()) {
 
                     Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey(), this);
 
@@ -313,7 +313,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
 //        return dtos.toArray(new DTO[dtos.size()]); //new DTO[]{add, updateAfter};
 //    }
 
-    protected void startTestSinkSync(Map<TableAlias, TabSinkFunc<?, ?, ROW>> sinkFunction) {
+    protected void startTestSinkSync(Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, ROW>> sinkFunction) {
     }
 
     // @Test
@@ -350,9 +350,9 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
             Map<String, TableAlias> mapper = Maps.newHashMap();
             mapper.put(tableName, new TableAlias(tableName));
-            TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
-            EasyMock.expect(dataxProcessor.getTabAlias(null, true)).andReturn(aliasMapper).anyTimes();
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
+           // TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
+            //EasyMock.expect(dataxProcessor.getTabAlias(null, true)).andReturn(aliasMapper).anyTimes();
+            //EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
             EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
 
             EasyMock.expect(dataxProcessor.getDataXName())
@@ -415,7 +415,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             CreateTableSqlBuilder.CreateDDL createDDL = null;
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
                 createDDL = dataXWriter.generateCreateDDL(
-                        SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(Optional.empty(),totalpayInfo), Optional.empty());
+                        SourceColMetaGetter.getNone(), new IDataxProcessor.TableMap(Optional.empty(), totalpayInfo), Optional.empty());
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
@@ -607,13 +607,13 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
     }
 
     protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(IStreamScriptRun streamScriptRun, StreamExecutionEnvironment env,
-                                                                    TableAlias tableAlia) {
+                                                                    IDataxProcessor.TableMap tableAlia) {
         return createReaderSource(env, tableAlia, streamScriptRun);
     }
 
     protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(
             StreamExecutionEnvironment env,
-            TableAlias tableAlia, IStreamScriptRun<SINK_FACTORY, ROW> streamScriptRun) {
+            IDataxProcessor.TableMap tableAlia, IStreamScriptRun<SINK_FACTORY, ROW> streamScriptRun) {
         List<DTO> testRecords = Lists.newArrayList();
         for (FlinkTestCase testCase : streamScriptRun.createFlinkTestCases()) {
             for (DTO dto : testCase.createTestData()) {

@@ -31,7 +31,6 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
@@ -111,7 +110,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
+    public Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
         MQListenerFactory sourceListener = HeteroEnum.getIncrSourceListenerFactory(((IAppSource) dataxProcessor).getDataXName());
@@ -120,9 +119,9 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         ElasticEndpoint token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
-        Optional<TableAlias> first = dataxProcessor.getTabAlias(null, false).findFirst();
+        Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);// dataxProcessor.getTabAlias(null, false).findFirst();
         if (first.isPresent()) {
-            TableAlias value = first.get();
+            IDataxProcessor.TableMap value = first.get();
             if (!(value instanceof ESTableAlias)) {
                 throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
             }

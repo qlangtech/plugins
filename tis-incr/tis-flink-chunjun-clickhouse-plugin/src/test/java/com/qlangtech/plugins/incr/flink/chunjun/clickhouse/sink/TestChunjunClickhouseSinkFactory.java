@@ -25,6 +25,7 @@ import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXName;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
@@ -235,7 +236,7 @@ public class TestChunjunClickhouseSinkFactory
             clickHouseSinkFactory.parallelism = 1;
             clickHouseSinkFactory.semantic = "at-least-once";
             IFlinkColCreator flinkColCreator = null;
-            Map<TableAlias, TabSinkFunc<?, ?, RowData>>
+            Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>>
                     sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
             Assert.assertTrue(sinkFuncs.size() > 0);
 

@@ -32,12 +32,10 @@ import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -72,7 +70,8 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, TableAlias targetTabName, List<String> primaryKeys, BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory( //
+            String jdbcUrl, IDataxProcessor.TableMap targetTabName, List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
         DataXStarRocksWriter rocksWriter = (DataXStarRocksWriter) dataXWriter;
@@ -136,7 +135,7 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(IDataxProcessor.TableMap tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
         throw new UnsupportedOperationException();
     }
 

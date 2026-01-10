@@ -27,7 +27,6 @@ import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.TISJarLoader;
 import com.qlangtech.tis.datax.common.DataXRealExecutor;
@@ -48,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +83,7 @@ public class DefaultDataXPreviewRocrdsImpl extends DataXRecordsPreviewImplBase {
 
 
         PreviewRecords records
-                = previewRocrds.pipeSynchronize.previewRecords("orderdetail", queryCriteria);
+                = previewRocrds.pipeSynchronize.previewRecords("totalpayinfo", queryCriteria);
         records.getPageRows().forEach((r) -> {
            // System.out.println(r.getColumn("order_id"));
             System.out.println(r);

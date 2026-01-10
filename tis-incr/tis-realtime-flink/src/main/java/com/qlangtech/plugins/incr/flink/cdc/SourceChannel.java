@@ -24,8 +24,9 @@ import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxWriter;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DBConfig.DBTable;
 import com.qlangtech.tis.plugin.ds.DBConfig.HostDBs;
@@ -57,7 +58,7 @@ import java.util.stream.Stream;
 public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     private final List<ReaderSource> sourceFunction;
-    private Set<String> focusTabs = null;// = Sets.newHashSet();
+    private Set<ISelectedTab> focusTabs = null;// = Sets.newHashSet();
     private Tab2OutputTag<DTOStream> tab2OutputTag = null;
     private final boolean flinkCDCPipelineEnable;
 
@@ -165,26 +166,30 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     @Override
-    public Set<String> getFocusTabs() {
+    public Set<ISelectedTab> getFocusTabs() {
         return this.focusTabs;
     }
 
-    public void setFocusTabs(List<ISelectedTab> tabs, TableAliasMapper tabAliasMapper, Function<String, DTOStream> dtoStreamCreator) {
+    public void setFocusTabs(List<ISelectedTab> tabs, IDataxProcessor dataXProcessor, Function<String, DTOStream> dtoStreamCreator) {
         if (CollectionUtils.isEmpty(tabs)) {
             throw new IllegalArgumentException("param tabs can not be null");
         }
-        if (tabAliasMapper.isNull()) {
-            throw new IllegalArgumentException("param tabAliasMapper can not be null");
-        }
+        IDataxWriter writer = dataXProcessor.getWriter(null);
+        Optional<AutoCreateTable> writerTableExecutor = writer.getWriterTableExecutor();
+//        if (tabAliasMapper.isNull()) {
+//            throw new IllegalArgumentException("param tabAliasMapper can not be null");
+//        }
         this.focusTabs = DTOSourceTagProcessFunction.createFocusTabs(this.flinkCDCPipelineEnable, tabs);
 //     (this.flinkCDCPipelineEnable
 //                ? Stream.of(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS)
 //                : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
 
-        Map<TableAlias, DTOStream> tab2StreamMapper
+        Map<IDataxProcessor.TableMap, DTOStream> tab2StreamMapper
                 = this.focusTabs.stream().collect(Collectors.toMap(
-                (name) -> (flinkCDCPipelineEnable ? TableAlias.create(name, name) : tabAliasMapper.getWithCheckNotNull(name))
-                , (name) -> dtoStreamCreator.apply(name)));
+                (name) -> (flinkCDCPipelineEnable //
+                        ? new IDataxProcessor.TableMap(Optional.empty(), name) //
+                        : new IDataxProcessor.TableMap(writerTableExecutor, name)) //
+                , (name) -> dtoStreamCreator.apply(name.getName())));
         this.tab2OutputTag = new Tab2OutputTag<>(tab2StreamMapper);
     }
 

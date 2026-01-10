@@ -22,14 +22,16 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.resmatcher.WildcardDFSResMatcher;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBIdentity;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
@@ -43,10 +45,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -75,6 +75,11 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
         }
     }
 
+    // @Override
+    public boolean isRDBMSSupport() {
+        return Objects.requireNonNull(resMatcher, "resMatcher can not be null").isRDBMSSupport();
+    }
+
     /**
      * ================================================================================
      * support rdbms start
@@ -86,8 +91,17 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
     public abstract List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities();
 
     @Override
+    public List<ISelectedTab> getSelectedTabs() {
+        return this.resMatcher.getSelectedTabs(this);
+    }
+
+    @Override
     public <T extends ISelectedTab> List<T> getUnfilledSelectedTabs() {
+        //if (this.isRDBMSSupport()) {
         return (List<T>) selectedTabs;
+//        } else {
+//            return (List<T>) getSelectedTabs();
+//        }
     }
 
     @Override
@@ -133,11 +147,6 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
         return this.resMatcher.hasMulitTable(this);
     }
 
-
-    @Override
-    public List<ISelectedTab> getSelectedTabs() {
-        return this.resMatcher.getSelectedTabs(this);
-    }
 
     /**
      * ================================================================================

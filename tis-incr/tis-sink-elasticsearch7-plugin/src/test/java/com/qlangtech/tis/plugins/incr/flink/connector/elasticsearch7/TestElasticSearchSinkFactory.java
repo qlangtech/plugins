@@ -25,8 +25,6 @@ import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactor
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
@@ -43,10 +41,8 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
@@ -59,7 +55,6 @@ import org.junit.rules.TestRule;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -163,17 +158,17 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
 
-        Map<String, TableAlias> aliasMap = new HashMap<>();
-
-        aliasMap.put(tableName, esTableAlias);
-        EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(new TableAliasMapper(aliasMap));
+//        Map<String, TableAlias> aliasMap = new HashMap<>();
+//
+//        aliasMap.put(tableName, esTableAlias);
+       // EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(new TableAliasMapper(aliasMap));
 
         this.replay();
 
         IFlinkColCreator flinkColCreator = null;
 
         ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
-        Map<TableAlias, TabSinkFunc<?, ?, RowData>>
+        Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>>
                 sinkFuncs = esSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
@@ -191,7 +186,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         d.setAfter(after);
         Assert.assertEquals(1, sinkFuncs.size());
 
-        for (Map.Entry<TableAlias, TabSinkFunc<?, ?, RowData>> entry : sinkFuncs.entrySet()) {
+        for (Map.Entry<IDataxProcessor.TableMap, TabSinkFunc<?, ?, RowData>> entry : sinkFuncs.entrySet()) {
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             runElasticSearchSinkTest(
                     "elasticsearch-sink-test-json-index", entry.getValue());
@@ -223,8 +218,8 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         DataStreamSource<DTO> source =
                 env.addSource(new TestDataSourceFunction());
-
-        DTOStream<RowData> sourceStream = DTOStream.createRowData(source.map(new DTO2RowDataMapper(sinkFunc.getSourceColsMeta())));
+       // sinkFunc.getSourceColsMeta()
+        DTOStream<RowData> sourceStream = DTOStream.createRowData(source.map(new DTO2RowDataMapper(null)));
 
 
         sinkFunc.add2Sink(sourceStream);

@@ -20,7 +20,7 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
-import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
@@ -51,7 +51,7 @@ public final class RowDataSinkFunc extends AbstractTabSinkFuncV1<SinkFunction<Ro
     private static final Logger logger = LoggerFactory.getLogger(RowDataSinkFunc.class);
 
 
-    public RowDataSinkFunc(TableAlias tab
+    public RowDataSinkFunc(IDataxProcessor.TableMap tab
             , SinkFunction<RowData> sinkFunction //
             , List<String> primaryKeys //
             , IPluginContext pluginContext

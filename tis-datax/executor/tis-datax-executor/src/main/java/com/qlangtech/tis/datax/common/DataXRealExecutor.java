@@ -106,13 +106,14 @@ public class DataXRealExecutor {
      * @return
      */
     public PreviewRecords previewRecords(String tableName, QueryCriteria queryCriteria) {
-
+        IPluginContext pluginCtx = IPluginContext.namedContext(this.dataXName);
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not be null");
         }
         final IDataxReader dataXReader = this.getDataxReader();
         IGroupChildTaskIterator subTasks = dataXReader.getSubTasks((tab) -> StringUtils.equals(tab.getName(), tableName));
-        IPluginContext pluginCtx = IPluginContext.namedContext(this.dataXName);
+
+
         while (subTasks.hasNext()) {
             IDataxReaderContext readerContext = subTasks.next();
 

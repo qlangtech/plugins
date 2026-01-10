@@ -30,7 +30,6 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
@@ -53,7 +52,6 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
@@ -94,7 +92,7 @@ public abstract class TableRegisterFlinkSourceHandle
                         .inStreamingMode()
                         .build());
 
-        for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
+        for (Map.Entry<IDataxProcessor.TableMap, DTOStream> entry : tab2OutputTag.entrySet()) {
             this.registerSourceTable(tabEnv, entry.getKey(), entry.getValue());
             if (shallRegisterSinkTable()) {
                 this.registerSinkTable(tabEnv, entry.getKey());
@@ -106,7 +104,7 @@ public abstract class TableRegisterFlinkSourceHandle
     }
 
     @Override
-    protected Map<TableAlias, TabSinkFunc<?, ?, DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+    protected Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
     }
@@ -131,12 +129,12 @@ public abstract class TableRegisterFlinkSourceHandle
     abstract protected void executeSql(TISTableEnvironment tabEnv);
 
     @Override
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, IDataxProcessor.TableMap tabName) {
 
         return getAllTabColsMeta(this.getSinkFuncFactory(), tabName);
     }
 
-    private void registerSinkTable(StreamTableEnvironment tabEnv, TableAlias alias) {
+    private void registerSinkTable(StreamTableEnvironment tabEnv, IDataxProcessor.TableMap alias) {
 
         org.apache.flink.table.api.Schema.Builder sinkTabSchema
                 = org.apache.flink.table.api.Schema.newBuilder();
@@ -154,7 +152,7 @@ public abstract class TableRegisterFlinkSourceHandle
                         .schema(sinkTabSchema.build()).build());
     }
 
-    protected void initWriterTable(TableAlias alias) {
+    protected void initWriterTable(IDataxProcessor.TableMap alias) {
         DataxWriter dataXWriter = DataxWriter.load(null, this.getDataXName());
         if (dataXWriter instanceof IInitWriterTableExecutor) {
             DataSourceFactory dsFactory
@@ -182,7 +180,7 @@ public abstract class TableRegisterFlinkSourceHandle
 
 
     protected void registerSourceTable(StreamTableEnvironment tabEnv
-            , TableAlias alias, DTOStream sourceStream) {
+            , IDataxProcessor.TableMap alias, DTOStream sourceStream) {
 
         String tabName = alias.getFrom();
         // Schema.Builder scmBuilder = Schema.newBuilder();
@@ -266,7 +264,7 @@ public abstract class TableRegisterFlinkSourceHandle
         tabEnv.createTemporaryView(alias.getTo() + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
     }
 
-    private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, TableAlias tabName) {
+    private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, IDataxProcessor.TableMap tabName) {
         IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
         return AbstractRowDataMapper.getAllTabColsMeta(streamTableMeta);
     }

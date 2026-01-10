@@ -30,10 +30,7 @@ import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtensible;
-import com.qlangtech.tis.plugin.ds.JDBCConnection;
-import com.qlangtech.tis.plugin.ds.JDBCConnectionPool;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.dto.DTOStream;
@@ -76,12 +73,12 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return DataXName.createDataXPipeline(this.getDataXName());
     }
 
-    public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, TableAlias tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, IDataxProcessor.TableMap tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(DataXName.createDataXPipeline(dataxName.getName()));
         return getStreamTableMeta(sinKFactory, tabName);
     }
 
-    public static IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, TableAlias tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, IDataxProcessor.TableMap tabName) {
         if (!(sinKFactory instanceof IStreamTableMeataCreator.ISinkStreamMetaCreator)) {
             throw new IllegalStateException("writer:"
                     + sinKFactory.getClass().getName() + " must be type of "
@@ -91,7 +88,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     }
 
     public static IStreamTableMeta getStreamTableMeta(
-            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, TableAlias tabName) {
+            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, IDataxProcessor.TableMap tabName) {
         return sourceFactory.getStreamTableMeta(tabName);
     }
 
@@ -106,15 +103,15 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         }
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
-        Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
+        Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
 
         this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
         return executeFlinkJob(dataxName, env);
     }
 
-    protected Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> createTabSinkFunc(
+    protected Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> createTabSinkFunc(
             IDataxProcessor dataXProcessor) {
-        Map<TableAlias, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks
+        Map<IDataxProcessor.TableMap, TabSinkFunc<?, ?, SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor, flinkColCreator);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
@@ -146,7 +143,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return tab2OutputTag;
     }
 
-    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, TableAlias tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, IDataxProcessor.TableMap tabName) {
         return Collections.emptyList();
     }
 

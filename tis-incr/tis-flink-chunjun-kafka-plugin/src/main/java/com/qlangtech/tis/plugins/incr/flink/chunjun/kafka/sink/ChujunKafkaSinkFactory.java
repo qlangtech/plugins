@@ -39,15 +39,13 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeta;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -101,25 +99,26 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected CreateChunjunSinkFunctionResult createSinFunctionResult(
-            IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName, boolean shallInitSinkTable) {
+            IDataxProcessor dataxProcessor, IDataxProcessor.TableMap selectedTab, boolean shallInitSinkTable) {
 
+        final String targetTabName = selectedTab.getTo();
         CreateChunjunSinkFunctionResult sinkFuncRef = new CreateChunjunSinkFunctionResult();
         sinkFuncRef.setPrimaryKeys(selectedTab.getPrimaryKeys());
-        KafkaSelectedTab kfkTable = (KafkaSelectedTab) selectedTab;
-
+        KafkaSelectedTab kfkTable = (KafkaSelectedTab) dataxProcessor.getReader(null).getSelectedTab(selectedTab.getFrom());// selectedTab.getSourceTab();
+      //  ISelectedTab filledColsSelectedTab = ;
         DataXKafkaWriter dataXWriter = (DataXKafkaWriter) dataxProcessor.getWriter(null);
 
         KafkaConf kafkaConf = new KafkaConf();
         //
         kafkaConf.setPartitionAssignColumns(kfkTable.partitionFields);
         kafkaConf.setTableFields(
-                kfkTable.getCols().stream().map((col) -> col.getName()).collect(Collectors.toList()));
-        kafkaConf.setTableName(targetTabName);
+                kfkTable.getCols().stream().map(CMeta::getName).collect(Collectors.toList()));
+        kafkaConf.setTableName(selectedTab.getTo());
         kafkaConf.setTopic(dataXWriter.topic);
 
         kafkaConf.setProducerSettings(dataXWriter.buildKafkaConfig());
-        TableAlias tableAlias = TableAlias.create(selectedTab.getName(), targetTabName);
-        SyncConf syncConf = createSyncConf(selectedTab, tableAlias, () -> {
+        //TableAlias tableAlias = TableAlias.create(selectedTab.getName(), targetTabName);
+        SyncConf syncConf = createSyncConf(selectedTab, () -> {
             Map<String, Object> params = Maps.newHashMap();
             return params;
         }, dataXWriter);
@@ -169,7 +168,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
         sinkFuncRef.setSinkFactory(sinkFactory);
         sinkFuncRef.initialize();
-        sinkFuncRef.setSinkCols(new TableCols(selectedTab.getCols()));
+        sinkFuncRef.setSinkCols(new TableCols(kfkTable.getCols()));
 
         //Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
         sinkFuncRef.setParallelism(this.parallelism);
@@ -225,7 +224,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(TableAlias tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+    protected JdbcOutputFormat createChunjunOutputFormat(IDataxProcessor.TableMap tableAlias, DataSourceFactory dsFactory, JdbcConf jdbcConf) {
         return null;
     }
 
@@ -235,7 +234,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    public IStreamTableMeta getStreamTableMeta(TableAlias tableName) {
+    public IStreamTableMeta getStreamTableMeta(IDataxProcessor.TableMap tableName) {
 
         // DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
         //  DataxWriter writer = DataxWriter.load(null, this.dataXName);// dataXProcessor.getWriter(null);

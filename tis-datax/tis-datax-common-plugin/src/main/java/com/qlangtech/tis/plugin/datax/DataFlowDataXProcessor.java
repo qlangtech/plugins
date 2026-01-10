@@ -32,7 +32,6 @@ import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.StoreResourceTypeConstants;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -415,10 +414,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         return DataxProcessor.getDataxCfgFileNames(pluginCtx, partialTrigger, this);
     }
 
-    @Override
-    public TableAliasMapper getTabAlias(IPluginContext pluginCtx, boolean withDft) {
-        return TableAliasMapper.Null;
-    }
+
 
 
     @TISExtension()

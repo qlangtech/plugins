@@ -20,11 +20,13 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.DTO.EventType;
 import org.apache.flink.util.OutputTag;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,10 +46,10 @@ public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
     }
 
 
-    public static Set<String> createFocusTabs(boolean flinkCDCPipelineEnable, List<ISelectedTab> tabs) {
+    public static Set<ISelectedTab> createFocusTabs(boolean flinkCDCPipelineEnable, List<ISelectedTab> tabs) {
         return (flinkCDCPipelineEnable
-                ? Stream.of(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS)
-                : tabs.stream().map((t) -> t.getName())).collect(Collectors.toSet());
+                ? Stream.of(new DefaultTab(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS, Collections.emptyList()))
+                : tabs.stream().map((t) -> t)).collect(Collectors.toSet());
     }
 
     public static DTOSourceTagProcessFunction create(DataXName dataXName, boolean flinkCDCPipelineEnable, Map<String, OutputTag<DTO>> tab2OutputTag) {

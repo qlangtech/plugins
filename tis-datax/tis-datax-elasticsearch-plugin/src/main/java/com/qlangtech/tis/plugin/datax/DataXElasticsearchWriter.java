@@ -135,11 +135,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, IDataxProcessor.TableMap tableAlias) {
+    public boolean hasDifferWithSource(IPluginContext pluginCtx, ESTableAlias esTab) {
         List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx, false);
 //        IColMetaGetter col = null;
 //        ISchemaField schemaCol = null;
-        ISchema schema = convert2Schema(tableAlias);
+        ISchema schema = convert2Schema(esTab);
         List<ISchemaField> schemaFields = schema.getSchemaFields();
         if (schemaFields.size() != cols.size()) {
             return true;
@@ -242,29 +242,36 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @Override
     public List<ESColumn> initialIndex(IDataxProcessor dataxProcessor) {
-        ESTableAlias esSchema = null;
 
-        Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);
 
-       // Optional<TableAlias> first = dataxProcessor.getTabAlias(null, true).findFirst();
-        if (first.isPresent()) {
-            IDataxProcessor.TableMap value = first.get();
-            if (!(value instanceof ESTableAlias)) {
-                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
-            }
-            esSchema = (ESTableAlias) value;
-        }
+        // Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);
+        ESTableAlias esSchema = getEsTableAlias(dataxProcessor);
 
         Objects.requireNonNull(esSchema, "esSchema can not be null");
-        List<CMeta> cols = esSchema.getSourceCols();
+        List<CMeta> cols = esSchema.getCols();
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalStateException("cols can not be null");
         }
-        Optional<CMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
-        if (!firstPK.isPresent()) {
+        long pkCount = esSchema.getPrimaryKeys().size();//  cols.stream().filter(CMeta::isPk).findFirst();
+        if (pkCount < 1) {
             throw new IllegalStateException("has not set PK col");
         }
         return this.initialIndex(esSchema);
+    }
+
+    public static ESTableAlias getEsTableAlias(IDataxProcessor dataxProcessor) {
+        return getEsTableAlias(dataxProcessor.identityValue(), dataxProcessor.getFirstTableMap(null));
+    }
+
+    private static ESTableAlias getEsTableAlias(String pipelineName, Optional<IDataxProcessor.TableMap> first) {
+
+        IDataxProcessor.TableMap tableMap = first.orElseThrow(() -> new IllegalStateException("index:" + pipelineName + " relevant tableMap can not be null"));
+        ESTableAlias esSchema = null;
+        ISelectedTab sourceTab = tableMap.getSourceTab();
+        if (sourceTab instanceof ESTableAlias) {
+            esSchema = (ESTableAlias) sourceTab;
+        }
+        return esSchema;
     }
 
     /**
@@ -303,14 +310,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public ISchema projectionFromExpertModel(IPluginContext context, ISelectedTab esTab
-            , IDataxProcessor.TableMap tableAlias, Consumer<byte[]> schemaContentConsumer) {
-        schemaContentConsumer.accept(((ESTableAlias) tableAlias).getSchemaByteContent());
+    public ISchema projectionFromExpertModel(IPluginContext context, ESTableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
+        schemaContentConsumer.accept((tableAlias).getSchemaByteContent());
         return convert2Schema(tableAlias);
     }
 
-    private ISchema convert2Schema(IDataxProcessor.TableMap tableAlias) {
-        ESTableAlias esTable = (ESTableAlias) tableAlias;
+    private ISchema convert2Schema(ESTableAlias esTable) {
 
         JSONObject body = new JSONObject();
         body.put("content", esTable.getSchemaContent());
@@ -391,6 +396,13 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             esField.setUniqueKey(field.getBooleanValue(ISchemaField.KEY_PK));
             esField.setSharedKey(field.getBooleanValue(ISchemaField.KEY_SHARE_KEY));
 
+            if (esField.isUniqueKey()) {
+                schema.setUniqueKey(esField.getName());
+            }
+
+            if (esField.isSharedKey()) {
+                schema.setSharedKey(esField.getName());
+            }
 
             if (!fieldAcceptPredicate.test(esField)) {
                 continue;
@@ -537,20 +549,19 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
-
-        if (!tableMap.isPresent()) {
-            throw new IllegalStateException("tableMap must be present");
-        }
-        IDataxProcessor.TableMap mapper = tableMap.get();
-        if (!(mapper instanceof ESTableAlias)) {
-            throw new IllegalStateException("mapper instance must be type of " + ESTableAlias.class.getSimpleName());
-        }
-        return new ESContext(this, (ESTableAlias) mapper);
+//        if (!tableMap.isPresent()) {
+//            throw new IllegalStateException("tableMap must be present");
+//        }
+//        IDataxProcessor.TableMap mapper = tableMap.get();
+//        if (!(mapper instanceof ESTableAlias)) {
+//            throw new IllegalStateException("mapper instance must be type of " + ESTableAlias.class.getSimpleName());
+//        }
+        return new ESContext(this, getEsTableAlias(this.index, tableMap));
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements IRewriteSuFormProperties {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME));
@@ -632,6 +643,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
+        }
+
+        @Override
+        public ESTableAlias.DefaultDescriptor getRewriterSelectTabDescriptor() {
+            return ESTableAlias.desc;
         }
     }
 }

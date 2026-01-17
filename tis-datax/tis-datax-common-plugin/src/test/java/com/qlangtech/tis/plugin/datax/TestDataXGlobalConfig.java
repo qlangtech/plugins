@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
@@ -42,7 +43,8 @@ public class TestDataXGlobalConfig extends TestCase {
         assertNotNull(descriptor);
 
         List<Descriptor<ParamsConfig>> singleton = Collections.singletonList(descriptor);
-        DescriptorsJSON descriptorsJSON = new DescriptorsJSON(singleton);
+        @SuppressWarnings("all")
+        DescriptorsJSON descriptorsJSON = new DefaultDescriptorsJSON(singleton);
 
         JSON.parseObject(IOUtils.loadResourceFromClasspath(TestDataXGlobalConfig.class, "dataXGlobalConfig-descriptor-assert.json"));
 

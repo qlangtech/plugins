@@ -140,18 +140,20 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         dataXWriter.dynamic = true;
 
         String esSchema = IOUtils.loadResourceFromClasspath(DataXElasticsearchWriter.class, "es-schema-content.json");
-        ESTableAlias tableMap = new ESTableAlias(esSchema);
+        ESTableAlias tableMap = ESTableAlias.create(Optional.empty(), esSchema);
 
-      //  tableMap.setSchemaContent(esSchema);
+        //  tableMap.setSchemaContent(esSchema);
 
 
-        WriterTemplate.valiateCfgGenerate("es-datax-writer-assert.json", dataXWriter, tableMap);
+        WriterTemplate.valiateCfgGenerate("es-datax-writer-assert.json"
+                , dataXWriter, new IDataxProcessor.TableMap(Optional.empty(), tableMap));
 
 
         token.authToken = null;
         // token.sccessKeySecret = null;
 
-        WriterTemplate.valiateCfgGenerate("es-datax-writer-assert-without-option.json", dataXWriter, tableMap);
+        WriterTemplate.valiateCfgGenerate("es-datax-writer-assert-without-option.json"
+                , dataXWriter, new IDataxProcessor.TableMap(Optional.empty(), tableMap));
 
 
         EasyMock.verify(dataxReader);

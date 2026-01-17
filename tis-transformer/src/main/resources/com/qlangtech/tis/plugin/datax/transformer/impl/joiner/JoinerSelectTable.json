@@ -1,0 +1,7 @@
+{
+  "tagetTable": {
+    "label": "目标表",
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSelectTable.selectableTabs():uncache_true",
+    "help": "选一张需要进行Joiner操作的目标表"
+  }
+}

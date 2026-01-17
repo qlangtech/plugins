@@ -1,0 +1,19 @@
+{
+  "targetCols": {
+    "label": "目标列",
+    "viewtype": "idlist",
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols.getTargetCols():uncache_true",
+    "help": "从目标表记录里提取的列（s）"
+  },
+  "matchCondition": {
+    "label": "匹配条件",
+    "elementCreator": "com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory",
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols.getCondition():uncache_true",
+    "viewtype": "tuplelist"
+  },
+  "colPrefix": {
+    "label": "前缀",
+    "placeholder": "order_",
+    "help": "在输出列前添加前缀，避免与主表记录名称冲突"
+  }
+}

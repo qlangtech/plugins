@@ -118,15 +118,15 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         ElasticEndpoint token = dataXWriter.getToken();
 
-        ESTableAlias esSchema = null;
-        Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);// dataxProcessor.getTabAlias(null, false).findFirst();
-        if (first.isPresent()) {
-            IDataxProcessor.TableMap value = first.get();
-            if (!(value instanceof ESTableAlias)) {
-                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
-            }
-            esSchema = (ESTableAlias) value;
-        }
+        ESTableAlias esSchema = DataXElasticsearchWriter.getEsTableAlias(dataxProcessor);
+//        Optional<IDataxProcessor.TableMap> first = dataxProcessor.getFirstTableMap(null);// dataxProcessor.getTabAlias(null, false).findFirst();
+//        if (first.isPresent()) {
+//            IDataxProcessor.TableMap value = first.get();
+//            if (!(value instanceof ESTableAlias)) {
+//                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
+//            }
+//            esSchema = (ESTableAlias) value;
+//        }
 
         Objects.requireNonNull(esSchema, "esSchema can not be null");
 //        List<CMeta> cols = esSchema.getSourceCols();
@@ -210,14 +210,16 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         });
         // final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
-        if (!StringUtils.equals(esSchema.getFrom(), tab.getName())) {
-            throw new IllegalStateException("esSchema.getFrom():" + esSchema.getFrom() + " must be equal with tab.getName():" + tab.getName());
+        if (!StringUtils.equals(esSchema.getName(), tab.getName())) {
+            throw new IllegalStateException("esSchema.getFrom():" + esSchema.getName() + " must be equal with tab.getName():" + tab.getName());
         }
         Optional<SelectedTableTransformerRules> transformerOpt
                 = SelectedTableTransformerRules.createTransformerRules(dataxProcessor.identityValue() //, esSchema
                 , tab, sourceFlinkColCreator);
-        return Collections.singletonMap(esSchema
-                , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys
+
+        final IDataxProcessor.TableMap esTabMap = new IDataxProcessor.TableMap(Optional.empty(), esSchema);
+        return Collections.singletonMap(esTabMap
+                , new RowDataSinkFunc(esTabMap, sinkBuilder.build(), primaryKeys
                         , IPluginContext.namedContext(dataxProcessor.identityValue())
                         , tab
                         , sourceFlinkColCreator

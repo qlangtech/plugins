@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl.joiner;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -8,6 +9,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +37,12 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps {
     public List<CMeta> targetCols;
 
     /**
+     * 目标记录是否开启缓存，这样会加速join速度，如果缓存中存在就直接从缓存中获取
+     */
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public TargetRowsCache cache;
+
+    /**
      * 取得目标端列集合
      *
      * @return
@@ -47,15 +55,13 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps {
         return Collections.emptyList();
     }
 
+    @Override
+    protected void processPreSaved(IPluginContext pluginContext, Context currentCtx, OneStepOfMultiSteps[] preSavedStepPlugins) {
 
-    /**
-     * 目标记录是否开启缓存，这样会加速join速度，如果缓存中存在就直接从缓存中获取
-     */
-    @FormField(ordinal = 3, validate = {Validator.require})
-    public TargetRowsCache cache;
+    }
 
     @TISExtension
-    public static class Desc extends OneStepOfMultiSteps.BasicDesc {
+    public static class Desc extends OneStepOfMultiSteps.BasicDesc implements FormFieldType.IMultiSelectValidator {
         public Desc() {
             super();
         }

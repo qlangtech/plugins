@@ -10,6 +10,10 @@ import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.TargetRowsCache;
  * @date 2026/1/15
  */
 public class TargetRowsCacheOn extends TargetRowsCache {
+    @Override
+    public boolean isOn() {
+        return true;
+    }
 
     @TISExtension
     public static class OnDesc extends Descriptor<TargetRowsCache>{

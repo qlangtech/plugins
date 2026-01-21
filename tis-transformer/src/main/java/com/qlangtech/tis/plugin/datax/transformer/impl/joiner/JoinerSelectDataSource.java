@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl.joiner;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -22,6 +23,7 @@ public class JoinerSelectDataSource extends OneStepOfMultiSteps {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
+    @JSONField(serialize = false)
     public DataSourceFactory getDataSourceFactory() {
         return DataSourceFactory.load(this.dbName);
     }

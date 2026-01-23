@@ -11,7 +11,7 @@
     "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols.getCondition():uncache_true",
     "viewtype": "tuplelist"
   },
-  "colPrefix": {
+  "colPrefix":  {
     "label": "前缀",
     "placeholder": "order_",
     "help": "在输出列前添加前缀，避免与主表记录名称冲突"

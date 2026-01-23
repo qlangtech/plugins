@@ -24,9 +24,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
+ * Joiner UDF for joining primary table with dimension table
+ * <p>
+ * This UDF implements a multi-step configuration process:
+ * <ol>
+ *   <li>Step 1: Select data source ({@link JoinerSelectDataSource})</li>
+ *   <li>Step 2: Select target table ({@link JoinerSelectTable})</li>
+ *   <li>Step 3: Set match conditions and columns ({@link JoinerSetMatchConditionAndCols})</li>
+ * </ol>
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
+ * @see MultiStepsSupportHost
+ * @see JoinerSelectDataSource
+ * @see JoinerSelectTable
+ * @see JoinerSetMatchConditionAndCols
  */
 public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost {
 
@@ -52,43 +64,123 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost {
 
     }
 
+    /**
+     * Maximum number of columns to display in the description
+     */
+    private static final int MAX_DISPLAY_COLS = 5;
+
+    /**
+     * Get the literia (description) of this UDF for display purposes
+     * <p>
+     * This method builds a human-readable description of the join configuration,
+     * including selected columns, data source, match conditions, and cache settings.
+     *
+     * @return List of UDFDesc describing the join configuration
+     */
     @Override
     public List<UDFDesc> getLiteria() {
+        // Get all step configurations
         JoinerSetMatchConditionAndCols conditionAndCols = this.getOneStepOf(OneStepOfMultiSteps.Step.Step3);
         JoinerSelectTable selectTable = this.getOneStepOf(OneStepOfMultiSteps.Step.Step2);
         JoinerSelectDataSource selectDS = this.getOneStepOf(OneStepOfMultiSteps.Step.Step1);
+
         List<UDFDesc> literia = Lists.newArrayList();
+
+        // Add select information
+        literia.add(buildSelectDesc(conditionAndCols, selectDS));
+
+        // Add match conditions
+        literia.add(buildMatchConditionDesc(conditionAndCols, selectTable));
+
+        // Add cache status
+        literia.add(new UDFDesc("Cache", conditionAndCols.cache.isOn() ? "enable" : "disabled"));
+
+        return literia;
+    }
+
+    /**
+     * Build the select description including columns, data source, and prefix
+     *
+     * @param conditionAndCols Configuration from step 3
+     * @param selectDS         Data source from step 1
+     * @return UDFDesc for select information
+     */
+    private UDFDesc buildSelectDesc(JoinerSetMatchConditionAndCols conditionAndCols,
+                                    JoinerSelectDataSource selectDS) {
         List<UDFDesc> selectDesc = Lists.newArrayList();
-        List<CMeta> cols = conditionAndCols.targetCols;
-        int totalCols = cols.size();
-        String colsDisplay = cols.stream()
-                .limit(5)
-                .map((col) -> "'" + col.getName() + "'")
-                .collect(Collectors.joining(","));
-        if (totalCols > 5) {
-            colsDisplay += "...共" + totalCols + "列";
-        }
+
+        // Format columns display
+        String colsDisplay = formatColumnsDisplay(conditionAndCols.targetCols);
         selectDesc.add(new UDFDesc("Cols", colsDisplay));
 
         selectDesc.add(new UDFDesc("DataSource", selectDS.dbName));
         selectDesc.add(new UDFDesc("Prefix", conditionAndCols.colPrefix));
 
-        literia.add(new UDFDesc("Select", selectDesc));
-        AtomicInteger conditionNum = new AtomicInteger(0);
-        literia.add(new UDFDesc("With Match"
-                , conditionAndCols.matchCondition.stream()
-                .map((mc) -> new UDFDesc("Condition" + conditionNum.incrementAndGet()
-                        , mc.getPrimaryTableMatchColName() + "=" + selectTable.tagetTable + "." + mc.getDimensionMatchColName())).collect(Collectors.toList())));
-        literia.add(new UDFDesc("Cache", conditionAndCols.cache.isOn() ? "enable" : "disabled"));
-        return literia;
+        return new UDFDesc("Select", selectDesc);
     }
 
+    /**
+     * Format columns for display
+     * Shows up to MAX_DISPLAY_COLS columns, with ellipsis if there are more
+     *
+     * @param cols List of columns
+     * @return Formatted string like "'col1','col2','col3'...total 10 columns"
+     */
+    private String formatColumnsDisplay(List<CMeta> cols) {
+        int totalCols = cols.size();
+        String colsDisplay = cols.stream()
+                .limit(MAX_DISPLAY_COLS)
+                .map(col -> "'" + col.getName() + "'")
+                .collect(Collectors.joining(","));
+
+        if (totalCols > MAX_DISPLAY_COLS) {
+            colsDisplay += String.format("...total %d columns", totalCols);
+        }
+
+        return colsDisplay;
+    }
+
+    /**
+     * Build match condition descriptions
+     *
+     * @param conditionAndCols Configuration from step 3
+     * @param selectTable      Table selection from step 2
+     * @return UDFDesc for match conditions
+     */
+    private UDFDesc buildMatchConditionDesc(JoinerSetMatchConditionAndCols conditionAndCols,
+                                            JoinerSelectTable selectTable) {
+        AtomicInteger conditionNum = new AtomicInteger(0);
+        List<UDFDesc> matchConditions = conditionAndCols.matchCondition.stream()
+                .map(mc -> new UDFDesc(
+                        "Condition" + conditionNum.incrementAndGet(),
+                        String.format("%s=%s.%s",
+                                mc.getPrimaryTableMatchColName(),
+                                selectTable.tagetTable,
+                                mc.getDimensionMatchColName())))
+                .collect(Collectors.toList());
+
+        return new UDFDesc("With Match", matchConditions);
+    }
+
+    /**
+     * Set all step plugins to this host
+     * <p>
+     * This method is called by the framework to inject all step configurations
+     * after user completes the multi-step wizard.
+     *
+     * @param stepsPlugin Array of step plugins in order
+     */
     @Override
     public void setSteps(OneStepOfMultiSteps[] stepsPlugin) {
         this.stepsPlugin = stepsPlugin;
     }
 
 
+    /**
+     * Descriptor for JoinerUDF
+     * <p>
+     * Defines the multi-step configuration process for joining tables.
+     */
     @TISExtension
     public static class DefaultDescriptor extends UDFDefinition.BasicUDFDesc implements MultiStepsSupportHostDescriptor<JoinerUDF> {
         public DefaultDescriptor() {
@@ -111,6 +203,18 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost {
             return JoinerUDF.class;
         }
 
+        /**
+         * Get the list of step descriptions for the multi-step wizard
+         * <p>
+         * Defines three steps:
+         * <ol>
+         *   <li>Select data source</li>
+         *   <li>Select target table</li>
+         *   <li>Set match conditions and columns</li>
+         * </ol>
+         *
+         * @return List of step descriptions
+         */
         @Override
         public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {
             return Lists.newArrayList(new JoinerSelectDataSource.Desc()
@@ -118,6 +222,15 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost {
                     , new JoinerSetMatchConditionAndCols.Desc());
         }
 
+        /**
+         * Append external properties to the multi-step configuration
+         * <p>
+         * Adds source table columns to the context so they can be used
+         * in match condition UI.
+         *
+         * @param multiStepsCfg Configuration object to append properties to
+         * @throws IllegalStateException if source table columns are not available
+         */
         @Override
         public void appendExternalProps(JSONObject multiStepsCfg) {
             List<CMeta> sourceTabCols = SelectedTab.getSelectedCols();

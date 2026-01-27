@@ -287,7 +287,8 @@ public class DorisAutoCreateTable extends ParamsAutoCreateTable<DorisColWrapper>
 
         protected DorisType convertType(IColMetaGetter col) {
 
-            final DorisType type = col.getType().accept((columnTokenRecognise));
+            final DorisType type = Objects.requireNonNull(col.getType(), "col:" + col.getName() + " relevant colType can not be null") //
+                    .accept((columnTokenRecognise));
 
             DorisType fixType = col.getType().accept(new DataType.PartialTypeVisitor<DorisType>() {
 

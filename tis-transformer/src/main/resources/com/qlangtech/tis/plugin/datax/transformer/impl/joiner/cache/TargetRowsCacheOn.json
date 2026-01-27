@@ -1,0 +1,14 @@
+{
+  "maxSize": {
+    "label": "最大缓存数",
+    "dftVal": 5000
+  },
+  "expireAfterWrite": {
+    "label": "写入后过期",
+    "dftVal": 120
+  },
+  "expireAfterAccess": {
+    "label": "访问后过期",
+    "dftVal": 120
+  }
+}

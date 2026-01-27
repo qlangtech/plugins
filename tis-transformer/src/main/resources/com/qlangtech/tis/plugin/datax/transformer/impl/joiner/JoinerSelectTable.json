@@ -3,5 +3,10 @@
     "label": "目标表",
     "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSelectTable.selectableTabs():uncache_true",
     "help": "选一张需要进行Joiner操作的目标表"
+  },
+  "cache": {
+    "label": "缓存加速",
+    "dftVal": "on",
+    "help": "通过开启缓存，使得执行Join过程中，让外表可以在缓存中命中，避免重复在数据库中查询，从而提升数据同步效率"
   }
 }

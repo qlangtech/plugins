@@ -31,12 +31,7 @@
     <artifactId>tis-datax-local-executor</artifactId>
     <packaging>tpi</packaging>
     <dependencies>
-        <!--https://github.com/ben-manes/caffeine-->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>2.9.2</version>
-        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

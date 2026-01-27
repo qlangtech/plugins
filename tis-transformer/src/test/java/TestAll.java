@@ -19,6 +19,7 @@
 import com.qlangtech.tis.plugin.datax.transformer.impl.TestCopyValUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.TestJSONSplitterUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.TestRegexPatternReplace;
+import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheOnTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -27,7 +28,7 @@ import org.junit.runners.Suite;
  * @create: 2024-06-17 16:04
  **/
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestCopyValUDF.class, TestJSONSplitterUDF.class, TestRegexPatternReplace.class})
+@Suite.SuiteClasses({TestCopyValUDF.class, TestJSONSplitterUDF.class, TestRegexPatternReplace.class, TargetRowsCacheOnTest.class})
 public class TestAll {
 
 }

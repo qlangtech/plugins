@@ -7,6 +7,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.table.join.TableJoinFilterCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
 import com.qlangtech.tis.util.IPluginContext;
@@ -27,20 +28,26 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps {
      */
     @FormField(ordinal = 0, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<TableJoinMatchCondition> matchCondition;
+
+    /**
+     * 过滤条件（可选）：在JOIN时对主表或维表进行过滤
+     * 例如：A.valid='1' AND B.valid='1'
+     */
+    @FormField(ordinal = 1, advance = false, type = FormFieldType.MULTI_SELECTABLE)
+    public List<TableJoinFilterCondition> filterConditions;
+
     /**
      * 输出列会加上这个前缀，这样可以保证和主表列有区别，避免列冲突
      */
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
     public String colPrefix;
 
-    @FormField(ordinal = 2, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<CMeta> targetCols;
 
-    /**
-     * 目标记录是否开启缓存，这样会加速join速度，如果缓存中存在就直接从缓存中获取
-     */
-    @FormField(ordinal = 3, validate = {Validator.require})
-    public TargetRowsCache cache;
+    @FormField(ordinal = 4, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean skipError;
+
 
     /**
      * 取得目标端列集合
@@ -52,6 +59,10 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps {
     }
 
     public static List<TableJoinMatchCondition> getCondition() {
+        return Collections.emptyList();
+    }
+
+    public static List<TableJoinFilterCondition> getFilterConditions() {
         return Collections.emptyList();
     }
 

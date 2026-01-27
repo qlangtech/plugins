@@ -19,14 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.element.QueryCriteria;
-import com.github.benmanes.caffeine.cache.CacheLoader;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.google.common.cache.CacheBuilder;
-
-import com.github.benmanes.caffeine.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
@@ -44,28 +36,16 @@ import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.datax.DataXPipelinePreviewProcessorExecutor.PreviewLaunchParam;
-import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.solrj.util.ZkUtils;
-import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.easymock.EasyMock;
 
 import java.io.File;
-import java.net.URL;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

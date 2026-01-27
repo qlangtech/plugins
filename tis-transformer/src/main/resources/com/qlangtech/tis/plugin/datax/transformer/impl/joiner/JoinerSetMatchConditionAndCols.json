@@ -9,11 +9,24 @@
     "label": "匹配条件",
     "elementCreator": "com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory",
     "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols.getCondition():uncache_true",
-    "viewtype": "tuplelist"
+    "viewtype": "tuplelist",
+    "help": "设置主表与外表的匹配条件，如果主表在执行join过程中匹配到多条外表记录，则只取第一条"
   },
-  "colPrefix":  {
+  "filterConditions": {
+    "label": "过滤条件",
+    "elementCreator": "com.qlangtech.tis.plugin.table.join.TableJoinFilterConditionCreatorFactory",
+    "enum": "com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols.getFilterConditions():uncache_true",
+    "viewtype": "tuplelist",
+    "help": "在JOIN时对主表或维表进行过滤，例如：A.valid='1' AND B.status='active'"
+  },
+  "colPrefix": {
     "label": "前缀",
     "placeholder": "order_",
     "help": "在输出列前添加前缀，避免与主表记录名称冲突"
+  },
+  "skipError": {
+    "label": "跳过错误",
+    "dftVal": true,
+    "help": "执行过程中如发生错误，是否直接跳过错误？"
   }
 }

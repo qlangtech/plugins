@@ -1,22 +1,12 @@
 {
   "dbName": {
     "label": "数据库名",
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"all\")",
     "creator": {
       "routerLink": "/offline/ds",
       "label": "配置",
       "assistType": "dbQuickManager",
       "plugin": [
-        {
-          "descName": "MySQL-V5",
-          "hetero": "datasource",
-          "extraParam": "type_detailed,update_false,disableBizStore_true"
-        },
-        {
-          "descName": "MySQL-V8",
-          "hetero": "datasource",
-          "extraParam": "type_detailed,update_false,disableBizStore_true"
-        }
       ]
     }
   }

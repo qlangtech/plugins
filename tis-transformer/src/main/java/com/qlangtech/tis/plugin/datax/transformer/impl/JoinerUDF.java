@@ -351,6 +351,7 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
         // Add cache status
         // isOn() ? "enable" : "disabled"
         literia.add(new UDFDesc("Cache", (selectTable.cache.getUDFDesc())));
+        literia.add(new UDFDesc("SkipError", String.valueOf(conditionAndCols.skipError)));
 
         return literia;
     }

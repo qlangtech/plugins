@@ -268,6 +268,9 @@ public class FlinkCol implements Serializable {
                 // com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter
                 return LocalDate.parse((String) o, dateFormatter);
             }
+            if(o instanceof java.sql.Date){
+                return ((java.sql.Date) o).toLocalDate();
+            }
             return (LocalDate) o;
         }
 

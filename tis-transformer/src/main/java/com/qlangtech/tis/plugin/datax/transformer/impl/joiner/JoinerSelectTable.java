@@ -12,6 +12,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
 import com.qlangtech.tis.util.IPluginContext;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
  */
-public class JoinerSelectTable extends OneStepOfMultiSteps {
+public class JoinerSelectTable extends OneStepOfMultiSteps implements Serializable {
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String tagetTable;

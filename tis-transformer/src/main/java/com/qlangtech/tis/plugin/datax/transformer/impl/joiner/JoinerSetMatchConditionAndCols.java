@@ -12,6 +12,7 @@ import com.qlangtech.tis.plugin.table.join.TableJoinMatchCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
 import com.qlangtech.tis.util.IPluginContext;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -21,7 +22,7 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
  */
-public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps {
+public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implements Serializable {
 
     /**
      * 定义join match 规则，例如：source.order_id = target.order_id，可以定义多个关联条件

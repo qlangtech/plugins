@@ -52,6 +52,7 @@ import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.table.api.ValidationException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -77,7 +78,8 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @Override
     public IFlinkColCreator<FlinkCol> createFlinkColCreator(DataSourceMeta sourceMeta) {
         final IFlinkColCreator flinkColCreator = (meta, colIndex) -> {
-            return meta.getType().accept(new MySQLCDCTypeVisitor(meta, colIndex));
+            return Objects.requireNonNull(meta.getType(), "col:" + meta.getName() + " relevant type can not be null") //
+                    .accept(new MySQLCDCTypeVisitor(meta, colIndex));
         };
         return flinkColCreator;
     }

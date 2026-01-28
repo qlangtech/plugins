@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
  * @date 2026/1/15
  * @see JoinerSetMatchConditionAndCols
  */
-public abstract class TargetRowsCache implements Describable<TargetRowsCache> {
+public abstract class TargetRowsCache implements Describable<TargetRowsCache>, Serializable {
     public abstract boolean isOn();
 
     public abstract List<UDFDesc> getUDFDesc();

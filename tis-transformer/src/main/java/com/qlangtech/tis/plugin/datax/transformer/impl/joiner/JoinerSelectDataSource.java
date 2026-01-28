@@ -11,6 +11,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +20,7 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
  */
-public class JoinerSelectDataSource extends OneStepOfMultiSteps {
+public class JoinerSelectDataSource extends OneStepOfMultiSteps implements Serializable {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 

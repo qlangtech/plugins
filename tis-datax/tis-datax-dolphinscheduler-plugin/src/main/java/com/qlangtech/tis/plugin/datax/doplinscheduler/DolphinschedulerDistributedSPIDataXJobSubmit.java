@@ -26,8 +26,8 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.IDescribableManipulate;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.BasicWorkflowPayload;
@@ -51,11 +51,12 @@ import java.util.Optional;
  * @create: 2024-08-20 18:51
  **/
 @Public
-@TISExtension()
+//@TISExtension()
 public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistributedSPIDataXJobSubmit<DSWorkflowInstance> {
     @Override
     public InstanceType getType() {
-        return InstanceType.DS;
+        //   return InstanceType.DS;
+        throw new UnsupportedOperationException("InstanceType.DS is not supported");
     }
 
     @Override
@@ -64,9 +65,12 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
     }
 
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , DataXName appName, Optional<Long> workflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
-        return super.triggerJob(module, context, appName, workflowInstanceIdOpt, latestSuccessWorkflowHistory);
+    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName //Optional<Long> workflowInstanceIdOpt,
+     //        ,  Optional<PhaseStatusCollection> latestSuccessWorkflowHistory
+    ) {
+        return super.triggerJob(execChainContext, appName //workflowInstanceIdOpt,
+            //    ,  latestSuccessWorkflowHistory
+        );
     }
 
     @Override
@@ -76,13 +80,13 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
     }
 
     @Override
-    protected BasicWorkflowPayload<DSWorkflowInstance> createApplicationPayload(
-            IControlMsgHandler module, DataXName appName, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
-        return createPayload(this, module, appName);
+    protected BasicWorkflowPayload<DSWorkflowInstance> createApplicationPayload(IExecChainContext execChainContext,
+            DataXName appName) {
+        return createPayload(this, appName);
     }
 
-    private static BasicWorkflowPayload<DSWorkflowInstance> createPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, DataXName appName) {
-        ICommonDAOContext commonDAOContext = getCommonDAOContext(module);
+    private static BasicWorkflowPayload<DSWorkflowInstance> createPayload(BasicDistributedSPIDataXJobSubmit submit, DataXName appName) {
+        ICommonDAOContext commonDAOContext = null;// getCommonDAOContext(module);
 //        if (!(module instanceof IPluginContext)) {
 //            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
 //        }

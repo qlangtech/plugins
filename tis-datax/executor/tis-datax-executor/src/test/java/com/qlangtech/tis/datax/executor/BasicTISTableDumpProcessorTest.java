@@ -19,10 +19,10 @@
 package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -30,10 +30,8 @@ import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.StoreResourceType;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator.GenerateCfgs;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor.IDataxProcessorGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter.BaseDataxWriterDescriptor;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
@@ -43,9 +41,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.IPluginStore;
-import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -69,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
-import static org.junit.Assert.*;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -115,13 +109,13 @@ public class BasicTISTableDumpProcessorTest implements TISEasyMock {
         DataXJobInfo dataXJobInfo = DataXJobInfo.parse("base_1.json/base_01,base_02");
 
         CuratorDataXTaskMessage tskMsg = new CuratorDataXTaskMessage();
-        tskMsg.setDataXName(pipeName);
+        tskMsg.setDataXName(DataXName.createDataXPipeline( pipeName));
         tskMsg.setResType(type);
-        PowerJobRemoteTaskTrigger taskTrigger = new PowerJobRemoteTaskTrigger(dataXJobInfo, tskMsg);
+        PowerJobRemoteTaskTrigger taskTrigger = new PowerJobRemoteTaskTrigger(dataXJobInfo);
 
         tabTriggers.setSplitTabTriggers(Collections.singletonList(taskTrigger));
-        JSONObject jobParams = tabTriggers.createMRParams();
-        EasyMock.expect(context.getJobParams()).andReturn(jobParams);
+       // JSONObject jobParams = tabTriggers.createMRParams();
+      //  EasyMock.expect(context.getJobParams()).andReturn(jobParams);
 
 
         instanceParams.put(JobParams.KEY_TASK_ID, taskId);
@@ -253,10 +247,10 @@ public class BasicTISTableDumpProcessorTest implements TISEasyMock {
                 return null;
             }
 
-            @Override
-            public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
-                return null;
-            }
+//            @Override
+//            public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
+//                return null;
+//            }
 
             @Override
             public Set<TransformerInfo> getTransformerInfo(IPluginContext pluginCtx, Map<String, List<DBDataXChildTask>> groupedChildTask) {

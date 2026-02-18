@@ -24,6 +24,7 @@ import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResul
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
@@ -111,7 +112,8 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         CenterResource.setNotFetchFromCenterRepository();
         DSWorkflowPayload dsWorkflowPayload = createTriggerDsWorkflowPayload();
         Optional<Long> spiWorkflowInstanceIdOpt = Optional.of(dsWorkflowId); // Optional.empty();
-        DistributeJobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(spiWorkflowInstanceIdOpt, AssembleSvcCompsite.statusRpc);
+        IExecChainContext execChainContext = null;
+        DistributeJobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(execChainContext, AssembleSvcCompsite.statusRpc);
         Assert.assertNotNull("triggerBuildResult can not be null", triggerBuildResult);
         Thread.sleep(900000);
         verifyAll();

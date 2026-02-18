@@ -20,6 +20,7 @@ package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -75,8 +76,9 @@ public class BasicTISInitializeProcessor {
                 InitializeNodeCfg initNodeCfg = InitializeNodeCfg.parse(context);
 
                 IExecChainContext.TriggerNewTaskParam triggerParams =
-                        new IExecChainContext.TriggerNewTaskParam(context.getWfInstanceId(), context.getJobTriggerType()
-                                , initNodeCfg.getDataXName(), initNodeCfg.resourceType) {
+                        new IExecChainContext.TriggerNewTaskParam( //context.getWfInstanceId() ,
+                                context.getJobTriggerType()
+                                , new DataXName(initNodeCfg.getDataXName(), initNodeCfg.resourceType)) {
                             @Override
                             public List<PostParam> params() {
                                 List<HttpUtils.PostParam> params = super.params();
@@ -94,7 +96,7 @@ public class BasicTISInitializeProcessor {
                 /**=======================================================================
                  *TriggerNewTask
                  =======================================================================*/
-                DistributeJobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
+                DistributeJobTriggerBuildResult triggerResult = null;// IExecChainContext.triggerNewTask(triggerParams);
                 svc.appendLog(LogLevel.INFO, triggerResult.getTaskid()
                         , Optional.empty()
                         , "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));

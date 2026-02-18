@@ -1,0 +1,26 @@
+{
+  "name": {
+    "readonly": true,
+    "dftVal": "crontab",
+    "help": "一个数据管道只能定义一个定时任务触发器"
+  },
+  "crontab": {
+    "label": "表达式",
+    "placeholder": "0 0 12 * * ?"
+  },
+  "turnOn": {
+    "label": "启用",
+    "help": "配置完成之后，使用过程中可以控制定时触发暂时失效，可选择‘否’",
+    "dftVal": true,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  }
+}

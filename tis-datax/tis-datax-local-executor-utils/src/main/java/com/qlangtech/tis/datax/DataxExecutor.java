@@ -47,7 +47,6 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.TaskSoapUtils;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.realtime.transfer.TableSingleDataIndexStatus;
@@ -115,10 +114,9 @@ public class DataxExecutor {
     private static final int ASSERT_PARAM_LENGTH = 10;
 
     /**
-     * @param args
-     * @see //DataxPrePostConsumer
-     * @see //DataXJobSingleProcessorExecutor
-     * 入口开始执行
+     * @param args // @see DataxPrePostConsumer
+     *             // @see DataXJobSingleProcessorExecutor
+     *             入口开始执行
      */
     public static void main(String[] args) throws Exception {
         assertParamsLength(args);
@@ -176,7 +174,7 @@ public class DataxExecutor {
 
         DataxExecutor dataxExecutor = new DataxExecutor(statusRpc, execMode, allRows);
 
-        if (execMode == DataXJobSubmit.InstanceType.DISTRIBUTE) {
+        if (execMode == DataXJobSubmit.InstanceType.AKKA) {
             // 如果是分布式执行状态，需要通过RPC的方式来监听监工是否执行了客户端终止操作
             Object thread = monitorDistributeCommand(jobId, jobInfo, dataXName, statusRpc, dataxExecutor);
             Objects.requireNonNull(thread);
@@ -223,7 +221,7 @@ public class DataxExecutor {
                 status.setFrom(NetUtils.getHost());
                 logger.info("start to listen the dataX job taskId:{},jobName:{},dataXName:{} overseer cancel", jobId, jobInfo, dataXName);
                 TableSingleDataIndexStatus dataXStatus = new TableSingleDataIndexStatus();
-                dataXStatus.setUUID(jobInfo.jobFileName);
+                dataXStatus.setUUID(jobInfo.getJobFileName());
                 status.setPipelineTableCounterMetric(new PipelineFlinkTaskId(dataXName, IAppSourcePipelineController.DATAX_FULL_PIPELINE), dataXStatus);
 
                 while (true) {
@@ -274,19 +272,16 @@ public class DataxExecutor {
         JobCommon.setMDC(jobArgs.jobId, dataxProcessor.identityValue());
         try {
             logger.info("process DataX job,jobid:{},jobName:{}", jobArgs.jobId, jobName);
-            //KeyedPluginStore.StoreResourceType resType = null;
-
-            // IDataxProcessor dataxProcessor = DataxProcessor.load(null, resType, dataxName);
             this.startWork(jobName, dataxProcessor, uberClassLoader, jobArgs);
             success = true;
         } finally {
             TIS.clean(false);
-            if (execMode == DataXJobSubmit.InstanceType.DISTRIBUTE) {
-                try {
-                    TaskSoapUtils.feedbackAsynTaskStatus(jobArgs.jobId, jobName.jobFileName, success);
-                } catch (Throwable e) {
-                    logger.warn("notify exec result faild,jobId:" + jobArgs.jobId + ",jobName:" + jobName, e);
-                }
+            if (execMode == DataXJobSubmit.InstanceType.AKKA) {
+//                try {
+//                    TaskSoapUtils.feedbackAsynTaskStatus(jobArgs.jobId, jobName.getJobFileName(), success);
+//                } catch (Throwable e) {
+//                    logger.warn("notify exec result faild,jobId:" + jobArgs.jobId + ",jobName:" + jobName, e);
+//                }
             }
         }
     }
@@ -316,16 +311,17 @@ public class DataxExecutor {
      * @throws IOException
      * @throws Exception
      */
-    public void startWork(DataXJobInfo jobName, IDataxProcessor dataxProcessor, final JarLoader uberClassLoader,
-                          DataXJobArgs jobArgs) throws IOException, Exception {
+    public void startWork(DataXJobInfo jobName
+            , IDataxProcessor dataxProcessor
+            , final JarLoader uberClassLoader
+            , DataXJobArgs jobArgs) throws Exception {
         try {
 
             final String processName = dataxProcessor.identityValue();
             Objects.requireNonNull(dataxProcessor, "dataxProcessor can not be null");
 
-            IDataxReader reader = DataXJobSubmit.getDataXJobInfo(jobName.getDbFactoryId(), (p) -> {
-                return p.getRight();
-            }, dataxProcessor.getReaders(null));
+            IDataxReader reader = DataXJobSubmit.getDataXJobInfo( //
+                    jobName.getDbFactoryId(), Pair::getRight, dataxProcessor.getReaders(null));
 
 
             IDataxWriter writer = dataxProcessor.getWriter(null);
@@ -373,8 +369,9 @@ public class DataxExecutor {
         // StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
         int readed = (int) allReadApproximately[0];
         boolean success = (complete && !faild);
-        this.statusRpc.reportDumpJobStatus(faild, complete, waiting, taskId, jobName.jobFileName, readed, (success ? readed :
-                this.allRowsApproximately));
+        this.statusRpc.reportDumpJobStatus(faild, complete, waiting //
+                , taskId, jobName.getJobFileName(), readed, (success ? readed :
+                        this.allRowsApproximately));
     }
 
     public static class DataXJobArgs {
@@ -476,10 +473,10 @@ public class DataxExecutor {
             this.dataXName = dataXName;
         }
 
-        @Override
-        public Integer getTaskId() {
-            return this.jobId;
-        }
+//        @Override
+//        public Integer getTaskId() {
+//            return this.jobId;
+//        }
 
         @Override
         public String getFormatTime(TimeFormat format) {
@@ -497,10 +494,10 @@ public class DataxExecutor {
         }
 
 
-        @Override
-        public String getDataXName() {
-            return this.dataXName.getTISDataXName().getPipelineName();
-        }
+//        @Override
+//        public DataXName getDataXName() {
+//            return this.dataXName.getTISDataXName();
+//        }
 
         @Override
         protected StandAloneJobContainerCommunicator createContainerCommunicator(Configuration configuration) {

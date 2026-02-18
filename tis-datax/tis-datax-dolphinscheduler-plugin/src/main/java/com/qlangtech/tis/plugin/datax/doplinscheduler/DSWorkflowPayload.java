@@ -29,6 +29,7 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.lang.TisException;
@@ -111,7 +112,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
     private final static AtomicInteger baseTisTaskIdWithLocalExecutor = new AtomicInteger(99999);
 
     public DSWorkflowPayload(ExportTISPipelineToDolphinscheduler exportCfg, IDataxProcessor dataxProcessor, ICommonDAOContext commonDAOContext, BasicDistributedSPIDataXJobSubmit submit) {
-        super(dataxProcessor, commonDAOContext, submit);
+        super(dataxProcessor,  submit);
         this.applicationStore = new SPIWorkflowPayloadApplicationStore(dataxProcessor.identityValue(), commonDAOContext);
         this.exportCfg = Objects.requireNonNull(exportCfg, "exportCfg can not be null");
     }
@@ -140,10 +141,12 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
      * taskid不变导致停止本地文件更新本地配置，所以需要让 baseTisTaskIdWithLocalExecutor 参数每次来都往上递增
      */
     @Override
-    public DistributeJobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt, RpcServiceReference feedback) {
+    public DistributeJobTriggerBuildResult triggerWorkflow(IExecChainContext execChainContext,//Optional<Long> workflowInstanceIdOpt,
+                                                           RpcServiceReference feedback) {
 
         if (exportCfg.createHistory) {
-            return super.triggerWorkflow(workflowInstanceIdOpt, feedback);
+            return super.triggerWorkflow(execChainContext,//workflowInstanceIdOpt,
+                    feedback);
         } else {
             // 不需要在TIS端生成执行历史记录
             synchronized (baseTisTaskIdWithLocalExecutor) {
@@ -258,7 +261,7 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
 
     @Override
     protected WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId) {
-        DSWorkFlowBuildHistoryPayload buildHistoryPayload = new DSWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, this.commonDAOContext);
+        DSWorkFlowBuildHistoryPayload buildHistoryPayload = new DSWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, null);
         return buildHistoryPayload;
     }
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn test -pl tis-datax-local-akka-executor -Dtest=com.qlangtech.tis.dag.actor.TestWorkflowInstanceActor)",
+      "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"class WorkflowDAGFileManager\" {} ;)",
+      "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"enum InstanceStatus\" {} ;)",
+      "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"enum WorkflowNodeType\" {} ;)"
+    ]
+  }
+}

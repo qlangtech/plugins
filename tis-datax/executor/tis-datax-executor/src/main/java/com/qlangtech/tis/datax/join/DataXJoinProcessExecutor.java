@@ -8,12 +8,9 @@ import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.AbstractExecContext;
-import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
-import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
@@ -25,7 +22,6 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
-import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.TopologyDir;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
@@ -53,7 +49,6 @@ import java.util.function.Supplier;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXECUTE_TYPE;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXPORT_NAME;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_ID;
-import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_SQL_SCRIPT;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -200,7 +195,8 @@ public class DataXJoinProcessExecutor {
         JSONObject instanceParams = deserializeInstanceParams(line);
 
         TriggersConfig triggersConfig = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
-        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggersConfig, instanceParams);
+        // FIXME shall initialize execContext instance
+        AbstractExecContext execContext = null; //IExecChainContext.deserializeInstanceParams(triggersConfig, instanceParams);
 //        execContext.setResType(StoreResourceType.DataFlow);
 //        execContext.setWorkflowName(execContext.getIndexName());
         execContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));

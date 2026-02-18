@@ -19,17 +19,23 @@ import java.util.Optional;
  * @date 2023/11/21
  */
 public class SplitTabSync {
-    public CuratorDataXTaskMessage tskMsg;
+    public DataXJobInfo tskMsg;
+    private final Integer allRows;
+    // private CuratorDataXTaskMessage taskConfig;
 
-    public SplitTabSync() {
-    }
+//    public SplitTabSync() {
+//    }
 
-    public SplitTabSync(CuratorDataXTaskMessage tskMsg) {
+    public SplitTabSync(DataXJobInfo tskMsg, Integer allRows) {
         this.tskMsg = tskMsg;
+        this.allRows = allRows;
+        //  this.taskConfig = Objects.requireNonNull(taskConfig);
     }
 
     public void execSync(final AbstractExecContext execChainContext, RpcServiceReference statusRpc) {
-
+        if (statusRpc == null) {
+            throw new IllegalArgumentException("statusRpc can not be null");
+        }
         DataXJobSubmit dataXJobSubmit = getDataXJobSubmit(execChainContext);
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
             DataXJobRunEnvironmentParamsSetter runEnvironmentParamsSetter =
@@ -43,8 +49,9 @@ public class SplitTabSync {
 
         DataXJobSubmit.IDataXJobContext dataXJobContext = DataXJobSubmit.IDataXJobContext.create(execChainContext);
         IDataxProcessor processor = execChainContext.getProcessor();
+        CuratorDataXTaskMessage taskCfg = dataXJobSubmit.getDataXJobDTO(dataXJobContext, tskMsg, processor, this.allRows);
         IRemoteTaskTrigger tskTrigger = dataXJobSubmit.createDataXJob(dataXJobContext, statusRpc,
-                DataXJobInfo.parse(tskMsg.getJobName()), processor, tskMsg);
+                tskMsg, processor, taskCfg);
 
         tskTrigger.run();
     }
@@ -55,7 +62,7 @@ public class SplitTabSync {
 
         Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(execChainContext.isDryRun(),
                 instanceType);
-        if (!dataXJobSubmit.isPresent()) {
+        if (dataXJobSubmit.isEmpty()) {
             throw new IllegalStateException("dataXJobSubmit must be present ,instanceType:"
                     + instanceType + ",isDryRun:" + execChainContext.isDryRun());
         }

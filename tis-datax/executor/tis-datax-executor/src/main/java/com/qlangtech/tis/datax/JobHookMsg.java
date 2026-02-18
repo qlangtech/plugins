@@ -108,10 +108,10 @@ public class JobHookMsg implements IDataXTaskRelevant {
     //        this.lifeCycleHook = lifeCycleHook;
     //    }
 
-    @Override
-    public Integer getTaskId() {
-        return Objects.requireNonNull(this.taskId, "taskid can not be null");
-    }
+//    @Override
+//    public Integer getTaskId() {
+//        return Objects.requireNonNull(this.taskId, "taskid can not be null");
+//    }
 
     @Override
     public String getJobName() {
@@ -119,8 +119,8 @@ public class JobHookMsg implements IDataXTaskRelevant {
     }
 
     @Override
-    public String getDataXName() {
-        return this.resName;
+    public DataXName getDataXName() {
+        return new DataXName(this.resName, this.resType);
     }
 
     @Override

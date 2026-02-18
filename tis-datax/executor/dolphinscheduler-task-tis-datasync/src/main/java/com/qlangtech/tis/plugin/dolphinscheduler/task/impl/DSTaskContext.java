@@ -78,7 +78,8 @@ public class DSTaskContext implements ITaskExecutorContext {
 
     @Override
     public InstanceType getJobTriggerType() {
-        return InstanceType.DS;
+       // return InstanceType.DS;
+        throw new UnsupportedOperationException();
     }
 
     @Override

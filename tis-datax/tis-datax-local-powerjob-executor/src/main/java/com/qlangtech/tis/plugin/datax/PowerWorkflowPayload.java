@@ -69,8 +69,8 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
     //   protected final ICommonDAOContext commonDAOContext;
 
     public PowerWorkflowPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, IDataxProcessor dataxProcessor
-            , ICommonDAOContext commonDAOContext, JobMap2WorkflowMaintainer jobIdMaintainer) {
-        super(dataxProcessor, commonDAOContext, submit);
+            , JobMap2WorkflowMaintainer jobIdMaintainer) {
+        super(dataxProcessor, submit);
         this.module = module;
         this.jobIdMaintainer = jobIdMaintainer;
         //  this.commonDAOContext = commonDAOContext;
@@ -148,7 +148,7 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
         };
 
 
-        return new TISWorkflowPayload(submit, module, topology.getName(), commonDAOContext
+        return new TISWorkflowPayload(submit, module, topology.getName()
                 , (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topology.getName()), jobIdMaintainer);
     }
 
@@ -191,7 +191,7 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
 
     @Override
     protected WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId) {
-        return new PowerjobWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, this.commonDAOContext, this.getTISPowerJob());
+        return new PowerjobWorkFlowBuildHistoryPayload(this.dataxProcessor, tisTaskId, null, this.getTISPowerJob());
     }
 
 
@@ -241,7 +241,7 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
         for (Map.Entry<ISelectedTab, SelectedTabTriggers> entry : createWfNodesResult.entrySet()) {
             tabTriggers = entry.getValue();
             selectedTab = entry.getKey();
-            mrParams = tabTriggers.createMRParams();
+            mrParams = null;//tabTriggers.createMRParams();
 
             if (tabTriggers.getPostTrigger() != null) {
                 containPostTrigger = true;
@@ -357,14 +357,15 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
         private WorkFlow tisWorkflow;
 
         private TISWorkflowPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module, String tisWorkflowName
-                , ICommonDAOContext commonDAOContext, IDataxProcessor dataxProcessor, JobMap2WorkflowMaintainer jobIdMaintainer) {
-            super(submit, module, dataxProcessor, commonDAOContext, jobIdMaintainer);
+                , IDataxProcessor dataxProcessor, JobMap2WorkflowMaintainer jobIdMaintainer) {
+            super(submit, module, dataxProcessor, jobIdMaintainer);
             if (StringUtils.isEmpty(tisWorkflowName)) {
                 throw new IllegalArgumentException("param  tisWorkflowName can not be empty");
             }
             this.tisWorkflowName = tisWorkflowName;
-            this.workFlowDAO = Objects.requireNonNull(commonDAOContext.getWorkFlowDAO()
-                    , "param workFlowDAO can not be null");
+            this.workFlowDAO = null;
+//                    Objects.requireNonNull(commonDAOContext.getWorkFlowDAO()
+//                    , "param workFlowDAO can not be null");
         }
 
         @Override
@@ -440,10 +441,8 @@ public abstract class PowerWorkflowPayload extends BasicWorkflowPayload<PowerJob
 
         private ApplicationPayload(BasicDistributedSPIDataXJobSubmit submit, IControlMsgHandler module
                 , String appName, ICommonDAOContext commonDAOContext, DataxProcessor dataxProcessor) {
-            super(submit, module, dataxProcessor, commonDAOContext, new JobMap2WorkflowMaintainer());
-
+            super(submit, module, dataxProcessor, new JobMap2WorkflowMaintainer());
             this.applicationStore = new SPIWorkflowPayloadApplicationStore(appName, commonDAOContext);
-            // this.applicationDAO = Objects.requireNonNull(commonDAOContext.getApplicationDAO(), "applicationDAO can not be null");
             this.appName = appName;
         }
 

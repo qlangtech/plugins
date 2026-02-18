@@ -73,12 +73,11 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
      * 写入元数据
      *
      * @param dfsLinker
-     * @param execContext
      * @param tab
      * @return
      */
     @Override
-    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext,EntityName entity, ISelectedTab tab) {
         if (dfsLinker == null) {
             throw new IllegalArgumentException("param dfsLinker can not be null");
         }

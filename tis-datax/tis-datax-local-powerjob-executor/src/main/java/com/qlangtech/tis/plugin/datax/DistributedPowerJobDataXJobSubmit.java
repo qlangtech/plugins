@@ -29,8 +29,7 @@ import com.qlangtech.tis.datax.IDataXPowerJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.plugin.datax.PowerWorkflowPayload.PowerJobWorkflow;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobWorkFlowBuildHistoryPayload;
@@ -68,7 +67,7 @@ import static com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient.result;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-27 21:41
  **/
-@TISExtension()
+//@TISExtension()
 @Public
 public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJobSubmit<PowerJobWorkflow> implements IDataXPowerJobSubmit {
 
@@ -85,14 +84,14 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
     }
 
     @Override
-    protected PowerWorkflowPayload createApplicationPayload(
-            IControlMsgHandler module, DataXName appName, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
-        return PowerWorkflowPayload.createApplicationPayload(this, module, appName);
+    protected PowerWorkflowPayload createApplicationPayload(IExecChainContext execChainContext, DataXName appName) {
+        return PowerWorkflowPayload.createApplicationPayload(this, null, appName);
     }
 
     @Override
     public InstanceType getType() {
-        return InstanceType.DISTRIBUTE;
+        //  return InstanceType.DISTRIBUTE;
+        throw new UnsupportedOperationException("InstanceType.DISTRIBUTE is not supported yet");
     }
 
     @Override
@@ -209,7 +208,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
     public void createJob(IControlMsgHandler module, Context context, IDataxProcessor dataxProcessor) {
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
-                this, module, ((IAppSource) dataxProcessor).getDataXName());
+                this, module, dataxProcessor.getDataXName());
 
         appPayload.innerCreatePowerjobWorkflow(false, Optional.empty(), Optional.empty());
     }
@@ -249,7 +248,7 @@ public class DistributedPowerJobDataXJobSubmit extends BasicDistributedSPIDataXJ
     public TISWorkflowInfoDTO saveJob(IControlMsgHandler module, Context context, IDataxProcessor dataxProcessor) {
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
-                this, module, ((IAppSource)dataxProcessor).getDataXName());
+                this, module, dataxProcessor.getDataXName());
 
 
         PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.saveJob();

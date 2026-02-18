@@ -127,7 +127,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         if (StringUtils.isBlank(this.preSql)) {
             return null;
         }
-        return new PreAndPostSQLExecutor(true, execContext, entity, tab);
+        return new PreAndPostSQLExecutor(true, this, entity, tab);
     }
 
     @Override
@@ -135,23 +135,23 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         if (StringUtils.isBlank(this.postSql)) {
             return null;
         }
-        return new PreAndPostSQLExecutor(false, execContext, entity, tab);
+        return new PreAndPostSQLExecutor(false, this, entity, tab);
     }
 
 
     private class PreAndPostSQLExecutor implements IRemoteTaskPostTrigger, IRemoteTaskPreviousTrigger {
         private final boolean preExecute;
-        private final IExecChainContext execContext;
+        // private final IExecChainContext execContext;
         private final EntityName entity;
         private final ISelectedTab tab;
         private final Optional<AutoCreateTable> writerTableExecutor;
 
-        public PreAndPostSQLExecutor(boolean preExecute, IExecChainContext execContext, EntityName entity, ISelectedTab tab) {
+        public PreAndPostSQLExecutor(boolean preExecute, IDataxWriter writer, EntityName entity, ISelectedTab tab) {
             this.preExecute = preExecute;
-            this.execContext = execContext;
+            // this.execContext = execContext;
             this.entity = entity;
             this.tab = tab;
-            IDataxWriter writer = execContext.getProcessor().getWriter(null);
+            // IDataxWriter writer = execContext.getProcessor().getWriter(null);
             this.writerTableExecutor = writer.getWriterTableExecutor();
         }
 
@@ -169,15 +169,6 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
         @Override
         public void run() {
-
-//            final TableAliasMapper tableAliasMapper
-//                    = execContext.getAttribute(TableAlias.class.getSimpleName(), () -> {
-//                return execContext.getProcessor().getTabAlias(null, true);
-//            });
-
-
-            ;
-
             BasicDataSourceFactory dsFactory = ((BasicDataSourceFactory) getDataSourceFactory());
             dsFactory.visitAllConnection((conn) -> {
                 SelectTable toTable = SelectTable.create(new TableMap(writerTableExecutor, tab).getTo(), dsFactory);
@@ -196,12 +187,25 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 }
 
                 if (tabExist.get()) {
+                    long start = System.currentTimeMillis();
+                    boolean success = false;
+                    Exception error = null;
                     try {
                         // 数据库表存在的情况下才进行删除
                         conn.execute(preSqlStatement);
-                        logger.info("success " + getTaskName() + ":" + preSqlStatement);
+                        success = true;
+
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        //throw new RuntimeException("SqlStatement:" + preSqlStatement, e);
+                        error = e;
+                    } finally {
+                        if (success) {
+                            logger.info("success " + getTaskName() + ":" + preSqlStatement);
+                        } else {
+                            logger.warn("SqlStatement:" + preSqlStatement
+                                    + "detail:" + (error != null ? error.getMessage() : StringUtils.EMPTY)
+                                    + ",consume:" + (System.currentTimeMillis() - start) + "ms");
+                        }
                     }
                 }
             });

@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.element.QueryCriteria;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
@@ -38,12 +37,9 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteDumpTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.HttpUtils;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.plugin.datax.DataXPipelinePreviewProcessorExecutor.PreviewLaunchParam;
-import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.web.start.TisAppLaunch;
@@ -56,14 +52,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-
-import static com.qlangtech.tis.fullbuild.IFullBuildContext.KEY_LASTEST_WORKFLOW_HISTORY_ID;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -88,41 +81,47 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     @Override
     public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module
             , Context context, IWorkflow workflow, Boolean dryRun
-            , Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+                                                 //, Optional<Long> powerJobWorkflowInstanceIdOpt
+            , Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
         return DataXJobUtils.getTriggerWorkflowBuildResult(
-                module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt, latestSuccessWorkflowHistory);
+                module, context, workflow, dryRun, Optional.empty() //powerJobWorkflowInstanceIdOpt
+                , latestSuccessWorkflowHistory);
     }
+
 
     /**
      * 由Console节点调用
+     * <p>
+     * // @param module
+     * // @param context
      *
-     * @param module
-     * @param context
      * @param appName
      * @return
      */
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , DataXName appName, Optional<Long> powerjobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
-        if ((appName) == null) {
-            throw new IllegalArgumentException("param appName can not be empty");
-        }
-        if (powerjobWorkflowInstanceIdOpt.isPresent()) {
-            throw new UnsupportedOperationException("must processed by pwoerJob");
-        }
-        try {
-            List<HttpUtils.PostParam> params = Lists.newArrayList();
-            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
-            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
-
-            partialTrigger.ifPresent((partial) -> {
-                params.add(partial.getHttpPostSelectedTabsAsParam());
-            });
-            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
-            return TriggerBuildResult.triggerBuild(module, context, params);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName // Optional<Long> powerjobWorkflowInstanceIdOpt,
+    //        ,   Optional<PhaseStatusCollection> latestWorkflowHistory
+    ) {
+//        if ((appName) == null) {
+//            throw new IllegalArgumentException("param appName can not be empty");
+//        }
+////        if (powerjobWorkflowInstanceIdOpt.isPresent()) {
+////            throw new UnsupportedOperationException("must processed by pwoerJob");
+////        }
+//        try {
+//            List<HttpUtils.PostParam> params = Lists.newArrayList();
+//            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
+//            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
+//
+//            partialTrigger.ifPresent((partial) -> {
+//                params.add(partial.getHttpPostSelectedTabsAsParam());
+//            });
+//            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
+//            return TriggerBuildResult.triggerBuild(module, context, params);
+//        } catch (MalformedURLException e) {
+//            throw new RuntimeException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     private final ConcurrentMap<String, DataXPipelinePreviewProcessorExecutor> tabSynchronizeCache = Maps.newConcurrentMap();
@@ -166,18 +165,17 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     }
 
 
-
     @Override
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
         return DataXJobUtils.terminateWorkingTask(module, context, buildHistory);
     }
 
     @Override
-    public IRemoteTaskTrigger createDataXJob(
+    public IRemoteDumpTaskTrigger createDataXJob(
             IDataXJobContext taskContext, RpcServiceReference statusRpc
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO) {
         getJAVAClasspath();
-        logger.info("dataX Job:{},classpath:{},workingDir:{}", jobName.jobFileName, this.classpath, workingDirectory.getPath());
+        logger.info("dataX Job:{},classpath:{},workingDir:{}", jobName.getJobFileName(), this.classpath, workingDirectory.getPath());
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         // IDataxReader dataxReader = dataxProcessor.getReader(null);
         //Optional<List<String>> ptabs = null;
@@ -190,7 +188,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
         //  TableInDB tablesInDB = dataxReader.getTablesInDB();
 
-        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, processor);
+        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, processor, dataXJobDTO);
     }
 
 

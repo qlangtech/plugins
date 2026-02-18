@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.datax;
 
-import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -33,11 +32,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * 独立进程中执行DataX任务，这样可以有效避免每次执行DataX任务由于ClassLoader的冲突导致的错误
@@ -51,20 +48,20 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
     // 记录当前正在执行的任务<taskid,ExecuteWatchdog>
     public final ConcurrentHashMap<Integer, ExecuteWatchdog> runningTask = new ConcurrentHashMap<>();
 
-    // @Override
     public void consumeMessage(T msg) throws Exception {
         //MDC.put();
-        Integer taskId = msg.getTaskId();
-        String jobName = msg.getJobName();
-        String dataxName = msg.getDataXName();
-        //  StoreResourceType resType = Objects.requireNonNull(msg.getResType(), "resType can not be null");
-        //        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(jobId));
-        //        MDC.put(JobCommon.KEY_COLLECTION, dataxName);
-        JobCommon.setMDC(taskId, dataxName);
-
-
-        // 查看当前任务是否正在进行中，如果已经终止则要退出
-        execSystemTask(msg, taskId, jobName, dataxName);
+        throw new UnsupportedOperationException();
+//        Integer taskId = msg.getTaskId();
+//        String jobName = msg.getJobName();
+//        String dataxName = msg.getDataXName();
+//        //  StoreResourceType resType = Objects.requireNonNull(msg.getResType(), "resType can not be null");
+//        //        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(jobId));
+//        //        MDC.put(JobCommon.KEY_COLLECTION, dataxName);
+//        JobCommon.setMDC(taskId, dataxName);
+//
+//
+//        // 查看当前任务是否正在进行中，如果已经终止则要退出
+//        execSystemTask(msg, taskId, jobName, dataxName);
     }
 
     protected void execSystemTask(T msg, Integer jobId, String jobName, String dataxName) throws IOException,
@@ -114,7 +111,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 executor.setStreamHandler(new PumpStreamHandler(System.out));
                 executor.setExitValue(0);
                 executor.setWatchdog(watchdog);
-                String command = Arrays.stream(cmdLine.toStrings()).collect(Collectors.joining(" "));
+                String command = String.join(" ", cmdLine.toStrings());
                 logger.info("workDir:{},command:{}", workingDir.getAbsolutePath(), command);
                 if (DataxUtils.localDataXCommandConsumer != null) {
                     DataxUtils.localDataXCommandConsumer.accept(command);
@@ -140,12 +137,13 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
      * @throws InterruptedException
      * @throws DataXJobSingleProcessorException
      */
-    protected void waitForTerminator(Integer jobId, String dataxName, final Integer taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
+    protected void waitForTerminator(Integer jobId, String dataxName, final Duration taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
 
-        int timeout = Objects.requireNonNull(taskExpireHours, "taskExpireHours can not be null");
+        Duration timeout = Objects.requireNonNull(taskExpireHours, "taskExpireHours can not be null");
         try {
+
             // 等待5个小时
-            resultHandler.waitFor(TimeUnit.HOURS.toMillis(timeout));
+            resultHandler.waitFor(timeout.toMillis());
 
             if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
                 if ( //resultHandler.hasResult() &&

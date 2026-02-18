@@ -54,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -233,7 +234,7 @@ public class DataXPipelinePreviewProcessorExecutor
     }
 
     @Override
-    protected void waitForTerminator(Integer jobId, String dataxName, Integer taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
+    protected void waitForTerminator(Integer jobId, String dataxName, Duration taskExpireHours, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
         // super.waitForTerminator(jobId, dataxName, resultHandler);
     }
 
@@ -280,10 +281,10 @@ public class DataXPipelinePreviewProcessorExecutor
             this.dataXName = dataXName;
         }
 
-        @Override
-        public Integer getTaskId() {
-            return DEFAULT_TASK_ID;
-        }
+//        @Override
+//        public Integer getTaskId() {
+//            return DEFAULT_TASK_ID;
+//        }
 
         @Override
         public String getJobName() {
@@ -291,8 +292,8 @@ public class DataXPipelinePreviewProcessorExecutor
         }
 
         @Override
-        public String getDataXName() {
-            return this.dataXName;
+        public DataXName getDataXName() {
+            return DataXName.createDataXPipeline(this.dataXName);
         }
 
         @Override

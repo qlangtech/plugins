@@ -108,10 +108,10 @@ public class DataxPrePostExecutor {
 
             IDataXBatchPost.process(dataxProcessor, tab, (batchPostTask, entryName) -> {
                 IRemoteTaskTrigger hookTrigger = null;
-                if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
-                    hookTrigger = batchPost.createPostTask(
-                            execContext, entryName, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
-                } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
+                if (LifeCycleHook.Post.getToken().equalsIgnoreCase(lifecycleHookName)) {
+                    hookTrigger = batchPost.createPostTask(execContext,
+                            entryName, tab, dataxProcessor.getDataxCfgFileNames(null, Optional.empty()));
+                } else if (LifeCycleHook.Prep.getToken().equalsIgnoreCase(lifecycleHookName)) {
                     hookTrigger = batchPost.createPreExecuteTask(execContext, entryName, tab);
                 } else {
                     throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);
@@ -133,13 +133,13 @@ public class DataxPrePostExecutor {
                     if (statusRpc != null) {
 //                        StatusRpcClientFactory.AssembleSvcCompsite svc =
 //                                (StatusRpcClientFactory.AssembleSvcCompsite) statusRpc.get();
-                        if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
+                        if (LifeCycleHook.Post.getToken().equalsIgnoreCase(lifecycleHookName)) {
                             JoinPhaseStatus.JoinTaskStatus joinStatus = new JoinPhaseStatus.JoinTaskStatus(jobName);
                             joinStatus.setFaild(true);
                             joinStatus.setComplete(true);
                             joinStatus.setStart();
                             statusRpc.reportJoinStatus(taskId, joinStatus);
-                        } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
+                        } else if (LifeCycleHook.Prep.getToken().equalsIgnoreCase(lifecycleHookName)) {
                             statusRpc.reportDumpJobStatus(true, true, false, taskId, jobName, -1, -1);
                         } else {
                             throw new IllegalArgumentException("illegal lifecycleHookName:" + lifecycleHookName);

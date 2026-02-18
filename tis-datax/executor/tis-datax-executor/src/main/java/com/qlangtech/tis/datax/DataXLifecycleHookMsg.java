@@ -10,7 +10,7 @@ import java.util.Objects;
  */
 public class DataXLifecycleHookMsg extends JobHookMsg {
 
-    private IDataXBatchPost.LifeCycleHook lifeCycleHook;
+    private LifeCycleHook lifeCycleHook;
     private String tableName;
 
     public DataXLifecycleHookMsg() {
@@ -20,7 +20,7 @@ public class DataXLifecycleHookMsg extends JobHookMsg {
     public static DataXLifecycleHookMsg createDataXLifecycleHookMsg(IDataxProcessor processor, String tableName,
                                                                     Integer taskId, String jobName,
                                                                     Long currentTimeStamp,
-                                                                    IDataXBatchPost.LifeCycleHook lifeCycleHook,
+                                                                    LifeCycleHook lifeCycleHook,
                                                                     Boolean dryRun) {
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("tableName can not be null");
@@ -43,11 +43,11 @@ public class DataXLifecycleHookMsg extends JobHookMsg {
         this.tableName = tableName;
     }
 
-    public IDataXBatchPost.LifeCycleHook getLifeCycleHook() {
+    public LifeCycleHook getLifeCycleHook() {
         return Objects.requireNonNull(this.lifeCycleHook, "lifeCycleHook can not be null");
     }
 
-    public void setLifeCycleHook(IDataXBatchPost.LifeCycleHook lifeCycleHook) {
+    public void setLifeCycleHook(LifeCycleHook lifeCycleHook) {
         this.lifeCycleHook = lifeCycleHook;
     }
 

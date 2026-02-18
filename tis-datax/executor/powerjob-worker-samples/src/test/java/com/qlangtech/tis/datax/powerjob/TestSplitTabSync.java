@@ -1,7 +1,6 @@
 package com.qlangtech.tis.datax.powerjob;
 
 import com.qlangtech.tis.cloud.ITISCoordinator;
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.datax.powerjob.impl.PowerJobTaskContext;
 import com.qlangtech.tis.exec.AbstractExecContext;
@@ -44,12 +43,12 @@ public class TestSplitTabSync implements TISEasyMock {
         pair.getLeft().setCoordinator(ITISCoordinator.create());
         // IDataxProcessor processor = DataxProcessor.load(null, pair.getRight().getDataXName());
 
-        for (CuratorDataXTaskMessage tskMsg : pair.getRight().getSplitTabsCfg()) {
-            SplitTabSync tabSync = new SplitTabSync(tskMsg);
-            tabSync.execSync(pair.getLeft(), rpcSvc);
-            this.verifyAll();
-            return;
-        }
+//        for (CuratorDataXTaskMessage tskMsg : pair.getRight().getSplitTabsCfg()) {
+//            SplitTabSync tabSync = new SplitTabSync(tskMsg);
+//            tabSync.execSync(pair.getLeft(), rpcSvc);
+//            this.verifyAll();
+//            return;
+//        }
 
         Assert.fail("have not process tskMsg ");
 

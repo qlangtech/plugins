@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.core.util.container.JarLoader;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
@@ -35,19 +34,15 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TISJarLoader;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.manage.common.HttpUtils;
-import com.qlangtech.tis.plugin.trigger.JobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteDumpTaskTrigger;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -76,78 +71,82 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         return DataXJobUtils.terminateWorkingTask(module, context, buildHistory);
     }
 
-
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , DataXName appName, Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
-        if (appName == null) {
-            throw new IllegalArgumentException("param appName can not be empty");
-        }
-        if (powerJobWorkflowInstanceIdOpt.isPresent()) {
-            throw new IllegalStateException("powerJobWorkflowInstanceIdOpt contain is not support,workflowId:"
-                    + powerJobWorkflowInstanceIdOpt.get());
-        }
-        try {
-            List<HttpUtils.PostParam> params = Lists.newArrayList();
-            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName.getPipelineName()));
+    public TriggerBuildResult triggerJob(IExecChainContext execChainContext,DataXName appName
+    //        , Optional<PhaseStatusCollection> latestWorkflowHistory
+    ) {
 
-            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
-            partialTrigger.ifPresent((partial) -> {
-                params.add(partial.getHttpPostSelectedTabsAsParam());
-            });
-            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
-            return TriggerBuildResult.triggerBuild(module, context, params);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+//        if (appName == null) {
+//            throw new IllegalArgumentException("param appName can not be empty");
+//        }
+//
+//        try {
+//            List<HttpUtils.PostParam> params = Lists.newArrayList();
+//            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName.getPipelineName()));
+//
+//            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
+//            partialTrigger.ifPresent((partial) -> {
+//                params.add(partial.getHttpPostSelectedTabsAsParam());
+//            });
+//            JobTrigger.addLatestWorkflowHistoryAsParam(params, latestWorkflowHistory);
+//            return TriggerBuildResult.triggerBuild(module, context, params);
+//        } catch (MalformedURLException e) {
+//            throw new RuntimeException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module, Context context
             , IWorkflow workflow, Boolean dryRun
-            , Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+            , Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
         return DataXJobUtils.getTriggerWorkflowBuildResult(
-                module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt, latestSuccessWorkflowHistory);
+                module, context, workflow, dryRun, Optional.empty(), latestSuccessWorkflowHistory);
     }
 
 
     @Override
-    public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO) {
+    public IRemoteDumpTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
+            , DataXJobInfo jobName,  IDataxProcessor processor , CuratorDataXTaskMessage msg
+    ) {
 
-        Integer jobId = jobDTO.getTaskId();
-
-        String dataXName = jobDTO.getDataXName();
+        Integer taskId = Objects.requireNonNull(taskContext.getTaskContext().getTaskId(), "taskId can not be null");
+//
+//        String dataXName = jobDTO.getDataXName();
         // DataxExecutor.statusRpc = statusRpc;
         final DataxExecutor dataxExecutor
-                = new DataxExecutor(statusRpc, InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
+                = new DataxExecutor(statusRpc, InstanceType.EMBEDDED //
+                , Objects.requireNonNull(msg.getAllRowsApproximately(), "AllRowsApproximately can not be null"));
 
-        ;
 
-        return new IRemoteTaskTrigger() {
+        return new IRemoteDumpTaskTrigger() {
             @Override
             public String getTaskName() {
-                return jobName.jobFileName;
+                return jobName.getJobFileName();
             }
 
+            @Override
+            public DataXJobInfo getDataXTaskMessage() {
+                return jobName;
+            }
 
             @Override
             public void run() {
                 try {
 
                     if (!taskContext.getTaskContext().isDryRun()) {
-                        dataxExecutor.reportDataXJobStatus(false, false, false, jobId, jobName);
+                        dataxExecutor.reportDataXJobStatus(false, false, false, taskId, jobName);
 
                         DataxExecutor.DataXJobArgs jobArgs
                                 = DataxExecutor.DataXJobArgs.createJobArgs(
-                                processor, jobId, jobName, jobDTO.getTaskSerializeNum(), jobDTO.getExecEpochMilli());
+                                processor, taskId, jobName, msg.getTaskSerializeNum(), msg.getExecEpochMilli());
 
                         dataxExecutor.exec(getUberClassLoader(), jobName, processor, jobArgs);
                     }
 
-                    dataxExecutor.reportDataXJobStatus(false, jobId, jobName);
+                    dataxExecutor.reportDataXJobStatus(false, taskId, jobName);
                 } catch (Throwable e) {
-                    dataxExecutor.reportDataXJobStatus(true, jobId, jobName);
+                    dataxExecutor.reportDataXJobStatus(true, taskId, jobName);
                     //logger.error(e.getMessage(), e);
                     try {
                         //确保日志向远端写入了

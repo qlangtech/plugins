@@ -134,7 +134,7 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
 
     @Override
     protected DataXJobSubmit.InstanceType getExecMode() {
-        return DataXJobSubmit.InstanceType.DISTRIBUTE;
+        return DataXJobSubmit.InstanceType.AKKA;
     }
 
     protected String getIncrStateCollectAddress() {

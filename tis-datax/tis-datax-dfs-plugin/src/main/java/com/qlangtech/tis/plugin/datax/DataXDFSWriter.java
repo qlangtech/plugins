@@ -47,10 +47,8 @@ import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -116,7 +114,7 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
 
     public static List<Option> supportCompress() {
-        return Arrays.stream(Compress.values()).filter((c) -> c.supportWriter())
+        return Arrays.stream(Compress.values()).filter(Compress::supportWriter)
                 .map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
     }
 

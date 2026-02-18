@@ -6,13 +6,11 @@ import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.RemoteTaskTriggers;
-import com.qlangtech.tis.fullbuild.phasestatus.IPhaseStatusCollection;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -49,20 +47,6 @@ public class SPIExecContext implements IExecChainContext {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void addAsynSubJob(AsynSubJob jobName) {
-
-    }
-
-    @Override
-    public List<AsynSubJob> getAsynSubJobs() {
-        return null;
-    }
-
-    @Override
-    public boolean containAsynJob() {
-        return false;
-    }
 
     private RemoteTaskTriggers tskTriggers;
 
@@ -101,10 +85,6 @@ public class SPIExecContext implements IExecChainContext {
         return null;
     }
 
-    @Override
-    public void rebindLoggingMDCParams() {
-
-    }
 
     @Override
     public boolean isDryRun() {
@@ -148,7 +128,7 @@ public class SPIExecContext implements IExecChainContext {
     }
 
     @Override
-    public int getTaskId() {
+    public Integer getTaskId() {
         Integer taskId = Objects.requireNonNull(getAttribute(JobCommon.KEY_TASK_ID), JobCommon.KEY_TASK_ID + " can not be null");
         return taskId;
     }
@@ -193,8 +173,8 @@ public class SPIExecContext implements IExecChainContext {
         return 0;
     }
 
-    @Override
-    public <T extends IPhaseStatusCollection> T loadPhaseStatusFromLatest() {
-        return null;
-    }
+//    @Override
+//    public <T extends IPhaseStatusCollection> T loadPhaseStatusFromLatest() {
+//        return null;
+//    }
 }

@@ -340,10 +340,10 @@ public class WriterTemplate {
         LoadUtil.bind(allConf);
 
         JobContainer container = new JobContainer(allConf) {
-            @Override
-            public Integer getTaskId() {
-                return taskId != null ? taskId : super.getTaskId();
-            }
+//            @Override
+//            public Integer getTaskId() {
+//                return taskId != null ? taskId : super.getTaskId();
+//            }
 
             @Override
             public int getTaskSerializeNum() {

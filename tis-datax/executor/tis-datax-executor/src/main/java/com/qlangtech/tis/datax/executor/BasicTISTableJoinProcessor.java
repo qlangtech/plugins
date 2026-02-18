@@ -19,7 +19,6 @@
 package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
@@ -31,8 +30,6 @@ import com.qlangtech.tis.datax.join.WorkflowHookMsg;
 import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
-import com.qlangtech.tis.exec.ExecutePhaseRange;
-import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.powerjob.TriggersConfig;
@@ -115,9 +112,11 @@ public class BasicTISTableJoinProcessor {
         JSONObject instanceParams = (context.getInstanceParams());
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
         TriggersConfig triggerCfg = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
-        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
-            ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
-        }, snapshotConsumer);
+        // FIXME shall initialize execContext
+        AbstractExecContext execContext = null;
+//                IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
+//            ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
+//        }, snapshotConsumer);
 
 
         snapshotConsumer.synchronizTpisAndConfs(execContext, BasicTISTableDumpProcessor.cacheSnaphsot);

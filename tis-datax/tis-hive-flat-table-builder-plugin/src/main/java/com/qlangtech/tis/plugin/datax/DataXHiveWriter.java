@@ -283,7 +283,7 @@ public class DataXHiveWriter extends BasicFSWriter
     protected void startScanFSWriterDependency() {
         this.getHiveConnGetter();
     }
-    
+
     @Override
     public Hiveserver2DataSourceFactory getDataSourceFactory() {
         if (StringUtils.isBlank(this.dbName)) {
@@ -347,7 +347,7 @@ public class DataXHiveWriter extends BasicFSWriter
 
     @Override
     public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, EntityName dumpTable, ISelectedTab tab) {
-        // final EntityName dumpTable = getDumpTab(tab);
+
         Objects.requireNonNull(partitionRetainNum, "partitionRetainNum can not be null");
         return new IRemoteTaskPreviousTrigger() {
             @Override
@@ -360,9 +360,9 @@ public class DataXHiveWriter extends BasicFSWriter
 
                 // 负责初始化表
                 final Hiveserver2DataSourceFactory dsFactory = DataXHiveWriter.this.getDataSourceFactory();
-                INameWithPathGetter tabPath = dsFactory.getSubTablePath(dumpTable);// INameWithPathGetter.create(Optional.of(dsFactory.getAlternativeHdfsSubPath()), dumpTable.getTabName());
+                INameWithPathGetter tabPath = dsFactory.getSubTablePath(dumpTable);
                 ITISFileSystem fs = getFs().getFileSystem();
-                Path tabDumpParentPath = getTabDumpParentPath(execContext, tabPath);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tabPath);
                 dsFactory.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");

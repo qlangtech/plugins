@@ -156,7 +156,7 @@ public abstract class BasicWorkflowInstance {
                         unEffectiveJudge.addExistWfNode(tabTrigger, wfNode);
 
                         if (!wfNode.getEnable() || !JsonUtil.objEquals(JSONObject.parseObject(wfNode.getNodeParams())
-                                , tabTrigger.createMRParams()
+                                , null//tabTrigger.createMRParams()
                                 , Sets.newHashSet("/exec/taskSerializeNum", "/exec/jobInfo[]/taskSerializeNum"))) {
                             // 触发条件更改了
                             unEffectiveJudge.setUnEffective();

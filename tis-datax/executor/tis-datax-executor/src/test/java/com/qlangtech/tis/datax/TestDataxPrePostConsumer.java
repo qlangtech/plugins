@@ -3,7 +3,6 @@ package com.qlangtech.tis.datax;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.TransformerInfo;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -32,13 +31,13 @@ public class TestDataxPrePostConsumer extends TestCase {
 
         DataxPrePostConsumer prePostConsumer = new DataxPrePostConsumer();
 
-        DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(IDataXBatchPost.LifeCycleHook.Prep);
+        DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(LifeCycleHook.Prep);
 
         prePostConsumer.consumeMessage(lifecycleHookMsg);
     }
 
 
-    private DataXLifecycleHookMsg createHookMsg(IDataXBatchPost.LifeCycleHook lifeCycleHook) {
+    private DataXLifecycleHookMsg createHookMsg(LifeCycleHook lifeCycleHook) {
 
         IDataxProcessor processor = new DataxProcessor() {
             @Override
@@ -78,14 +77,13 @@ public class TestDataxPrePostConsumer extends TestCase {
         };
 
         Objects.requireNonNull(lifeCycleHook, "lifeCycleHook can not be null");
-        return DataXLifecycleHookMsg.createDataXLifecycleHookMsg(processor, tableName, taskId,
-                IDataXBatchPost.KEY_PREP + tableName, currentTimeStamp, lifeCycleHook, false);
+        return DataXLifecycleHookMsg.createDataXLifecycleHookMsg(processor, tableName, taskId, LifeCycleHook.Prep.getToken() + tableName, currentTimeStamp, lifeCycleHook, false);
     }
 
     public void testConsumePostExecMessage() throws Exception {
         DataxPrePostConsumer prePostConsumer = new DataxPrePostConsumer();
 
-        DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(IDataXBatchPost.LifeCycleHook.Post);
+        DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(LifeCycleHook.Post);
 
         prePostConsumer.consumeMessage(lifecycleHookMsg);
     }

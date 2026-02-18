@@ -39,7 +39,7 @@ public class PowerJobTaskContext implements ITaskExecutorContext {
 
     @Override
     public InstanceType getJobTriggerType() {
-        return InstanceType.DISTRIBUTE;
+        return InstanceType.AKKA;
     }
 
     public static ExecPhase parse(MapProcessor processor, TaskContext context) {

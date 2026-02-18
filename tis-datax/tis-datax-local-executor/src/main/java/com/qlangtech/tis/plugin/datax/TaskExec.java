@@ -21,16 +21,16 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
-import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXJobSubmit.IDataXJobContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteDumpTaskTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,12 +41,17 @@ public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
 
 
-    static IRemoteTaskTrigger getRemoteJobTrigger(IDataXJobContext jobContext
-            , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor
+    static IRemoteDumpTaskTrigger getRemoteJobTrigger(IDataXJobContext jobContext
+            , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor, CuratorDataXTaskMessage taskMsg
     ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
-        return new IRemoteTaskTrigger() {
+        return new IRemoteDumpTaskTrigger() {
+            @Override
+            public DataXJobInfo getDataXTaskMessage() {
+                return Objects.requireNonNull(dataXJobInfo, "taskMsg can not be null");
+            }
+
             DataXJobSingleProcessorExecutor<CuratorDataXTaskMessage> jobConsumer;
             boolean hasCanceled;
 
@@ -67,7 +72,7 @@ public class TaskExec {
                     if (this.hasCanceled) {
                         logger.warn("datax:" + datax + " has been canceled");
                     } else {
-                        logger.error("datax:" + datax + ",jobName:" + dataXJobInfo.jobFileName, e);
+                        logger.error("datax:" + datax + ",jobName:" + dataXJobInfo.getJobFileName(), e);
                         throw new RuntimeException(e);
                     }
                 } finally {
@@ -77,7 +82,7 @@ public class TaskExec {
 
             @Override
             public String getTaskName() {
-                return dataXJobInfo.jobFileName;
+                return dataXJobInfo.getJobFileName();
             }
 
             @Override

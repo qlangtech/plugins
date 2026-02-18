@@ -8,7 +8,7 @@ import com.qlangtech.tis.fullbuild.indexbuild.RemoteTaskTriggers;
  */
 public class PowerJobTskTriggers extends RemoteTaskTriggers {
     public PowerJobTskTriggers() {
-        super(null);
+        super();
     }
 
     @Override

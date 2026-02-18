@@ -20,55 +20,41 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
-import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.SPIWrokerMemorySpec;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.PhaseStatusCollection;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.AbstractChildProcessStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
-import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
-import com.qlangtech.tis.manage.common.CreateNewTaskResult;
-import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.datax.StoreResourceType;
-import com.qlangtech.tis.plugin.datax.BasicDistributedSPIDataXJobSubmit.WorkflowNodeVisit;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
+import com.qlangtech.tis.powerjob.IDAGSessionSpec;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-import com.qlangtech.tis.powerjob.SelectedTabTriggersConfig;
-import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,11 +62,9 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.qlangtech.tis.fullbuild.IFullBuildContext.KEY_WORKFLOW_ID;
-import static com.qlangtech.tis.plugin.datax.BasicWorkflowInstance.vistWorkflowNodes;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -91,12 +75,11 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
     private static final Logger logger = LoggerFactory.getLogger(BasicWorkflowPayload.class);
     protected final IDataxProcessor dataxProcessor;
     protected final BasicDistributedSPIDataXJobSubmit submit;
-    protected final ICommonDAOContext commonDAOContext;
+    // protected final ICommonDAOContext commonDAOContext;
 
-    public BasicWorkflowPayload(IDataxProcessor dataxProcessor, ICommonDAOContext commonDAOContext, BasicDistributedSPIDataXJobSubmit submit) {
-        this.dataxProcessor = dataxProcessor;
+    public BasicWorkflowPayload(IDataxProcessor dataxProcessor, BasicDistributedSPIDataXJobSubmit submit) {
+        this.dataxProcessor = Objects.requireNonNull(dataxProcessor, "dataxProcessor");
         this.submit = submit;
-        this.commonDAOContext = commonDAOContext;
     }
 
     public static JSONObject createPayload( //
@@ -174,144 +157,147 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
     protected abstract SPIExecContext createSPIExecContext();
 
     /**
-     * @param workflowInstanceIdOpt TIS 中触发历史taskId
+     * // @param workflowInstanceIdOpt TIS 中触发历史taskId
+     *
      * @param feedback
      * @return
      */
-    public DistributeJobTriggerBuildResult triggerWorkflow(Optional<Long> workflowInstanceIdOpt
-            , RpcServiceReference feedback) {
+    public DistributeJobTriggerBuildResult triggerWorkflow(IExecChainContext execChainContext,
+                                                           RpcServiceReference feedback) {
+        throw new UnsupportedOperationException();
         //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
-        WorkflowSPIInitializer<BasicWorkflowInstance> workflowInitializer = new WorkflowSPIInitializer(this);
-
-        BasicWorkflowInstance spiWorkflowId = workflowInitializer.initialize();
-
-        List<IWorkflowNode> wfNodes = Objects.requireNonNull(spiWorkflowId, "spiWorkflowId can not be null").getWorkflowNodes();// getDAGNodes(spiWorkflowId);
-        final List<SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
-        final List<ISqlTask.SqlTaskCfg> joinNodeCfgs = Lists.newArrayList();
-        vistWorkflowNodes(this.dataxProcessor.identityValue(), wfNodes, new WorkflowNodeVisit() {
-            @Override
-            public void vistStartInitNode(IWorkflowNode node) {
-                return;
-            }
-
-            @Override
-            public void vistJoinWorkerNode(ISqlTask.SqlTaskCfg cfg, IWorkflowNode node) {
-                joinNodeCfgs.add(cfg);
-            }
-
-            @Override
-            public void vistDumpWorkerNode(IWorkflowNode node) {
-                triggerCfgs.add(SelectedTabTriggers.deserialize(JSONObject.parseObject(node.getNodeParams())));
-            }
-        });
-
-        SPIExecContext chainContext = this.createSPIExecContext();
-        chainContext.setExecutePhaseRange(spiWorkflowId.getExecutePhaseRange());
-        //
-        /**===================================================================
-         * 创建 TIS的taskId
-         ===================================================================*/
-        CreateNewTaskResult newTaskResult
-                = this.commonDAOContext.createNewDataXTask(chainContext, workflowInstanceIdOpt.isPresent() ? TriggerType.CRONTAB : TriggerType.MANUAL);
-
-        final Integer tisTaskId = newTaskResult.getTaskid();
-
-        if (CollectionUtils.isEmpty(triggerCfgs)) {
-            throw new IllegalStateException("powerjob workflowId:" + spiWorkflowId.getSPIWorkflowId()
-                    + " relevant nodes triggerCfgs can not be null empty");
-        }
-
-        PhaseStatusCollection statusCollection = createPhaseStatus(spiWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
-        feedback.initSynJob(statusCollection);
-
-        JSONObject instanceParams = createInstanceParams(tisTaskId);
-        // 取得powerjob instanceId
-        Long workflowInstanceIdOfSPI = workflowInstanceIdOpt.orElseGet(() -> {
-            /****************************************
-             * 手动触发的情况
-             ****************************************/
-            Long createWorkflowInstanceId = runSPIWorkflow(spiWorkflowId, instanceParams);
-            logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
-            return createWorkflowInstanceId;
-        });
-
-
-        WorkFlowBuildHistoryPayload buildHistoryPayload = createBuildHistoryPayload(tisTaskId);
-
-        buildHistoryPayload.setSPIWorkflowInstanceId(workflowInstanceIdOfSPI);
-
-        DistributeJobTriggerBuildResult buildResult = new DistributeJobTriggerBuildResult(true, instanceParams);
-        buildResult.taskid = tisTaskId;
-
-        initializeService(commonDAOContext);
-        triggrWorkflowJobs.offer(buildHistoryPayload);
-        if (checkWorkflowJobsLock.tryLock()) {
-
-            scheduledExecutorService.schedule(() -> {
-                checkWorkflowJobsLock.lock();
-                try {
-                    int count = 0;
-                    WorkFlowBuildHistoryPayload pl = null;
-                    List<WorkFlowBuildHistoryPayload> checkWf = Lists.newArrayList();
-                    ExecResult execResult = null;
-                    // TISPowerJobClient powerJobClient = this.getTISPowerJob();
-                    while (true) {
-                        while ((pl = triggrWorkflowJobs.poll()) != null) {
-                            checkWf.add(pl);
-                            count++;
-                        }
-
-                        if (CollectionUtils.isEmpty(checkWf)) {
-                            logger.info("the turn all of the powerjob workflow job has been terminated,jobs count:{}", count);
-                            return;
-                        }
-
-                        // WorkflowInstanceInfoDTO wfStatus = null;
-                        Iterator<WorkFlowBuildHistoryPayload> it = checkWf.iterator();
-                        WorkFlowBuildHistoryPayload p;
-                        int allWfJobsCount = checkWf.size();
-                        int removed = 0;
-                        aa:
-                        while (it.hasNext()) {
-                            p = it.next();
-                            try {
-                                if ((execResult = p.processExecHistoryRecord()) != null) {
-                                    // 说明结束了
-                                    it.remove();
-                                    removed++;
-                                    // 正常结束？ 还是失败导致？
-                                    if (execResult != ExecResult.SUCCESS) {
-
-                                    }
-                                    triggrWorkflowJobs.taskFinal(p, execResult);
-                                }
-                            } catch (Throwable e) {
-                                it.remove();
-                                removed++;
-                                logger.error(e.getMessage(), e);
-                                continue aa;
-                            }
-                        }
-                        logger.info("start to wait next time to check job status,to terminate status count:{},allWfJobsCount:{}", removed, allWfJobsCount);
-                        try {
-                            Thread.sleep(4000);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
-                    throw e;
-                } finally {
-                    checkWorkflowJobsLock.unlock();
-                }
-            }, 5, TimeUnit.SECONDS);
-            checkWorkflowJobsLock.unlock();
-        }
-
-
-        return buildResult;
+//        WorkflowSPIInitializer<BasicWorkflowInstance> workflowInitializer = new WorkflowSPIInitializer(this);
+//
+//        BasicWorkflowInstance spiWorkflowId = workflowInitializer.initialize();
+//
+//        List<IWorkflowNode> wfNodes = Objects.requireNonNull(spiWorkflowId
+//                , "spiWorkflowId can not be null").getWorkflowNodes();// getDAGNodes(spiWorkflowId);
+//        final List<SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
+//        final List<ISqlTask.SqlTaskCfg> joinNodeCfgs = Lists.newArrayList();
+//        vistWorkflowNodes(this.dataxProcessor.identityValue(), wfNodes, new WorkflowNodeVisit() {
+//            @Override
+//            public void vistStartInitNode(IWorkflowNode node) {
+//                return;
+//            }
+//
+//            @Override
+//            public void vistJoinWorkerNode(ISqlTask.SqlTaskCfg cfg, IWorkflowNode node) {
+//                joinNodeCfgs.add(cfg);
+//            }
+//
+//            @Override
+//            public void vistDumpWorkerNode(IWorkflowNode node) {
+//                triggerCfgs.add(SelectedTabTriggers.deserialize(JSONObject.parseObject(node.getNodeParams())));
+//            }
+//        });
+//
+//        SPIExecContext chainContext = this.createSPIExecContext();
+//        chainContext.setExecutePhaseRange(spiWorkflowId.getExecutePhaseRange());
+//        //
+//        /**===================================================================
+//         * 创建 TIS的taskId
+//         ===================================================================*/
+//        CreateNewTaskResult newTaskResult
+//                = this.commonDAOContext.createNewDataXTask(chainContext, workflowInstanceIdOpt.isPresent() ? TriggerType.CRONTAB : TriggerType.MANUAL);
+//
+//        final Integer tisTaskId = newTaskResult.getTaskid();
+//
+//        if (CollectionUtils.isEmpty(triggerCfgs)) {
+//            throw new IllegalStateException("powerjob workflowId:" + spiWorkflowId.getSPIWorkflowId()
+//                    + " relevant nodes triggerCfgs can not be null empty");
+//        }
+//
+//        PhaseStatusCollection statusCollection = createPhaseStatus(spiWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
+//        feedback.initSynJob(statusCollection);
+//
+//        JSONObject instanceParams = createInstanceParams(tisTaskId);
+//        // 取得powerjob instanceId
+//        Long workflowInstanceIdOfSPI = workflowInstanceIdOpt.orElseGet(() -> {
+//            /****************************************
+//             * 手动触发的情况
+//             ****************************************/
+//            Long createWorkflowInstanceId = runSPIWorkflow(spiWorkflowId, instanceParams);
+//            logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
+//            return createWorkflowInstanceId;
+//        });
+//
+//
+//        WorkFlowBuildHistoryPayload buildHistoryPayload = createBuildHistoryPayload(tisTaskId);
+//
+//        buildHistoryPayload.setSPIWorkflowInstanceId(workflowInstanceIdOfSPI);
+//
+//        DistributeJobTriggerBuildResult buildResult = new DistributeJobTriggerBuildResult(true, instanceParams);
+//        buildResult.taskid = tisTaskId;
+//
+//        initializeService(commonDAOContext);
+//        triggrWorkflowJobs.offer(buildHistoryPayload);
+//        if (checkWorkflowJobsLock.tryLock()) {
+//
+//            scheduledExecutorService.schedule(() -> {
+//                checkWorkflowJobsLock.lock();
+//                try {
+//                    int count = 0;
+//                    WorkFlowBuildHistoryPayload pl = null;
+//                    List<WorkFlowBuildHistoryPayload> checkWf = Lists.newArrayList();
+//                    ExecResult execResult = null;
+//                    // TISPowerJobClient powerJobClient = this.getTISPowerJob();
+//                    while (true) {
+//                        while ((pl = triggrWorkflowJobs.poll()) != null) {
+//                            checkWf.add(pl);
+//                            count++;
+//                        }
+//
+//                        if (CollectionUtils.isEmpty(checkWf)) {
+//                            logger.info("the turn all of the powerjob workflow job has been terminated,jobs count:{}", count);
+//                            return;
+//                        }
+//
+//                        // WorkflowInstanceInfoDTO wfStatus = null;
+//                        Iterator<WorkFlowBuildHistoryPayload> it = checkWf.iterator();
+//                        WorkFlowBuildHistoryPayload p;
+//                        int allWfJobsCount = checkWf.size();
+//                        int removed = 0;
+//                        aa:
+//                        while (it.hasNext()) {
+//                            p = it.next();
+//                            try {
+//                                if ((execResult = p.processExecHistoryRecord()) != null) {
+//                                    // 说明结束了
+//                                    it.remove();
+//                                    removed++;
+//                                    // 正常结束？ 还是失败导致？
+//                                    if (execResult != ExecResult.SUCCESS) {
+//
+//                                    }
+//                                    triggrWorkflowJobs.taskFinal(p, execResult);
+//                                }
+//                            } catch (Throwable e) {
+//                                it.remove();
+//                                removed++;
+//                                logger.error(e.getMessage(), e);
+//                                continue aa;
+//                            }
+//                        }
+//                        logger.info("start to wait next time to check job status,to terminate status count:{},allWfJobsCount:{}", removed, allWfJobsCount);
+//                        try {
+//                            Thread.sleep(4000);
+//                        } catch (InterruptedException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    }
+//                } catch (Throwable e) {
+//                    logger.error(e.getMessage(), e);
+//                    throw e;
+//                } finally {
+//                    checkWorkflowJobsLock.unlock();
+//                }
+//            }, 5, TimeUnit.SECONDS);
+//            checkWorkflowJobsLock.unlock();
+//        }
+//
+//
+//        return buildResult;
     }
 
     protected abstract WorkFlowBuildHistoryPayload createBuildHistoryPayload(Integer tisTaskId);
@@ -403,9 +389,9 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
                 execChainContext.setTskTriggers(tskTriggers);
 
 
-                DAGSessionSpec sessionSpec = new DAGSessionSpec();
+                IDAGSessionSpec sessionSpec = null;
 
-                tabTriggers = DAGSessionSpec.buildTaskTriggers(
+                tabTriggers = SelectedTabTriggers.buildTaskTriggers(
                         execChainContext, dataxProcessor, submit, rpcStub, selectedTab, selectedTab.getName(),
                         sessionSpec, cfgFileNames);
 
@@ -425,30 +411,26 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
     }
 
     protected final JSONObject createInstanceParams(Integer tisTaskId) {
-        try {
-            JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
-
-            ReplicasSpec replicasSpec = getResourceSeplicasSpec();
-
-            // DataXJobWorker worker = getSPIJobWorker();
-            // if (worker != null) {
-            //  ReplicasSpec replicasSpec = worker.getReplicasSpec();
-            instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
-                    , Objects.requireNonNull(replicasSpec, "replicasSpec can not be null")
-                            .toJavaMemorySpec(Optional.of(SPIWrokerMemorySpec.dataXExecutorMemoryProportion())));
-            //}
-
-            WorkFlowBuildHistory latestSuccessWorkflowHistory = this.commonDAOContext.getLatestSuccessWorkflowHistory(dataxProcessor.getResTarget());
-
-            if (latestSuccessWorkflowHistory != null) {
-                instanceParams.put(JobParams.KEY_PREVIOUS_TASK_ID, latestSuccessWorkflowHistory.getId());
-            }
-
-            return instanceParams;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        throw new UnsupportedOperationException();
+//        try {
+//            JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
+//
+//            ReplicasSpec replicasSpec = getResourceSeplicasSpec();
+//            instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
+//                    , Objects.requireNonNull(replicasSpec, "replicasSpec can not be null")
+//                            .toJavaMemorySpec(Optional.of(SPIWrokerMemorySpec.dataXExecutorMemoryProportion())));
+//
+//            WorkFlowBuildHistory latestSuccessWorkflowHistory = this.commonDAOContext.getLatestSuccessWorkflowHistory(dataxProcessor.getResTarget());
+//
+//            if (latestSuccessWorkflowHistory != null) {
+//                instanceParams.put(JobParams.KEY_PREVIOUS_TASK_ID, latestSuccessWorkflowHistory.getId());
+//            }
+//
+//            return instanceParams;
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     protected ReplicasSpec getResourceSeplicasSpec() {
@@ -463,40 +445,48 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         return DataXJobWorker.getK8SDataXPowerJobWorker();
     }
 
-    private PhaseStatusCollection createPhaseStatus(BasicWorkflowInstance spiWorkflowId
-            , List<SelectedTabTriggersConfig> triggerCfgs //
+    public static PhaseStatusCollection createPhaseStatus(
+            List<Pair<ISelectedTab, SelectedTabTriggers>> triggerCfgs //
             , List<ISqlTask.SqlTaskCfg> joinNodeCfgs //
             , Integer tisTaskId) {
-        PhaseStatusCollection statusCollection = new PhaseStatusCollection(tisTaskId, spiWorkflowId.getExecutePhaseRange());
+
         DumpPhaseStatus dumpPhase = new DumpPhaseStatus(tisTaskId);
         JoinPhaseStatus joinPhase = new JoinPhaseStatus(tisTaskId);
-        statusCollection.setDumpPhase(dumpPhase);
-        statusCollection.setJoinPhase(joinPhase);
-
-        for (SelectedTabTriggersConfig triggerCfg : triggerCfgs) {
-
-            if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
-                setInitStatus(dumpPhase.getTable(triggerCfg.getPreTrigger()));
+        boolean containJoinPhaseNodes = false;
+        SelectedTabTriggers tabTrigger = null;
+        IRemoteTaskTrigger trigger = null;
+        for (Pair<ISelectedTab, SelectedTabTriggers> triggerCfg : triggerCfgs) {
+            tabTrigger = triggerCfg.getValue();
+            if ((trigger = tabTrigger.getPreTrigger()) != null) {
+                setInitStatus(dumpPhase.getTable(trigger.getTaskName()));
             }
 
-            if (StringUtils.isNotEmpty(triggerCfg.getPostTrigger())) {
-                setInitStatus(joinPhase.getTaskStatus(triggerCfg.getPostTrigger()));
+            if ((trigger = tabTrigger.getPostTrigger()) != null) {
+                setInitStatus(joinPhase.getTaskStatus(trigger.getTaskName()));
+                containJoinPhaseNodes = true;
             }
 
-            for (CuratorDataXTaskMessage taskMsg : triggerCfg.getSplitTabsCfg()) {
-                setInitStatus(dumpPhase.getTable(DataXJobInfo.parse(taskMsg.getJobName()).jobFileName));
+            for (IRemoteTaskTrigger taskMsg : tabTrigger.getSplitTabTriggers()) {
+                // setInitStatus(dumpPhase.getTable(DataXJobInfo.parse(taskMsg.getJobName()).jobFileName));
+                setInitStatus(dumpPhase.getTable(taskMsg.getTaskName()));
             }
         }
 
         for (ISqlTask.SqlTaskCfg joinTskCfg //
                 : Objects.requireNonNull(joinNodeCfgs, "joinNodeCfgs can not be null")) {
             setInitStatus(joinPhase.getTaskStatus(joinTskCfg.getExportName()));
+            containJoinPhaseNodes = true;
         }
+        ExecutePhaseRange phaseRange = new ExecutePhaseRange(FullbuildPhase.FullDump, (containJoinPhaseNodes ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));
+        PhaseStatusCollection statusCollection //
+                = new PhaseStatusCollection(tisTaskId, Objects.requireNonNull(phaseRange, "phaseRange can not be null"));
+        statusCollection.setDumpPhase(dumpPhase);
+        statusCollection.setJoinPhase(joinPhase);
 
         return statusCollection;
     }
 
-    private void setInitStatus(AbstractChildProcessStatus status) {
+    private static void setInitStatus(AbstractChildProcessStatus status) {
         status.setFaild(false);
         status.setWaiting(true);
         status.setComplete(false);

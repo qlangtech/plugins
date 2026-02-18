@@ -28,8 +28,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteDumpTaskTrigger;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IMessageHandler;
@@ -40,7 +39,6 @@ import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
 
@@ -49,18 +47,19 @@ import java.util.Optional;
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-20 18:49
- * // @see DistributedPowerJobDataXJobSubmit
+ * // @see tis-datax-local-powerjob-executor：com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit
  * // @see com.qlangtech.tis.plugin.datax.doplinscheduler.DolphinschedulerDistributedSPIDataXJobSubmit
+ * // @see  com.qlangtech.tis.plugin.akka.DistributedAKKAJobDataXJobSubmit
  **/
 public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends BasicWorkflowInstance> extends DataXJobSubmit {
     public final static String KEY_START_INITIALIZE_SUFFIX = "_start_initialize";
     transient RpcServiceReference statusRpc;
 
     @Override
-    public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
+    public IRemoteDumpTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
             , RpcServiceReference statusRpc, DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage msg) {
-        SelectedTabTriggers.PowerJobRemoteTaskTrigger tskTrigger
-                = new SelectedTabTriggers.PowerJobRemoteTaskTrigger(jobName, msg);
+        IRemoteDumpTaskTrigger tskTrigger
+                = new SelectedTabTriggers.PowerJobRemoteTaskTrigger(jobName);
         return tskTrigger;
     }
 
@@ -70,15 +69,15 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
      * @param module
      * @param context
      * @param workflow
-     * @param dryRun
-     * @param powerJobWorkflowInstanceIdOpt powerJobWorkflowInstanceIdOpt 如果是手动触发则为空,如果是定时触发的，例如在powerjob系统中已经生成了powerjob 的workflowInstanceId
+     * @param dryRun   //@param powerJobWorkflowInstanceIdOpt powerJobWorkflowInstanceIdOpt 如果是手动触发则为空,如果是定时触发的，例如在powerjob系统中已经生成了powerjob 的workflowInstanceId
      * @return
      */
     @Override
     public TriggerBuildResult triggerWorkflowJob(
             IControlMsgHandler module, Context context,
             IWorkflow workflow, Boolean dryRun
-            , Optional<Long> powerJobWorkflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
+            //, Optional<Long> powerJobWorkflowInstanceIdOpt
+            , Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory) {
 
         try {
             //   ICommonDAOContext daoContext = getCommonDAOContext(module);
@@ -88,7 +87,9 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
             //   PowerJobClient powerJobClient = getTISPowerJob();
             //  RpcServiceReference statusRpc = getStatusRpc();
             //  StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
-            return payload.triggerWorkflow(powerJobWorkflowInstanceIdOpt, getStatusRpc());
+            IExecChainContext execChainContext = null;
+            return payload.triggerWorkflow(execChainContext,//powerJobWorkflowInstanceIdOpt,
+                    getStatusRpc());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -97,28 +98,25 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
     /**
      * 触发数据同步Pipeline执行
      *
-     * @param module
-     * @param context
      * @param appName
-     * @param workflowInstanceIdOpt 如果是手动触发则为空
      * @return
      */
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context
-            , DataXName appName, Optional<Long> workflowInstanceIdOpt, Optional<WorkFlowBuildHistory> latestWorkflowHistory) {
+    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName) {
         if ((appName) == null) {
             throw new IllegalArgumentException("appName " + appName + " can not be empty");
         }
 
-        BasicWorkflowPayload<WF_INSTANCE> appPayload = createApplicationPayload(module, appName, latestWorkflowHistory);
-        return appPayload.triggerWorkflow(workflowInstanceIdOpt, getStatusRpc());
+        BasicWorkflowPayload<WF_INSTANCE> appPayload = createApplicationPayload(execChainContext, appName);
+        return appPayload.triggerWorkflow(execChainContext,getStatusRpc());
     }
 
     protected abstract BasicWorkflowPayload<WF_INSTANCE> createWorkflowPayload(
             IControlMsgHandler module, Optional<WorkFlowBuildHistory> latestSuccessWorkflowHistory, SqlDataFlowTopology topology);
 
-    protected abstract BasicWorkflowPayload<WF_INSTANCE> createApplicationPayload(
-            IControlMsgHandler module, DataXName appName, Optional<WorkFlowBuildHistory> latestWorkflowHistory);
+
+    protected abstract BasicWorkflowPayload<WF_INSTANCE> createApplicationPayload(IExecChainContext execChainContext,
+                                                                                  DataXName appName);
 
     @Override
     public IDataXJobContext createJobContext(IExecChainContext parentContext) {
@@ -129,8 +127,7 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
         if (!(module instanceof ICommonDAOContext)) {
             throw new IllegalStateException("module must be type of " + ICommonDAOContext.class.getName());
         }
-        ICommonDAOContext daoContext = (ICommonDAOContext) module;
-        return daoContext;
+        return (ICommonDAOContext) module;
     }
 
 

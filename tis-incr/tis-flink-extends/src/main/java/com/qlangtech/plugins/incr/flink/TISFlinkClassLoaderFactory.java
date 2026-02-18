@@ -85,7 +85,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
         return (libraryURLs) -> {
             logger.info("create Flink app classloader:{},resolveOrder:{}"
-                    , Arrays.stream(libraryURLs).map((url) -> String.valueOf(url)).collect(Collectors.joining(","))
+                    , Arrays.stream(libraryURLs).map(String::valueOf).collect(Collectors.joining(","))
                     , classLoaderResolveOrder);
             try {
                 //

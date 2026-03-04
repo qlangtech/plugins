@@ -102,13 +102,13 @@ public abstract class BasicDistributedSPIDataXJobSubmit<WF_INSTANCE extends Basi
      * @return
      */
     @Override
-    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName) {
+    public final TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName) {
         if ((appName) == null) {
             throw new IllegalArgumentException("appName " + appName + " can not be empty");
         }
 
         BasicWorkflowPayload<WF_INSTANCE> appPayload = createApplicationPayload(execChainContext, appName);
-        return appPayload.triggerWorkflow(execChainContext,getStatusRpc());
+        return appPayload.triggerWorkflow(execChainContext, getStatusRpc());
     }
 
     protected abstract BasicWorkflowPayload<WF_INSTANCE> createWorkflowPayload(

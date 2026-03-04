@@ -8,26 +8,28 @@ import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
+import com.qlangtech.tis.assemble.TriggerType;
+import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dag.BatchJobCrontab;
 import com.qlangtech.tis.dag.actor.message.LoadSchedules;
+import com.qlangtech.tis.dag.actor.message.QuerySchedulerDetail;
 import com.qlangtech.tis.dag.actor.message.RegisterSchedule;
 import com.qlangtech.tis.dag.actor.message.ScheduleTriggered;
-import com.qlangtech.tis.dag.actor.message.StartWorkflow;
 import com.qlangtech.tis.dag.actor.message.UnregisterSchedule;
+import com.qlangtech.tis.datax.DAGSchedulerDetail;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate.DataXProcessorTemplateManipulateStore;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
-import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -53,7 +55,23 @@ public class DAGSchedulerActor extends AbstractActor {
     private final ActorRef workflowInstanceRegion;
     private final IWorkFlowBuildHistoryDAO buildHistoryDAO;
 
-    private final Map<String, ScheduleEntry> activeSchedules = new HashMap<>();
+    private static class ActiveSchedules {
+        private final Map<DataXName, ScheduleEntry> schedules = new HashMap<>();
+
+        public ScheduleEntry get(DataXName dataXName) {
+            return schedules.get(dataXName);
+        }
+
+        public ScheduleEntry remove(DataXName dataXName) {
+            return schedules.remove(dataXName);
+        }
+
+        public void put(DataXName dataXName, ScheduleEntry entry) {
+            this.schedules.put(dataXName, entry);
+        }
+    }
+
+    private final ActiveSchedules activeSchedules = new ActiveSchedules();
 
     public static Props props(ActorRef workflowInstanceRegion, IWorkFlowBuildHistoryDAO buildHistoryDAO) {
         return Props.create(DAGSchedulerActor.class,
@@ -79,6 +97,7 @@ public class DAGSchedulerActor extends AbstractActor {
                 .match(ScheduleTriggered.class, this::handleScheduleTriggered)
                 .match(RegisterSchedule.class, this::handleRegisterSchedule)
                 .match(UnregisterSchedule.class, this::handleUnregisterSchedule)
+                .match(QuerySchedulerDetail.class, this::handleQuerySchedulerDetail)
                 .build();
     }
 
@@ -118,84 +137,137 @@ public class DAGSchedulerActor extends AbstractActor {
     /**
      * Handle cron trigger: check if a workflow instance is already running for this pipeline;
      * if not, create a build history record and send StartWorkflow to the sharding region.
+     *
+     * @see com.qlangtech.tis.plugin.akka.AkkaPipelinePayload#submitToAkkaCluster
      */
     private void handleScheduleTriggered(ScheduleTriggered msg) {
         String pipelineName = msg.getPipelineName();
         StoreResourceType resType = msg.getResType();
         logger.info("schedule triggered for pipeline: {}", pipelineName);
 
+        ScheduleEntry entry = activeSchedules.get(msg.getDataName());
+        if (entry != null) {
+            entry.lastTriggerTime = System.currentTimeMillis();
+        }
+
         try {
-            if (hasRunningInstance(pipelineName)) {
+            if (hasRunningInstance(msg.getDataName())) {
                 logger.warn("pipeline {} has running instance, skipping this trigger", pipelineName);
-                scheduleNextIfActive(pipelineName);
+                scheduleNextIfActive(msg.getDataName());
                 return;
             }
             DataXJobSubmit dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit();
             long triggerTimestamp = System.currentTimeMillis();
             DataXPipelineExecContext execContext = new DataXPipelineExecContext(pipelineName, triggerTimestamp);
+            execContext.setAttribute(TriggerType.class.getName(), TriggerType.CRONTAB);
+//            RpcServiceReference rpcServiceRef = StatusRpcClientFactory.getService(ITISCoordinator.create());
+//            IDataxProcessor processor = execContext.getProcessor();
+//            DataXCfgGenerator.GenerateCfgs cfgFileNames
+//                    = processor.getDataxCfgFileNames(null, Optional.empty());
+//            Pair<DAGSessionSpec, List<Pair<ISelectedTab, SelectedTabTriggers>>> spec = DAGSessionSpec.createDAGSessionSpec(
+//                    execContext, rpcServiceRef, processor, cfgFileNames, dataXJobSubmit);
+            //DAGSessionSpec sessionSpec = spec.getLeft();
+
+//            PEWorkflowDAG dag = Objects.requireNonNull(sessionSpec.getDAG() //
+//                    , "pipeline:" + pipelineName + " relevant dag can not be null");
+
+            // 4. 保存 DAG 定义到文件系统
+//            WorkflowDAGFileManager fileManager //
+//                    = new WorkflowDAGFileManager(processor.getDataXWorkDir(null), true);
+//            File dagSpecPath = fileManager.saveDagSpec(pipelineName, dag);
+//            CreateNewTaskResult newTask = IExecChainContext.createNewTask(execContext, TriggerType.CRONTAB, dagSpecPath);
 
 
-            dataXJobSubmit.triggerJob(execContext, msg.getDataName());
+            TriggerBuildResult triggerResult = dataXJobSubmit.triggerJob(execContext, msg.getDataName());
 
-            WorkFlowBuildHistory buildHistory = new WorkFlowBuildHistory();
-            buildHistory.setAppName(pipelineName);
-            buildHistory.setStartTime(new Date());
-          //  buildHistory.setInstanceStatus(InstanceStatus.WAITING.getDesc());
+            //  WorkFlowBuildHistory buildHistory = new WorkFlowBuildHistory();
+//            buildHistory.setAppName(pipelineName);
+//            buildHistory.setStartTime(new Date());
+            //  buildHistory.setInstanceStatus(InstanceStatus.WAITING.getDesc());
             // TriggerType
-            buildHistory.setTriggerType(2); // 2 = cron triggered
-            buildHistory.setCreateTime(new Date());
-            buildHistory.setOpTime(new Date());
-            Integer instanceId = buildHistoryDAO.insertSelective(buildHistory);
+            //  buildHistory.setTriggerType(2); // 2 = cron triggered
+            // buildHistory.setCreateTime(new Date());
+            // buildHistory.setOpTime(new Date());
+            // Integer instanceId = buildHistoryDAO.insertSelective(buildHistory);
 
-            DataXName dataXName = new DataXName(pipelineName, resType);
-            StartWorkflow startMsg = new StartWorkflow(instanceId, dataXName);
-            workflowInstanceRegion.tell(startMsg, getSelf());
-            logger.info("sent StartWorkflow for pipeline: {}, instanceId: {}", pipelineName, instanceId);
+            // DataXName dataXName = new DataXName(pipelineName, resType);
+          //  StartWorkflow startMsg = new StartWorkflow(newTask.getTaskid(), msg.getDataName());
+           // workflowInstanceRegion.tell(startMsg, getSelf());
+            logger.info("sent StartWorkflow for pipeline: {}, instanceId: {}", pipelineName, triggerResult.getTaskid());
         } catch (Exception e) {
             logger.error("failed to handle schedule trigger for pipeline: " + pipelineName, e);
         }
 
-        scheduleNextIfActive(pipelineName);
+        scheduleNextIfActive(msg.getDataName());
     }
 
     /**
      * Register a new cron schedule dynamically. If a schedule with the same pipelineName
      * already exists, cancel the old one first.
      */
-    private void handleRegisterSchedule(RegisterSchedule msg) {
-        logger.info("registering schedule for pipeline: {}, cron: {}", msg.getPipelineName(), msg.getCronExpression());
-        registerCronSchedule(msg.getPipelineName(), msg.getResType(), msg.getCronExpression());
+    public void handleRegisterSchedule(RegisterSchedule msg) {
+        try {
+            logger.info("registering schedule for pipeline: {}, cron: {}", msg.getPipelineName(), msg.getCronExpression());
+            registerCronSchedule(msg.getPipelineName(), msg.getResType(), msg.getCronExpression());
+            getSender().tell(akka.Done.getInstance(), getSelf());
+        } catch (Exception e) {
+            logger.error("failed to handle register schedule for pipeline: " + msg.getPipelineName(), e);
+            getSender().tell(new akka.actor.Status.Failure(e), getSelf());
+        }
     }
 
     /**
      * Remove a cron schedule dynamically, cancelling the pending Akka scheduled task.
      */
-    private void handleUnregisterSchedule(UnregisterSchedule msg) {
-        String pipelineName = msg.getPipelineName();
-        logger.info("unregistering schedule for pipeline: {}", pipelineName);
+    public void handleUnregisterSchedule(UnregisterSchedule msg) {
+        try {
+            final DataXName dataXName = new DataXName(msg.getPipelineName(), msg.getResType());
+            logger.info("unregistering schedule for pipeline: {}", dataXName);
 
-        ScheduleEntry entry = activeSchedules.remove(pipelineName);
-        if (entry != null && entry.scheduledTask != null) {
-            entry.scheduledTask.cancel();
-            logger.info("cancelled schedule for pipeline: {}", pipelineName);
+            ScheduleEntry entry = activeSchedules.remove(dataXName);
+            if (entry != null && entry.scheduledTask != null) {
+                entry.scheduledTask.cancel();
+                logger.info("cancelled schedule for pipeline: {}", dataXName);
+            }
+            BatchJobCrontab crontab = getBatchJobCrontab(dataXName);
+            if (crontab != null) {
+                crontab.turnOn = false;
+            } else {
+                // 这里应该是已经被物理删除了
+            }
+
+            getSender().tell(akka.Done.getInstance(), getSelf());
+        } catch (Exception e) {
+            logger.error("failed to handle unregister schedule for pipeline: " + msg.getPipelineName(), e);
+            getSender().tell(new akka.actor.Status.Failure(e), getSelf());
         }
     }
 
     private void registerCronSchedule(String pipelineName, StoreResourceType resType, String cronExpression) {
         // Cancel existing schedule if present
-        ScheduleEntry existing = activeSchedules.remove(pipelineName);
+        final DataXName dataXName = new DataXName(pipelineName, resType);
+        ScheduleEntry existing = activeSchedules.remove(dataXName);
         if (existing != null && existing.scheduledTask != null) {
             existing.scheduledTask.cancel();
         }
-
+        BatchJobCrontab crontab = Objects.requireNonNull(getBatchJobCrontab(dataXName) //
+                , "dataX:" + dataXName.getPipelineName() + " relevant crontab can not be null");
+        crontab.crontab = cronExpression;
+        crontab.turnOn = true;
         ScheduleEntry entry = new ScheduleEntry(pipelineName, resType, cronExpression);
+        entry.registerTime = System.currentTimeMillis();
         try {
             scheduleNext(entry);
-            activeSchedules.put(pipelineName, entry);
+            activeSchedules.put(dataXName, entry);
             logger.info("registered schedule for pipeline: {}, cron: {}", pipelineName, cronExpression);
         } catch (Exception e) {
             logger.error("failed to register schedule for pipeline: " + pipelineName, e);
         }
+    }
+
+    private BatchJobCrontab getBatchJobCrontab(DataXName dataXName) {
+        return DefaultDataXProcessorManipulate.getManipulateStore(dataXName, true) //
+                .getManipuldate(IdentityName.create(BatchJobCrontab.KEY_CRONTAB), BatchJobCrontab.class);
     }
 
     /**
@@ -226,7 +298,7 @@ public class DAGSchedulerActor extends AbstractActor {
     /**
      * Re-schedule next trigger only if the pipeline is still in active schedules.
      */
-    private void scheduleNextIfActive(String pipelineName) {
+    private void scheduleNextIfActive(DataXName pipelineName) {
         ScheduleEntry entry = activeSchedules.get(pipelineName);
         if (entry != null) {
             try {
@@ -240,12 +312,12 @@ public class DAGSchedulerActor extends AbstractActor {
     /**
      * Check if there's already a RUNNING/WAITING/QUEUED instance for the given pipeline.
      */
-    private boolean hasRunningInstance(String pipelineName) {
+    private boolean hasRunningInstance(DataXName pipelineName) {
 //        WorkFlowBuildHistoryCriteria criteria = new WorkFlowBuildHistoryCriteria();
 //        WorkFlowBuildHistoryCriteria.Criteria c = criteria.createCriteria();
 //        c.andAppNameEqualTo(pipelineName);
 
-        return buildHistoryDAO.hasRunningInstance(DataXName.createDataXPipeline(pipelineName));
+        return buildHistoryDAO.hasRunningInstance(pipelineName);
 
 //        List<WorkFlowBuildHistory> histories = buildHistoryDAO.selectByExample(criteria);
 //        for (WorkFlowBuildHistory h : histories) {
@@ -260,6 +332,67 @@ public class DAGSchedulerActor extends AbstractActor {
     }
 
     /**
+     * Handle query for all scheduled crontab entries (both active and inactive).
+     * Iterates the manipulate registry to find all BatchJobCrontab instances,
+     * supplements active schedule info (registerTime, lastTriggerTime, nextFireTime).
+     */
+    private void handleQuerySchedulerDetail(QuerySchedulerDetail msg) {
+        DAGSchedulerDetail detail = new DAGSchedulerDetail();
+        try {
+            CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.SPRING));
+            Map<String, DataXProcessorTemplateManipulateStore> registry =
+                    DefaultDataXProcessorManipulate.getManipulateRegistry();
+
+            for (Map.Entry<String, DataXProcessorTemplateManipulateStore> registryEntry : registry.entrySet()) {
+                DataXName pipelineName = DataXName.createDataXPipeline(registryEntry.getKey());
+                DataXProcessorTemplateManipulateStore store = registryEntry.getValue();
+                for (DefaultDataXProcessorManipulate manipulate : store.getManipulates()) {
+                    if (BatchJobCrontab.KEY_CRONTAB.equals(manipulate.identityValue())) {
+                        BatchJobCrontab crontab = (BatchJobCrontab) manipulate;
+                        DAGSchedulerDetail.ScheduleEntryInfo info = new DAGSchedulerDetail.ScheduleEntryInfo();
+                        info.setPipelineName(pipelineName.getPipelineName());
+                        info.setCronExpression(crontab.crontab);
+                        info.setTurnOn(Boolean.TRUE.equals(crontab.turnOn));
+
+                        ScheduleEntry activeEntry = activeSchedules.get(pipelineName);
+                        if (activeEntry != null) {
+                            crontab.crontab = activeEntry.cronExpression;
+                            info.setTurnOn(true);
+                            info.setCronExpression(activeEntry.cronExpression);
+                            info.setRegisterTime(activeEntry.registerTime);
+                            info.setLastTriggerTime(activeEntry.lastTriggerTime);
+                            // calculate next fire time
+                            if (info.isTurnOn() && crontab.crontab != null) {
+                                try {
+                                    ExecutionTime executionTime = ExecutionTime.forCron(parser.parse(crontab.crontab));
+                                    long nextFire = executionTime.nextExecution(ZonedDateTime.now())
+                                            .map(zdt -> zdt.toInstant().toEpochMilli())
+                                            .orElse(-1L);
+                                    info.setNextFireTime(nextFire);
+                                } catch (Exception e) {
+                                    logger.warn("failed to calculate next fire time for pipeline: {}", pipelineName, e);
+                                    info.setNextFireTime(-1);
+                                }
+                            } else {
+                                info.setNextFireTime(-1);
+                            }
+                        } else {
+                            info.setRegisterTime(-1);
+                            info.setLastTriggerTime(-1);
+                            info.setNextFireTime(-1);
+                        }
+
+                        detail.getSchedules().add(info);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("failed to query scheduler detail", e);
+        }
+        getSender().tell(detail, getSelf());
+    }
+
+    /**
      * Internal record for an active schedule entry.
      */
     private static class ScheduleEntry {
@@ -267,6 +400,8 @@ public class DAGSchedulerActor extends AbstractActor {
         final StoreResourceType resType;
         final String cronExpression;
         Cancellable scheduledTask;
+        long registerTime;
+        long lastTriggerTime = -1;
 
         ScheduleEntry(String pipelineName, StoreResourceType resType, String cronExpression) {
             this.pipelineName = pipelineName;

@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
-import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
@@ -64,14 +63,14 @@ public class DolphinschedulerDistributedSPIDataXJobSubmit extends BasicDistribut
         throw TisException.create("Dolphinscheduler DAG job cancel is not supported");
     }
 
-    @Override
-    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName //Optional<Long> workflowInstanceIdOpt,
-     //        ,  Optional<PhaseStatusCollection> latestSuccessWorkflowHistory
-    ) {
-        return super.triggerJob(execChainContext, appName //workflowInstanceIdOpt,
-            //    ,  latestSuccessWorkflowHistory
-        );
-    }
+//    @Override
+//    public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName //Optional<Long> workflowInstanceIdOpt,
+//     //        ,  Optional<PhaseStatusCollection> latestSuccessWorkflowHistory
+//    ) {
+//        return super.triggerJob(execChainContext, appName //workflowInstanceIdOpt,
+//            //    ,  latestSuccessWorkflowHistory
+//        );
+//    }
 
     @Override
     protected BasicWorkflowPayload createWorkflowPayload(

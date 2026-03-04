@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.datax;
 
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -44,24 +45,22 @@ import java.util.concurrent.ConcurrentHashMap;
  **/
 public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskRelevant> {
     private static final Logger logger = LoggerFactory.getLogger(DataXJobSingleProcessorExecutor.class);
-
+    public static final int DEFAULT_TASK_ID = 999;
     // 记录当前正在执行的任务<taskid,ExecuteWatchdog>
     public final ConcurrentHashMap<Integer, ExecuteWatchdog> runningTask = new ConcurrentHashMap<>();
 
     public void consumeMessage(T msg) throws Exception {
-        //MDC.put();
-        throw new UnsupportedOperationException();
-//        Integer taskId = msg.getTaskId();
-//        String jobName = msg.getJobName();
-//        String dataxName = msg.getDataXName();
-//        //  StoreResourceType resType = Objects.requireNonNull(msg.getResType(), "resType can not be null");
-//        //        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(jobId));
-//        //        MDC.put(JobCommon.KEY_COLLECTION, dataxName);
-//        JobCommon.setMDC(taskId, dataxName);
-//
-//
-//        // 查看当前任务是否正在进行中，如果已经终止则要退出
-//        execSystemTask(msg, taskId, jobName, dataxName);
+        // Integer taskId = PreviewLaunchParam;// msg.getTaskId();
+        String jobName = msg.getJobName();
+        DataXName dataxName = msg.getDataXName();
+        //  StoreResourceType resType = Objects.requireNonNull(msg.getResType(), "resType can not be null");
+        //        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(jobId));
+        //        MDC.put(JobCommon.KEY_COLLECTION, dataxName);
+        JobCommon.setMDC(DEFAULT_TASK_ID, dataxName.getPipelineName());
+
+
+        // 查看当前任务是否正在进行中，如果已经终止则要退出
+        execSystemTask(msg, DEFAULT_TASK_ID, jobName, dataxName.getPipelineName());
     }
 
     protected void execSystemTask(T msg, Integer jobId, String jobName, String dataxName) throws IOException,

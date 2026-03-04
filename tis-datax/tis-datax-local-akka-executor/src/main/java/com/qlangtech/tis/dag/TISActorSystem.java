@@ -326,6 +326,13 @@ public class TISActorSystem {
             logger.info("Cluster Sharding initialized: WorkflowInstance region created at {}",
                     workflowInstanceRegion.path());
 
+            // 将 workflowInstanceRegion 注入到 NodeDispatcherActor，解决循环依赖
+            // NodeDispatcherActor 需要通过 Region 转发 NodeCompleted 消息，
+            // 而不是直接使用 entity ActorRef（可能因 shard rebalancing/passivation 失效）
+            nodeDispatcherActor.tell(
+                    new NodeDispatcherActor.SetWorkflowInstanceRegion(workflowInstanceRegion),
+                    ActorRef.noSender());
+
         } catch (Exception e) {
             logger.error("Failed to initialize Cluster Sharding", e);
             throw new IllegalStateException("Failed to initialize Cluster Sharding", e);

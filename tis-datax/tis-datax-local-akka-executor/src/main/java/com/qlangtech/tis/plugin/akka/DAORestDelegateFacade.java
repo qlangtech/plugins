@@ -58,7 +58,8 @@ public class DAORestDelegateFacade implements IWorkflowDAOFacade {
                         switch (methodName) {
                             case "hasRunningInstance": {
                                 DataXName dataXName = (DataXName) Objects.requireNonNull(args[0], "param can not be null");
-
+                                return IExecChainContext.hasRunningWorkflowInstance(dataXName);
+                                // return true;
                             }
                             case "updateByPrimaryKeySelective": {
                                 return IExecChainContext.updateWorkFlowBuildHistory( //

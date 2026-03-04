@@ -17,6 +17,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.fullbuild.phasestatus.PhaseStatusCollection;
 import com.qlangtech.tis.manage.common.CreateNewTaskResult;
+import com.qlangtech.tis.manage.common.TaskSoapUtils;
 import com.qlangtech.tis.plugin.datax.BasicWorkflowInstance;
 import com.qlangtech.tis.plugin.datax.BasicWorkflowPayload;
 import com.qlangtech.tis.plugin.datax.PowerJobTskTriggers;
@@ -95,7 +96,7 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
      * @return 执行结果
      * @throws Exception 执行异常
      */
-    private DistributeJobTriggerBuildResult submitToAkkaCluster(IExecChainContext execChainContext, DAGSessionSpec sessionSpec) {
+    public DistributeJobTriggerBuildResult submitToAkkaCluster(IExecChainContext execChainContext, DAGSessionSpec sessionSpec) {
         TISActorSystem tisActorSystem = TISActorSystem.get();
 
         if (!tisActorSystem.isInitialized()) {
@@ -115,10 +116,11 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
         if (workflowBuildHistoryDAO == null) {
             throw new IllegalStateException("workflowBuildHistoryDAO is not injected");
         }
+        // 3. 将 DAGSessionSpec 转换为 PEWorkflowDAG
+        final PEWorkflowDAG dag = Objects.requireNonNull(sessionSpec.getDAG() //
+                , "pipeline:" + pipelineName.getPipelineName() + " relevant dag can not be null");
         try {
-            // 3. 将 DAGSessionSpec 转换为 PEWorkflowDAG
-            PEWorkflowDAG dag = Objects.requireNonNull(sessionSpec.getDAG() //
-                    , "pipeline:" + pipelineName.getPipelineName() + " relevant dag can not be null");
+
 
             // 4. 保存 DAG 定义到文件系统
             WorkflowDAGFileManager fileManager //
@@ -130,18 +132,18 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
 
             DataXPipelineExecContext chainContext = new DataXPipelineExecContext(pipelineName.getPipelineName(), System.currentTimeMillis());
             chainContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
-
-            CreateNewTaskResult newTask = IExecChainContext.createNewTask(chainContext, TriggerType.MANUAL, dagSpecPath);
+            TriggerType triggerType = execChainContext.getAttribute(TriggerType.class.getName(), () -> TriggerType.MANUAL);
+            CreateNewTaskResult newTask = IExecChainContext.createNewTask(chainContext, triggerType, dagSpecPath);
             /**============================================================
              * 创建新的task实例
              ============================================================*/
             taskHistory.setId(newTask.getTaskid());
 
-            if (newTask.getPreTaskId() != null) {
-                PhaseStatusCollection statusCollection
-                        = PhaseStatusCollection.getTaskPhaseReference(newTask.getPreTaskId());
-              //  statusCollection.getBuildPhase();
-            }
+//            if (newTask.getPreTaskId() != null) {
+//                PhaseStatusCollection statusCollection
+//                        = PhaseStatusCollection.getTaskPhaseReference(newTask.getPreTaskId());
+//              //  statusCollection.getBuildPhase();
+//            }
 
 
             // 6. 获取 DAGSchedulerActor 引用
@@ -158,6 +160,7 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
 
             // 8. 发送 StartWorkflow 消息到 DAGSchedulerActor
             StartWorkflow startMsg = new StartWorkflow(taskHistory.getId(), pipelineName);
+            startMsg.setPreTaskId(newTask.getPreTaskId());
             startMsg.setDryRun(false);
             startMsg.setTriggerTimestamp(execChainContext.getPartitionTimestampWithMillis());
             startMsg.setPluginCfgsMetas(IExecChainContext.manifestOfDataX(dataxProcessor));
@@ -183,7 +186,9 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
                     // taskHistory.setInstanceStatus(InstanceStatus.FAILED.getDesc());
                     taskHistory.setState((byte) ExecResult.FAILD.getValue());
                     taskHistory.setEndTime(new Date());
-                    workflowBuildHistoryDAO.updateByPrimaryKeySelective(taskHistory);
+                    //workflowBuildHistoryDAO.updateByPrimaryKeySelective(taskHistory);
+
+                    TaskSoapUtils.createTaskComplete(taskHistory.getId(), ExecResult.FAILD, dag);
                 }
             } catch (Exception updateEx) {
                 logger.error("Failed to update instance status to FAILED", updateEx);

@@ -4,7 +4,10 @@
       "Bash(mvn test -pl tis-datax-local-akka-executor -Dtest=com.qlangtech.tis.dag.actor.TestWorkflowInstanceActor)",
       "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"class WorkflowDAGFileManager\" {} ;)",
       "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"enum InstanceStatus\" {} ;)",
-      "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"enum WorkflowNodeType\" {} ;)"
+      "Bash(find /Users/mozhenghua/j2ee_solution/project -type f -name \"*.java\" -exec grep -l \"enum WorkflowNodeType\" {} ;)",
+      "Bash(mvn compile -Dmaven.test.skip=true)",
+      "Bash(mvn install -Dmaven.test.skip=true)",
+      "Bash(mvn compile -pl tis-datax-local-akka-executor -am -Dmaven.test.skip=true -q)"
     ]
   }
 }

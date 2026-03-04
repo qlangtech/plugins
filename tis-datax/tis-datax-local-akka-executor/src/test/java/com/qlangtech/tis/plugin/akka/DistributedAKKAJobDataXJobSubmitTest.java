@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.Optional;
 
 /**
  *
@@ -94,7 +93,7 @@ public class DistributedAKKAJobDataXJobSubmitTest implements TISEasyMock {
         this.replay();
 
         powerJobDataXJobSubmit.triggerJob(pipelineExecContext,
-                dataXPipeline, Optional.empty());
+                dataXPipeline);
 
 
         Thread.sleep(999000);

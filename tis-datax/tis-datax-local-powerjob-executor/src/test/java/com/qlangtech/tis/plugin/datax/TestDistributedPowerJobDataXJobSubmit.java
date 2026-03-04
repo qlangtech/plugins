@@ -204,7 +204,7 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
                 , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
         DataXName dataXPipeline = DataXName.createDataXPipeline(testDataXName);
         powerJobDataXJobSubmit.triggerJob(null,
-                 dataXPipeline, Optional.empty());
+                 dataXPipeline);
 
         this.verifyAll();
     }

@@ -507,6 +507,9 @@ public class DataxExecutor {
                     super.report(communication);
                     setAllReadApproximately(communication);
                     reportDataXJobStatus(false, false, false, jobId, jobName);
+                    if (Thread.currentThread().isInterrupted()) {
+                        throw new RuntimeException("current thread has been interrupted");
+                    }
                 }
             };
         }

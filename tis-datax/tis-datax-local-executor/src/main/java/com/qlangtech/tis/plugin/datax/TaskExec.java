@@ -64,7 +64,7 @@ public class TaskExec {
                     jobConsumer = new DefaultDataxSplitTabSyncConsumer((IExecChainContext) taskContext, localDataXJobSubmit);
 
                     CuratorDataXTaskMessage
-                            dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor);
+                            dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor, taskMsg.getAllRowsApproximately());
                     jobConsumer.consumeMessage(dataXJob);
 
                 } catch (Throwable e) {

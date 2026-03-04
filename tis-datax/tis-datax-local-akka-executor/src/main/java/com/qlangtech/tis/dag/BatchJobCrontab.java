@@ -2,11 +2,15 @@ package com.qlangtech.tis.dag;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.IdentityDesc;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -15,9 +19,11 @@ import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,8 +50,28 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         return Descriptor.getManipulateMeta(false, this);
     }
 
+    /**
+     * //@see DAGWorkflowServlet
+     *
+     * @param pluginContext
+     * @param context
+     * @param itemsProcessor
+     */
     @Override
     protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
+
+
+        final String getAssembleHttpHost = Config.getAssembleHttpHost();
+        if (StringUtils.isEmpty(getAssembleHttpHost)) {
+            throw new IllegalArgumentException("param getAssembleHttpHost can not be empty");
+        }
+
+        List<HttpUtils.PostParam> params = Lists.newArrayList();
+       // params.add(new HttpUtils.PostParam(HttpUtils.KEY_METHOD, HttpUtils.KEY_METHOD_HANDLE_REGISTER_SCHEDULE));
+        params.addAll(HttpUtils.dataXToParams(pluginContext.getCollectionName()));
+        params.add(new HttpUtils.PostParam(TriggerType.KEY_CONTAB, this.crontab));
+        params.add(new HttpUtils.PostParam(TriggerType.KEY_CRONTAB_TURN_ON, !itemsProcessor.isDeleteProcess() && this.turnOn));
+        HttpUtils.postAssembleDAGServlet(HttpUtils.KEY_METHOD_HANDLE_REGISTER_SCHEDULE, params, (respStream) -> null);
 
     }
 
@@ -86,7 +112,7 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
             //   CrontabTriggerStrategy describable = postFormVals.newInstance();
             Date nextFireTime = getNextFireTime(msgHandler, context, KEY_CRONTAB, postFormVals.getField(KEY_CRONTAB));
             if (nextFireTime != null) {
-                msgHandler.addActionMessage(context, "最近触发时间为：" + TimeFormat.yyyyMMddHHmmss.format(nextFireTime.getTime()));
+                msgHandler.addActionMessage(context, "最近触发时间为：" + TimeFormat.yyyyMMdd_HH_mm_ss.format(nextFireTime.getTime()));
                 return true;
             }
             return false;

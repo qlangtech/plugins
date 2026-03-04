@@ -7,6 +7,7 @@ import akka.actor.ReceiveTimeout;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.ExecResult;
+import com.qlangtech.tis.dag.actor.message.CancelTasks;
 import com.qlangtech.tis.dag.actor.message.CancelWorkflow;
 import com.qlangtech.tis.dag.actor.message.DispatchTask;
 import com.qlangtech.tis.dag.actor.message.NodeCompleted;
@@ -112,6 +113,7 @@ public class WorkflowInstanceActor extends AbstractActor {
      * 可通过配置或StartWorkflow消息参数覆盖
      */
     private int maxConcurrentTasks = 5;
+    private String stopReason;
     private RpcServiceReference rpcRef;
     private Optional<PhaseStatusCollection> statusCollection;
 
@@ -155,7 +157,18 @@ public class WorkflowInstanceActor extends AbstractActor {
     @Override
     public void postStop() throws Exception {
         super.postStop();
-        logger.info("WorkflowInstanceActor stopped: workflowInstanceId={}", taskId);
+        if (stopReason != null) {
+            logger.info("WorkflowInstanceActor stopped: workflowInstanceId={}, reason={}", taskId, stopReason);
+        } else {
+            logger.warn("WorkflowInstanceActor stopped by external signal (parent stop / ActorSystem shutdown / PoisonPill / Kill / Cluster Sharding rebalance): workflowInstanceId={}", taskId);
+            logger.warn("postStop stacktrace for debugging:", new Throwable("postStop stacktrace"));
+        }
+    }
+
+    private void stopSelf(String reason) {
+        this.stopReason = reason;
+        logger.info("Stopping actor: workflowInstanceId={}, reason={}", taskId, reason);
+        getContext().stop(getSelf());
     }
 
     @Override
@@ -167,7 +180,7 @@ public class WorkflowInstanceActor extends AbstractActor {
                 .match(CancelWorkflow.class, this::handleCancelWorkflow) //
                 .match(QueryWorkflowStatus.class, this::handleQueryWorkflowStatus) //
                 .match(ReceiveTimeout.class, this::handleTimeout) //
-                .matchAny(msg -> logger.warn("Received unknown message: {}", msg)).build();
+                .matchAny(msg -> logger.warn("Received unknown message: type={}, content={}", msg.getClass().getName(), msg)).build();
     }
 
     /**
@@ -230,10 +243,11 @@ public class WorkflowInstanceActor extends AbstractActor {
             if (instance != null) {
                 instance.setState(ExecResult.FAILD.getByteVal());//.setInstanceStatus(InstanceStatus.FAILED.getDesc());
                 instance.setEndTime(new Date());
-                workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
+                // workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
+                TaskSoapUtils.createTaskComplete(this.taskId, ExecResult.FAILD, this.dag); // updateByPrimaryKeySelective
             }
             // 停止Actor
-            getContext().stop(getSelf());
+            stopSelf("handleStartWorkflow failed: " + e.getMessage());
         }
     }
 
@@ -246,6 +260,16 @@ public class WorkflowInstanceActor extends AbstractActor {
                 msg.getWorkflowInstanceId(), msg.getNodeId(), msg.getStatus());
 
         try {
+            // 防御性检查：如果 dag 为 null，说明这是 Cluster Sharding 自动创建的未初始化实例
+            // 直接停止 Actor，避免后续处理出错
+            if (this.dag == null) {
+                logger.warn("Received NodeCompleted but dag is null (orphan actor created by Cluster Sharding), "
+                                + "stopping actor: workflowInstanceId={}, nodeId={}",
+                        msg.getWorkflowInstanceId(), msg.getNodeId());
+                stopSelf("handleNodeCompleted: dag is null, orphan actor");
+                return;
+            }
+
             // 1. 从运行集合中移除
             runningTasks.remove(msg.getNodeId());
 
@@ -253,7 +277,7 @@ public class WorkflowInstanceActor extends AbstractActor {
                     runningTasks.size(), maxConcurrentTasks, waitingQueue.size());
 
             // 2. 查找节点
-            PEWorkflowDAG.Node node = findNode(dag, msg.getNodeId());
+            PEWorkflowDAG.Node node = findNode(Objects.requireNonNull(dag, "dag can not be null"), msg.getNodeId());
             if (node == null) {
                 logger.error("Node not found: nodeId={}, workflowInstanceId={}", msg.getNodeId(), taskId);
                 return;
@@ -337,23 +361,65 @@ public class WorkflowInstanceActor extends AbstractActor {
 
     /**
      * 处理取消workflow消息
+     * <p>
+     * 1. Cancel running tasks dispatched to NodeDispatcherActor/TaskWorkerActor
+     * 2. Clear waiting queue
+     * 3. Mark all running/queued nodes as STOPPED
+     * 4. Reply success/failure to the caller
      */
     private void handleCancelWorkflow(CancelWorkflow msg) {
-        logger.info("Handling CancelWorkflow: workflowInstanceId={}", msg.getWorkflowInstanceId());
+        logger.info("Handling CancelWorkflow: workflowInstanceId={}, reason={}", msg.getWorkflowInstanceId(), msg.getReason());
 
         try {
-            // 标记为STOPPED
-            instance.setState(ExecResult.CANCEL.getByteVal());//.setInstanceStatus(InstanceStatus.STOPPED.getDesc());
+            // 1. Send CancelTasks to NodeDispatcherActor to clean up active workers
+            if (!runningTasks.isEmpty()) {
+                CancelTasks cancelTasks = new CancelTasks(taskId, new HashSet<>(runningTasks));
+                nodeDispatcher.tell(cancelTasks, getSelf());
+                logger.info("Sent CancelTasks to NodeDispatcher: taskId={}, runningNodes={}", taskId, runningTasks);
+            }
+
+            // 2. Clear waiting queue and mark queued nodes as STOPPED
+            while (!waitingQueue.isEmpty()) {
+                PEWorkflowDAG.Node queuedNode = waitingQueue.poll();
+                if (queuedNode != null) {
+                    queuedNode.setStatus(InstanceStatus.STOPPED);
+                    queuedNode.setResult("Cancelled: " + (msg.getReason() != null ? msg.getReason() : "user requested"));
+                    queuedNode.setFinishedTime(new Date().toString());
+                }
+            }
+
+            // 3. Mark running nodes as STOPPED in DAG
+            if (dag != null) {
+                for (Long runningNodeId : runningTasks) {
+                    PEWorkflowDAG.Node node = findNode(dag, runningNodeId);
+                    if (node != null) {
+                        node.setStatus(InstanceStatus.STOPPED);
+                        node.setResult("Cancelled: " + (msg.getReason() != null ? msg.getReason() : "user requested"));
+                        node.setFinishedTime(new Date().toString());
+                    }
+                }
+            }
+            runningTasks.clear();
+
+            // 4. Update instance state
+            instance.setState(ExecResult.CANCEL.getByteVal());
             instance.setEndTime(new Date());
-            workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
+            // workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
 
-            logger.info("Workflow cancelled: workflowInstanceId={}", taskId);
+            persistDAGRuntime();
 
-            // 停止Actor
-            getContext().stop(getSelf());
+            logger.info("Workflow cancelled successfully: workflowInstanceId={}", taskId);
+
+            // 5. Reply success to the caller
+            getSender().tell(new akka.actor.Status.Success("workflow cancelled: taskId=" + taskId), getSelf());
+            TaskSoapUtils.createTaskComplete(this.taskId, ExecResult.CANCEL, this.dag);
+            // 6. Stop this actor
+            stopSelf("handleCancelWorkflow: user cancelled");
 
         } catch (Exception e) {
             logger.error("Failed to cancel workflow: workflowInstanceId={}", taskId, e);
+            // Reply failure to the caller
+            getSender().tell(new akka.actor.Status.Failure(e), getSelf());
         }
     }
 
@@ -382,7 +448,7 @@ public class WorkflowInstanceActor extends AbstractActor {
                 getSender().tell(new akka.actor.Status.Failure(
                         TisException.create("workflow instance not initialized yet, taskId:" + msg.getWorkflowInstanceId())), getSelf());
                 // Actor was auto-created by Cluster Sharding without proper StartWorkflow initialization, stop it
-                getContext().stop(getSelf());
+                stopSelf("handleQueryWorkflowStatus: instance not initialized");
                 return;
             }
 
@@ -401,7 +467,7 @@ public class WorkflowInstanceActor extends AbstractActor {
      */
     private void handleTimeout(ReceiveTimeout msg) {
         logger.warn("Workflow instance idle timeout, stopping actor: workflowInstanceId={}", taskId);
-        getContext().stop(getSelf());
+        stopSelf("handleTimeout: ReceiveTimeout idle timeout");
     }
 
     // ==================== 辅助方法 ====================
@@ -471,11 +537,6 @@ public class WorkflowInstanceActor extends AbstractActor {
         boolean hasFailure =
                 dag.getNodes().stream().anyMatch(n -> InstanceStatus.FAILED == n.getStatus());
         ExecResult execResult = hasFailure ? ExecResult.FAILD : ExecResult.SUCCESS;
-        //InstanceStatus finalStatus = hasFailure ? InstanceStatus.FAILED : InstanceStatus.SUCCEED;
-
-//        instance.setInstanceStatus(finalStatus.getDesc());
-//        instance.setEndTime(new Date());
-//        workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
 
         persistDAGRuntime();
 
@@ -483,8 +544,15 @@ public class WorkflowInstanceActor extends AbstractActor {
 
         logger.info("Workflow final status: {}, workflowInstanceId={}", execResult, taskId);
 
+        // 防御性清理：确保 NodeDispatcherActor 中没有残留的活跃 worker
+        if (!runningTasks.isEmpty()) {
+            logger.warn("Completing workflow but still has running tasks: {}, cleaning up", runningTasks);
+            CancelTasks cancelTasks = new CancelTasks(taskId, new HashSet<>(runningTasks));
+            nodeDispatcher.tell(cancelTasks, getSelf());
+        }
+
         // 停止Actor释放内存
-        getContext().stop(getSelf());
+        stopSelf("completeWorkflow: workflow finished");
     }
 
     /**
@@ -496,12 +564,22 @@ public class WorkflowInstanceActor extends AbstractActor {
         // instance.setInstanceStatus(status.getDesc());
         instance.setState((byte) status.getValue());
         instance.setEndTime(new Date());
-        workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
+//        workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
 
+
+        TaskSoapUtils.createTaskComplete(this.taskId, status, this.dag);
         persistDAGRuntime();
 
+        // 通知 NodeDispatcherActor 清理该 workflow 的所有活跃 worker
+        // 这样后续 worker 完成时的 NodeCompleted 消息会被 NodeDispatcherActor 忽略，
+        // 不会再转发到已停止的 WorkflowInstanceActor（避免 Cluster Sharding 重新创建空实例）
+        if (!runningTasks.isEmpty()) {
+            CancelTasks cancelTasks = new CancelTasks(taskId, new HashSet<>(runningTasks));
+            nodeDispatcher.tell(cancelTasks, getSelf());
+        }
+
         // 停止Actor
-        getContext().stop(getSelf());
+        stopSelf("terminateWorkflow: status=" + status);
     }
 
     /**

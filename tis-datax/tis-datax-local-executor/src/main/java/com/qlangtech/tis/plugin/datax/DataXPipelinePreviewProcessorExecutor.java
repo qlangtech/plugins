@@ -274,7 +274,7 @@ public class DataXPipelinePreviewProcessorExecutor
     }
 
     public static class PreviewLaunchParam implements IDataXTaskRelevant {
-        private static final int DEFAULT_TASK_ID = 999;
+
         private final String dataXName;
 
         public PreviewLaunchParam(String dataXName) {

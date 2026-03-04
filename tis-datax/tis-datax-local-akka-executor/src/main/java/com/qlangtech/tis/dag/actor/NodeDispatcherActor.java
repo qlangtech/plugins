@@ -5,11 +5,14 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.cluster.routing.ClusterRouterPool;
 import akka.cluster.routing.ClusterRouterPoolSettings;
+import akka.routing.Broadcast;
 import akka.routing.RoundRobinPool;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.dag.actor.message.AbstractTaskExecutionMessage;
+import com.qlangtech.tis.dag.actor.message.CancelTask;
+import com.qlangtech.tis.dag.actor.message.CancelTasks;
 import com.qlangtech.tis.dag.actor.message.DispatchTask;
 import com.qlangtech.tis.dag.actor.message.NodeCompleted;
 import com.qlangtech.tis.dag.actor.message.NodeTimeout;
@@ -19,6 +22,7 @@ import com.qlangtech.tis.datax.ActorSystemStatus;
 import com.qlangtech.tis.datax.DataXJobSubmitParams;
 import com.qlangtech.tis.powerjob.model.InstanceStatus;
 import com.qlangtech.tis.powerjob.model.PEWorkflowDAG;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.workflow.dao.IDAGNodeExecutionDAO;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.qlangtech.tis.workflow.pojo.DagNodeExecution;
@@ -26,7 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,6 +68,13 @@ public class NodeDispatcherActor extends AbstractActor {
      */
     private ActorRef taskRouter;
     private DataXJobSubmitParams submitParams;
+
+    /**
+     * WorkflowInstance Cluster Sharding Region 引用
+     * 通过 SetWorkflowInstanceRegion 消息在 Sharding 初始化后注入
+     * 用于替代直接 entity ActorRef 转发消息，确保消息被正确路由
+     */
+    private ActorRef workflowInstanceRegion;
 
     /**
      * Active worker registry: taskId_nodeId -> WorkerInfo(startTime, sender)
@@ -107,9 +118,14 @@ public class NodeDispatcherActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder() //
+                .match(SetWorkflowInstanceRegion.class, msg -> {
+                    this.workflowInstanceRegion = msg.getRegion();
+                    logger.info("WorkflowInstanceRegion set: {}", workflowInstanceRegion.path());
+                }) //
                 .match(DispatchTask.class, this::handleDispatchTask) //
                 .match(NodeCompleted.class, this::handleNodeCompleted) //
                 .match(NodeTimeout.class, this::handleNodeTimeout) //
+                .match(CancelTasks.class, this::handleCancelTasks) //
                 .match(QueryActiveWorkers.class, this::handleQueryActiveWorkers) //
                 .matchAny(msg -> logger.warn("Received unknown message: {}", msg)).build();
     }
@@ -155,9 +171,9 @@ public class NodeDispatcherActor extends AbstractActor {
             // 这样NodeDispatcherActor可以清除activeWorkerRegistry并取消超时，再转发给WorkflowInstanceActor
             taskRouter.tell(taskMsg, getSelf());
 
-            // 5. Register active worker (with sender reference for timeout notification)
+            // 5. Register active worker
             String workerKey = msg.getTaskId() + "_" + node.getNodeId();
-            activeWorkerRegistry.put(workerKey, new ActiveWorkerEntry(msg.getTaskId(), node.getNodeId(), System.currentTimeMillis(), getSender()));
+            activeWorkerRegistry.put(workerKey, new ActiveWorkerEntry(msg.getTaskId(), node.getNodeId(), System.currentTimeMillis()));
 
             // 6. 设置超时监控
             scheduleTimeout(msg.getTaskId(), node.getNodeId(), submitParams.getTaskExpireHours());
@@ -169,10 +185,10 @@ public class NodeDispatcherActor extends AbstractActor {
             logger.error("Failed to dispatch task: instanceId={}, nodeId={}", msg.getTaskId(),
                     node.getNodeId(), e);
             // 通知 WorkflowInstanceActor 任务分发失败
-            // 直接回复给sender（WorkflowInstanceActor）
+            // 通过 Cluster Sharding Region 转发，确保消息被正确路由
             NodeCompleted failureMsg = new NodeCompleted(msg.getTaskId(), node.getNodeId(),
                     InstanceStatus.FAILED, "Failed to dispatch task: " + e.getMessage());
-            getSender().tell(failureMsg, getSelf());
+            workflowInstanceRegion.tell(failureMsg, getSelf());
         }
     }
 
@@ -214,14 +230,14 @@ public class NodeDispatcherActor extends AbstractActor {
                 msg.getWorkflowInstanceId(), msg.getNodeId(),
                 System.currentTimeMillis() - entry.startTime);
 
-        // 向 WorkflowInstanceActor 发送失败消息
+        // 向 WorkflowInstanceActor 发送失败消息（通过 Cluster Sharding Region 转发）
         NodeCompleted failureMsg = new NodeCompleted(
                 msg.getWorkflowInstanceId(),
                 msg.getNodeId(),
                 InstanceStatus.FAILED,
                 "Task execution timeout after " + (System.currentTimeMillis() - entry.startTime) + "ms"
         );
-        entry.sender.tell(failureMsg, getSelf());
+        workflowInstanceRegion.tell(failureMsg, getSelf());
     }
 
     /**
@@ -245,11 +261,36 @@ public class NodeDispatcherActor extends AbstractActor {
             return;
         }
 
-        logger.info("NodeCompleted: workflowInstanceId={}, nodeId={}, status={}, forwarding to WorkflowInstanceActor",
+        logger.info("NodeCompleted: workflowInstanceId={}, nodeId={}, status={}, forwarding to WorkflowInstanceActor via shard region",
                 msg.getWorkflowInstanceId(), msg.getNodeId(), msg.getStatus());
 
-        // 转发给 WorkflowInstanceActor
-        entry.sender.tell(msg, getSelf());
+        // 通过 Cluster Sharding Region 转发给 WorkflowInstanceActor，确保消息被正确路由
+        workflowInstanceRegion.tell(msg, getSelf());
+    }
+
+    /**
+     * Handle cancel tasks request
+     * Remove all active worker entries for the given taskId so that
+     * subsequent NodeCompleted / NodeTimeout messages from those workers will be silently ignored.
+     *
+     * @param msg CancelTasks message containing taskId and running nodeIds
+     */
+    private void handleCancelTasks(CancelTasks msg) {
+        int removed = 0;
+        for (Long nodeId : msg.getRunningNodeIds()) {
+            String workerKey = msg.getTaskId() + "_" + nodeId;
+            ActiveWorkerEntry entry = activeWorkerRegistry.remove(workerKey);
+            if (entry != null) {
+                removed++;
+            }
+        }
+
+        // Broadcast CancelTask to all TaskWorkerActor routees via the router
+        // Each routee checks if it is executing the matching taskId and interrupts its thread
+        taskRouter.tell(new Broadcast(new CancelTask(msg.getTaskId())), getSelf());
+
+        logger.info("CancelTasks processed: taskId={}, requested={}, removed={}, broadcast sent",
+                msg.getTaskId(), msg.getRunningNodeIds().size(), removed);
     }
 
     /**
@@ -313,13 +354,14 @@ public class NodeDispatcherActor extends AbstractActor {
      * @return 本地地址
      */
     private String getLocalAddress() {
-        try {
-            InetAddress address = InetAddress.getLocalHost();
-            return address.getHostAddress();
-        } catch (Exception e) {
-            logger.warn("Failed to get local address", e);
-            return "unknown";
-        }
+        //try {
+        return NetUtils.getHost();
+//            InetAddress address = InetAddress.getLocalHost();
+//            return address.getHostAddress();
+//        } catch (Exception e) {
+//            logger.warn("Failed to get local address", e);
+//            return "unknown";
+//        }
     }
 
     /**
@@ -365,16 +407,30 @@ public class NodeDispatcherActor extends AbstractActor {
         final Integer taskId;
         final Long nodeId;
         final long startTime;
-        /**
-         * 原始请求方（WorkflowInstanceActor），用于超时时回传失败消息
-         */
-        final ActorRef sender;
 
-        ActiveWorkerEntry(Integer taskId, Long nodeId, long startTime, ActorRef sender) {
+        ActiveWorkerEntry(Integer taskId, Long nodeId, long startTime) {
             this.taskId = taskId;
             this.nodeId = nodeId;
             this.startTime = startTime;
-            this.sender = sender;
+        }
+    }
+
+    /**
+     * 内部消息：注入 WorkflowInstance Cluster Sharding Region 引用
+     * <p>
+     * 解决循环依赖问题：NodeDispatcherActor 先于 ClusterSharding 创建，
+     * 因此需要在 Sharding 初始化完成后通过此消息注入 region 引用。
+     */
+    public static class SetWorkflowInstanceRegion implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final ActorRef region;
+
+        public SetWorkflowInstanceRegion(ActorRef region) {
+            this.region = Objects.requireNonNull(region, "region can not be null");
+        }
+
+        public ActorRef getRegion() {
+            return region;
         }
     }
 }

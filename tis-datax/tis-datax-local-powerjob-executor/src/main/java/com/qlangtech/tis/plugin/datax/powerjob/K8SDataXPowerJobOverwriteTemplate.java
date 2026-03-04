@@ -2,7 +2,6 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -26,7 +25,7 @@ public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTempla
         return req;
     }
 
-    @TISExtension()
+   // @TISExtension()
     public static class DescriptorImpl extends BasicDescriptor implements IEndTypeGetter {
 
         public DescriptorImpl() {

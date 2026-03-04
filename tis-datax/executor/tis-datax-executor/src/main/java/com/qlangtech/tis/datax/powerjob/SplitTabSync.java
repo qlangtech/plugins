@@ -32,7 +32,7 @@ public class SplitTabSync {
         //  this.taskConfig = Objects.requireNonNull(taskConfig);
     }
 
-    public void execSync(final AbstractExecContext execChainContext, RpcServiceReference statusRpc) {
+    public IRemoteTaskTrigger createTrigger(final AbstractExecContext execChainContext, RpcServiceReference statusRpc) {
         if (statusRpc == null) {
             throw new IllegalArgumentException("statusRpc can not be null");
         }
@@ -40,8 +40,7 @@ public class SplitTabSync {
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
             DataXJobRunEnvironmentParamsSetter runEnvironmentParamsSetter =
                     (DataXJobRunEnvironmentParamsSetter) dataXJobSubmit;
-            DataxPrePostConsumer prePostConsumer = BasicTISTableDumpProcessor.createPrePostConsumer();// new
-            // DataxPrePostConsumer();
+            DataxPrePostConsumer prePostConsumer = BasicTISTableDumpProcessor.createPrePostConsumer();
             runEnvironmentParamsSetter.setClasspath(prePostConsumer.getClasspath());
             runEnvironmentParamsSetter.setWorkingDirectory(prePostConsumer.getWorkingDirectory());
             runEnvironmentParamsSetter.setExtraJavaSystemPramsSuppiler(prePostConsumer.getExtraJavaSystemPramsSuppiler());
@@ -50,10 +49,11 @@ public class SplitTabSync {
         DataXJobSubmit.IDataXJobContext dataXJobContext = DataXJobSubmit.IDataXJobContext.create(execChainContext);
         IDataxProcessor processor = execChainContext.getProcessor();
         CuratorDataXTaskMessage taskCfg = dataXJobSubmit.getDataXJobDTO(dataXJobContext, tskMsg, processor, this.allRows);
-        IRemoteTaskTrigger tskTrigger = dataXJobSubmit.createDataXJob(dataXJobContext, statusRpc,
-                tskMsg, processor, taskCfg);
+        return dataXJobSubmit.createDataXJob(dataXJobContext, statusRpc, tskMsg, processor, taskCfg);
+    }
 
-        tskTrigger.run();
+    public void execSync(final AbstractExecContext execChainContext, RpcServiceReference statusRpc) {
+        createTrigger(execChainContext, statusRpc).run();
     }
 
     private static DataXJobSubmit getDataXJobSubmit(AbstractExecContext execChainContext) {

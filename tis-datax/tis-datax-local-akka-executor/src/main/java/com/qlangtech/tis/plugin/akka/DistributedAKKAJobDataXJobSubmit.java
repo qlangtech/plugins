@@ -5,11 +5,17 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.dag.TISActorSystem;
+import com.qlangtech.tis.dag.actor.DAGSchedulerActor;
 import com.qlangtech.tis.dag.actor.WorkflowInstanceActor;
+import com.qlangtech.tis.dag.actor.message.CancelWorkflow;
 import com.qlangtech.tis.dag.actor.message.QueryActiveWorkers;
 import com.qlangtech.tis.dag.actor.message.QueryClusterStatus;
+import com.qlangtech.tis.dag.actor.message.QuerySchedulerDetail;
 import com.qlangtech.tis.dag.actor.message.QueryWorkflowStatus;
+import com.qlangtech.tis.dag.actor.message.RegisterSchedule;
+import com.qlangtech.tis.dag.actor.message.UnregisterSchedule;
 import com.qlangtech.tis.datax.ActorSystemStatus;
+import com.qlangtech.tis.datax.DAGSchedulerDetail;
 import com.qlangtech.tis.datax.DataXJobSubmitAkkaClusterSupport;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -35,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * DistributedPowerJobDataXJobSubmit
@@ -70,7 +77,8 @@ public class DistributedAKKAJobDataXJobSubmit extends BasicDistributedSPIDataXJo
 
     @Override
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
-        return false;
+        cancelTask(null, buildHistory.getTaskId());
+        return true;
     }
 
     @Override
@@ -105,6 +113,20 @@ public class DistributedAKKAJobDataXJobSubmit extends BasicDistributedSPIDataXJo
         return status;
     }
 
+    @Override
+    public DAGSchedulerDetail getDAGSchedulerDetail() {
+        TISActorSystem akkaSys = TISActorSystem.get();
+        try {
+            Duration timeout = Duration.create(10, TimeUnit.SECONDS);
+            Future<Object> future = Patterns.ask(
+                    akkaSys.getDAGSchedulerActor(), new QuerySchedulerDetail(), timeout.toMillis());
+            Object result = Await.result(future, timeout);
+            return (DAGSchedulerDetail) result;
+        } catch (Exception e) {
+            throw new RuntimeException("failed to query DAG scheduler detail", e);
+        }
+    }
+
     /**
      * @param taskId DataXName dataXName,
      * @return
@@ -134,6 +156,57 @@ public class DistributedAKKAJobDataXJobSubmit extends BasicDistributedSPIDataXJo
             return loadHistoryWorkflowRuntimeStatus(dataXName, taskId);
         } catch (Exception e) {
             throw new RuntimeException("failed to query workflow status, taskId:" + taskId, e);
+        }
+    }
+
+    /**
+     *
+     * @see DAGSchedulerActor#handleRegisterSchedule(RegisterSchedule)
+     * @see DAGSchedulerActor#handleUnregisterSchedule(UnregisterSchedule)
+     *
+     * @param dataXName
+     * @param crontab
+     * @param turnOn
+     */
+    @Override
+    public void handleRegisterSchedule(DataXName dataXName, String crontab, boolean turnOn) {
+        TISActorSystem akkaSys = TISActorSystem.get();
+        // RegisterSchedule
+        // UnregisterSchedule
+
+        Object sendMsg = turnOn //
+                ? new RegisterSchedule(dataXName.getPipelineName(), dataXName.getType(), crontab) //
+                : new UnregisterSchedule(dataXName.getPipelineName(), dataXName.getType());
+
+        try {
+            Future<Object> future = Patterns.ask(
+                    akkaSys.getDAGSchedulerActor(), sendMsg, Duration.create(30, TimeUnit.SECONDS).toMillis());
+            Object result = Await.result(future, Duration.create(30, TimeUnit.SECONDS));
+           // throw new IllegalStateException("unexpected response type: " + result.getClass().getName());
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void cancelTask(DataXName dataXName, Integer taskId) {
+        TISActorSystem akkaSys = TISActorSystem.get();
+        CancelWorkflow cancelMsg = new CancelWorkflow(taskId);
+        try {
+            Future<Object> future = Patterns.ask(
+                    akkaSys.getWorkflowInstanceRegion(), cancelMsg, Duration.create(30, TimeUnit.SECONDS).toMillis());
+            Object result = Await.result(future, Duration.create(30, TimeUnit.SECONDS));
+            if (result instanceof akka.actor.Status.Failure) {
+                akka.actor.Status.Failure failure = (akka.actor.Status.Failure) result;
+                throw new RuntimeException("failed to cancel workflow, taskId:" + taskId, failure.cause());
+            }
+            logger.info("workflow cancelled successfully, taskId: {}", taskId);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("failed to cancel workflow, taskId:" + taskId, e);
         }
     }
 

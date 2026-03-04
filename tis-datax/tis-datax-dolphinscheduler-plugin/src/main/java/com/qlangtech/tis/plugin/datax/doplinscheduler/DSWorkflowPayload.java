@@ -337,7 +337,8 @@ public class DSWorkflowPayload extends BasicWorkflowPayload<DSWorkflowInstance> 
             //======================================
             tabTriggers = entry.getValue();
             selectedTab = entry.getKey();
-            JSONObject mrParams = new JSONObject(tabTriggers.createMRParams());
+          //  tabTriggers.createMRParams()
+            JSONObject mrParams = new JSONObject();
             this.setDisableGrpcRemoteServerConnect(mrParams);
             if (tabTriggers.getPostTrigger() != null) {
                 containPostTrigger = true;

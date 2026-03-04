@@ -24,7 +24,6 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.IDescribableManipulate;
-import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.datax.WorkFlowBuildHistoryPayload;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerURLBuilder.DolphinSchedulerResponse;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
@@ -44,7 +43,7 @@ public class DSWorkFlowBuildHistoryPayload extends WorkFlowBuildHistoryPayload {
         super(dataxProcessor, tisTaskId, daoContext);
         //Pair<List<ExportTISPipelineToDolphinscheduler>, IPluginStore<DefaultDataXProcessorManipulate>>
         DefaultDataXProcessorManipulate.ProcessorManipulateManager<ExportTISPipelineToDolphinscheduler> pluginStorePair
-                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, ((IAppSource) this.dataxProcessor).getDataXName()
+                = DefaultDataXProcessorManipulate.loadPlugins(null, ExportTISPipelineToDolphinscheduler.class, ( this.dataxProcessor).getDataXName()
                 , new IDescribableManipulate.IManipulateStorable() {
                     @Override
                     public boolean isManipulateStorable() {

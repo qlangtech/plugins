@@ -53,7 +53,6 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -234,7 +233,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
 //String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
-        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(((IAppSource) dataxProcessor).getDataXName());
+        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(( dataxProcessor).getDataXName());
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator
                 = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator(reader);
         //  List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);

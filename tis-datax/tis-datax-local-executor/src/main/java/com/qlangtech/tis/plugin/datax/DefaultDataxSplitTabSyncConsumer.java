@@ -22,8 +22,6 @@ import com.qlangtech.tis.datax.DataxSplitTabSyncConsumer;
 import com.qlangtech.tis.exec.IExecChainContext;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-04-13 15:54
@@ -67,8 +65,8 @@ public class DefaultDataxSplitTabSyncConsumer extends DataxSplitTabSyncConsumer 
         return localDataXJobSubmit.getMainClassName();
     }
 
-    @Override
-    protected File getWorkingDirectory() {
-        return localDataXJobSubmit.getWorkingDirectory();
-    }
+//    @Override
+//    protected File getWorkingDirectory() {
+//        return localDataXJobSubmit.getWorkingDirectory();
+//    }
 }

@@ -1,10 +1,8 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.google.common.collect.Lists;
-import com.google.gson.reflect.TypeToken;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
@@ -15,7 +13,6 @@ import com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.TestEmbeddedPower
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
-import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.PodStat;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
@@ -23,9 +20,6 @@ import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api.APIlistNamespacedPodRequest;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.util.Watch;
-import io.kubernetes.client.util.Watch.Response;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
@@ -33,7 +27,7 @@ import org.junit.Assert;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/12/14
  */
-public class TestK8SDataXPowerJobServer extends TestCase {
+public class TestK8SDataXJobWorker extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
@@ -41,15 +35,15 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         SSERunnable.setLocalThread(SSERunnable.createMock());
     }
 
-    public void testScalePodNumber() throws Exception {
-        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
-        SSERunnable sse = SSERunnable.getLocal();
-        TargetResName cptType = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER;
-        powerJobServer.updatePodNumber(sse, cptType, 2);
-    }
+//    public void testScalePodNumber() throws Exception {
+//        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+//        SSERunnable sse = SSERunnable.getLocal();
+//        TargetResName cptType = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER;
+//        powerJobServer.updatePodNumber(sse, cptType, 2);
+//    }
 
     public void testWaitPowerjobPods() throws Exception {
-        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+        K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
         PowerJobK8SImage image = powerJobServer.getImage();
 
         CoreV1Api apiClient = powerJobServer.getK8SApi();
@@ -98,7 +92,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     }
 
     public void testWatchOneOfPowerJobPodLog() throws Exception {
-        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+        K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
 
         WatchPodLog podLog = powerJobServer.watchOneOfPowerJobPodLog(
                 new WaitReplicaControllerLaunch(null, Lists.newArrayList(new PodStat(null, RunningStatus.SUCCESS)))
@@ -115,7 +109,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     }
 
     public void testDeleteAllResources() {
-        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+        K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
 
         Descriptor<DataXJobWorker> descriptor = powerJobServer.getDescriptor();
         Assert.assertNotNull("descriptor can not be null", descriptor);
@@ -123,24 +117,24 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         powerJobServer.remove();
     }
 
-    /**
-     * 启动worker
-     *
-     * @throws Exception
-     */
-    public void testLaunchPowerjobWorker() throws Exception {
-
-        try {
-
-            K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
-            powerJobServer.k8sImage =
-                    TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
-
-            powerJobServer.launchPowerjobWorker();
-        } catch (Exception e) {
-           throw new RuntimeException(e);
-        }
-    }
+//    /**
+//     * 启动worker
+//     *
+//     * @throws Exception
+//     */
+//    public void testLaunchPowerjobWorker() throws Exception {
+//
+//        try {
+//
+//            K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+//            powerJobServer.k8sImage =
+//                    TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
+//
+//            powerJobServer.launchPowerjobWorker();
+//        } catch (Exception e) {
+//           throw new RuntimeException(e);
+//        }
+//    }
 
     public void testLaunchPowerjobServer() throws Exception {
         try {
@@ -149,7 +143,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
 
             LoadBalance portExport = createLoadBalance();
 
-            K8SDataXPowerJobServer powerJobServer = createPowerJobServer(portExport);
+            K8SDataXJobWorker powerJobServer = createPowerJobServer(portExport);
 
             powerJobServer.setReplicasSpec(ReplicasSpec.createDftReplicasSpec());
 
@@ -169,7 +163,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     public void testRegisterApp() throws Exception {
         NodePort portExport = createNodePort();
 
-        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(portExport);
+        K8SDataXJobWorker powerJobServer = createPowerJobServer(portExport);
         powerJobServer.coreDS.initialPowerjobAccount(powerJobServer);
         //  portExport.initialPowerjobAccount(powerJobServer);
     }
@@ -182,32 +176,32 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         return portExport;
     }
 
-    public static K8SDataXPowerJobServer createPowerJobServer(ServerPortExport portExport) {
+    public static K8SDataXJobWorker createPowerJobServer(ServerPortExport portExport) {
 
-        final K8SDataXPowerJobWorker powerJobWorker = new K8SDataXPowerJobWorker();
-        powerJobWorker.port = 27777;
-        // powerJobWorker.appName = "tis";
-        powerJobWorker.storeStrategy = "MEMORY";
-        powerJobWorker.maxResultLength = 8096;
-        powerJobWorker.maxLightweightTaskNum = 1024;
-        powerJobWorker.maxHeavyweightTaskNum = 64;
-        powerJobWorker.healthReportInterval = 10;
-        powerJobWorker.k8sImage = TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
+//        final K8SDataXPowerJobWorker powerJobWorker = new K8SDataXPowerJobWorker();
+//        powerJobWorker.port = 27777;
+//        // powerJobWorker.appName = "tis";
+//        powerJobWorker.storeStrategy = "MEMORY";
+//        powerJobWorker.maxResultLength = 8096;
+//        powerJobWorker.maxLightweightTaskNum = 1024;
+//        powerJobWorker.maxHeavyweightTaskNum = 64;
+//        powerJobWorker.healthReportInterval = 10;
+//        powerJobWorker.k8sImage = TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
+//
+//
+//        ReplicasSpec replicasSpec = ReplicasSpec.createDftReplicasSpec();
+//        powerJobWorker.setReplicasSpec(replicasSpec);
 
 
-        ReplicasSpec replicasSpec = ReplicasSpec.createDftReplicasSpec();
-        powerJobWorker.setReplicasSpec(replicasSpec);
-
-
-        K8SDataXPowerJobServer powerJobServer = new K8SDataXPowerJobServer() {
-            @Override
-            protected K8SDataXPowerJobWorker getPowerJobWorker() {
-                return powerJobWorker;
-            }
+        K8SDataXJobWorker powerJobServer = new K8SDataXJobWorker() {
+//            @Override
+//            protected K8SDataXPowerJobWorker getPowerJobWorker() {
+//                return powerJobWorker;
+//            }
 
             @Override
             public final Descriptor<DataXJobWorker> getDescriptor() {
-                return TIS.get().getDescriptor(K8SDataXPowerJobServer.class);
+                return TIS.get().getDescriptor(K8SDataXJobWorker.class);
             }
         };
         EmbeddedPowerjobCoreDataSource coreDataSource = new EmbeddedPowerjobCoreDataSource();

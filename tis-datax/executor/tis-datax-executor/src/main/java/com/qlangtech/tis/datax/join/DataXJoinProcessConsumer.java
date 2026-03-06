@@ -1,7 +1,6 @@
 package com.qlangtech.tis.datax.join;
 
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
@@ -16,14 +15,12 @@ import com.qlangtech.tis.sql.parser.TabPartitions;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXECUTE_TYPE;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXPORT_NAME;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_ID;
-import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_SQL_SCRIPT;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -156,10 +153,10 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
         return DataxPrePostConsumer.DEFAULT_CLASSPATH;
     }
 
-    @Override
-    protected File getWorkingDirectory() {
-        return DataXJobInfo.getDataXExecutorDir();
-    }
+//    @Override
+//    protected File getWorkingDirectory() {
+//        return DataXJobInfo.getDataXExecutorDir();
+//    }
 
     @Override
     protected String getIncrStateCollectAddress() {

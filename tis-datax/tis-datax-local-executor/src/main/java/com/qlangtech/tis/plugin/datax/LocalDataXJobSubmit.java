@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit;
 public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEnvironmentParamsSetter {
 
     private String mainClassName = DataxExecutor.class.getName();
-    private File workingDirectory = new File(".");
+   // private File workingDirectory = new File(".");
     private String classpath;
     private ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler = new ExtraJavaSystemPramsSuppiler(true);
 
@@ -100,7 +100,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
      */
     @Override
     public TriggerBuildResult triggerJob(IExecChainContext execChainContext, DataXName appName // Optional<Long> powerjobWorkflowInstanceIdOpt,
-    //        ,   Optional<PhaseStatusCollection> latestWorkflowHistory
+                                         //        ,   Optional<PhaseStatusCollection> latestWorkflowHistory
     ) {
 //        if ((appName) == null) {
 //            throw new IllegalArgumentException("param appName can not be empty");
@@ -132,6 +132,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
         return previewProcessorExecutor.previewRowsData(dataXName, tableName, queryCriteria);
     }
 
+    private static final int DEFAULT_TASK_ID = 999;
+
     private DataXPipelinePreviewProcessorExecutor getPipelinePreviewProcessor(String dataXName) {
         DataXPipelinePreviewProcessorExecutor previewProcessorExecutor = tabSynchronizeCache.get(dataXName);
         if (previewProcessorExecutor == null) {
@@ -142,7 +144,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
                     previewLaunchProcessorExecutor.setClasspath(getJAVAClasspath());
                     PreviewLaunchParam launchParam = new PreviewLaunchParam(dataXName);
                     // 启动服务
-                    previewLaunchProcessorExecutor.consumeMessage(launchParam);
+                    previewLaunchProcessorExecutor.consumeMessage(launchParam, DEFAULT_TASK_ID);
 
 
                     PreviewProgressorExpireTracker commitTracker = new PreviewProgressorExpireTracker(dataXName, TimeUnit.SECONDS.toMillis(60)) {
@@ -175,7 +177,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
             IDataXJobContext taskContext, RpcServiceReference statusRpc
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO) {
         getJAVAClasspath();
-        logger.info("dataX Job:{},classpath:{},workingDir:{}", jobName.getJobFileName(), this.classpath, workingDirectory.getPath());
+        logger.info("dataX Job:{},classpath:{}", jobName.getJobFileName(), this.classpath);
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         // IDataxReader dataxReader = dataxProcessor.getReader(null);
         //Optional<List<String>> ptabs = null;
@@ -229,18 +231,18 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     }
 
 
-    @Override
-    public void setWorkingDirectory(File workingDirectory) {
-        this.workingDirectory = workingDirectory;
-    }
+//    @Override
+//    public void setWorkingDirectory(File workingDirectory) {
+//        this.workingDirectory = workingDirectory;
+//    }
 
     public String getMainClassName() {
         return mainClassName;
     }
 
-    public File getWorkingDirectory() {
-        return workingDirectory;
-    }
+//    public File getWorkingDirectory() {
+//        return workingDirectory;
+//    }
 
     public String getClasspath() {
         if (StringUtils.isEmpty(this.classpath)) {

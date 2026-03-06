@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.coresource;
 
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
-import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXPowerJobServer;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXJobWorker;
 import io.kubernetes.client.openapi.ApiException;
 import junit.framework.TestCase;
 
@@ -18,7 +18,7 @@ public class TestEmbeddedPowerjobCoreDataSource extends TestCase {
 
         EmbeddedPowerjobCoreDataSource coreDataSource = new EmbeddedPowerjobCoreDataSource();
 
-        K8SDataXPowerJobServer powerJobServer = TestK8SDataXPowerJobServer.createPowerJobServer(null);// new K8SDataXPowerJobServer();
+        K8SDataXJobWorker powerJobServer = TestK8SDataXJobWorker.createPowerJobServer(null);// new K8SDataXPowerJobServer();
         // powerJobServer.k8sImage = K8S_IMAGE;
 
         try {

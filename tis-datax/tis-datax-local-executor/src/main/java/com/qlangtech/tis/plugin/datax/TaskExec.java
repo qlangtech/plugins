@@ -45,6 +45,7 @@ public class TaskExec {
             , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor, CuratorDataXTaskMessage taskMsg
     ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
+        // ;
         AtomicBoolean complete = new AtomicBoolean(false);
         return new IRemoteDumpTaskTrigger() {
             @Override
@@ -65,7 +66,7 @@ public class TaskExec {
 
                     CuratorDataXTaskMessage
                             dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor, taskMsg.getAllRowsApproximately());
-                    jobConsumer.consumeMessage(dataXJob);
+                    jobConsumer.consumeMessage(dataXJob, taskContext.getTaskId());
 
                 } catch (Throwable e) {
                     final String datax = taskContext.hasIndexName() ? taskContext.getIndexName() : ("workflow:" + taskContext.getTaskId());

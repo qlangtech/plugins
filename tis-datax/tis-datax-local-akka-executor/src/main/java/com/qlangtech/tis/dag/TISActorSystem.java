@@ -30,6 +30,15 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 启动 worker-only 节点：
+ *   export AKKA_ROLES="worker"
+ *   export AKKA_HOSTNAME="192.168.1.101"
+ *   export AKKA_PORT=2552
+ *   export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551"
+ * 启动seed节点：
+ *   export AKKA_HOSTNAME="192.168.1.100"
+ *   export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551" #可以不设置就是127.0.0.1
+ *
  * TIS Actor System 管理器
  * 负责 Actor System 的初始化、配置和生命周期管理
  * <p>
@@ -50,7 +59,11 @@ import java.util.concurrent.TimeUnit;
  * @date 2026-01-29
  */
 public class TISActorSystem {
-
+    /**
+     * ServletContext 中的属性名
+     */
+    public static final String ATTR_TIS_ACTOR_SYSTEM = "tisActorSystem";
+    private static final String KEY_AKKA_ROLES = "akka.cluster.roles";
 
     private static TISActorSystem tisActorSystem;
 
@@ -71,6 +84,7 @@ public class TISActorSystem {
 //        TISActorSystem akkaSys = TISActorSystem.get();
 //        akkaSys.getWorkflowInstanceRegion().tell(queryMsg, ActorRef.noSender());
     }
+
     public static TISActorSystem createAndInit(DAORestDelegateFacade workflowDAOFacade) {
 //        IWorkFlowBuildHistoryDAO workflowBuildHistoryDAO = workflowDAOFacade.getWorkFlowBuildHistoryDAO();
 //        IDAGNodeExecutionDAO dagNodeExecutionDAO = workflowDAOFacade.getDagNodeExecutionDAO();
@@ -87,10 +101,7 @@ public class TISActorSystem {
     }
 
 
-    /**
-     * ServletContext 中的属性名
-     */
-    public static final String ATTR_TIS_ACTOR_SYSTEM = "tisActorSystem";
+
     private static final Logger logger = LoggerFactory.getLogger(TISActorSystem.class);
 
     /**
@@ -110,6 +121,12 @@ public class TISActorSystem {
      */
     private static final String ENV_AKKA_HOSTNAME = "AKKA_HOSTNAME";
     private static final String ENV_AKKA_PORT = "AKKA_PORT";
+
+    /**
+     * 环境变量：节点角色
+     * 格式：逗号分隔，例如 "worker" 或 "scheduler,worker"
+     */
+    private static final String ENV_AKKA_ROLES = "AKKA_ROLES";
 
     /**
      * Actor System 实例
@@ -191,17 +208,33 @@ public class TISActorSystem {
             actorSystem = ActorSystem.create(ACTOR_SYSTEM_NAME, config, TISActorSystem.class.getClassLoader());
             logger.info("Actor System created: {}", actorSystem.name());
 
-            // 3. 创建核心 Actor（包括NodeDispatcherActor，但暂时不传workflowInstanceRegion）
-            createCoreActors();
-            logger.info("Core actors created successfully");
+            boolean isScheduler = hasRole(config, "scheduler");
+            boolean isWorker = hasRole(config, "worker");
+            logger.info("Node roles: scheduler={}, worker={}", isScheduler, isWorker);
 
-            // 4. 初始化 Cluster Sharding（需要使用nodeDispatcherActor）
-            initializeClusterSharding();
-            logger.info("Cluster Sharding initialized successfully");
+            // 3. ClusterManagerActor — 所有节点都需要，用于监控集群事件
+            clusterManagerActor = actorSystem.actorOf(ClusterManagerActor.props(), "cluster-manager");
+            logger.info("ClusterManagerActor created: {}", clusterManagerActor.path());
 
-            // 5. 创建 DAGSchedulerActor（需要 workflowInstanceRegion，所以在 Sharding 之后）
-            createDAGSchedulerActor();
-            logger.info("DAGSchedulerActor created successfully");
+            if (isScheduler) {
+                // 4. scheduler 节点：创建 NodeDispatcherActor
+                nodeDispatcherActor = actorSystem.actorOf(NodeDispatcherActor.props(
+                        dagNodeExecutionDAO, workflowBuildHistoryDAO), "node-dispatcher");
+                logger.info("NodeDispatcherActor created: {}", nodeDispatcherActor.path());
+
+                // 5. 初始化 Cluster Sharding（需要 nodeDispatcherActor）
+                initializeClusterSharding();
+                logger.info("Cluster Sharding initialized successfully");
+
+                // 6. 创建 DAGSchedulerActor（需要 workflowInstanceRegion）
+                createDAGSchedulerActor();
+                logger.info("DAGSchedulerActor created successfully");
+            } else {
+                logger.info("Non-scheduler node: skipping NodeDispatcherActor, ClusterSharding, DAGSchedulerActor creation");
+            }
+
+            // worker 节点不需要创建额外的顶级 Actor
+            // ClusterRouterPool 会自动在 worker 角色节点上创建 TaskWorkerActor routee
 
             // 6. 标记为已初始化
             initialized = true;
@@ -282,7 +315,16 @@ public class TISActorSystem {
                     ConfigValueFactory.fromAnyRef(Integer.parseInt(port)));
         }
 
-        // 4. 记录最终配置
+        // 4. 读取 AKKA_ROLES 环境变量（可选）
+        String roles = System.getenv(ENV_AKKA_ROLES);
+        if (roles != null && !roles.trim().isEmpty()) {
+            logger.info("Overriding roles from environment: {}", roles);
+            String[] roleArray = roles.split(",");
+            config = config.withValue(KEY_AKKA_ROLES,
+                    ConfigValueFactory.fromIterable(Arrays.asList(roleArray)));
+        }
+
+        // 5. 记录最终配置
         logConfiguration(config);
 
         return config;
@@ -340,44 +382,13 @@ public class TISActorSystem {
     }
 
     /**
-     * 创建所有核心 Actor
-     * <p>
-     * Actor 创建顺序：
-     * 1. ClusterManagerActor - 集群管理（最先创建，监控集群事件）
-     * 2. NodeDispatcherActor - 任务分发（不再持有workflowInstanceRegion引用）
-     * <p>
-     * 注意：NodeDispatcherActor 创建时 workflowInstanceRegion 还未初始化，
-     * 但 WorkflowInstanceActor 需要 nodeDispatcherActor，所以先创建 NodeDispatcherActor。
-     * TaskWorkerActor 通过 getSender() 机制直接回复给 WorkflowInstanceActor，避免循环依赖。
-     */
-    private void createCoreActors() {
-        logger.info("Creating core actors...");
-
-        try {
-            // 1. 创建 ClusterManagerActor
-            clusterManagerActor = actorSystem.actorOf(ClusterManagerActor.props(), "cluster-manager");
-            logger.info("ClusterManagerActor created: {}", clusterManagerActor.path());
-
-            // 2. 创建 NodeDispatcherActor
-            nodeDispatcherActor = actorSystem.actorOf(NodeDispatcherActor.props(
-                    dagNodeExecutionDAO, workflowBuildHistoryDAO), "node-dispatcher");
-            logger.info("NodeDispatcherActor created: {}", nodeDispatcherActor.path());
-
-            logger.info("Core actors created successfully");
-
-        } catch (Exception e) {
-            logger.error("Failed to create core actors", e);
-            throw new IllegalStateException("Failed to create core actors", e);
-        }
-    }
-
-    /**
      * Create DAGSchedulerActor for cron-based scheduling.
      * Must be called after initializeClusterSharding() since it needs workflowInstanceRegion.
      */
     private void createDAGSchedulerActor() {
         logger.info("Creating DAGSchedulerActor...");
         try {
+            // 后续优化可以使用 ClusterSingletonManager包装，保证集群中使用一个dagSchedulerActor活着
             dagSchedulerActor = actorSystem.actorOf(
                     DAGSchedulerActor.props(workflowInstanceRegion, workflowBuildHistoryDAO),
                     "dag-scheduler");
@@ -469,6 +480,20 @@ public class TISActorSystem {
     }
 
     /**
+     * 检查配置中是否包含指定的集群角色
+     *
+     * @param config Akka config
+     * @param role   role name to check
+     * @return true if the role is present
+     */
+    private static boolean hasRole(Config config, String role) {
+        if (config.hasPath(KEY_AKKA_ROLES)) {
+            return config.getStringList(KEY_AKKA_ROLES).contains(role);
+        }
+        return false;
+    }
+
+    /**
      * 记录配置信息
      * <p>
      * 用于调试和问题排查
@@ -490,6 +515,10 @@ public class TISActorSystem {
 
             if (config.hasPath("akka.cluster.seed-nodes")) {
                 logger.info("Seed nodes: {}", config.getStringList("akka.cluster.seed-nodes"));
+            }
+
+            if (config.hasPath(KEY_AKKA_ROLES)) {
+                logger.info("Roles: {}", config.getStringList(KEY_AKKA_ROLES));
             }
 
             if (config.hasPath("akka.cluster.split-brain-resolver.active-strategy")) {

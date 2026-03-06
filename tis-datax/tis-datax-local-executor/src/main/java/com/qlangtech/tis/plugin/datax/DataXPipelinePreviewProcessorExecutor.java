@@ -22,7 +22,6 @@ import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
@@ -41,7 +40,6 @@ import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria.Builder;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataResponse;
 import com.qlangtech.tis.rpc.grpc.datax.preview.StringValue;
-import com.qlangtech.tis.web.start.TisAppLaunch;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -53,7 +51,6 @@ import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -229,8 +226,8 @@ public class DataXPipelinePreviewProcessorExecutor
 
 
     @Override
-    public void consumeMessage(PreviewLaunchParam msg) throws Exception {
-        super.consumeMessage(msg);
+    public void consumeMessage(PreviewLaunchParam msg, Integer taskId) throws Exception {
+        super.consumeMessage(msg, taskId);
     }
 
     @Override
@@ -259,10 +256,10 @@ public class DataXPipelinePreviewProcessorExecutor
         return DataXPipelinePreviewMain.class.getName();
     }
 
-    @Override
-    protected File getWorkingDirectory() {
-        return TisAppLaunch.isTestMock() ? new File("/opt/tis/tis-datax-executor") : DataXJobInfo.getDataXExecutorDir();
-    }
+//    @Override
+//    protected File getWorkingDirectory() {
+//        return TisAppLaunch.isTestMock() ? new File("/opt/tis/tis-datax-executor") : DataXJobInfo.getDataXExecutorDir();
+//    }
 
     @Override
     protected String getIncrStateCollectAddress() {

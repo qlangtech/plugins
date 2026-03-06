@@ -4,15 +4,13 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXJobSubmitParams;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
-
-import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -36,13 +34,15 @@ public class SplitTabSync {
         if (statusRpc == null) {
             throw new IllegalArgumentException("statusRpc can not be null");
         }
-        DataXJobSubmit dataXJobSubmit = getDataXJobSubmit(execChainContext);
+        DataXJobSubmitParams submitParams = DataXJobSubmitParams.getDftIfEmpty();
+        DataXJobSubmit dataXJobSubmit = submitParams.getTaskSubmit(execChainContext.isDryRun());
+
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
             DataXJobRunEnvironmentParamsSetter runEnvironmentParamsSetter =
                     (DataXJobRunEnvironmentParamsSetter) dataXJobSubmit;
             DataxPrePostConsumer prePostConsumer = BasicTISTableDumpProcessor.createPrePostConsumer();
             runEnvironmentParamsSetter.setClasspath(prePostConsumer.getClasspath());
-            runEnvironmentParamsSetter.setWorkingDirectory(prePostConsumer.getWorkingDirectory());
+            // runEnvironmentParamsSetter.setWorkingDirectory(prePostConsumer.getWorkingDirectory());
             runEnvironmentParamsSetter.setExtraJavaSystemPramsSuppiler(prePostConsumer.getExtraJavaSystemPramsSuppiler());
         }
 
@@ -56,18 +56,18 @@ public class SplitTabSync {
         createTrigger(execChainContext, statusRpc).run();
     }
 
-    private static DataXJobSubmit getDataXJobSubmit(AbstractExecContext execChainContext) {
-        DataXJobSubmit.InstanceType instanceType = TisAppLaunch.isTestMock() ? DataXJobSubmit.InstanceType.EMBEDDED :
-                DataXJobSubmit.InstanceType.LOCAL;
-
-        Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(execChainContext.isDryRun(),
-                instanceType);
-        if (dataXJobSubmit.isEmpty()) {
-            throw new IllegalStateException("dataXJobSubmit must be present ,instanceType:"
-                    + instanceType + ",isDryRun:" + execChainContext.isDryRun());
-        }
-        return dataXJobSubmit.get();
-    }
+//    private static DataXJobSubmit getDataXJobSubmit(AbstractExecContext execChainContext) {
+//        DataXJobSubmit.InstanceType instanceType = (TisAppLaunch.isTestMock() && false) ? DataXJobSubmit.InstanceType.EMBEDDED :
+//                DataXJobSubmit.InstanceType.LOCAL;
+//
+//        Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(execChainContext.isDryRun(),
+//                instanceType);
+//        if (dataXJobSubmit.isEmpty()) {
+//            throw new IllegalStateException("dataXJobSubmit must be present ,instanceType:"
+//                    + instanceType + ",isDryRun:" + execChainContext.isDryRun());
+//        }
+//        return dataXJobSubmit.get();
+//    }
 
 
 }

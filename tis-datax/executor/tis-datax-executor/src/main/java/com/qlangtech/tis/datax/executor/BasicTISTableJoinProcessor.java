@@ -76,6 +76,7 @@ public class BasicTISTableJoinProcessor {
 
 
     protected void process(ITaskExecutorContext context) throws Exception {
+
         RpcServiceReference feedback = createRpcServiceReference();
         SqlTaskNodeMeta sqlTask =
                 SqlTaskNodeMeta.deserializeTaskNode(ISqlTask.toCfg((context.getJobParams())));
@@ -90,7 +91,7 @@ public class BasicTISTableJoinProcessor {
 
                 WorkflowHookMsg wfHookMsg = WorkflowHookMsg.create(sqlTask, execContext, sqlTask.getExportName());
 
-                tableJoinConsumer.consumeMessage(wfHookMsg);
+                tableJoinConsumer.consumeMessage(wfHookMsg,execContext.getTaskId());
             }
             BasicTISTableDumpProcessor.addSuccessPartition(context, execContext, sqlTask.getExportName());
 

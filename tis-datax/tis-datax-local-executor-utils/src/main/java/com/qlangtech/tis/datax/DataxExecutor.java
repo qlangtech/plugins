@@ -369,6 +369,7 @@ public class DataxExecutor {
         // StatusRpcClientFactory.AssembleSvcCompsite svc = this.statusRpc.get();
         int readed = (int) allReadApproximately[0];
         boolean success = (complete && !faild);
+
         this.statusRpc.reportDumpJobStatus(faild, complete, waiting //
                 , taskId, jobName.getJobFileName(), readed, (success ? readed :
                         this.allRowsApproximately));
@@ -460,7 +461,7 @@ public class DataxExecutor {
 
     private class TISDataXJobContainer extends JobContainer {
         private final Integer jobId;
-        private final DataXJobInfo jobName;
+        protected final DataXJobInfo jobName;
         private final DataXJobArgs jobArgs;
         private final IDataXNameAware dataXName;
 

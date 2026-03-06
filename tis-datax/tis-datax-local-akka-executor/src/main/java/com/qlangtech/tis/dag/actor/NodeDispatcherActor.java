@@ -3,6 +3,7 @@ package com.qlangtech.tis.dag.actor;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.cluster.Cluster;
 import akka.cluster.routing.ClusterRouterPool;
 import akka.cluster.routing.ClusterRouterPoolSettings;
 import akka.routing.Broadcast;
@@ -18,6 +19,7 @@ import com.qlangtech.tis.dag.actor.message.NodeCompleted;
 import com.qlangtech.tis.dag.actor.message.NodeTimeout;
 import com.qlangtech.tis.dag.actor.message.QueryActiveWorkers;
 import com.qlangtech.tis.dag.actor.message.TaskExecutionMessage;
+import com.qlangtech.tis.dag.actor.message.TaskStarted;
 import com.qlangtech.tis.datax.ActorSystemStatus;
 import com.qlangtech.tis.datax.DataXJobSubmitParams;
 import com.qlangtech.tis.powerjob.model.InstanceStatus;
@@ -68,7 +70,7 @@ public class NodeDispatcherActor extends AbstractActor {
      */
     private ActorRef taskRouter;
     private DataXJobSubmitParams submitParams;
-
+    private String clusterSelfAddress;
     /**
      * WorkflowInstance Cluster Sharding Region 引用
      * 通过 SetWorkflowInstanceRegion 消息在 Sharding 初始化后注入
@@ -99,8 +101,7 @@ public class NodeDispatcherActor extends AbstractActor {
 
     public static Props props(IDAGNodeExecutionDAO dagNodeExecutionDAO,
                               IWorkFlowBuildHistoryDAO workflowBuildHistoryDAO) {
-        return Props.create(NodeDispatcherActor.class, () -> new NodeDispatcherActor(dagNodeExecutionDAO,
-                workflowBuildHistoryDAO));
+        return Props.create(NodeDispatcherActor.class, dagNodeExecutionDAO, workflowBuildHistoryDAO);
     }
 
     /**
@@ -112,6 +113,7 @@ public class NodeDispatcherActor extends AbstractActor {
         super.preStart();
         this.taskRouter = createTaskRouter();
         this.submitParams = DataXJobSubmitParams.getDftIfEmpty();
+        this.clusterSelfAddress = String.valueOf(Cluster.get(getContext().getSystem()).selfAddress());
         logger.info("NodeDispatcherActor started, task router created");
     }
 
@@ -125,6 +127,7 @@ public class NodeDispatcherActor extends AbstractActor {
                 .match(DispatchTask.class, this::handleDispatchTask) //
                 .match(NodeCompleted.class, this::handleNodeCompleted) //
                 .match(NodeTimeout.class, this::handleNodeTimeout) //
+                .match(TaskStarted.class, this::handleTaskStarted) //
                 .match(CancelTasks.class, this::handleCancelTasks) //
                 .match(QueryActiveWorkers.class, this::handleQueryActiveWorkers) //
                 .matchAny(msg -> logger.warn("Received unknown message: {}", msg)).build();
@@ -269,6 +272,26 @@ public class NodeDispatcherActor extends AbstractActor {
     }
 
     /**
+     * Handle TaskStarted message from TaskWorkerActor.
+     * Updates the activeWorkerRegistry with the real cluster address
+     * of the worker node that is executing the task.
+     *
+     * @param msg TaskStarted message containing actual worker address
+     */
+    private void handleTaskStarted(TaskStarted msg) {
+        String workerKey = msg.getTaskId() + "_" + msg.getNodeId();
+        ActiveWorkerEntry entry = activeWorkerRegistry.get(workerKey);
+        if (entry != null) {
+            entry.workerAddress = msg.getWorkerAddress();
+            logger.info("TaskStarted: taskId={}, nodeId={}, workerAddress={}",
+                    msg.getTaskId(), msg.getNodeId(), msg.getWorkerAddress());
+        } else {
+            logger.warn("TaskStarted received but no active worker entry found: taskId={}, nodeId={}",
+                    msg.getTaskId(), msg.getNodeId());
+        }
+    }
+
+    /**
      * Handle cancel tasks request
      * Remove all active worker entries for the given taskId so that
      * subsequent NodeCompleted / NodeTimeout messages from those workers will be silently ignored.
@@ -310,17 +333,22 @@ public class NodeDispatcherActor extends AbstractActor {
         logger.info("Creating task router with ClusterRouterPool...");
 
         try {
-            ClusterRouterPoolSettings settings = new ClusterRouterPoolSettings(100,      // maxTotalNrOfInstances:
-                    // 集群总共最多100个Worker实例
-                    10,       // maxInstancesPerNode: 每个节点最多10个Worker实例
-                    true,     // allowLocalRoutees: 允许本地路由
-                    Sets.newHashSet()     // useRole: 不使用角色限制
+            DataXJobSubmitParams params = DataXJobSubmitParams.getDftIfEmpty();
+            int maxPerNode = Objects.requireNonNull(params.maxInstancesPerNode, "");
+            int maxTotal = params.maxTotalNrOfInstances;
+
+            ClusterRouterPoolSettings settings = new ClusterRouterPoolSettings(
+                    maxTotal,      // maxTotalNrOfInstances: 集群总共最多Worker实例数
+                    maxPerNode,    // maxInstancesPerNode: 每个节点最多Worker实例数
+                    true,          // allowLocalRoutees: 允许本地路由
+                    Sets.newHashSet("worker")  // useRole: 只在worker角色节点上创建routee
             );
 
-            ActorRef router = getContext().actorOf(new ClusterRouterPool(new RoundRobinPool(10),  // 本地池大小
+            ActorRef router = getContext().actorOf(new ClusterRouterPool(new RoundRobinPool(maxPerNode),
                     settings).props(TaskWorkerActor.props()), "task-worker-cluster-pool");
 
-            logger.info("Task router created successfully: {}", router.path());
+            logger.info("Task router created successfully: {}, maxPerNode={}, maxTotal={}, useRole=worker",
+                    router.path(), maxPerNode, maxTotal);
             return router;
 
         } catch (Exception e) {
@@ -391,8 +419,10 @@ public class NodeDispatcherActor extends AbstractActor {
         for (Map.Entry<String, ActiveWorkerEntry> entry : activeWorkerRegistry.entrySet()) {
             ActiveWorkerEntry workerEntry = entry.getValue();
             ActorSystemStatus.ActiveWorkerInfo info = new ActorSystemStatus.ActiveWorkerInfo();
-            info.setActorPath(taskRouter != null ? taskRouter.path().toString() : "unknown");
+            info.setActorPath(taskRouter != null ? String.valueOf(taskRouter.path()) : "unknown");
             info.setTaskId(workerEntry.taskId);
+            info.setWorkerAddress(workerEntry.workerAddress != null
+                    ? workerEntry.workerAddress : this.clusterSelfAddress);
             info.setNodeId(workerEntry.nodeId);
             info.setStartTime(workerEntry.startTime);
             workers.add(info);
@@ -407,6 +437,10 @@ public class NodeDispatcherActor extends AbstractActor {
         final Integer taskId;
         final Long nodeId;
         final long startTime;
+        /**
+         * Actual cluster address of the worker node, set by TaskStarted message
+         */
+        volatile String workerAddress;
 
         ActiveWorkerEntry(Integer taskId, Long nodeId, long startTime) {
             this.taskId = taskId;

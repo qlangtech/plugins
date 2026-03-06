@@ -5,12 +5,14 @@ import akka.actor.ActorRef;
 import akka.actor.OneForOneStrategy;
 import akka.actor.Props;
 import akka.actor.SupervisorStrategy;
+import akka.cluster.Cluster;
 import akka.japi.pf.DeciderBuilder;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.dag.actor.message.CancelTask;
 import com.qlangtech.tis.dag.actor.message.NodeCompleted;
 import com.qlangtech.tis.dag.actor.message.TaskExecutionMessage;
+import com.qlangtech.tis.dag.actor.message.TaskStarted;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.RpcUtils;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
@@ -95,7 +97,7 @@ public class TaskWorkerActor extends AbstractActorWithStash {
     }
 
     public static Props props() {
-        return Props.create(TaskWorkerActor.class, TaskWorkerActor::new);
+        return Props.create(TaskWorkerActor.class);
     }
 
     @Override
@@ -187,6 +189,10 @@ public class TaskWorkerActor extends AbstractActorWithStash {
         final ActorRef replyTo = getSender();
         final ActorRef self = getSelf();
         long startTime = System.currentTimeMillis();
+
+        // Report the actual worker cluster address back to NodeDispatcherActor
+        String workerAddr = String.valueOf(Cluster.get(getContext().getSystem()).selfAddress());
+        replyTo.tell(new TaskStarted(msg.getTaskId(), node.getNodeId(), workerAddr), getSelf());
 
         // Switch to busy behavior so CancelTask can be processed
         getContext().become(busy(replyTo));

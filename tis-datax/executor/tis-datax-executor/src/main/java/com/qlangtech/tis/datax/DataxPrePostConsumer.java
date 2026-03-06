@@ -24,7 +24,6 @@ import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
@@ -64,8 +63,8 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
 
 
     @Override
-    public void consumeMessage(DataXLifecycleHookMsg msg) throws Exception {
-        super.consumeMessage(msg);
+    public void consumeMessage(DataXLifecycleHookMsg msg, Integer taskId) throws Exception {
+        super.consumeMessage(msg, taskId);
     }
 
     @Override
@@ -147,9 +146,9 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
         return DataxPrePostExecutor.class.getName();
     }
 
-    public File getWorkingDirectory() {
-        return DataXJobInfo.getDataXExecutorDir();
-    }
+//    public File getWorkingDirectory() {
+//        return DataXJobInfo.getDataXExecutorDir();
+//    }
 
 
     public static final String DEFAULT_CLASSPATH = "./lib/*:./" + IDataXTaskRelevant.KEY_TIS_DATAX_EXECUTOR + ".jar:./conf/";

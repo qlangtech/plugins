@@ -138,8 +138,7 @@ public class WorkflowInstanceActor extends AbstractActor {
     }
 
     public static Props props(ActorRef nodeDispatcher, IWorkFlowBuildHistoryDAO workflowBuildHistoryDAO) {
-        return Props.create(WorkflowInstanceActor.class, () -> new WorkflowInstanceActor(nodeDispatcher,
-                workflowBuildHistoryDAO));
+        return Props.create(WorkflowInstanceActor.class, nodeDispatcher, workflowBuildHistoryDAO);
     }
 
     @Override
@@ -402,7 +401,8 @@ public class WorkflowInstanceActor extends AbstractActor {
             runningTasks.clear();
 
             // 4. Update instance state
-            instance.setState(ExecResult.CANCEL.getByteVal());
+            Objects.requireNonNull(instance, "instance can not be null")
+                    .setState(ExecResult.CANCEL.getByteVal());
             instance.setEndTime(new Date());
             // workflowBuildHistoryDAO.updateByPrimaryKeySelective(instance);
 

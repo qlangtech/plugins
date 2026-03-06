@@ -33,7 +33,7 @@ public class TestDataxPrePostConsumer extends TestCase {
 
         DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(LifeCycleHook.Prep);
 
-        prePostConsumer.consumeMessage(lifecycleHookMsg);
+        prePostConsumer.consumeMessage(lifecycleHookMsg, taskId);
     }
 
 
@@ -85,7 +85,7 @@ public class TestDataxPrePostConsumer extends TestCase {
 
         DataXLifecycleHookMsg lifecycleHookMsg = createHookMsg(LifeCycleHook.Post);
 
-        prePostConsumer.consumeMessage(lifecycleHookMsg);
+        prePostConsumer.consumeMessage(lifecycleHookMsg, taskId);
     }
 
 }

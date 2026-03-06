@@ -10,10 +10,12 @@ import tech.powerjob.common.request.http.SaveWorkflowRequest;
 import java.util.Objects;
 
 /**
+ * 由于不使用powerjob了，废弃该功能了
+ *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/25
  */
-public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTemplate  {
+public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTemplate {
 
     @FormField(ordinal = 0, validate = {Validator.require})
     public TriggerStrategy triggerStrategy;
@@ -25,18 +27,20 @@ public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTempla
         return req;
     }
 
-   // @TISExtension()
+    // @TISExtension()
     public static class DescriptorImpl extends BasicDescriptor implements IEndTypeGetter {
 
         public DescriptorImpl() {
             super();
         }
+
         @Override
         public EndType getEndType() {
             return EndType.PowerJob;
         }
+
         @Override
-        public  K8SWorkerCptType getWorkerCptType() {
+        public K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.JobTplAppOverwrite;
         }
 

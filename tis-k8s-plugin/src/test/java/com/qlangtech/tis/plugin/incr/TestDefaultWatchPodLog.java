@@ -19,9 +19,8 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.job.DataXJobWorker;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
-import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXPowerJobServer;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXJobWorker;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
@@ -41,7 +40,7 @@ public class TestDefaultWatchPodLog extends TestCase {
 
         Optional<String> containerId = Optional.empty();
         String podName = "datax-worker-powerjob-server-mfgk8";
-        K8SDataXPowerJobServer powerJobServer = TestK8SDataXPowerJobServer.createPowerJobServer(null);
+        K8SDataXJobWorker powerJobServer = TestK8SDataXJobWorker.createPowerJobServer(null);
         CoreV1Api client = powerJobServer.getK8SApi();
         final K8sImage config = powerJobServer.getImage();
 

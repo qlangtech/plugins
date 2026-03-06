@@ -22,14 +22,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.assemble.FullbuildPhase;
-import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
-import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -433,17 +431,17 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
 //        }
     }
 
-    protected ReplicasSpec getResourceSeplicasSpec() {
-        DataXJobWorker worker = getSPIJobWorker();
-        if (worker != null) {
-            return worker.getReplicasSpec();
-        }
-        return ReplicasSpec.createDftPowerjobServerReplicasSpec();
-    }
+//    protected ReplicasSpec getResourceSeplicasSpec() {
+//        DataXJobWorker worker = getSPIJobWorker();
+//        if (worker != null) {
+//            return worker.getReplicasSpec();
+//        }
+//        return ReplicasSpec.createDftPowerjobServerReplicasSpec();
+//    }
 
-    protected DataXJobWorker getSPIJobWorker() {
-        return DataXJobWorker.getK8SDataXPowerJobWorker();
-    }
+//    protected DataXJobWorker getSPIJobWorker() {
+//        return DataXJobWorker.getK8SDataXPowerJobWorker();
+//    }
 
     public static PhaseStatusCollection createPhaseStatus(
             List<Pair<ISelectedTab, SelectedTabTriggers>> triggerCfgs //
@@ -481,7 +479,10 @@ public abstract class BasicWorkflowPayload<WF_INSTANCE extends BasicWorkflowInst
         PhaseStatusCollection statusCollection //
                 = new PhaseStatusCollection(tisTaskId, Objects.requireNonNull(phaseRange, "phaseRange can not be null"));
         statusCollection.setDumpPhase(dumpPhase);
-        statusCollection.setJoinPhase(joinPhase);
+        if (containJoinPhaseNodes) {
+            statusCollection.setJoinPhase(joinPhase);
+        }
+
 
         return statusCollection;
     }

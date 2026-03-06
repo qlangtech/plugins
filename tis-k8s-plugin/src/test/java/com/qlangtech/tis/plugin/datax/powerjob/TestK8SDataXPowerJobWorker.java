@@ -24,7 +24,7 @@ import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_SERVICE;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8S_DATAX_POWERJOB_SERVER_SERVICE;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

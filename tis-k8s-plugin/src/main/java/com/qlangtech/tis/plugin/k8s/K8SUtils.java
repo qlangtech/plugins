@@ -5,18 +5,15 @@ import com.google.common.collect.Maps;
 import com.google.gson.reflect.TypeToken;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
-import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.OwnerJobResName;
 import com.qlangtech.tis.datax.job.OwnerJobResName.SSEExecuteOwner;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8SRCResNameWithFieldSelector;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8SRCResNameWithFieldSelector;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
@@ -33,14 +30,12 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
-import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1ReplicationController;
 import io.kubernetes.client.openapi.models.V1ReplicationControllerSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
-import io.kubernetes.client.openapi.models.V1TCPSocketAction;
 import io.kubernetes.client.util.Watch;
 import io.kubernetes.client.util.Watch.Response;
 import org.apache.commons.collections.CollectionUtils;
@@ -77,7 +72,7 @@ public class K8SUtils {
 
     public static final List<K8SRCResName> getPowerJobRCRes() {
         List<K8SRCResName> result = Lists.newArrayList();
-        for (TargetResName res : K8SDataXPowerJobServer.powerJobRes) {
+        for (TargetResName res : K8SDataXJobWorker.powerJobRes) {
             if (res instanceof K8SRCResName) {
                 result.add((K8SRCResName) res);
             }
@@ -730,8 +725,8 @@ public class K8SUtils {
         };
     }
 
-    public static K8SDataXPowerJobWorker getK8SDataXPowerJobWorker() {
-        return DataXJobWorker.getK8SDataXPowerJobWorker();
-    }
+//    public static K8SDataXPowerJobWorker getK8SDataXPowerJobWorker() {
+//        return DataXJobWorker.getK8SDataXPowerJobWorker();
+//    }
 
 }

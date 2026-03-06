@@ -3,7 +3,6 @@ package com.qlangtech.tis.plugin.akka;
 import akka.actor.ActorRef;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.ExecResult;
-import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.coredefine.module.action.DistributeJobTriggerBuildResult;
 import com.qlangtech.tis.dag.TISActorSystem;
@@ -81,9 +80,12 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
         Pair<DAGSessionSpec, List<Pair<ISelectedTab, SelectedTabTriggers>>> spec = DAGSessionSpec.createDAGSessionSpec(
                 execChainContext, rpcServiceRef, this.dataxProcessor, cfgFileNames, submit);
         DAGSessionSpec sessionSpec = spec.getLeft();
-        DistributeJobTriggerBuildResult buildResult = submitToAkkaCluster(execChainContext, sessionSpec);
         List<Pair<ISelectedTab, SelectedTabTriggers>> triggerCfgs = spec.getRight();
-        PhaseStatusCollection statusCollection = BasicWorkflowPayload.createPhaseStatus(triggerCfgs, /**joinNodeCfgs*/Collections.emptyList(), buildResult.getTaskid());
+        PhaseStatusCollection statusCollection = BasicWorkflowPayload.createPhaseStatus(triggerCfgs, /**joinNodeCfgs*/Collections.emptyList(), Integer.MAX_VALUE);
+
+        DistributeJobTriggerBuildResult buildResult = submitToAkkaCluster(statusCollection.phaseRange(), execChainContext, sessionSpec);
+
+        statusCollection = BasicWorkflowPayload.createPhaseStatus(triggerCfgs, /**joinNodeCfgs*/Collections.emptyList(), buildResult.getTaskid());
         feedback.initSynJob(statusCollection);
         return buildResult;
     }
@@ -96,7 +98,7 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
      * @return 执行结果
      * @throws Exception 执行异常
      */
-    public DistributeJobTriggerBuildResult submitToAkkaCluster(IExecChainContext execChainContext, DAGSessionSpec sessionSpec) {
+    public DistributeJobTriggerBuildResult submitToAkkaCluster(ExecutePhaseRange phaseRange, IExecChainContext execChainContext, DAGSessionSpec sessionSpec) {
         TISActorSystem tisActorSystem = TISActorSystem.get();
 
         if (!tisActorSystem.isInitialized()) {
@@ -131,7 +133,7 @@ public class AkkaPipelinePayload extends BasicWorkflowPayload<AkkaWorkflow> {
             taskHistory.setDagRuntime(dagSpecPath.getAbsolutePath());
 
             DataXPipelineExecContext chainContext = new DataXPipelineExecContext(pipelineName.getPipelineName(), System.currentTimeMillis());
-            chainContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
+            chainContext.setExecutePhaseRange(phaseRange);
             TriggerType triggerType = execChainContext.getAttribute(TriggerType.class.getName(), () -> TriggerType.MANUAL);
             CreateNewTaskResult newTask = IExecChainContext.createNewTask(chainContext, triggerType, dagSpecPath);
             /**============================================================

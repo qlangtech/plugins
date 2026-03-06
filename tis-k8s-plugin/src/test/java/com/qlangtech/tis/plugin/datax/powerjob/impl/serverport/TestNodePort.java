@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
-import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
@@ -30,7 +29,7 @@ import org.easymock.EasyMock;
 
 import java.util.Optional;
 
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

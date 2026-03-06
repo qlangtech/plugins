@@ -299,7 +299,7 @@ public class BasicTISTableDumpProcessor {
                 return dataXBatchPost.createPostTask(execContext, entityName, tab,
                         processor.getDataxCfgFileNames(null, Optional.empty()));
             } else if (cycleHook == LifeCycleHook.Prep) {
-                return dataXBatchPost.createPreExecuteTask(execContext , entityName, tab);
+                return dataXBatchPost.createPreExecuteTask(execContext, entityName, tab);
             } else {
                 throw new IllegalArgumentException("cycleHook:" + cycleHook);
             }
@@ -321,7 +321,7 @@ public class BasicTISTableDumpProcessor {
             @Override
             public void run() {
                 try {
-                    prePostConsumer.consumeMessage(lifecycleHookMsg);
+                    prePostConsumer.consumeMessage(lifecycleHookMsg, execContext.getTaskId());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

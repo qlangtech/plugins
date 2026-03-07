@@ -22,12 +22,21 @@ import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-19 15:53
  **/
 public class KingBaseDateTimeConverter extends DateTimeConverter {
+    /**
+     * 为了与cdc出来的时间是一致的时区： https://github.com/datavane/tis/issues/492
+     * 测试之后发现没有效果
+     * props.setProperty("timeZone", ZoneOffset.UTC.getId());
+     */
+    private final ZoneId timestampZoneId = ZoneOffset.UTC;
+
     @Override
     protected String convertDate(Object input) {
         if (input != null) {

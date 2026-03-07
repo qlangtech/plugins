@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /opt/misc/flink-cdc/flink-cdc-connect/flink-cdc-source-connectors/flink-connector-kingbase-cdc -name *.java -type f)"
+    ]
+  }
+}

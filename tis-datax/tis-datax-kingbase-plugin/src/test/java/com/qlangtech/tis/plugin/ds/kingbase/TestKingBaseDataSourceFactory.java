@@ -34,7 +34,7 @@ public class TestKingBaseDataSourceFactory {
 
     @Test
     public void testGetTableMetadata() {
-        BasicKingBaseDataSourceFactory dataSourceFactory = new BasicKingBaseDataSourceFactory();
+        BasicKingBaseDataSourceFactory dataSourceFactory = new KingBaseDataSourceFactory();
         dataSourceFactory.name = "kingbase201";
         dataSourceFactory.nodeDesc = "192.168.28.201";
         dataSourceFactory.port = 4321;

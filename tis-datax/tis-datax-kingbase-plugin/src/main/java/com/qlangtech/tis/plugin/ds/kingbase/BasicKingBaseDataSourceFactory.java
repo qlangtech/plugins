@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.postgresql.PGLikeDataSourceFactory;
+import com.qlangtech.tis.plugin.timezone.TISTimeZone;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -53,10 +55,10 @@ import java.util.function.Consumer;
  **/
 public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFactory {
     public static final String KingBase_NAME = "KingBase";
- //   public static final String KingBase_Ver8 = "-V8x";
+    //   public static final String KingBase_Ver8 = "-V8x";
     public static final String KingBase_Ver9 = "-V9x";
     public static final String JDBC_SCHEMA_TYPE_V9 = "kingbase8";
-   // public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
+    // public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
     public static final String FIELD_DB_MODE = "dbMode";
     @FormField(ordinal = 8, validate = {Validator.require})
     public KingBaseCompatibleMode dbMode;
@@ -64,6 +66,13 @@ public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFac
     @FormField(ordinal = 9, validate = {Validator.require})
     public KingBaseDispatch dispatch;
 
+    @FormField(ordinal = 10, validate = {Validator.require})
+    public TISTimeZone timeZone;
+
+    @Override
+    public Optional<ZoneId> getTimeZone() {
+        return Optional.of(timeZone.getTimeZone());
+    }
 
     @Override
     protected java.util.Properties extractSetJdbcProps(java.util.Properties props) {

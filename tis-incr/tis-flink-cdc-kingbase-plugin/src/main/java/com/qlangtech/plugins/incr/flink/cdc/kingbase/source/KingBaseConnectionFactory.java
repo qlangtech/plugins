@@ -43,7 +43,9 @@ public class KingBaseConnectionFactory implements JdbcConnection.ConnectionFacto
     public Connection connect(JdbcConfiguration config) throws SQLException {
 
         final Properties props = config.asProperties();
-
+        //  为了与cdc出来的时间是一致的时区： https://github.com/datavane/tis/issues/492
+        // 测试之后发现没有效果
+//        props.setProperty("timeZone", ZoneOffset.UTC.getId());
         DataSourceFactory dsFactory
                 = TIS.getDataBasePlugin(PostedDSProp.parse(config.getString(DataxUtils.DATASOURCE_FACTORY_IDENTITY)));
         String jdbcUrl = config.getString(DataxUtils.DATASOURCE_JDBC_URL);

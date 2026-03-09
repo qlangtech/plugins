@@ -21,7 +21,11 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.Utils;
-import com.qlangtech.tis.config.authtoken.*;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IOffUserToken;
+import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -32,6 +36,7 @@ import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -41,7 +46,11 @@ import com.qlangtech.tis.util.ClassloaderUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FilterFileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.security.SecurityInfo;
@@ -55,7 +64,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -94,7 +108,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String hdfsSiteContent;
 
-    private ITISFileSystem fileSystem;
+    private transient ITISFileSystem fileSystem;
 
     @Override
     public String identityValue() {
@@ -161,7 +175,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                     }
                     SecurityUtil.setSecurityInfoProviders(sinfos.toArray(new SecurityInfo[sinfos.size()]));
                     cfg.set(DFSConfigKeys.DFS_NAMENODE_KERBEROS_PRINCIPAL_KEY, token.getKerberosCfg().getPrincipal());
-                    return setConfiguration(token.getKerberosCfg(), fsFactory.getClass(), cfg, () -> create());
+                    return setConfiguration(token.getKerberosCfg(), fsFactory.getClass(), cfg, this::create);
                 }
 
                 private final ITISFileSystem create() {
@@ -398,7 +412,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
 
     @TISExtension(ordinal = 0)
-    public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {
+    public static class DefaultDescriptor extends Descriptor<FileSystemFactory> implements IEndTypeGetter {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(IKerberos.IDENTITY, () -> ParamsConfig.getItems(IKerberos.IDENTITY));
@@ -409,6 +423,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             return "HDFS";
         }
 
+        @Override
+        public EndType getEndType() {
+            return EndType.HDFS;
+        }
 
         public boolean validateHdfsSiteContent(IFieldErrorHandler msgHandler
                 , Context context, String fieldName, String value) {

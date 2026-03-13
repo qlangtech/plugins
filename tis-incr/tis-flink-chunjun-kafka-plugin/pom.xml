@@ -78,6 +78,12 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-cdc-pipeline-connector-kafka-tis</artifactId>
+            <version>${flink.cdc.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -93,17 +99,7 @@
         </dependency>
 
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.flink</groupId>-->
-<!--            <artifactId>flink-connector-kafka</artifactId>-->
-<!--            <version>${flink.version}</version>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <artifactId>flink-core</artifactId>-->
-<!--                    <groupId>org.apache.flink</groupId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
+
 
 
 
@@ -117,6 +113,22 @@
 
 
     </dependencies>
+
+    <dependencyManagement>
+<!--        <dependencies>-->
+<!--            <dependency>-->
+<!--                <groupId>org.apache.flink</groupId>-->
+<!--                <artifactId>flink-connector-kafka</artifactId>-->
+<!--                <version>4.0.0</version>-->
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <artifactId>flink-core</artifactId>-->
+<!--                        <groupId>org.apache.flink</groupId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
+<!--            </dependency>-->
+<!--        </dependencies>-->
+    </dependencyManagement>
 
 
 </project>

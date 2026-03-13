@@ -168,7 +168,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
         sinkFuncRef.setSinkFactory(sinkFactory);
         sinkFuncRef.initialize();
-        sinkFuncRef.setSinkCols(new TableCols(kfkTable.getCols()));
+        sinkFuncRef.setSinkCols(new TableCols<CMeta>(kfkTable.getCols()));
 
         //Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
         sinkFuncRef.setParallelism(this.parallelism);

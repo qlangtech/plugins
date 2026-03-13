@@ -23,7 +23,6 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 
 import java.io.Serializable;
 import java.util.Map;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-09-26 11:24
@@ -40,6 +39,7 @@ public class FlinkColMapper implements Serializable {
     }
 
     public BiFunction getSourceDTOColValProcess(String colName) {
+
         FlinkCol fcol = colMapper.get(colName);
         if (fcol == null) {
             return null;

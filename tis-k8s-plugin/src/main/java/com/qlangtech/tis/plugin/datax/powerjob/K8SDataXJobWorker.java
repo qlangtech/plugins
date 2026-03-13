@@ -91,10 +91,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 /**
@@ -887,37 +885,7 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
 //    }
 
     WatchPodLog watchOneOfPowerJobPodLog(WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
-        return watchOneOfPowerJobPodLog(this.getK8SController(), relevantPodNames, logListener);
-    }
-
-    public static WatchPodLog watchOneOfPowerJobPodLog(K8SController controller
-            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
-        return watchOneOfPodLog(K8S_DATAX_POWERJOB_SERVER, controller, relevantPodNames, logListener);
-    }
-
-    public static WatchPodLog watchOneOfPodLog(TargetResName indexName, K8SController controller
-            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
-        if (relevantPodNames.isSkipWaittingPhase()) {
-            return new WatchPodLog() {
-                @Override
-                public void addListener(ILogListener listener) {
-                }
-
-                @Override
-                public void close() {
-                }
-            };
-        }
-        Set<PodStat> pods = relevantPodNames.getRelevantPods();
-        logger.info("watch onOfPod log:{}", pods.stream().map((pod) -> pod.getPodName()).collect(Collectors.joining(",")));
-        WatchPodLog watchPodLog = null;
-        for (PodStat onePodOf : pods) {
-            if (onePodOf.isRunning()) {
-                watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf.getPodName(), logListener);
-                return watchPodLog;
-            }
-        }
-        throw new IllegalStateException("must return a watchPodLog instance");
+        return K8SUtils.watchOneOfPowerJobPodLog(this.getK8SController(), relevantPodNames, logListener);
     }
 
 

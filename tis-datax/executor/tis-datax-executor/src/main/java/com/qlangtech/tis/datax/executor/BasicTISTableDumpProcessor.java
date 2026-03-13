@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.DataXLifecycleHookMsg;
 import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.LifeCycleHook;
 import com.qlangtech.tis.datax.RpcUtils;
@@ -291,8 +292,10 @@ public class BasicTISTableDumpProcessor {
         IDataxProcessor processor = execContext.getProcessor();
 
         if (TisAppLaunch.isTestMock()) {
+            IDataxReader reader = processor.getReader(null);
+            ISelectedTab tab = reader.getSelectedTab(tableName);
             IDataXBatchPost dataXBatchPost = getDataXBatchPost(processor);
-            DefaultTab tab = new DefaultTab(tableName);
+           // DefaultTab tab = new DefaultTab(tableName);
             EntityName entityName = dataXBatchPost.parseEntity(tab);
             LifeCycleHook cycleHook = lifeCycleHookInfo.getRight();
             if (cycleHook == LifeCycleHook.Post) {

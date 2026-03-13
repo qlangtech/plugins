@@ -14,7 +14,10 @@ import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8SRCResNameWithFieldSelector;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
+import com.qlangtech.tis.plugin.incr.WatchPodLog;
+import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiCallback;
@@ -54,6 +57,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 //import okhttp3;
 
@@ -392,6 +396,36 @@ public class K8SUtils {
         return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resVer, new ResChangeCallback() {
 
         });
+    }
+
+    public static WatchPodLog watchOneOfPowerJobPodLog(K8SController controller
+            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
+        return watchOneOfPodLog(K8SDataXJobWorker.K8S_DATAX_POWERJOB_SERVER, controller, relevantPodNames, logListener);
+    }
+
+    public static WatchPodLog watchOneOfPodLog(TargetResName indexName, K8SController controller
+            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
+        if (relevantPodNames.isSkipWaittingPhase()) {
+            return new WatchPodLog() {
+                @Override
+                public void addListener(ILogListener listener) {
+                }
+
+                @Override
+                public void close() {
+                }
+            };
+        }
+        Set<PodStat> pods = relevantPodNames.getRelevantPods();
+        logger.info("watch onOfPod log:{}", pods.stream().map(PodStat::getPodName).collect(Collectors.joining(",")));
+        WatchPodLog watchPodLog = null;
+        for (PodStat onePodOf : pods) {
+            if (onePodOf.isRunning()) {
+                watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf.getPodName(), logListener);
+                return watchPodLog;
+            }
+        }
+        throw new IllegalStateException("must return a watchPodLog instance");
     }
 
     public enum K8SResChangeReason {

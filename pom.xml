@@ -75,25 +75,25 @@
                 <module>tis-local-dump-build</module>-->
     </modules>
     <profiles>
-        <profile>
-            <id>default-emr</id>
-            <properties>
-                <spark2.version>2.4.4</spark2.version>
-                <hadoop-version>${hadoop2x-version}</hadoop-version>
-                <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
-                <hudi.version>0.14.1</hudi.version>
-                <hive.version>2.3.1</hive.version>
-                <scala.binary.version>2.12</scala.binary.version>
-                <scala.version>2.12.9</scala.version>
-                <appname>all</appname>
+<!--        <profile>-->
+<!--            <id>default-emr</id>-->
+<!--            <properties>-->
+<!--                <spark2.version>2.4.4</spark2.version>-->
+<!--                <hadoop-version>${hadoop2x-version}</hadoop-version>-->
+<!--                <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>-->
+<!--                <hudi.version>0.14.1</hudi.version>-->
+<!--                <hive.version>2.3.1</hive.version>-->
+<!--                <scala.binary.version>2.12</scala.binary.version>-->
+<!--                <scala.version>2.12.9</scala.version>-->
+<!--                <appname>all</appname>-->
 
-                <hudi>${hudi.version}</hudi>
-                <spark>${spark2.version}</spark>
-                <hive>${hive.version}</hive>
-                <hadoop>${hadoop-version}</hadoop>
+<!--                <hudi>${hudi.version}</hudi>-->
+<!--                <spark>${spark2.version}</spark>-->
+<!--                <hive>${hive.version}</hive>-->
+<!--                <hadoop>${hadoop-version}</hadoop>-->
 
-            </properties>
-        </profile>
+<!--            </properties>-->
+<!--        </profile>-->
         <profile>
             <!--https://emr-next.console.aliyun.com/#/resource/all/create/ecs-->
             <id>aliyun-emr</id>
@@ -164,8 +164,10 @@
         <hudi.version>0.14.1</hudi.version>
         <!--        <revision>4.2.0</revision>-->
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
-        <hadoop2x-version>2.7.3</hadoop2x-version>
-        <hadoop-version>${hadoop2x-version}</hadoop-version>
+<!--        <hadoop2x-version>2.7.3</hadoop2x-version>-->
+
+        <hadoop-version>${hadoop3-version}</hadoop-version>
+<!--        <hadoop-version>${hadoop2x-version}</hadoop-version>-->
         <hive.version>2.3.1</hive.version>
 
         <maven-tpi-plugin.classpathDependentExcludes>
@@ -686,13 +688,13 @@
             </dependency>
 
             <!-- 解决IDE对jdk.tools依赖的报错，该依赖实际上会被exclusion排除 -->
-            <dependency>
-                <groupId>jdk.tools</groupId>
-                <artifactId>jdk.tools</artifactId>
-                <version>1.8</version>
-                <scope>system</scope>
-                <systemPath>${java.home}/../lib/tools.jar</systemPath>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>jdk.tools</groupId>-->
+<!--                <artifactId>jdk.tools</artifactId>-->
+<!--                <version>1.8</version>-->
+<!--                <scope>system</scope>-->
+<!--                <systemPath>${java.home}/../lib/tools.jar</systemPath>-->
+<!--            </dependency>-->
 
         </dependencies>
     </dependencyManagement>

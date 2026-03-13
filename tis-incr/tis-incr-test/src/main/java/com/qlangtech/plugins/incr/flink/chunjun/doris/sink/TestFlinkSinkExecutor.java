@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.plugins.incr.flink.cdc.NoRateLimiter;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
@@ -53,7 +54,6 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
-import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
@@ -106,7 +106,7 @@ import java.util.stream.Collectors;
 public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFactory<ROW>, ROW> extends AbstractTestBase implements TISEasyMock {
 
 
-    IncrStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+    protected final TISFlinkCDCStreamFactory streamFactory;
 
     protected static String dataXName = "testDataX";
 
@@ -143,6 +143,11 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
 
     static {
         System.setProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY, "logback-test.xml");
+    }
+
+    public TestFlinkSinkExecutor() {
+        this.streamFactory = new TISFlinkCDCStreamFactory();
+        this.streamFactory.rateLimiter = new NoRateLimiter();
     }
 
     protected abstract BasicDataSourceFactory getDsFactory();
@@ -350,7 +355,7 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
             Map<String, TableAlias> mapper = Maps.newHashMap();
             mapper.put(tableName, new TableAlias(tableName));
-           // TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
+            // TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
             //EasyMock.expect(dataxProcessor.getTabAlias(null, true)).andReturn(aliasMapper).anyTimes();
             //EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
             EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();

@@ -96,6 +96,10 @@
                     <groupId>com.sun</groupId>
                     <artifactId>tools</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.amazonaws</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 

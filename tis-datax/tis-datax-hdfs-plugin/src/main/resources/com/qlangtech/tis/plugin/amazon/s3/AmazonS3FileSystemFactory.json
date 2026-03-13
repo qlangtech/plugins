@@ -1,3 +1,30 @@
 {
-
+  "endpoint": {
+    "label": "服务端点",
+    "placeholder": "http://localhost:9000",
+    "help": "S3/MinIO服务端点（API地址），例如：http://localhost:9000"
+  },
+  "bucket": {
+    "label": "存储桶",
+    "help": "存储桶名称，相当于一个顶级存储容器"
+  },
+  "rootDir": {
+    "label": "根目录",
+    "placeholder": "/user/admin",
+    "help": "系统会将数据存储到该子目录下，用户需要保证该路径有读/写权限"
+  },
+  "region": {
+    "label": "区域",
+    "placeholder": "us-east-1",
+    "help": "可选项，如果遇到Region相关报错可以设置一个默认Region"
+  },
+  "userToken": {
+    "dftVal": "userPass",
+    "label": "认证方式",
+    "help": "S3/MinIO认证信息，用户名填写AccessKey，密码填写SecretKey"
+  },
+  "pathStyleAccess": {
+    "label": "路径访问模式",
+    "dftVal": false
+  }
 }

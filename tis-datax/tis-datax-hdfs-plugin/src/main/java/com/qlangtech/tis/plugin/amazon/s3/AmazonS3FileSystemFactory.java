@@ -13,11 +13,13 @@ import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.ClassloaderUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,21 +44,24 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
     @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
     public String endpoint;
 
-    @FormField(ordinal = 2, validate = {Validator.require, Validator.absolute_path})
+    /**
+     * 是存储桶名称，相当于一个顶级容器
+     */
+    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
+    public String bucket;
+
+    @FormField(ordinal = 3, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
 
     //<!-- 可选：如果遇到 region 相关报错，可以设置一个默认 region -->
-    @FormField(ordinal = 3, validate = {Validator.identity})
+    @FormField(ordinal = 4, validate = {Validator.identity})
     public String region;
 
     @FormField(ordinal = 5, validate = {Validator.require})
     public UserToken userToken;
 
-    /**
-     * 是存储桶名称，相当于一个顶级容器
-     */
-    @FormField(ordinal = 7, validate = {Validator.require, Validator.identity})
-    public String bucket;
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean pathStyleAccess ;
 
 
 //    public String accessKey;
@@ -68,10 +73,10 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
     private transient ITISFileSystem fileSystem;
 
     @Override
-    public Configuration getConfiguration() {
+    public ReplayConfiguration getConfiguration() {
         try {
             return ClassloaderUtils.processByResetThreadClassloader(AmazonS3FileSystemFactory.class, () -> {
-                final Configuration conf = new Configuration();
+                final ReplayConfiguration conf = new ReplayConfiguration();
 //                try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
 //                    conf.addResource(input);
 //                }
@@ -80,7 +85,15 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                 // conf.setBoolean(DFSConfigKeys.DFS_CLIENT_RETRY_POLICY_ENABLED_KEY, false);
                 // conf.set(FsPermission.UMASK_LABEL, "000");
                 // fs.defaultFS
-                conf.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem");
+                conf.set("fs.s3a.impl", org.apache.hadoop.fs.s3a.S3AFileSystem.class.getName());
+
+                /**
+                 * 显式注册 LocalFileSystem，防止在 TIS 插件 ClassLoader 隔离环境下
+                 * S3AFileSystem 创建本地临时文件时找不到 "file" scheme 的实现
+                 *  S3AFileSystem 需要本地临时文件：当 Paimon 通过 HadoopFileIO 写入 S3/MinIO 时，S3AFileSystem 内部使用 DiskBlockFactory 先在本地磁盘创建临时文件缓冲数据，然后再上传。创建临时文件时调用了 FileSystem.getLocal(conf)，这需要查找 "file"
+                 *   scheme 对应的 LocalFileSystem 实现。
+                 */
+                conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
                 // conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
                 //https://segmentfault.com/q/1010000008473574
                 logger.info("userHostname:{}", userHostname);
@@ -105,8 +118,9 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                 }
 
                 URL endpointUrl = new URL(endpoint);
-                conf.set("fs.s3a.endpoint", String.valueOf(endpointUrl));
-                conf.setBoolean("fs.s3a.connection.ssl.enabled", "https".equalsIgnoreCase(endpointUrl.getProtocol()));
+                conf.set(Constants.ENDPOINT, String.valueOf(endpointUrl));
+                conf.setBoolean(Constants.SECURE_CONNECTIONS, "https".equalsIgnoreCase(endpointUrl.getProtocol()));
+                conf.setBoolean(Constants.PATH_STYLE_ACCESS, pathStyleAccess);
 
                 userToken.accept(new IUserTokenVisitor<Void>() {
                     @Override
@@ -116,10 +130,11 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
 
                     @Override
                     public Void visit(IUserNamePasswordUserToken token) throws Exception {
-                        token.getPassword();
-                        token.getPassword();
-                        conf.set("fs.s3a.access.key", token.getUserName());
-                        conf.set("fs.s3a.secret.key", token.getPassword());
+//                        token.getPassword();
+//                        token.getPassword();
+
+                        conf.set(Constants.ACCESS_KEY, token.getUserName());
+                        conf.set(Constants.SECRET_KEY, token.getPassword());
                         return null;
                         // throw new UnsupportedOperationException();
                     }

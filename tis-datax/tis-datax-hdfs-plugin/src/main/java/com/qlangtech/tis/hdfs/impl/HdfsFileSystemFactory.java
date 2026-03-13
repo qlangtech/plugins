@@ -37,6 +37,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.amazon.s3.ReplayConfiguration;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -205,7 +206,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         }).collect(Collectors.toList());
     }
 
-    private static Configuration getConfiguration(String hdfsSiteContent, Boolean userHostname, Consumer<Configuration> cfgProcess) {
+    private static ReplayConfiguration getConfiguration(String hdfsSiteContent, Boolean userHostname, Consumer<ReplayConfiguration> cfgProcess) {
 
 
 //        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -221,7 +222,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
         try {
             return ClassloaderUtils.processByResetThreadClassloader(HdfsFileSystemFactory.class, () -> {
-                Configuration conf = new Configuration();
+                ReplayConfiguration conf = new ReplayConfiguration();
                 try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
                     conf.addResource(input);
                 }
@@ -259,7 +260,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public ReplayConfiguration getConfiguration() {
         return getConfiguration(this.hdfsSiteContent, this.userHostname, (conf) -> setConfiguration(conf));
     }
 

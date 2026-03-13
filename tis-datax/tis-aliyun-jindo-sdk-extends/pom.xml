@@ -31,7 +31,7 @@
         <module>tis-aliyun-jindo-sdk-extends-api</module>
         <module>tis-aliyun-jindo-sdk-extends-impl</module>
         <module>tis-datax-hdfs-aliyun-emr-plugin</module>
-        <module>tis-aliyun-jindo-sdk-extends-hadoop2x</module>
+<!--        <module>tis-aliyun-jindo-sdk-extends-hadoop2x</module>-->
         <module>tis-aliyun-jindo-sdk-extends-hadoop3x</module>
     </modules>
 

@@ -22,7 +22,6 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.StoreResourceTypeConstants;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -32,7 +31,6 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
-
 import org.apache.flink.util.FlinkUserCodeClassLoaders.ResolveOrder;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -40,12 +38,21 @@ import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-03-13 15:41
  **/
 public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
+
+    @Test
+    public void testBuildServerLoaderFactorydd() throws Exception {
+        Enumeration<URL> resources = TestTISFlinkClassLoaderFactory.class.getClassLoader().getResources("org/apache/hadoop/conf/Configuration.class");
+        while (resources.hasMoreElements()) {
+            System.out.println(resources.nextElement());
+        }
+    }
 
 
     @Test

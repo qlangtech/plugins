@@ -187,6 +187,20 @@
 
     </dependencies>
 
+    <dependencyManagement>
+        <dependencies>
+            <!--
+            INFO] +- org.apache.hadoop:hadoop-aws:jar:3.2.1:compile
+            [INFO] |  \- com.amazonaws:aws-java-sdk-bundle:jar:1.11.375:compile
+            -->
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-bundle</artifactId>
+                <version>1.11.375</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
 
         <plugins>

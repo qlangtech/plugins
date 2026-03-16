@@ -30,6 +30,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.impl.AttrVals;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class KafkaSelectedTab extends SelectedTab {
     public List<String> partitionFields;
 
     public static List<Option> getPtCandidateFields() {
-        return SelectedTab.getContextOpts((cols) -> cols.stream());
+        return SelectedTab.getContextOpts(Collection::stream);
     }
 
 

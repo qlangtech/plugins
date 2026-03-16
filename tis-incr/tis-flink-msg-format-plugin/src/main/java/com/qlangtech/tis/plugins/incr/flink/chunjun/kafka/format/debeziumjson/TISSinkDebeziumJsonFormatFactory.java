@@ -147,6 +147,9 @@ public class TISSinkDebeziumJsonFormatFactory extends FormatFactory {
     public static class DftDescriptor extends BasicFormatDescriptor {
         public DftDescriptor() {
             super();
+//            ConfigOptions.key(KafkaDataSinkOptions.DEBEZIUM_JSON_INCLUDE_SCHEMA_ENABLED )
+//            FlinkPropAssist.TISFlinkProp.create()
+//            this.options.add("includeSchema",);
         }
 
 

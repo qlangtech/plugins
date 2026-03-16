@@ -197,11 +197,11 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
             , BiFunction<CanalJsonFormatFactory, org.apache.flink.configuration.Configuration, T> formatCreator) {
         CanalJsonFormatFactory canalFormatFactory = new CanalJsonFormatFactory();
 
-        DftDescriptor desc = (DftDescriptor) this.getDescriptor();
+        // DftDescriptor desc = (DftDescriptor) this.getDescriptor();
         return formatCreator.apply(canalFormatFactory
-                , desc.options.createFlinkCfg(this)
-                        .set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
+                , createFlinkCfg().set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
     }
+
 
 
     @TISExtension

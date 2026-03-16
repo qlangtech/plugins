@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.debeziumjson.TISSinkDebeziumJsonFormatFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsMeta;
 import org.junit.Assert;
@@ -34,7 +35,7 @@ public class TestTISSinkDebeziumJsonFormatFactory {
     @Test
     public void testDescriptorsJSONGenerate() {
         TISSinkDebeziumJsonFormatFactory formatFactory = new TISSinkDebeziumJsonFormatFactory();
-        DescriptorsJSON descJson = new DescriptorsJSON(formatFactory.getDescriptor());
+        DescriptorsJSON descJson = new DefaultDescriptorsJSON(formatFactory.getDescriptor());
         DescriptorsMeta descriptorsJSON = descJson.getDescriptorsJSON();
         JsonUtil.assertJSONEqual(formatFactory.getClass(), "debezium-json-format-factory.json"
                 , descriptorsJSON, (m, e, a) -> {

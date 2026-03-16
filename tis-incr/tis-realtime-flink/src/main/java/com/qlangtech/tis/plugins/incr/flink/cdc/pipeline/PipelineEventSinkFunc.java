@@ -97,9 +97,10 @@ public abstract class PipelineEventSinkFunc<WRITER extends DataxWriter> extends 
         ImmutableMap.Builder<String, TableId> tab2TableIDBuilder = ImmutableMap.builder();
         EntityName targetEntityName = null;
         for (ISelectedTab selTab : this.tabs) {
-            targetEntityName = writer.parseEntity(selTab);
-            tab2TableIDBuilder.put(selTab.getName(), TableId.tableId(targetEntityName.getDbName(),
-                    targetEntityName.getTableName()));
+            targetEntityName = getWriterEntityName(selTab);
+
+            tab2TableIDBuilder.put(selTab.getName(), TableId.tableId(targetEntityName.getDbName(), targetEntityName.getTableName()));
+
             transformerOpt = SelectedTableTransformerRules.createTransformerRules(dataxProcessor.identityValue(),
                     selTab, Objects.requireNonNull(sourceFlinkColCreator, "sourceFlinkColCreator can not be null"));
 
@@ -112,12 +113,17 @@ public abstract class PipelineEventSinkFunc<WRITER extends DataxWriter> extends 
         sourceColsMetaMapper = sourceColsMetaMapperBuilder.build();
     }
 
+    protected EntityName getWriterEntityName(ISelectedTab selTab) {
+        return writer.parseEntity(selTab);
+    }
+
+    @SuppressWarnings("all")
     @Override
     protected DataStream<Event> streamMap(DTOStream sourceStream) {
         DataStream<Event> result = null;
         if (sourceStream.clazz == DTO.class) {
             TypeInformation<Event> outputType = new EventTypeInfo();
-            // Optional<String> dbName = paimonWriter.catalog.getDBName();
+
             SingleOutputStreamOperator<Event> outputOperator = sourceStream.getStream().filter(new DTOFilter(true,
                             Collections.emptyList())).name("skip_" + UPDATE_BEFORE) //
                     .setParallelism(this.sinkTaskParallelism) //
@@ -128,7 +134,10 @@ public abstract class PipelineEventSinkFunc<WRITER extends DataxWriter> extends 
 
             SourceColMetaGetter sourceColMetaGetter = writerTabInitialization.getAutoCreateTableCanNotBeNull().enabledColumnComment() ?
                     reader.createSourceColMetaGetter() : SourceColMetaGetter.getNone();
-            result = outputOperator.process(new SchemaEmitterFunction(sinkDBName, writer, this.writerTabInitialization, this.optionsCreator, this.tabs,
+            result = outputOperator.process(new SchemaEmitterFunction(
+                    sinkDBName //
+                    , Objects.requireNonNull(tab2TableID, "tab2TableID can not be null")
+                    , this.writerTabInitialization, this.optionsCreator, this.tabs,
                     this.sourceColsMetaMapper, sourceColMetaGetter), outputType).name("schema_emitter");
             // outputOperator;
         } else if (sourceStream.clazz == org.apache.flink.cdc.common.event.Event.class) {

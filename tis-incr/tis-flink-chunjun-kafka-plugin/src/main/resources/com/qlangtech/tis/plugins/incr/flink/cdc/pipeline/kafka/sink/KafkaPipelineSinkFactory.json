@@ -1,0 +1,11 @@
+{
+  "format": {
+    "label": "传输格式",
+    "dftVal": "json",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugins.incr.flink.cdc.pipeline.kafka.sink.KafkaPipelineSinkFactory.supportedFormats(desc);"
+  },
+  "semantic": {
+    "dftVal": "none",
+    "enum": "com.qlangtech.tis.plugins.incr.flink.cdc.pipeline.kafka.sink.KafkaPipelineSinkFactory.getSupportSemantic()"
+  }
+}

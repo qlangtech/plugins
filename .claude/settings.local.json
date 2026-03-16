@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find /opt/misc/flink-cdc/flink-cdc-connect/flink-cdc-source-connectors/flink-connector-kingbase-cdc -name *.java -type f)"
+      "Bash(find /opt/misc/flink-cdc/flink-cdc-connect/flink-cdc-source-connectors/flink-connector-kingbase-cdc -name *.java -type f)",
+      "Bash(find /Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-kafka-plugin -name *.java -type f)",
+      "Bash(git -C /Users/mozhenghua/j2ee_solution/project/plugins diff HEAD -- tis-datax/tis-datax-kafka-plugin/src/main/java/com/qlangtech/tis/plugins/datax/kafka/writer/DataXKafkaWriter.java)"
     ]
   }
 }

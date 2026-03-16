@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json;
 
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.format.guesstype.TargetTabsEntities;
 
 
@@ -42,7 +41,10 @@ public class SinkJsonFormatFactory extends SourceJsonFormatFactory {
         throw new UnsupportedOperationException("sink end not supported");
     }
 
-    @TISExtension
+    /**
+     * flink-cdc pipeline sink 不支持这种类型
+     */
+    //@TISExtension
     public static final class SinkDescriptor extends SourceDescriptor {
         public SinkDescriptor() {
             super();

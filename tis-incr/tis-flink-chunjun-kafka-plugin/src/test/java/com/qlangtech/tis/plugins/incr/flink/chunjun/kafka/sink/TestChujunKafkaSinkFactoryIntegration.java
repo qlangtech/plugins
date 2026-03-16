@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink;
 
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunFlinkSinkExecutor;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -30,6 +29,7 @@ import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaPlaintext;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import org.jetbrains.annotations.NotNull;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestChunjunFlinkSinkE
 
     @BeforeClass
     public static void initializeKafka() throws Exception {
-        kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.0"));
+        kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.3.0"));
         kafka.start();
     }
 
@@ -78,6 +78,10 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestChunjunFlinkSinkE
 
     @Override
     protected DataxWriter createDataXWriter() {
+        return createDataXKafkaWriter();
+    }
+
+    public static @NotNull DataXKafkaWriter createDataXKafkaWriter() {
         DataXKafkaWriter writer = new DataXKafkaWriter();
 
 //        final ObjectNode stubProtocolConfig = mapper.createObjectNode();

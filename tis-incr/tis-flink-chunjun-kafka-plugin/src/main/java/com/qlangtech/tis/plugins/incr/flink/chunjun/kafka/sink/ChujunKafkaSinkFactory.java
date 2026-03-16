@@ -41,7 +41,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -105,7 +104,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         CreateChunjunSinkFunctionResult sinkFuncRef = new CreateChunjunSinkFunctionResult();
         sinkFuncRef.setPrimaryKeys(selectedTab.getPrimaryKeys());
         KafkaSelectedTab kfkTable = (KafkaSelectedTab) dataxProcessor.getReader(null).getSelectedTab(selectedTab.getFrom());// selectedTab.getSourceTab();
-      //  ISelectedTab filledColsSelectedTab = ;
+        //  ISelectedTab filledColsSelectedTab = ;
         DataXKafkaWriter dataXWriter = (DataXKafkaWriter) dataxProcessor.getWriter(null);
 
         KafkaConf kafkaConf = new KafkaConf();
@@ -262,8 +261,10 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         return new CompileAndPackage(Sets.newHashSet(ChujunKafkaSinkFactory.class));
     }
 
-
-    @TISExtension
+    /**
+     * 废弃了
+     */
+    // @TISExtension
     public static class DefaultDesc extends BasicChunjunSinkDescriptor {
         @Override
         protected EndType getTargetType() {

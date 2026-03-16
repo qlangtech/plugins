@@ -111,6 +111,12 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
         return false;
     }
 
+    @SuppressWarnings("all")
+    public final org.apache.flink.configuration.Configuration createFlinkCfg() {
+        BasicFormatDescriptor desc =  this.getDescriptor();
+        return desc.options.createFlinkCfg(this);
+    }
+
     @Override
     public final void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         this.timestampOption = null;
@@ -204,13 +210,13 @@ public abstract class FormatFactory implements Describable<FormatFactory>, IGues
     public abstract EncodingFormat<SerializationSchema<RowData>> createEncodingFormat(final String targetTabName);
 
     @Override
-    public final Descriptor<FormatFactory> getDescriptor() {
+    public final BasicFormatDescriptor getDescriptor() {
         Descriptor<FormatFactory> desc = Describable.super.getDescriptor();
         if (!BasicFormatDescriptor.class.isAssignableFrom(desc.getClass())) {
             throw new IllegalStateException("class:" + desc.getClass()
                     + " must extend from " + BasicFormatDescriptor.class.getSimpleName());
         }
-        return desc;
+        return (BasicFormatDescriptor)desc;
     }
 
     /**

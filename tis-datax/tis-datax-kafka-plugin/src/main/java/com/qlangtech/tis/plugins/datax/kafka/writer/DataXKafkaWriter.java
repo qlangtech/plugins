@@ -19,7 +19,9 @@
 package com.qlangtech.tis.plugins.datax.kafka.writer;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.core.job.ISourceTable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -33,8 +35,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
+import com.qlangtech.tis.plugin.datax.common.impl.NoneCreateTable;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
+import com.qlangtech.tis.plugins.incr.flink.cdc.pipeline.ICDCPipelineTableOptionsCreator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -51,17 +57,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/datastream/kafka/ <br/>
  * https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/destination-kafka/src/main/resources/spec.json <br/>
  */
-public class DataXKafkaWriter extends DataxWriter {
+public class DataXKafkaWriter extends DataxWriter implements IInitWriterTableExecutor, ICDCPipelineTableOptionsCreator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DataXKafkaWriter.class);
 
@@ -138,6 +146,7 @@ public class DataXKafkaWriter extends DataxWriter {
     @FormField(ordinal = 22, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer}, advance = true)
     public Integer receiveBufferBytes;
 
+
     @Override
     public void startScanDependency() {
 
@@ -186,12 +195,35 @@ public class DataXKafkaWriter extends DataxWriter {
 //                .put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class.getName())//
                 .put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName())//   .StringSerializer.class.getName())
                 .put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName())// JsonSerializer.class.getName())
+//                .put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.flink.kafka.shaded.org.apache.kafka.common.serialization.ByteArraySerializer")//   .StringSerializer.class.getName())
+//                .put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.flink.kafka.shaded.org.apache.kafka.common.serialization.ByteArraySerializer")//
                 .build();
         return props.entrySet().stream()
                 .filter(entry -> entry.getValue() != null && StringUtils.isNotBlank(entry.getValue().toString()))
-                .collect(Collectors.toMap((e) -> e.getKey(), (e) -> String.valueOf(e.getValue())));
+                .collect(Collectors.toMap(Map.Entry::getKey, (e) -> String.valueOf(e.getValue())));
     }
 
+//    @Override
+//    public EntityName parseEntity(ISelectedTab tab) {
+//        return EntityName.create(IEndTypeGetter.EndType.Kafka.getVal(), tab.getName());
+//    }
+
+    @Override
+    public AutoCreateTable getAutoCreateTableCanNotBeNull() {
+        return new NoneCreateTable();
+    }
+
+    @Override
+    public void initWriterTable(ISourceTable sourceTable, String sinkTargetTabName, List<String> jdbcUrls) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Function<SelectedTab, Map<String, String>> createTabOpts() {
+        return (tab) -> {
+            return Maps.newHashMap();
+        };
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {

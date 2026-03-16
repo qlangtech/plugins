@@ -63,7 +63,7 @@
         <module>tis-e2e</module>
         <module>tis-kerberos-plugin</module>
 
-        <module>tis-powerjob-common-plugin</module>
+<!--        <module>tis-powerjob-common-plugin</module>-->
 
         <module>tis-transformer</module>
 <!--        <module>tis-datax/tis-datax-dolphinscheduler-plugin</module>-->

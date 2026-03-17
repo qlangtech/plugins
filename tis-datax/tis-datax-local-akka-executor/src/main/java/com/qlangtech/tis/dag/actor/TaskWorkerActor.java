@@ -20,7 +20,7 @@ import com.qlangtech.tis.datax.powerjob.SplitTabSync;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-import com.qlangtech.tis.powerjob.TriggersConfig;
+//import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.powerjob.model.InstanceStatus;
 import com.qlangtech.tis.powerjob.model.PEWorkflowDAG;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -250,7 +250,7 @@ public class TaskWorkerActor extends AbstractActorWithStash {
         logger.info("Executing DataX job: nodeName={}, workflowContext={}",
                 node.getNodeName(), msg.getWorkflowContext());
         AbstractExecContext execContext = TaskExecutionMessage.deserializeInstanceParams(
-                TriggersConfig.create(msg.getDataXName()) //
+                (msg.getDataXName()) //
                 , msg //
                 , (ctx) -> {
                 } //

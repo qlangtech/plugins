@@ -6,7 +6,6 @@ import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
-import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
@@ -20,7 +19,6 @@ import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
-import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
@@ -194,7 +192,7 @@ public class DataXJoinProcessExecutor {
     private static AbstractExecContext createDftExecContent(CommandLine line) {
         JSONObject instanceParams = deserializeInstanceParams(line);
 
-        TriggersConfig triggersConfig = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
+      //  TriggersConfig triggersConfig = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
         // FIXME shall initialize execContext instance
         AbstractExecContext execContext = null; //IExecChainContext.deserializeInstanceParams(triggersConfig, instanceParams);
 //        execContext.setResType(StoreResourceType.DataFlow);

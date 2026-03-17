@@ -18,12 +18,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.job.ITISPowerJob;
-import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistoryCriteria;
 import org.slf4j.Logger;
@@ -58,29 +55,30 @@ public abstract class WorkFlowBuildHistoryPayload {
 
     public Long getSPIWorkflowInstanceId() {
 
-        if (this.spiWorkflowInstanceId == null) {
-            WorkFlowBuildHistory wfBuildHistory
-                    = daoContext.getTaskBuildHistoryDAO().selectByPrimaryKey(tisTaskId);
-            this.spiWorkflowInstanceId = ITISPowerJob.getPowerJobWorkflowInstanceId(wfBuildHistory, true);
-        }
-        return this.spiWorkflowInstanceId;
+        throw new UnsupportedOperationException();
+//        if (this.spiWorkflowInstanceId == null) {
+//            WorkFlowBuildHistory wfBuildHistory
+//                    = daoContext.getTaskBuildHistoryDAO().selectByPrimaryKey(tisTaskId);
+//            this.spiWorkflowInstanceId = ITISPowerJob.getPowerJobWorkflowInstanceId(wfBuildHistory, true);
+//        }
+//        return this.spiWorkflowInstanceId;
     }
 
-    public void setSPIWorkflowInstanceId(Long workflowInstanceId) {
-        // logger.info("create workflow instanceId:{}", workflowInstanceId);
-        // 需要将task执行历史记录更新，将instanceId 绑定到历史记录上去，以便后续最终
-        WorkFlowBuildHistory record = new WorkFlowBuildHistory();
-        JSONObject wfHistory = new JSONObject();
-        wfHistory.put(ITISPowerJob.KEY_POWERJOB_WORKFLOW_INSTANCE_ID, workflowInstanceId);
-        record.setAsynSubTaskStatus(JsonUtil.toString(wfHistory));
-        WorkFlowBuildHistoryCriteria taskHistoryCriteria = new WorkFlowBuildHistoryCriteria();
-        taskHistoryCriteria.createCriteria().andIdEqualTo(tisTaskId);
-        if (daoContext.getTaskBuildHistoryDAO().updateByExampleSelective(record, taskHistoryCriteria) < 1) {
-            throw new IllegalStateException("update taskBuildHistory faild,taskId:" + tisTaskId
-                    + ",powerJob workflowInstanceId:" + workflowInstanceId);
-        }
-        this.spiWorkflowInstanceId = workflowInstanceId;
-    }
+//    public void setSPIWorkflowInstanceId(Long workflowInstanceId) {
+//        // logger.info("create workflow instanceId:{}", workflowInstanceId);
+//        // 需要将task执行历史记录更新，将instanceId 绑定到历史记录上去，以便后续最终
+//        WorkFlowBuildHistory record = new WorkFlowBuildHistory();
+//        JSONObject wfHistory = new JSONObject();
+//        wfHistory.put(ITISPowerJob.KEY_POWERJOB_WORKFLOW_INSTANCE_ID, workflowInstanceId);
+//        record.setAsynSubTaskStatus(JsonUtil.toString(wfHistory));
+//        WorkFlowBuildHistoryCriteria taskHistoryCriteria = new WorkFlowBuildHistoryCriteria();
+//        taskHistoryCriteria.createCriteria().andIdEqualTo(tisTaskId);
+//        if (daoContext.getTaskBuildHistoryDAO().updateByExampleSelective(record, taskHistoryCriteria) < 1) {
+//            throw new IllegalStateException("update taskBuildHistory faild,taskId:" + tisTaskId
+//                    + ",powerJob workflowInstanceId:" + workflowInstanceId);
+//        }
+//        this.spiWorkflowInstanceId = workflowInstanceId;
+//    }
 
     /**
      *

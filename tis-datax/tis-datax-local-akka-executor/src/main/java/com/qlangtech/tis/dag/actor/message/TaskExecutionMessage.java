@@ -11,7 +11,6 @@ import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
-import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.powerjob.model.PEWorkflowDAG;
 
 import java.util.HashMap;
@@ -32,13 +31,13 @@ public class TaskExecutionMessage extends AbstractTaskExecutionMessage {
 
     private static final long serialVersionUID = 1L;
 
-    public static AbstractExecContext deserializeInstanceParams(TriggersConfig triggerCfg, TaskExecutionMessage instanceParams,
+    public static AbstractExecContext deserializeInstanceParams(DataXName triggerCfg, TaskExecutionMessage instanceParams,
                                                                 Consumer<AbstractExecContext> execChainContextConsumer, Consumer<PluginAndCfgsSnapshot> cfgsSnapshotConsumer) {
         return TaskExecutionMessage.deserializeInstanceParams(triggerCfg, instanceParams, true,
                 execChainContextConsumer, cfgsSnapshotConsumer);
     }
 
-    public static AbstractExecContext deserializeInstanceParams(TriggersConfig triggerCfg, TaskExecutionMessage instanceParams) {
+    public static AbstractExecContext deserializeInstanceParams(DataXName triggerCfg, TaskExecutionMessage instanceParams) {
         return TaskExecutionMessage.deserializeInstanceParams(triggerCfg, instanceParams, false, (execChainContext) -> {
         }, (snapshot) -> {
             throw new UnsupportedOperationException("shall not be execute");
@@ -51,7 +50,7 @@ public class TaskExecutionMessage extends AbstractTaskExecutionMessage {
      * @param taskExec
      * @return
      */
-    static AbstractExecContext deserializeInstanceParams(TriggersConfig triggerCfg, TaskExecutionMessage taskExec,
+    static AbstractExecContext deserializeInstanceParams(DataXName triggerCfg, TaskExecutionMessage taskExec,
                                                          boolean resolveCfgsSnapshotConsumer //
             , Consumer<AbstractExecContext> execChainContextConsumer,
                                                          Consumer<PluginAndCfgsSnapshot> cfgsSnapshotConsumer) {
@@ -68,10 +67,10 @@ public class TaskExecutionMessage extends AbstractTaskExecutionMessage {
 
 
         AbstractExecContext execChainContext = null;
-        switch (triggerCfg.getResType()) {
+        switch (triggerCfg.getType()) {
             case DataFlow:
                 WorkflowExecContext wfContext = new WorkflowExecContext(0, triggerTimestamp);
-                wfContext.setWorkflowName(triggerCfg.getDataXName());
+                wfContext.setWorkflowName(triggerCfg.getPipelineName());
                 execChainContext = wfContext;
                 break;
             case DataApp:
@@ -79,7 +78,7 @@ public class TaskExecutionMessage extends AbstractTaskExecutionMessage {
                 execChainContext = new DataXPipelineExecContext(appName.getPipelineName(), triggerTimestamp);
                 break;
             default:
-                throw new IllegalStateException("illegal resType:" + triggerCfg.getResType());
+                throw new IllegalStateException("illegal resType:" + triggerCfg.getType());
         }
 
 
@@ -99,7 +98,7 @@ public class TaskExecutionMessage extends AbstractTaskExecutionMessage {
             instanceParams.put(PluginAndCfgsSnapshotUtils.KEY_PLUGIN_CFGS_METAS, taskExec.getPluginCfgsMetas());
             instanceParams.put(JobParams.KEY_COLLECTION, execChainContext.getDataXName().getPipelineName());
 
-            cfgsSnapshotConsumer.accept(resolveCfgsSnapshotConsumer(triggerCfg.getResType(), instanceParams));
+            cfgsSnapshotConsumer.accept(resolveCfgsSnapshotConsumer(triggerCfg.getType(), instanceParams));
         }
 
         return execChainContext;

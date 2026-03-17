@@ -20,6 +20,7 @@ package com.qlangtech.tis.datax.executor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.cloud.ITISCoordinator;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
@@ -32,7 +33,6 @@ import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.job.common.JobParams;
-import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.rpc.grpc.log.ILoggerAppenderClient.LogLevel;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
@@ -112,7 +112,7 @@ public class BasicTISTableJoinProcessor {
     private AbstractExecContext createDftExecContent(ITaskExecutorContext context) {
         JSONObject instanceParams = (context.getInstanceParams());
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
-        TriggersConfig triggerCfg = new TriggersConfig(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
+        DataXName triggerCfg = new DataXName(instanceParams.getString(JobParams.KEY_COLLECTION), StoreResourceType.DataFlow);
         // FIXME shall initialize execContext
         AbstractExecContext execContext = null;
 //                IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {

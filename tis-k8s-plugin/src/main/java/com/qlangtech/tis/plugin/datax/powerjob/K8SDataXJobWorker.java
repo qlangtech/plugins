@@ -33,7 +33,6 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
-import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.JobResName;
 import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
@@ -41,11 +40,8 @@ import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
-import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.lang.TisException.ErrorCode;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -106,7 +102,7 @@ import java.util.regex.Pattern;
  * @create: 2021-04-23 18:16
  **/
 @Public
-public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, ILaunchingOrchestrate {
+public class K8SDataXJobWorker extends DataXJobWorker implements ILaunchingOrchestrate {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);
 
@@ -235,10 +231,10 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
 
     public static final JobResName[] powerJobRes //
             = new JobResName[]{
-          //  K8S_DATAX_POWERJOB_MYSQL,
-             K8S_DATAX_POWERJOB_SERVER
-           // , K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
-           //, K8S_DATAX_POWERJOB_WORKER
+            //  K8S_DATAX_POWERJOB_MYSQL,
+            K8S_DATAX_POWERJOB_SERVER
+            // , K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
+            //, K8S_DATAX_POWERJOB_WORKER
     };
 
 
@@ -263,17 +259,17 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
     private transient CoreV1Api apiClient;
 
 
-    public String getPowerJobMasterGateway() {
-        try {
-            final String linkHost = this.serverPortExport
-                    .getClusterHost(this.getK8SApi(), this.getImage(), powerJobServiceResAndOwnerGetter.get());
-            return linkHost;
-        } catch (ServiceNotDefinedException e) {
-            //
-            throw throwPowerJobClusterLossOfContactException(Optional.of(e));
-            // throw new RuntimeException(e);
-        }
-    }
+//    public String getPowerJobMasterGateway() {
+//        try {
+//            final String linkHost = this.serverPortExport
+//                    .getClusterHost(this.getK8SApi(), this.getImage(), powerJobServiceResAndOwnerGetter.get());
+//            return linkHost;
+//        } catch (ServiceNotDefinedException e) {
+//            //
+//            throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+//            // throw new RuntimeException(e);
+//        }
+//    }
 
     public CoreV1Api getK8SApi() {
         if (this.apiClient == null) {
@@ -289,21 +285,21 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
     //    public static String getDefaultZookeeperAddress() {
 //        return processDefaultHost(Config.getZKHost());
 //    }
-    private transient TISPowerJobClient powerJobClient;
-
-    @Override
-    public TISPowerJobClient getPowerJobClient() {
-        if (powerJobClient == null) {
-            try {
-                powerJobClient = TISPowerJobClient.create(
-                        this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
-                        , this.appName, this.password);
-            } catch (ServiceNotDefinedException e) {
-                throw throwPowerJobClusterLossOfContactException(Optional.of(e));
-            }
-        }
-        return powerJobClient;
-    }
+//    private transient TISPowerJobClient powerJobClient;
+//
+//    @Override
+//    public TISPowerJobClient getPowerJobClient() {
+//        if (powerJobClient == null) {
+//            try {
+//                powerJobClient = TISPowerJobClient.create(
+//                        this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
+//                        , this.appName, this.password);
+//            } catch (ServiceNotDefinedException e) {
+//                throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+//            }
+//        }
+//        return powerJobClient;
+//    }
 
     @Override
     public Map<String, Object> getPayloadInfo() {
@@ -316,8 +312,8 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
             // throwPowerJobClusterLossOfContactException();
             return payloads;
         } catch (ServiceNotDefinedException e) {
-            // throw new RuntimeException(e);
-            throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+            throw new RuntimeException(e);
+            // throw throwPowerJobClusterLossOfContactException(Optional.of(e));
         }
     }
 
@@ -590,8 +586,8 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
         K8SController k8SController = getK8SController();
         RcDeployment powerjobServer = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_SERVER);
         if (powerjobServer == null) {
-            // throw TisException.create("the powerJob has been loss of communication");
-            throw throwPowerJobClusterLossOfContactException(Optional.empty());
+            throw TisException.create("the powerJob has been loss of communication");
+            // throw throwPowerJobClusterLossOfContactException(Optional.empty());
         }
         powerjobServer.setReplicaScalable(false);
 
@@ -612,12 +608,12 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
         // return getK8SController().getRCDeployment(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
     }
 
-    private static TisException throwPowerJobClusterLossOfContactException(Optional<ServiceNotDefinedException> e) {
-        return TisException.create(
-                ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
-                        , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
-                , e.map((except) -> except.getMessage()).orElse("the powerJob has been loss of communication"));
-    }
+//    private static TisException throwPowerJobClusterLossOfContactException(Optional<ServiceNotDefinedException> e) {
+//        return TisException.create(
+//                ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
+//                        , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
+//                , e.map((except) -> except.getMessage()).orElse("the powerJob has been loss of communication"));
+//    }
 
     @Override
     public WatchPodLog listPodAndWatchLog(String podName, ILogListener listener) {
@@ -750,8 +746,6 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
 //    protected K8SDataXPowerJobWorker getPowerJobWorker() {
 //        return K8SUtils.getK8SDataXPowerJobWorker();
 //    }
-
-
     public NamespacedEventCallCriteria launchPowerjobServer() throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
 
@@ -804,7 +798,7 @@ public class K8SDataXJobWorker extends DataXJobWorker implements ITISPowerJob, I
 //            }
             // --spring.datasource.core.jdbc-url=
             // --oms.transporter.active.protocols=http
-           // envVar.setValue(" --oms.mongodb.enable=false " + coreJbdcParams);
+            // envVar.setValue(" --oms.mongodb.enable=false " + coreJbdcParams);
             envs.add(envVar);
 
 

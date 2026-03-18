@@ -3,7 +3,7 @@ package com.qlangtech.tis.datax.powerjob;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.exec.AbstractExecContext;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.slf4j.Logger;
@@ -34,33 +34,32 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
     }
 
 
-    public void synchronizTpisAndConfs(AbstractExecContext execContext, PluginAndCfgSnapshotLocalCache snapshotLocalCache) {
+    public void synchronizTpisAndConfs(//AbstractExecContext execContext
+                                       Integer taskId, DataXName dataXName, PluginAndCfgSnapshotLocalCache snapshotLocalCache) {
         try {
             synchronized (processTaskIds) {
                 final long current = System.currentTimeMillis();
 
-                processTaskIds.compute(execContext.getTaskId(), (tskId, oldVal) -> {
+                processTaskIds.compute(taskId, (tskId, oldVal) -> {
 
                     if (oldVal == null || (current - oldVal) > processTaskIdsExpirTime) {
                         try {
                             logger.info("taskId:{},resName:{} execute plugin and config synchronize to local"
-                                    , execContext.getTaskId(), execContext.identityValue());
+                                    , taskId, dataXName);
                             TargetResName resName = null;
-                            switch (execContext.getResType()) {
+                            switch (dataXName.getType()) {
                                 case DataApp:
-                                    resName = new TargetResName(execContext.getIndexName());
-                                    break;
                                 case DataFlow:
-                                    resName = new TargetResName(execContext.getWorkflowName());
+                                    resName = new TargetResName(dataXName.getPipelineName());
                                     break;
                                 default:
-                                    throw new IllegalStateException("illegal type:" + execContext.getResType());
+                                    throw new IllegalStateException("illegal type:" + dataXName.getType());
                             }
                             PluginAndCfgsSnapshot localSnapshot =
-                                    PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(execContext.getResType(), resName
+                                    PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(dataXName.getType(), resName
                                             , Collections.emptySet());
 
-                            snapshotLocalCache.processLocalCache(new TargetResName(execContext.identityValue()), (cacheSnaphsot) -> {
+                            snapshotLocalCache.processLocalCache(resName, (cacheSnaphsot) -> {
                                 try {
 
                                     Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be null") //
@@ -82,13 +81,13 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
                                  * 	at java.base/java.util.concurrent.ConcurrentHashMap.remove(ConcurrentHashMap.java:1102)
                                  * 	at com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer.lambda$synchronizTpisAndConfs$1(CfgsSnapshotConsumer.java:79)
                                  */
-                              //   processTaskIds.remove(execContext.getTaskId());
+                                //   processTaskIds.remove(execContext.getTaskId());
                             }
                         }
                         return current;
                     } else {
                         logger.info("taskId:{},resName:{} SKIP plugin and config synchronize to local"
-                                , execContext.getTaskId(), execContext.getIndexName());
+                                , taskId, dataXName);
                         return oldVal;
                     }
 

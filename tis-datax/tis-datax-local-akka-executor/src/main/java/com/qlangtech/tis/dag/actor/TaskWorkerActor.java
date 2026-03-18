@@ -14,22 +14,30 @@ import com.qlangtech.tis.dag.actor.message.NodeCompleted;
 import com.qlangtech.tis.dag.actor.message.TaskExecutionMessage;
 import com.qlangtech.tis.dag.actor.message.TaskStarted;
 import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.RpcUtils;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
+import com.qlangtech.tis.datax.powerjob.CfgsSnapshotConsumer;
 import com.qlangtech.tis.datax.powerjob.SplitTabSync;
 import com.qlangtech.tis.exec.AbstractExecContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-//import com.qlangtech.tis.powerjob.TriggersConfig;
 import com.qlangtech.tis.powerjob.model.InstanceStatus;
 import com.qlangtech.tis.powerjob.model.PEWorkflowDAG;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -61,7 +69,7 @@ import static com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor.report
 public class TaskWorkerActor extends AbstractActorWithStash {
 
     private static final Logger logger = LoggerFactory.getLogger(TaskWorkerActor.class);
-
+    public transient static final PluginAndCfgSnapshotLocalCache cacheSnaphsot = new PluginAndCfgSnapshotLocalCache();
     /**
      * Current executing taskId (null when idle)
      */
@@ -193,7 +201,23 @@ public class TaskWorkerActor extends AbstractActorWithStash {
         // Report the actual worker cluster address back to NodeDispatcherActor
         String workerAddr = String.valueOf(Cluster.get(getContext().getSystem()).selfAddress());
         replyTo.tell(new TaskStarted(msg.getTaskId(), node.getNodeId(), workerAddr), getSelf());
-
+        final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
+        String pluginCfgsMetas = msg.getPluginCfgsMetas();
+        if (StringUtils.isEmpty(pluginCfgsMetas)) {
+            throw new IllegalStateException("property:"
+                    + PluginAndCfgsSnapshotUtils.KEY_PLUGIN_CFGS_METAS + " of instanceParams can not be null");
+        }
+        final Base64.Decoder base64 = Base64.getDecoder();
+        try (InputStream manifestJar = new ByteArrayInputStream(base64.decode(pluginCfgsMetas))) {
+            DataXName dataXName = msg.getDataXName();
+            snapshotConsumer.accept(PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(dataXName.getPipelineName(), dataXName.getType(), manifestJar, false));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        /**
+         * 同步必要的配置及tpi资源到本地
+         */
+        snapshotConsumer.synchronizTpisAndConfs(this.currentTaskId, msg.getDataXName(), cacheSnaphsot);
         // Switch to busy behavior so CancelTask can be processed
         getContext().become(busy(replyTo));
 

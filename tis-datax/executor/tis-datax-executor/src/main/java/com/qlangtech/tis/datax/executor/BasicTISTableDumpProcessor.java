@@ -128,7 +128,48 @@ public class BasicTISTableDumpProcessor {
 //        throw new UnsupportedOperationException();
 //    }
 
-
+//    private static Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>  //
+//    createExecContext(ITaskExecutorContext context, Integer taskId, JSONObject instanceParams) {
+//        if (taskId == null) {
+//            throw new IllegalArgumentException("param taskId can not be null");
+//        }
+//
+//        SelectedTabTriggersConfig triggerCfg = getTriggerCfg(context);
+//
+//        final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
+//        AbstractExecContext execContext = IExecChainContext.deserializeInstanceParams(triggerCfg, instanceParams, (ctx) -> {
+//            ctx.setLatestPhaseStatusCollection(cacheSnaphsot.getPreviousStatus(ctx.getTaskId(), () -> {
+//                Integer prevTaskId = instanceParams.getInteger(JobParams.KEY_PREVIOUS_TASK_ID);
+//                if (prevTaskId == null) {
+//                    return null;
+//                }
+//                return getRpcServiceReference().loadPhaseStatusFromLatest(prevTaskId);
+//            }));
+//
+//        }, snapshotConsumer);
+//
+//        execContext.setSpecifiedLocalLoggerPath(context.getSpecifiedLocalLoggerPath());
+//        execContext.setDisableGrpcRemoteServerConnect(context.isDisableGrpcRemoteServerConnect());
+//        //  execContext.setAttribute(JobCommon.KEY_TASK_ID, Objects.requireNonNull(taskId, "taskId can not be null"));
+//
+//
+//        /**
+//         * 同步必要的配置及tpi资源到本地
+//         */
+//        snapshotConsumer.synchronizTpisAndConfs(execContext, cacheSnaphsot);
+//
+//        Long triggerTimestamp = execContext.getPartitionTimestampWithMillis();// instanceParams.getLong(DataxUtils
+//        System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(triggerTimestamp));
+//        for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
+//            tskMsg.setExecTimeStamp(triggerTimestamp);
+//        }
+//        triggerCfg.getSplitTabsCfg().forEach((tskMsg) -> {
+//            tskMsg.setJobId(taskId);
+//        });
+//
+//
+//        return Triple.of(execContext, snapshotConsumer, triggerCfg);
+//    }
 
     public static DataxPrePostConsumer createPrePostConsumer() {
         DataXJobRunEnvironmentParamsSetter.ExtraJavaSystemPramsSuppiler systemPramsSuppiler = createSysPramsSuppiler();

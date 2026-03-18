@@ -120,7 +120,7 @@ public class BasicTISTableJoinProcessor {
 //        }, snapshotConsumer);
 
 
-        snapshotConsumer.synchronizTpisAndConfs(execContext, BasicTISTableDumpProcessor.cacheSnaphsot);
+       // snapshotConsumer.synchronizTpisAndConfs(execContext, BasicTISTableDumpProcessor.cacheSnaphsot);
 
         IDataxProcessor dataxProc = execContext.getProcessor();
         IPartionableWarehouse partionableWarehouse = IDataxWriter.getPartionableWarehouse(dataxProc.getWriter(null));

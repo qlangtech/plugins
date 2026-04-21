@@ -161,7 +161,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
             pluginCtx = IPluginContext.namedContext(new DataXName(pipeName, resType));
         }
         Key transformerRuleKey = TransformerRuleKey.createStoreKey(pluginCtx, resType, pipeName, "dump");
-        XmlFile sotre = transformerRuleKey.getSotreFile();
+        XmlFile sotre = transformerRuleKey.getStoreXmlFile();
         File parent = sotre.getFile().getParentFile();
         if (!parent.exists()) {
             // return Collections.emptySet();

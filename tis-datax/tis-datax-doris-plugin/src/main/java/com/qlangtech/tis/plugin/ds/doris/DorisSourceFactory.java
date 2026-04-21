@@ -33,12 +33,14 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceCatalog;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataType.DefaultTypeVisitor;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -84,8 +86,16 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         }
     }
 
+    @FormField(ordinal = 4, validate = {Validator.require})
+    public DataSourceCatalog catalog;
+
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
+
+    @Override
+    protected TableInDB createTableInDB() {
+        return TableInDB.create(this, (tab) -> catalog.getFullTableName(this.dbName, tab));
+    }
 
     @Override
     public SplitTableStrategy getSplitTableStrategy() {
@@ -112,7 +122,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         jdbcUrl.append("jdbc:mysql://").append(ip).append(":").append(this.port);
 
         if (StringUtils.isNotEmpty(dbName)) {
-            jdbcUrl.append("/").append(dbName);
+            catalog.appendJdbcUrl(jdbcUrl.append("/"), dbName);
         }
         return jdbcUrl.toString();
     }
@@ -254,38 +264,38 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                         try {
                             Boolean success = HttpUtils.get(new URL(clusterInfoApiUrl.toString()) //
                                     , new PostFormStreamProcess<Boolean>( //
-                                            ConfigFileContext.setAuthorizationHeader( dorisDS.getUserName(), dorisDS.getPassword())) { //
-                                @Override
-                                public ContentType getContentType() {
-                                    return ContentType.JSON;
-                                }
-
-                                @Override
-                                public Duration getSocketReadTimeout() {
-                                    return socketReadTimeout;
-                                }
-                                
-                                @Override
-                                public Boolean p(int status, InputStream stream, Map<String, List<String>> headerFields) {
-                                    try {
-                                        JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
-                                        final String msg = result.getString("msg");
-                                        if (!"success".equals(msg)) {
-                                            msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, msg);
-                                            return false;
+                                            ConfigFileContext.setAuthorizationHeader(dorisDS.getUserName(), dorisDS.getPassword())) { //
+                                        @Override
+                                        public ContentType getContentType() {
+                                            return ContentType.JSON;
                                         }
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                    return true;
-                                }
 
-                                @Override
-                                public void error(int status, InputStream errstream, IOException e) throws Exception {
-                                    logger.warn(e.getMessage(), e);
-                                    msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, IOUtils.toString(errstream, TisUTF8.get()));
-                                }
-                            });
+                                        @Override
+                                        public Duration getSocketReadTimeout() {
+                                            return socketReadTimeout;
+                                        }
+
+                                        @Override
+                                        public Boolean p(int status, InputStream stream, Map<String, List<String>> headerFields) {
+                                            try {
+                                                JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
+                                                final String msg = result.getString("msg");
+                                                if (!"success".equals(msg)) {
+                                                    msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, msg);
+                                                    return false;
+                                                }
+                                            } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                            return true;
+                                        }
+
+                                        @Override
+                                        public void error(int status, InputStream errstream, IOException e) throws Exception {
+                                            logger.warn(e.getMessage(), e);
+                                            msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, IOUtils.toString(errstream, TisUTF8.get()));
+                                        }
+                                    });
                             if (success == null || !success) {
                                 break;
                             }

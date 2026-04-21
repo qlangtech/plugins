@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.impl.JoinerUDF;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -19,6 +20,7 @@ import java.util.Optional;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
+ * @see JoinerUDF
  */
 public class JoinerSelectDataSource extends OneStepOfMultiSteps implements Serializable {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})

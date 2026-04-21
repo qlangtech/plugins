@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.TestDorisSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
@@ -140,7 +141,7 @@ public class TestDataXDorisWriter extends TestCase {
         EasyMock.replay(dataxReader);
         DataXDorisWriter writer = new DataXDorisWriter();
 
-        DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
+        DescriptorsJSON descJson = new DefaultDescriptorsJSON(writer.getDescriptor());
 
         JsonUtil.assertJSONEqual(DataXDorisWriter.class, "doris-datax-writer-descriptor.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {

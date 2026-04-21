@@ -78,28 +78,28 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
      */
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String nodeDesc;
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public int port;
     // 数据库名称
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.user_name})
+    @FormField(ordinal = 7, prompt4llm = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.user_name})
     public String userName;
 
-    @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
+    @FormField(ordinal = 9, prompt4llm = true, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
 
 
     /**
      * 数据库编码
      */
-    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 15, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
     public String encode;
     /**
      * 附加参数
      */
-    @FormField(ordinal = 15, advance = true, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 17, advance = true, type = FormFieldType.INPUTTEXT)
     public String extraParams;
 
     public static <DS extends DataSourceFactory> DS getDs(String dbName) {
@@ -125,7 +125,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     @Override
     public SplitTableStrategy getSplitTableStrategy() {
-      throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override

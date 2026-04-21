@@ -7,6 +7,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.impl.JoinerUDF;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/13
+ * @see JoinerUDF
  */
 public class JoinerSelectTable extends OneStepOfMultiSteps implements Serializable {
 

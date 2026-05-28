@@ -84,6 +84,11 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implemen
         }
 
         @Override
+        public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
+            return Optional.empty();
+        }
+
+        @Override
         public String getDisplayName() {
             return "第三步";
         }
@@ -93,9 +98,9 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implemen
             return "选择匹配条件和Join表输出列";
         }
 
-        @Override
-        public Optional<BasicDesc> nextPluginDesc() {
-            return Optional.empty();
-        }
+//        @Override
+//        public Optional<BasicDesc> nextPluginDesc() {
+//            return Optional.empty();
+//        }
     }
 }

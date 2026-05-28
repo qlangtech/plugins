@@ -18,11 +18,18 @@
 
 package com.qlangtech.tis.plugin.ds.doris;
 
+import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.impl.CatalogSpecific;
 import junit.framework.TestCase;
+
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -39,7 +46,22 @@ public class TestDorisSourceFactory extends TestCase {
         CenterResource.setNotFetchFromCenterRepository();
         HttpUtils.addMockGlobalParametersConfig();
     }
-
+    public void testGetValidatorDisableRequireValidatorByJsonConfig() {
+        Map<String, /*** fieldname */IPropertyType> props
+                = PropertyType.buildPropertyTypes(Optional.empty(), DorisSourceFactory.class);
+        PropertyType passwordPropery = (PropertyType) props.get("password");
+        Assert.assertNotNull(passwordPropery);
+        Validator[] validators = passwordPropery.getValidator();
+        // contain 2 validator 'require' and 'none_blank'
+        Assert.assertEquals(1, validators.length);
+        boolean containRequire = false;
+        for (Validator v : validators) {
+            if (v == Validator.require) {
+                containRequire = true;
+            }
+        }
+        Assert.assertFalse("shall not containRequire", containRequire);
+    }
 
     public void testDataDumpers() throws Exception {
         DorisSourceFactory dataSourceFactory = getDorisSourceFactory();

@@ -74,7 +74,7 @@ public class JoinerSelectTable extends OneStepOfMultiSteps implements Serializab
         }
 
         @Override
-        public Optional<BasicDesc> nextPluginDesc() {
+        public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
             return Optional.of(new JoinerSetMatchConditionAndCols.Desc());
         }
 

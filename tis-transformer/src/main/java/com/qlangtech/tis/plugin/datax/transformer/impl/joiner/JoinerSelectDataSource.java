@@ -54,8 +54,9 @@ public class JoinerSelectDataSource extends OneStepOfMultiSteps implements Seria
             return Step.Step1;
         }
 
+
         @Override
-        public Optional<BasicDesc> nextPluginDesc() {
+        public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
             return Optional.of(new JoinerSelectTable.Desc());
         }
     }

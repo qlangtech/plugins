@@ -1,0 +1,260 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.qlangtech.tis.plugin.ontology;
+
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.annotation.JSONType;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.SetPluginsResult;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.IMultiElement;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.OntologyPropertyJsonSerializer;
+import com.qlangtech.tis.plugin.ontology.impl.typeref.DefaultPropertyTypeRef;
+import com.qlangtech.tis.plugin.ontology.impl.typeref.SharedPropertyTypeRef;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.HeteroEnum;
+import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.Selectable;
+import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.lang3.tuple.Triple;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+/**
+ *
+ * @author 百岁 (baisui@qlangtech.com)
+ * @date 2026/4/18
+ */
+@JSONType(serializer = OntologyPropertyJsonSerializer.class)
+public class OntologyProperty implements Describable<OntologyProperty>, IdentityName, IMultiElement {
+
+    public static final String KEY_ONTOLOGY_PROP = "ontology-property";
+    private static final String FIELD_NULLABLE = "nullable";
+
+
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.db_col_name})
+    public String name;
+
+    @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.none_blank})
+    public String description;
+
+    //    /**
+    //     * @see OntologyType
+    //     */
+    //    @JSONField(serialize = false)
+    //    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    //    public int type;
+
+    @JSONField(serialize = false)
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public OntologyPropertyTypeRef typeRef;
+
+
+    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean pk;
+
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean nullable;
+
+    /**
+     * ChatBI 语义角色 —— 子类对应 {@link SemanticRole} 中的一项，
+     * MeasureRole 还承载 derived property 配置。
+     */
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public PropertyRoleType roleType;
+
+    public SemanticRole getSemanticRole() {
+        return this.roleType == null ? SemanticRole.Unknown : this.roleType.kind();
+    }
+
+
+    @TISExtension
+    public static final HeteroEnum<OntologyProperty> ONTOLOGY_PROPERTY = new HeteroEnum<>(//
+            OntologyProperty.class, //
+            KEY_ONTOLOGY_PROP, // },
+            "本体对象属性", Selectable.Single, false) {
+        @SuppressWarnings("all")
+        @Override
+        public IPluginStore<OntologyProperty> getPluginStore(IPluginContext pluginContext,
+                                                             UploadPluginMeta pluginMeta) {
+
+            OntologyPluginMeta ontologyMeta = new OntologyPluginMeta(pluginMeta);
+            //            if (StringUtils.isEmpty(propName)) {
+            //                throw new IllegalStateException("param propName can not be null");
+            //            }
+            return new IPluginStore.AdapterPluginStore<>() {
+                @Override
+                public List<OntologyProperty> getPlugins() {
+                    return Collections.singletonList(this.getPlugin());
+                }
+
+                @Override
+                public SetPluginsResult setPlugins(IPluginContext pluginContext, Optional<Context> context,
+                                                   List<Descriptor.ParseDescribable<OntologyProperty>> dlist,
+                                                   boolean update) {
+                    getOntologyProperty((t) -> {
+                        OntologyProperty ontologyProp = t.getRight();
+                        for (Descriptor.ParseDescribable<OntologyProperty> plugin : dlist) {
+                            OntologyProperty property = plugin.getInstance();
+                            ontologyProp.copy(property);
+                            t.getLeft().setPlugins(pluginContext, context,
+                                    Collections.singletonList(new Descriptor.ParseDescribable<>(t.getMiddle())));
+                        }
+                    });
+                    return new SetPluginsResult(true, true);
+                }
+
+                @Override
+                public OntologyProperty getPlugin() {
+                    return getOntologyProperty((t) -> {
+                    });
+                }
+
+                private OntologyProperty getOntologyProperty(
+                        Consumer<Triple<IPluginStore<OntologyObjectType>,
+                                OntologyObjectType, OntologyProperty>> propConsumer) {
+                    final String propName = ontologyMeta.getObjectTypeProperty();
+                    IPluginStore<OntologyObjectType> pluginStore =
+                            Ontology.OntologyEnum.ObjectType.getPluginStore(ontologyMeta).unsaveCast();
+
+                    ;
+                    //  Ontology.ONTOLOGY.getPluginStore(pluginContext, pluginMeta).unsaveCast();
+                    OntologyObjectType objectType = OntologyObjectType.loadDetail(ontologyMeta.getDomain(),
+                            ontologyMeta.getObjectType());// pluginStore.getPlugin();
+                    for (OntologyProperty prop : objectType.getCols()) {
+                        if (propName.equals(prop.name)) {
+                            propConsumer.accept(Triple.of(pluginStore, objectType, prop));
+                            return prop;
+                        }
+                    }
+                    throw new IllegalStateException("colName:" + propName + " can not find relevant prop,in:"
+                            + objectType.getCols().stream().map(OntologyProperty::getName).collect(Collectors.joining(",")));
+
+                }
+            };
+        }
+    };
+
+    private void copy(OntologyProperty from) {
+
+        Descriptor<OntologyProperty> descriptor = from.getDescriptor();
+        descriptor.assign(this, from);
+
+    }
+
+
+    public OntologyProperty() {
+    }
+
+    public OntologyProperty(String name, boolean pk, boolean nullable, String description, OntologyType type) {
+        this.name = Objects.requireNonNull(name, "name must not be null");
+        this.typeRef = new DefaultPropertyTypeRef(Objects.requireNonNull(type, "type must not be null").getValue());
+        this.pk = pk;
+        this.nullable = nullable;
+        this.description = description;
+    }
+
+    @Override
+    public String identityValue() {
+        return this.getName();
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    public Boolean isPk() {
+        return pk;
+    }
+
+    public Boolean isNullable() {
+        return nullable;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public OntologyType parseOntologyType() {
+        return this.typeRef.getOntologyType();
+
+    }
+
+    public String getType() {
+        return parseOntologyType().getLiteria();
+    }
+
+    public String getTypeEnd() {
+        return this.parseOntologyType().getEndType().getVal();
+    }
+
+    public void setPk(boolean val) {
+        this.pk = val;
+    }
+
+    /**
+     * 将属性挂接到已经创建的sharedProperty上
+     *
+     * @param sharedProp
+     */
+    public void reference2SharedProp(OntologySharedProperty sharedProp) {
+        SharedPropertyTypeRef sharedPropertyRef = new SharedPropertyTypeRef();
+        sharedPropertyRef.sharedPropRef = Objects.requireNonNull(sharedProp).name;
+        this.typeRef = sharedPropertyRef;
+    }
+
+    public void reference2ValueType(OntologyValueType valueType) {
+        Objects.requireNonNull(this.typeRef
+                , "property:" + this.getName() + " relevant typeRef can not be null").valueType =
+                valueType.identityValue();
+    }
+
+    @TISExtension
+    public static class DftDesc extends Descriptor<OntologyProperty> {
+        public DftDesc() {
+            super();
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            OntologyProperty property = postFormVals.newInstance();
+            if (property.pk && property.isNullable()) {
+                msgHandler.addFieldError(context, FIELD_NULLABLE, "当为该属性为主键时，值不能为空");
+                return false;
+            }
+
+            return true;
+        }
+    }
+}

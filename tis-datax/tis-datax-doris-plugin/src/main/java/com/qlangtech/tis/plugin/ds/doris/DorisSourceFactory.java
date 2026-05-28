@@ -58,6 +58,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -89,7 +90,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     @FormField(ordinal = 4, validate = {Validator.require})
     public DataSourceCatalog catalog;
 
-    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
 
     @Override
@@ -122,7 +123,8 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         jdbcUrl.append("jdbc:mysql://").append(ip).append(":").append(this.port);
 
         if (StringUtils.isNotEmpty(dbName)) {
-            catalog.appendJdbcUrl(jdbcUrl.append("/"), dbName);
+            Objects.requireNonNull(catalog,"catalog can not be null")
+                    .appendJdbcUrl(jdbcUrl.append("/"), dbName);
         }
         return jdbcUrl.toString();
     }

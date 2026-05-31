@@ -18,13 +18,19 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.domain;
 
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyDomainManipulate;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.Optional;
 
@@ -33,7 +39,12 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/28
  */
-public class DefaultOntologyDomain extends OntologyDomain {
+public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved {
+
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+
+    }
 
     @TISExtension
     public static class DefaultDesc extends Descriptor<OntologyDomain> implements DescriptorUseableShortComment, IDescribableManipulate<OntologyDomainManipulate> {
@@ -43,7 +54,7 @@ public class DefaultOntologyDomain extends OntologyDomain {
 
         @Override
         public String getDisplayName() {
-            return "Ontology";
+            return StoreResourceType.Ontology.pluginDescName;
         }
 
         @Override
@@ -57,8 +68,13 @@ public class DefaultOntologyDomain extends OntologyDomain {
         }
 
         @Override
-        public Optional<IPluginStore<OntologyDomainManipulate>> getManipulateStore() {
-            return Optional.empty();
+        public final Optional<IPluginStore<OntologyDomainManipulate>> getManipulateStore() {
+            OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
+            KeyedPluginStore.Key<OntologyDomainManipulate> manipulateStoreKey
+                    = OntologyDomain.getStoreKey(pluginMeta.getDomain(), this.getManipulateExtendPoint());
+            return Optional.of(TIS.getPluginStore(manipulateStoreKey));
         }
     }
 }
+
+

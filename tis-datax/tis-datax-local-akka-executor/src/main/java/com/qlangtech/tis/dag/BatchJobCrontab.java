@@ -50,6 +50,8 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         return Descriptor.getManipulateMeta(false, this);
     }
 
+
+
     /**
      * //@see DAGWorkflowServlet
      *
@@ -110,6 +112,7 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             // return super.verify(msgHandler, context, postFormVals);
             //   CrontabTriggerStrategy describable = postFormVals.newInstance();
+
             Date nextFireTime = getNextFireTime(msgHandler, context, KEY_CRONTAB, postFormVals.getField(KEY_CRONTAB));
             if (nextFireTime != null) {
                 msgHandler.addActionMessage(context, "最近触发时间为：" + TimeFormat.yyyyMMdd_HH_mm_ss.format(nextFireTime.getTime()));

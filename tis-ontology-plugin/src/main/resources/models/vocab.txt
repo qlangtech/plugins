@@ -1,0 +1,1 @@
+/opt/misc/neo4j-demo/src/main/resources/models/vocab.txt

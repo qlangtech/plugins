@@ -101,7 +101,7 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
         return LLMProvider.load(Objects.requireNonNull(IPluginContext.getThreadLocalInstance()), llm);
     }
 
-    private static OntologyPluginMeta getOntologyPluginMeta(IPluginContext pluginContext, Optional<Context> context) {
+    public static OntologyPluginMeta getOntologyPluginMeta(IPluginContext pluginContext, Optional<Context> context) {
         final Context ctx = context.orElseThrow();
         ManipulateItemsProcessor itemsProcessor = ManipuldateUtils.instance(pluginContext, ctx,
                 null, (meta) -> {
@@ -117,13 +117,9 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
     }
 
     @Override
-    public void manipuldateProcess(IPluginContext pluginContext, UploadPluginMeta pluginMeta,
-                                   Optional<Context> context) {
+    protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context,
+                                           ManipulateItemsProcessor itemsProcessor) {
         final Context ctx = context.orElseThrow();
-        //        ManipulateItemsProcessor itemsProcessor = ManipuldateUtils.instance(pluginContext, ctx,
-        //                null, (meta) -> {
-        //                    UploadPluginMeta.putPluginMeta(ctx, meta);
-        //                });
 
         OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, context);
 
@@ -698,6 +694,9 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             Optional<OntologyProperty> pk = null;
             List<OntologyObjectType> lackPkObjTypes = Lists.newArrayList();
             for (OntologyObjectType objType : objectTypes) {
+                if (objType.hasDisablePK()) {
+                    continue;
+                }
                 pk = objType.getPk();
                 if (!pk.isPresent()) {
                     lackPkObjTypes.add(objType);

@@ -1,1 +1,157 @@
-/** * Licensed to the Apache Software Foundation (ASF) under one * or more contributor license agreements.  See the NOTICE file * distributed with this work for additional information * regarding copyright ownership.  The ASF licenses this file * to you under the Apache License, Version 2.0 (the * "License"); you may not use this file except in compliance * with the License.  You may obtain a copy of the License at * <p> * http://www.apache.org/licenses/LICENSE-2.0 * <p> * Unless required by applicable law or agreed to in writing, software * distributed under the License is distributed on an "AS IS" BASIS, * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. * See the License for the specific language governing permissions and * limitations under the License. */package com.qlangtech.tis.plugin.ontology.impl.valuetype;import com.alibaba.citrus.turbine.Context;import com.alibaba.fastjson.JSONObject;import com.google.common.collect.Lists;import com.qlangtech.tis.aiagent.llm.ITISJsonSchema;import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;import com.qlangtech.tis.extension.OneStepOfMultiSteps;import com.qlangtech.tis.extension.TISExtension;import com.qlangtech.tis.plugin.IEndTypeGetter;import com.qlangtech.tis.plugin.ontology.Ontology;import com.qlangtech.tis.plugin.ontology.OntologyType;import com.qlangtech.tis.plugin.ontology.OntologyValueType;import com.qlangtech.tis.util.DescriptorsJSONForAIPrompt;import com.qlangtech.tis.util.DescriptorsMeta;import com.qlangtech.tis.util.IPluginContext;import org.apache.commons.collections.CollectionUtils;import java.util.Collections;import java.util.List;import java.util.Map;import java.util.Objects;import java.util.Set;import java.util.stream.Collectors;import static com.qlangtech.tis.plugin.ontology.impl.valuetype.MetadataOfValueType.getReducedOntologyTypeWithValConstraint;/** * * @author 百岁 (baisui@qlangtech.com) * @date 2026/5/28 * @see ConstraintsOfValueType * @see MetadataOfValueType */public class DefaultOntologyValueType extends OntologyValueType {    @Override    public MetadataOfValueType getMeta() {        return (MetadataOfValueType) Objects.requireNonNull( //                stepsPlugin[OneStepOfMultiSteps.Step.Step1.getStepIndex()], "step1 can can not be null");    }    //    @Override    //    public String getDescription() {    //        return getMeta().description;    //    }    @TISExtension    public static class DefaultDesc extends Ontology.BasicDesc implements MultiStepsSupportHostDescriptor<OntologyValueType> {        public DefaultDesc() {            super();        }        @Override        public OntologyEnum getOntologyType() {            return OntologyEnum.ValueType;        }        @Override        public String getDisplayName() {            return "Value Type";        }        @Override        public Class<OntologyValueType> getHostClass() {            return OntologyValueType.class;        }        @Override        public EndType getEndType() {            return EndType.OntologyValueType;        }        @Override        public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {            return List.of(new MetadataOfValueType.Desc(), new ConstraintsOfValueType.Desc());        }        @Override        public List<List<ITISJsonSchema>> generateMultiStepsSchemaForAIPrompt() {            List<List<ITISJsonSchema>> result = Lists.newArrayList();            for (Map.Entry<IEndTypeGetter.EndType, Set<OntologyType>> entry :                    getReducedOntologyTypeWithValConstraint().entrySet()) {                if (CollectionUtils.isEmpty(entry.getValue())) {                    throw new IllegalStateException(entry.getKey() + " relevant vals can not be empty");                }                List<ITISJsonSchema> oneOfSteps = Lists.newArrayList();                DescriptorsJSONForAIPrompt<?> inner //                        = new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new MetadataOfValueType.Desc())                        , false,                        (builder, descriptor) -> {                        },                        (attr, addedProp) -> {                            if (org.apache.commons.lang3.StringUtils.equals(attr.getFieldKey(),                                    MetadataOfValueType.KEY_TYPE)) {                                addedProp.setValEnums(entry.getValue().stream().map(OntologyType::getValue).toArray());                                int[] index = new int[]{1};                                addedProp.addDescription("枚举说明："                                        + entry.getValue().stream().map((ot) -> (index[0]++) + ".\"" + ot.getValue() + "\":" + ot.getLiteria()).collect(Collectors.joining(",")));                                // skip                                return true;                            }                            return false;                        });                DescriptorsMeta innerMeta = inner.getDescriptorsJSON();                oneOfSteps.add(innerMeta.getFirstPluginJsonSchema());                IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();                // IPluginContext.setPluginContext(pluginContext);                Context context = pluginContext.getContext();                // pluginContext.setContext(context);                MetadataOfValueType metaOfValType = new MetadataOfValueType();                metaOfValType.type = entry.getValue().toArray(OntologyType[]::new)[0].getValue();                context.put(MetadataOfValueType.class.getName(), metaOfValType);                inner = new DescriptorsJSONForAIPrompt<>(                        Collections.singletonList(new ConstraintsOfValueType.Desc()), false);                innerMeta = inner.getDescriptorsJSON();                oneOfSteps.add(innerMeta.getFirstPluginJsonSchema());                result.add(oneOfSteps);            }            return result;        }        @Override        public void appendExternalProps(JSONObject multiStepsCfg) {        }        @Override        public String shortComment() {            return "定义属性的值类型（数据类型与约束规则）";        }    }}
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.qlangtech.tis.plugin.ontology.impl.valuetype;
+
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.aiagent.llm.ITISJsonSchema;
+import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;
+import com.qlangtech.tis.extension.OneStepOfMultiSteps;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
+import com.qlangtech.tis.plugin.ontology.OntologyValueType;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
+import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
+import com.qlangtech.tis.util.DescriptorsJSONForAIPrompt;
+import com.qlangtech.tis.util.DescriptorsMeta;
+import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.ontology.impl.valuetype.MetadataOfValueType.getReducedOntologyTypeWithValConstraint;
+
+/**
+ *
+ * @author 百岁 (baisui@qlangtech.com)
+ * @date 2026/5/28
+ * @see ConstraintsOfValueType
+ * @see MetadataOfValueType
+ */
+public class DefaultOntologyValueType extends OntologyValueType implements IPluginStore.AfterPluginSaved {
+
+    @Override
+    public MetadataOfValueType getMeta() {
+        return (MetadataOfValueType) Objects.requireNonNull(
+                stepsPlugin[OneStepOfMultiSteps.Step.Step1.getStepIndex()], "step1 can not be null");
+    }
+
+    public ConstraintsOfValueType getConstraintsStep() {
+        return (ConstraintsOfValueType) stepsPlugin[OneStepOfMultiSteps.Step.Step2.getStepIndex()];
+    }
+
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
+        final DefaultOntologyValueType self = this;
+        OntologySyncQueue.enqueue(() -> OntologyNeo4jSyncService.getInstance().syncValueType(domain, self));
+    }
+
+    @TISExtension
+    public static class DefaultDesc extends Ontology.BasicDesc implements MultiStepsSupportHostDescriptor<OntologyValueType> {
+        public DefaultDesc() {
+            super();
+        }
+
+        @Override
+        public OntologyEnum getOntologyType() {
+            return OntologyEnum.ValueType;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Value Type";
+        }
+
+        @Override
+        public Class<OntologyValueType> getHostClass() {
+            return OntologyValueType.class;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.OntologyValueType;
+        }
+
+        @Override
+        public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {
+            return List.of(new MetadataOfValueType.Desc(), new ConstraintsOfValueType.Desc());
+        }
+
+        @Override
+        public List<List<ITISJsonSchema>> generateMultiStepsSchemaForAIPrompt() {
+            List<List<ITISJsonSchema>> result = Lists.newArrayList();
+            for (Map.Entry<IEndTypeGetter.EndType, Set<OntologyType>> entry :
+                    getReducedOntologyTypeWithValConstraint().entrySet()) {
+                if (CollectionUtils.isEmpty(entry.getValue())) {
+                    throw new IllegalStateException(entry.getKey() + " relevant vals can not be empty");
+                }
+                List<ITISJsonSchema> oneOfSteps = Lists.newArrayList();
+                DescriptorsJSONForAIPrompt<?> inner = new DescriptorsJSONForAIPrompt<>(
+                        Collections.singletonList(new MetadataOfValueType.Desc()), false,
+                        (builder, descriptor) -> {},
+                        (attr, addedProp) -> {
+                            if (org.apache.commons.lang3.StringUtils.equals(attr.getFieldKey(), MetadataOfValueType.KEY_TYPE)) {
+                                addedProp.setValEnums(entry.getValue().stream().map(OntologyType::getValue).toArray());
+                                int[] index = new int[]{1};
+                                addedProp.addDescription("枚举说明："
+                                        + entry.getValue().stream()
+                                        .map((ot) -> (index[0]++) + ".\"" + ot.getValue() + "\":" + ot.getLiteria())
+                                        .collect(Collectors.joining(",")));
+                                return true;
+                            }
+                            return false;
+                        });
+                DescriptorsMeta innerMeta = inner.getDescriptorsJSON();
+                oneOfSteps.add(innerMeta.getFirstPluginJsonSchema());
+
+                IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();
+                Context context = pluginContext.getContext();
+                MetadataOfValueType metaOfValType = new MetadataOfValueType();
+                metaOfValType.type = entry.getValue().toArray(OntologyType[]::new)[0].getValue();
+                context.put(MetadataOfValueType.class.getName(), metaOfValType);
+                inner = new DescriptorsJSONForAIPrompt<>(
+                        Collections.singletonList(new ConstraintsOfValueType.Desc()), false);
+                innerMeta = inner.getDescriptorsJSON();
+                oneOfSteps.add(innerMeta.getFirstPluginJsonSchema());
+                result.add(oneOfSteps);
+            }
+            return result;
+        }
+
+        @Override
+        public void appendExternalProps(JSONObject multiStepsCfg) {
+        }
+
+        @Override
+        public String shortComment() {
+            return "定义属性的值类型（数据类型与约束规则）";
+        }
+    }
+}

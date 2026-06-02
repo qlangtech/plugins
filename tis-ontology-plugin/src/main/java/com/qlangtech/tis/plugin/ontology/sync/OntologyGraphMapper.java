@@ -102,6 +102,7 @@ public class OntologyGraphMapper {
         }
         p.put(ROLE, role);
         p.put(AGG, agg);
+        p.put("physicalExpr", nullSafe(prop.getPhysicalExpression()));
         p.put(EMBEDDING, embeddingService.embedAsList(EmbeddingTextBuilder.forProperty(otName, prop)));
         return p;
     }

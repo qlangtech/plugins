@@ -188,6 +188,7 @@ public class OntologyNeo4jSyncService {
                         pr.description = $description,
                         pr.role        = $role,
                         pr.agg         = $agg,
+                        pr.physicalExpr = $physicalExpr,
                         pr.embedding   = $embedding,
                         pr.updatedAt   = timestamp()
                     MERGE (ot)-[:HAS_PROPERTY {ordinal: $ordinal}]->(pr)

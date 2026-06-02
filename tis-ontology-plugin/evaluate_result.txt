@@ -1,0 +1,1989 @@
+1.nl:怎样获取Commercial区域库存量前十的产品及其当前库存量？------------------------------------------------
+1.expect sql------------------------------------------------
+WITH commercial_stores AS (
+    SELECT store_id
+    FROM toy_stores
+    WHERE store_location = 'Commercial'
+),
+
+-- 关联库存表并聚合库存量
+inventory_aggregation AS (
+    SELECT 
+        i.product_id,
+        SUM(CAST(i.stock_on_hand AS BIGINT)) AS total_stock
+    FROM toy_inventory i
+    INNER JOIN commercial_stores cs 
+        ON i.store_id = cs.store_id
+    GROUP BY i.product_id
+),
+
+-- 关联商品表获取商品信息
+product_details AS (
+    SELECT 
+        p.product_id,
+        p.product_name
+    FROM toy_products p
+)
+
+-- 最终查询并取TOP10
+SELECT 
+    pd.product_name AS `product_name`,
+    ia.total_stock AS `stock_on_hand`
+FROM inventory_aggregation ia
+INNER JOIN product_details pd 
+    ON ia.product_id = pd.product_id
+ORDER BY ia.total_stock DESC
+LIMIT 10
+1.generate------------------------------------------------
+SELECT 
+    p.Product_Name,
+    i.Stock_On_Hand
+FROM toy_inventory i
+JOIN toy_products p ON i.Product_ID = p.Product_ID
+JOIN toy_stores s ON i.Store_ID = s.Store_ID
+WHERE s.Store_Location = 'Commercial'
+ORDER BY i.Stock_On_Hand DESC
+LIMIT 10;
+1.------------------------------------------------
+
+2.nl:筛选销售额超过50美元的产品类别，并计算各类别销售额占总销售额的比例。------------------------------------------------
+2.expect sql------------------------------------------------
+WITH sales_detail AS (
+    SELECT
+        p.product_category,
+        CAST(TRIM(s.units) AS INT) * CAST(REPLACE(TRIM(p.product_price), '$', '') AS DECIMAL) AS sale_amount
+    FROM
+        toy_sales s
+    INNER JOIN
+        toy_products p
+    ON
+        s.product_id = p.product_id
+),
+category_sales AS (
+    SELECT
+        product_category,
+        SUM(sale_amount) AS category_total
+    FROM
+        sales_detail
+    GROUP BY
+        product_category
+),
+total_sales AS (
+    SELECT
+        SUM(category_total) AS grand_total
+    FROM
+        category_sales
+)
+SELECT
+    cs.product_category AS `product_category`,
+    (cs.category_total * 100.0 / (SELECT grand_total FROM total_sales)) AS `sales_percentage`
+FROM
+    category_sales cs
+WHERE
+    cs.category_total > 50
+2.generate------------------------------------------------
+WITH category_sales AS (
+  SELECT 
+    p.Product_Category,
+    SUM(CAST(p.Product_Price AS DECIMAL) * s.Units) AS category_revenue
+  FROM toy_sales s
+  JOIN toy_products p ON s.Product_ID = p.Product_ID
+  GROUP BY p.Product_Category
+  HAVING SUM(CAST(p.Product_Price AS DECIMAL) * s.Units) > 50
+),
+total_sales AS (
+  SELECT SUM(category_revenue) AS total_revenue
+  FROM category_sales
+)
+SELECT 
+  cs.Product_Category,
+  cs.category_revenue,
+  ROUND(cs.category_revenue / ts.total_revenue * 100, 2) AS percentage_of_total
+FROM category_sales cs
+CROSS JOIN total_sales ts;
+2.------------------------------------------------
+
+3.nl:如何统计每个产品类别在不同城市的历史总销售额，并筛选出超过该类别平均销售额的城市？------------------------------------------------
+3.expect sql------------------------------------------------
+with 
+-- 连接销售表、店铺表、产品表并计算销售额
+joined_data as (
+ select 
+ p.product_category as product_category,
+ s.store_city as store_city,
+ cast(replace(p.product_price, '$', '') as real) * cast(sa.units as integer) as sales_amount
+ from 
+ toy_sales sa
+ join toy_stores s on sa.store_id = s.store_id
+ join toy_products p on sa.product_id = p.product_id
+),
+
+-- 计算各品类各城市总销售额
+category_city_sales as (
+ select 
+ product_category,
+ store_city,
+ sum(sales_amount) as total_sales
+ from 
+ joined_data
+ group by 
+ product_category, store_city
+),
+
+-- 计算各品类平均销售额
+category_avg_sales as (
+ select 
+ product_category,
+ avg(total_sales) as avg_category_sales
+ from 
+ category_city_sales
+ group by 
+ product_category
+)
+
+-- 筛选超过品类平均值的城市
+select 
+ ccs.product_category as 产品类别,
+ ccs.store_city as 城市,
+ ccs.total_sales as 历史总销售额
+from 
+ category_city_sales ccs
+ join category_avg_sales cas 
+ on ccs.product_category = cas.product_category
+where 
+ ccs.total_sales > cas.avg_category_sales
+3.generate------------------------------------------------
+WITH category_city_sales AS (
+  SELECT
+    p.Product_Category,
+    s.Store_City,
+    SUM(sa.Units * CAST(p.Product_Price AS DECIMAL(18,2))) AS total_sales_value
+  FROM toy_sales sa
+  JOIN toy_products p ON sa.Product_ID = p.Product_ID
+  JOIN toy_stores s ON sa.Store_ID = s.Store_ID
+  WHERE p.Product_Category IS NOT NULL AND s.Store_City IS NOT NULL
+  GROUP BY p.Product_Category, s.Store_City
+),
+category_avg AS (
+  SELECT
+    Product_Category,
+    AVG(total_sales_value) AS avg_sales_per_category
+  FROM category_city_sales
+  GROUP BY Product_Category
+)
+SELECT
+  ccs.Product_Category,
+  ccs.Store_City,
+  ccs.total_sales_value
+FROM category_city_sales ccs
+JOIN category_avg ca
+  ON ccs.Product_Category = ca.Product_Category
+WHERE ccs.total_sales_value > ca.avg_sales_per_category
+ORDER BY ccs.Product_Category, ccs.total_sales_value DESC;
+3.------------------------------------------------
+
+4.nl:哪些城市的店铺开业时间早于2008年且玩具平均售价小于14.99美元？------------------------------------------------
+4.expect sql------------------------------------------------
+with filtered_stores as (
+ select 
+ store_id, 
+ store_city
+ from 
+ toy_stores
+ where 
+ store_open_date < '2008-01-01'
+),
+sales_with_prices as (
+ select 
+ s.store_id,
+ p.product_price
+ from 
+ toy_sales s
+ join 
+ toy_products p
+ on 
+ s.product_id = p.product_id
+ join 
+ filtered_stores f
+ on 
+ s.store_id = f.store_id
+),
+city_price_aggregation as (
+ select 
+ f.store_city,
+ avg(cast(substr(trim(p.product_price), 2) as real)) as avg_price
+ from 
+ sales_with_prices p
+ join 
+ filtered_stores f
+ on 
+ p.store_id = f.store_id
+ group by 
+ f.store_city
+)
+select 
+ store_city as store_city
+from 
+ city_price_aggregation
+where 
+ round(avg_price, 2) < 14.99
+4.generate------------------------------------------------
+SELECT DISTINCT s.Store_City
+FROM toy_stores s
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+JOIN toy_products p ON i.Product_ID = p.Product_ID
+WHERE STR_TO_DATE(s.Store_Open_Date, '%Y-%m-%d') < '2008-01-01'
+GROUP BY s.Store_City
+HAVING AVG(CAST(p.Product_Price AS DECIMAL)) < 14.99
+4.------------------------------------------------
+
+5.nl:如何查询2018年Mexicali地区各店铺的玩具销售额排名？------------------------------------------------
+5.expect sql------------------------------------------------
+with 
+stores as (
+    select store_id
+    from toy_stores
+    where store_city = 'Mexicali'
+),
+products as (
+    select product_id, product_price
+    from toy_products 
+    where product_category = 'Toys'
+),
+ sales_data as (
+    select 
+        s.store_id,
+        s.units,
+        products.product_price
+    from toy_sales s
+    join stores 
+        on s.store_id = stores.store_id
+    join products 
+        on s.product_id = products.product_id
+    where substr(s.date, 1, 4) = '2018'
+),
+sales_calculation as (
+    select
+        sales_data.store_id,
+        sum(
+            cast(sales_data.units as integer) 
+            * cast(replace(replace(sales_data.product_price, '$', ''), ',', '') as real)
+        ) as total_sales
+    from sales_data
+    group by sales_data.store_id
+)
+select
+    stores.store_name as `店铺名称`,
+    sales_calculation.total_sales as `销售额`,
+    rank() over(order by sales_calculation.total_sales desc) as `排名`
+from sales_calculation
+join toy_stores stores
+    on sales_calculation.store_id = stores.store_id
+5.generate------------------------------------------------
+SELECT 
+    ts.Store_Name,
+    SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) AS total_sales_value
+FROM 
+    toy_sales s
+JOIN 
+    toy_products p ON s.Product_ID = p.Product_ID
+JOIN 
+    toy_stores ts ON s.Store_ID = ts.Store_ID
+WHERE 
+    ts.Store_City = 'Mexicali' 
+    AND s.Date >= '2018-01-01' 
+    AND s.Date <= '2018-12-31'
+GROUP BY 
+    ts.Store_Name
+ORDER BY 
+    total_sales_value DESC;
+5.------------------------------------------------
+
+6.nl:如何获取每家店铺开业以来销售总量不超过10件的产品及店铺的累计销量？------------------------------------------------
+6.expect sql------------------------------------------------
+WITH product_store_sales AS (
+    -- 步骤1: 计算每个产品在每家店铺的总销量
+    SELECT
+        store_id,
+        product_id,
+        SUM(units) AS product_total_units
+    FROM
+        toy_sales
+    GROUP BY
+        store_id, product_id
+    HAVING
+        SUM(units) <= 10  -- 筛选销量不超过10件的产品
+),
+
+store_low_sales AS (
+    -- 步骤2: 计算每家店铺的累计销量
+    SELECT
+        store_id,
+        SUM(product_total_units) AS store_low_sales_total
+    FROM
+        product_store_sales
+    GROUP BY
+        store_id
+)
+
+-- 步骤3: 组合最终结果
+SELECT
+    p.store_id AS `店铺ID`,
+    p.product_id AS `产品ID`,
+    p.product_total_units AS `产品销量`,
+    s.store_low_sales_total AS `店铺产品累计`
+FROM
+    product_store_sales p
+JOIN
+    store_low_sales s ON p.store_id = s.store_id
+ORDER BY
+    p.store_id, p.product_total_units
+6.generate------------------------------------------------
+SELECT 
+    s.Store_ID,
+    p.Product_ID,
+    SUM(s.Units) AS total_units
+FROM 
+    toy_sales s
+JOIN 
+    toy_products p ON s.Product_ID = p.Product_ID
+JOIN 
+    toy_stores st ON s.Store_ID = st.Store_ID
+GROUP BY 
+    s.Store_ID, p.Product_ID
+HAVING 
+    SUM(s.Units) <= 10
+6.------------------------------------------------
+
+7.nl:商业区店铺的玩具销售额占全部区域的比例是多少？------------------------------------------------
+7.expect sql------------------------------------------------
+WITH sales_detail AS (
+    SELECT
+        s.units as units,
+        st.store_location,
+        CAST(
+            REPLACE(
+                REPLACE(p.product_price, '$', ''),
+                ' ', ''
+            ) AS REAL
+        ) as product_price
+    FROM
+        toy_sales s
+        INNER JOIN toy_stores st ON s.store_id = st.store_id
+        INNER JOIN toy_products p ON s.product_id = p.product_id
+)
+SELECT
+    (SUM(CASE WHEN store_location = 'Commercial' THEN units * product_price ELSE 0 END) 
+     / SUM(units * product_price)) as `比例`
+FROM
+    sales_detail
+7.generate------------------------------------------------
+SELECT 
+  SUM(CASE WHEN s.Store_Location = '商业区' THEN s.Units * p.Product_Price ELSE 0 END) * 100.0 / SUM(s.Units * p.Product_Price) AS ratio
+FROM toy_sales s
+JOIN toy_products p ON s.Product_ID = p.Product_ID
+JOIN toy_stores st ON s.Store_ID = st.Store_ID;
+7.------------------------------------------------
+
+8.nl:计算各产品利润率，并筛选出利润率高于品类平均水平的在售商品------------------------------------------------
+8.expect sql------------------------------------------------
+WITH product_profit AS (
+    SELECT
+        p.Product_ID,
+        p.Product_Category,
+        (
+            CAST(REPLACE(REPLACE(p.Product_Price, '$', ''), ' ', '') AS REAL) 
+            - CAST(REPLACE(REPLACE(p.Product_Cost, '$', ''), ' ', '') AS REAL)
+        ) / CAST(REPLACE(REPLACE(p.Product_Price, '$', ''), ' ', '') AS REAL) AS profit_margin
+    FROM
+        toy_products p
+    INNER JOIN
+        toy_sales s
+    ON
+        p.Product_ID = s.Product_ID
+),
+category_avg AS (
+    SELECT
+        Product_Category,
+        AVG(profit_margin) AS avg_margin
+    FROM
+        product_profit
+    GROUP BY
+        Product_Category
+)
+SELECT
+    Product_ID AS `product_id`,
+    Product_Category AS `product_category`,
+    profit_margin AS `profit_margin`
+FROM
+    product_profit
+INNER JOIN
+    category_avg
+USING
+    (Product_Category)
+WHERE
+    profit_margin > avg_margin
+8.generate------------------------------------------------
+SELECT 
+    p.Product_Name,
+    (p.Product_Price - COALESCE(i.Stock_On_Hand, 0) * 0.01) / NULLIF(p.Product_Price, 0) AS profit_margin
+FROM 
+    toy_products p
+JOIN 
+    toy_sales s ON p.Product_ID = s.Product_ID
+LEFT JOIN 
+    toy_inventory i ON p.Product_ID = i.Product_ID
+WHERE 
+    p.Product_Price IS NOT NULL 
+    AND p.Product_Price != ''
+    AND CAST(p.Product_Price AS DOUBLE) > 0
+    AND i.Stock_On_Hand > 0
+    AND (p.Product_Price - COALESCE(i.Stock_On_Hand, 0) * 0.01) / NULLIF(p.Product_Price, 0) > (
+        SELECT 
+            AVG((p2.Product_Price - COALESCE(i2.Stock_On_Hand, 0) * 0.01) / NULLIF(p2.Product_Price, 0))
+        FROM 
+            toy_products p2
+        JOIN 
+            toy_sales s2 ON p2.Product_ID = s2.Product_ID
+        LEFT JOIN 
+            toy_inventory i2 ON p2.Product_ID = i2.Product_ID
+        WHERE 
+            p2.Product_Price IS NOT NULL 
+            AND p2.Product_Price != ''
+            AND CAST(p2.Product_Price AS DOUBLE) > 0
+            AND i2.Stock_On_Hand > 0
+    )
+GROUP BY 
+    p.Product_Name, p.Product_Price, i.Stock_On_Hand
+HAVING 
+    COUNT(s.Sale_ID) > 0;
+8.------------------------------------------------
+
+9.nl:计算各门店按销售日期排序后每笔销售的单位数量及其在当天的排名？------------------------------------------------
+9.expect sql------------------------------------------------
+with sales_stores as (
+    select
+        s.date,
+        s.store_id,
+        s.sale_id,
+        s.units
+    from
+        toy_sales s
+    inner join
+        toy_stores st
+    on
+        s.store_id = st.store_id
+)
+select
+    date as `date`,
+    store_id as `store_id`,
+    sale_id as `sale_id`,
+    units as `units`,
+    row_number() over (
+        partition by store_id, date
+        order by cast(units as int) desc
+    ) as `rank`
+from
+    sales_stores
+order by
+    store_id,
+    date,
+    `rank`
+9.generate------------------------------------------------
+SELECT 
+    s.Store_ID,
+    st.Store_Name,
+    s.Date,
+    s.Units,
+    ROW_NUMBER() OVER (PARTITION BY s.Store_ID, s.Date ORDER BY s.Units DESC) AS rank_in_day
+FROM toy_sales s
+JOIN toy_stores st ON s.Store_ID = st.Store_ID
+ORDER BY s.Store_ID, s.Date, rank_in_day;
+9.------------------------------------------------
+
+10.nl:找出利润超过5美元的产品在哪些城市有库存，并统计各城市的库存总量？------------------------------------------------
+10.expect sql------------------------------------------------
+WITH product_profit AS (
+    SELECT 
+        product_id,
+        CAST(REPLACE(REPLACE(product_price, '$', ''), ' ', '') AS REAL) - 
+        CAST(REPLACE(REPLACE(product_cost, '$', ''), ' ', '') AS REAL) AS profit
+    FROM 
+        toy_products
+),
+high_profit_products AS (
+    SELECT 
+        product_id 
+    FROM 
+        product_profit 
+    WHERE 
+        profit > 5
+),
+valid_inventory AS (
+    SELECT 
+        i.store_id,
+        i.stock_on_hand,
+        i.product_id
+    FROM 
+        toy_inventory i
+    INNER JOIN 
+        high_profit_products h 
+    ON 
+        i.product_id = h.product_id
+),
+city_stocks AS (
+    SELECT 
+        s.store_city,
+        CAST(v.stock_on_hand AS INTEGER) AS stock
+    FROM 
+        valid_inventory v
+    INNER JOIN 
+        toy_stores s 
+    ON 
+        v.store_id = s.store_id
+)
+SELECT 
+    store_city AS store_city,
+    SUM(stock) AS total_stock
+FROM 
+    city_stocks
+GROUP BY 
+    store_city
+10.generate------------------------------------------------
+SELECT 
+    s.Store_City,
+    SUM(i.Stock_On_Hand) AS total_stock
+FROM toy_inventory i
+JOIN toy_stores s ON i.Store_ID = s.Store_ID
+JOIN toy_products p ON i.Product_ID = p.Product_ID
+WHERE (CAST(p.Product_Price AS DECIMAL) - CAST(p.Product_Cost AS DECIMAL)) > 5
+GROUP BY s.Store_City;
+10.------------------------------------------------
+
+11.nl:截止到2025年12月31号，统计每个城市店铺的平均开业年限，并列出库存量高于区域平均值的店铺详情------------------------------------------------
+11.expect sql------------------------------------------------
+WITH store_opening_years AS (
+    -- 计算每个城市的平均开业年限
+    SELECT
+        store_city,
+        AVG(
+            (julianday('2025-12-31') - julianday(store_open_date)) / 365.25
+        ) AS avg_years
+    FROM
+        toy_stores
+    GROUP BY
+        store_city
+),
+-- 计算区域平均库存
+city_avg_inventory AS (
+    SELECT
+        s.store_city,
+        AVG(i.stock_on_hand) AS avg_stock
+    FROM
+        toy_inventory i
+        JOIN toy_stores s ON i.store_id = s.store_id
+    GROUP BY
+        s.store_city
+),
+-- 获取高于区域平均库存的店铺清单
+high_inventory_stores AS (
+    SELECT
+        s.store_city,
+        s.store_name,
+        s.store_location,
+        i.stock_on_hand AS stock,
+        c.avg_stock
+    FROM
+        toy_inventory i
+        JOIN toy_stores s ON i.store_id = s.store_id
+        JOIN city_avg_inventory c ON s.store_city = c.store_city
+    WHERE
+        i.stock_on_hand > c.avg_stock
+)
+-- 组合最终结果
+SELECT
+    soy.store_city AS `店铺城市`,
+    ROUND(soy.avg_years, 2) AS `平均开业年限`,
+    his.store_name AS `店铺名称`,
+    his.store_location AS `店铺位置`,
+    his.stock AS `库存量`,
+    his.avg_stock AS `区域平均库存`
+FROM
+    store_opening_years soy
+    JOIN high_inventory_stores his ON soy.store_city = his.store_city
+ORDER BY
+    soy.store_city;
+11.generate------------------------------------------------
+WITH city_avg_open_years AS (
+  SELECT 
+    Store_City,
+    AVG(DATEDIFF(FROM_UNIXTIME(0), FROM_UNIXTIME(UNIX_TIMESTAMP(Store_Open_Date, '%Y-%m-%d')))) / 365.25 AS avg_open_years
+  FROM toy_stores
+  WHERE Store_Open_Date IS NOT NULL AND Store_Open_Date != ''
+  GROUP BY Store_City
+),
+region_avg_stock AS (
+  SELECT 
+    s.Store_City,
+    AVG(i.Stock_On_Hand) AS region_avg_stock
+  FROM toy_stores s
+  JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+  GROUP BY s.Store_City
+)
+SELECT 
+  s.Store_ID,
+  s.Store_Name,
+  s.Store_City,
+  s.Store_Location,
+  s.Store_Open_Date,
+  FLOOR(DATEDIFF(FROM_UNIXTIME(0), FROM_UNIXTIME(UNIX_TIMESTAMP(s.Store_Open_Date, '%Y-%m-%d')))) / 365.25 AS open_years,
+  i.Stock_On_Hand,
+  r.region_avg_stock
+FROM toy_stores s
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+JOIN region_avg_stock r ON s.Store_City = r.Store_City
+WHERE i.Stock_On_Hand > r.region_avg_stock
+  AND s.Store_Open_Date IS NOT NULL 
+  AND s.Store_Open_Date != ''
+  AND TO_DATE(s.Store_Open_Date, '%Y-%m-%d') <= '2025-12-31'
+ORDER BY s.Store_City, s.Store_ID;
+11.------------------------------------------------
+
+12.nl:各玩具品类的平均利润率在不同城市如何分布？------------------------------------------------
+12.expect sql------------------------------------------------
+WITH products_cte AS (
+    SELECT 
+        product_id,
+        product_category,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(Product_Cost, '$', ''),
+                        ' ', ''
+                    ),
+                    ',', ''
+                ),
+                ' ', ''
+            ) AS DECIMAL
+        ) as cost,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(Product_Price, '$', ''),
+                        ' ', ''
+                    ),
+                    ',', ''
+                ),
+                ' ', ''
+            ) AS DECIMAL
+        ) as price
+    FROM toy_products
+),
+
+joined_data AS (
+    SELECT 
+        p.product_category,
+        st.store_city,
+        (p.price - p.cost) / p.price as profit_margin
+    FROM toy_sales s
+    JOIN products_cte p 
+        ON s.product_id = p.product_id
+    JOIN toy_stores st 
+        ON s.store_id = st.store_id
+)
+
+SELECT 
+    product_category as `玩具品类`,
+    store_city as `城市`,
+    AVG(profit_margin) * 100 as `平均利润率`
+FROM joined_data
+GROUP BY 
+    product_category, 
+    store_city
+12.generate------------------------------------------------
+SELECT 
+    p.Product_Category,
+    s.Store_City,
+    AVG((p.Product_Price - p.Product_Cost) / NULLIF(p.Product_Price, 0)) AS avg_profit_margin
+FROM toy_products p
+JOIN toy_sales sa ON p.Product_ID = sa.Product_ID
+JOIN toy_stores s ON sa.Store_ID = s.Store_ID
+WHERE p.Product_Price IS NOT NULL 
+    AND p.Product_Cost IS NOT NULL 
+    AND p.Product_Price != '0' 
+    AND p.Product_Price != '' 
+    AND p.Product_Cost != ''
+GROUP BY p.Product_Category, s.Store_City
+ORDER BY p.Product_Category, s.Store_City;
+12.------------------------------------------------
+
+13.nl:如何计算各产品类别在销售额排名前三的城市中的总利润？------------------------------------------------
+13.expect sql------------------------------------------------
+with sales_profit as (
+    select
+        pr.product_category,
+        st.store_city,
+        (cast(trim(replace(pr.product_price, '$', '')) as decimal) - cast(trim(replace(pr.product_cost, '$', '')) as decimal)) * cast(s.units as int) as profit
+    from
+        toy_sales s
+        join toy_stores st on s.store_id = st.store_id
+        join toy_products pr on s.product_id = pr.product_id
+),
+city_sales as (
+    select
+        product_category,
+        store_city,
+        sum(cast(trim(replace(pr.product_price, '$', '')) as decimal) * cast(s.units as int)) as total_sales
+    from
+        toy_sales s
+        join toy_stores st on s.store_id = st.store_id
+        join toy_products pr on s.product_id = pr.product_id
+    group by
+        product_category, store_city
+),
+city_rank as (
+    select
+        product_category,
+        store_city,
+        row_number() over (partition by product_category order by total_sales desc) as rank
+    from
+        city_sales
+),
+top_cities as (
+    select
+        product_category,
+        store_city
+    from
+        city_rank
+    where
+        rank <= 3
+)
+select
+    sp.product_category as `product_category`,
+    sum(sp.profit) as `total_profit`
+from
+    sales_profit sp
+    join top_cities tc on sp.product_category = tc.product_category and sp.store_city = tc.store_city
+group by
+    sp.product_category
+13.generate------------------------------------------------
+SELECT 
+    p.Product_Category,
+    SUM(s.Units * (p.Product_Price - p.Product_Cost)) AS total_profit
+FROM 
+    toy_sales s
+JOIN 
+    toy_products p ON s.Product_ID = p.Product_ID
+JOIN 
+    toy_stores st ON s.Store_ID = st.Store_ID
+WHERE 
+    st.Store_City IN (
+        SELECT 
+            Store_City
+        FROM (
+            SELECT 
+                st2.Store_City,
+                SUM(s2.Units * p2.Product_Price) AS city_gmv
+            FROM 
+                toy_sales s2
+            JOIN 
+                toy_products p2 ON s2.Product_ID = p2.Product_ID
+            JOIN 
+                toy_stores st2 ON s2.Store_ID = st2.Store_ID
+            GROUP BY 
+                st2.Store_City
+            ORDER BY 
+                city_gmv DESC
+            LIMIT 3
+        ) AS top_cities
+    )
+GROUP BY 
+    p.Product_Category
+13.------------------------------------------------
+
+14.nl:哪些城市的总玩具销售额超过了10美元且各产品类别的平均销售额小于2000美元？------------------------------------------------
+14.expect sql------------------------------------------------
+WITH city_category_sales AS (
+    SELECT
+        st.store_city,
+        p.product_category,
+        SUM(
+            CAST(s.units AS INT) * CAST(
+                TRIM(REPLACE(p.product_price, '$', '')) AS DECIMAL
+            )
+        ) AS category_total
+    FROM
+        toy_sales s
+        JOIN toy_stores st ON s.store_id = st.store_id
+        JOIN toy_products p ON s.product_id = p.product_id
+    GROUP BY
+        st.store_city,
+        p.product_category
+),
+city_summary AS (
+    SELECT
+        store_city,
+        SUM(category_total) AS total_sales,
+        AVG(category_total) AS avg_category_sales
+    FROM
+        city_category_sales
+    GROUP BY
+        store_city
+)
+SELECT
+    store_city AS `store_city`
+FROM
+    city_summary
+WHERE
+    total_sales > 10
+    AND avg_category_sales < 2000
+14.generate------------------------------------------------
+SELECT 
+  ts.Store_City
+FROM 
+  toy_sales s
+  JOIN toy_products p ON s.Product_ID = p.Product_ID
+  JOIN toy_stores ts ON s.Store_ID = ts.Store_ID
+GROUP BY 
+  ts.Store_City
+HAVING 
+  SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) > 10
+  AND AVG(s.Units * CAST(p.Product_Price AS DECIMAL)) < 2000
+14.------------------------------------------------
+
+15.nl:如何计算每个城市店铺的产品成本与售价的利润差及其排名？------------------------------------------------
+15.expect sql------------------------------------------------
+WITH product_cost_price AS (
+    SELECT
+        product_id,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(product_cost, '$', ''),
+                    ' ', ''
+                ),
+                ',', ''
+            ) AS REAL
+        ) AS product_cost,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(product_price, '$', ''),
+                    ' ', ''
+                ),
+                ',', ''
+            ) AS REAL
+        ) AS product_price
+    FROM
+        toy_products
+),
+sales_profit AS (
+    SELECT
+        s.store_id,
+        st.store_city,
+        SUM((p.product_price - p.product_cost) * CAST(s.units AS INTEGER)) AS total_profit_diff
+    FROM
+        toy_sales s
+        JOIN toy_stores st ON s.store_id = st.store_id
+        JOIN product_cost_price p ON s.product_id = p.product_id
+    GROUP BY
+        s.store_id, st.store_city
+)
+SELECT
+    store_city AS `store_city`,
+    store_id AS `store_id`,
+    total_profit_diff AS `profit_diff`
+FROM
+    sales_profit
+15.generate------------------------------------------------
+SELECT 
+    s.Store_City,
+    p.Product_Name,
+    CAST(p.Product_Price AS DECIMAL(18,2)) - CAST(p.Product_Cost AS DECIMAL(18,2)) AS profit_diff,
+    RANK() OVER (PARTITION BY s.Store_City ORDER BY (CAST(p.Product_Price AS DECIMAL(18,2)) - CAST(p.Product_Cost AS DECIMAL(18,2))) DESC) AS rank_in_city
+FROM toy_products p
+JOIN toy_sales sa ON p.Product_ID = sa.Product_ID
+JOIN toy_stores s ON sa.Store_ID = s.Store_ID
+WHERE p.Product_Cost IS NOT NULL 
+    AND p.Product_Price IS NOT NULL
+    AND s.Store_City IS NOT NULL
+ORDER BY s.Store_City, rank_in_city;
+15.------------------------------------------------
+
+16.nl:计算各城市门店的销售总额，并筛选出销售额高于全市平均水平的门店，最后按销售额降序排列？------------------------------------------------
+16.expect sql------------------------------------------------
+WITH store_sales AS (
+    SELECT
+        s.store_id,
+        SUM(
+            CAST(
+                REPLACE(TRIM(p.product_price), '$', '') AS REAL
+            ) * CAST(s.units AS INTEGER)
+        ) AS total_sales
+    FROM
+        toy_sales s
+    INNER JOIN
+        toy_products p
+    ON
+        s.product_id = p.product_id
+    GROUP BY
+        s.store_id
+),
+city_sales AS (
+    SELECT
+        st.store_city,
+        ss.store_id,
+        ss.total_sales
+    FROM
+        store_sales ss
+    INNER JOIN
+        toy_stores st
+    ON
+        ss.store_id = st.store_id
+),
+city_avg AS (
+    SELECT
+        store_city,
+        AVG(total_sales) AS avg_sales
+    FROM
+        city_sales
+    GROUP BY
+        store_city
+)
+SELECT
+    cs.store_city AS store_city,
+    cs.store_id AS store_id,
+    cs.total_sales AS total_sales
+FROM
+    city_sales cs
+INNER JOIN
+    city_avg ca
+ON
+    cs.store_city = ca.store_city
+WHERE
+    cs.total_sales > ca.avg_sales
+ORDER BY
+    cs.total_sales DESC
+16.generate------------------------------------------------
+SELECT 
+    s.Store_City,
+    s.Store_Name,
+    SUM(sa.Units * CAST(p.Product_Price AS DECIMAL(18,2))) AS total_sales_value
+FROM 
+    toy_sales sa
+JOIN 
+    toy_products p ON sa.Product_ID = p.Product_ID
+JOIN 
+    toy_stores s ON sa.Store_ID = s.Store_ID
+GROUP BY 
+    s.Store_City, s.Store_Name
+HAVING 
+    SUM(sa.Units * CAST(p.Product_Price AS DECIMAL(18,2))) > (
+        SELECT 
+            AVG(city_total)
+        FROM (
+            SELECT 
+                SUM(sa2.Units * CAST(p2.Product_Price AS DECIMAL(18,2))) AS city_total
+            FROM 
+                toy_sales sa2
+            JOIN 
+                toy_products p2 ON sa2.Product_ID = p2.Product_ID
+            JOIN 
+                toy_stores s2 ON sa2.Store_ID = s2.Store_ID
+            GROUP BY 
+                s2.Store_City, s2.Store_Name
+        ) t
+    )
+ORDER BY 
+    total_sales_value DESC;
+16.------------------------------------------------
+
+17.nl:San Luis Potosi地区各门店2018年销售额最高的前五家门店是哪些？------------------------------------------------
+17.expect sql------------------------------------------------
+WITH product_data AS (
+    SELECT
+        Product_ID,
+        CAST(REPLACE(TRIM(Product_Price), '$', '') AS REAL) AS clean_price
+    FROM toy_products
+),
+
+store_filter AS (
+    SELECT
+        Store_ID
+    FROM toy_stores
+    WHERE Store_City = 'San Luis Potosi'
+),
+
+sales_base AS (
+    SELECT
+        s.Store_ID,
+        CAST(s.Units AS INTEGER) * p.clean_price AS sale_amount
+    FROM toy_sales s
+    JOIN product_data p
+        ON s.Product_ID = p.Product_ID
+    JOIN store_filter f
+        ON s.Store_ID = f.Store_ID
+    WHERE strftime('%Y', s.Date) = '2018'
+),
+
+store_sales AS (
+    SELECT
+        s.Store_ID,
+        SUM(s.sale_amount) AS total_sales
+    FROM sales_base s
+    GROUP BY s.Store_ID
+),
+
+ranked_sales AS (
+    SELECT
+        Store_ID,
+        total_sales,
+        ROW_NUMBER() OVER (ORDER BY total_sales DESC) AS sales_rank
+    FROM store_sales
+)
+
+SELECT
+    Store_ID
+FROM ranked_sales
+WHERE sales_rank <= 5
+17.generate------------------------------------------------
+SELECT 
+    s.Store_Name,
+    SUM(sa.Units * CAST(p.Product_Price AS DECIMAL)) AS total_sales_value
+FROM 
+    toy_sales sa
+JOIN 
+    toy_products p ON sa.Product_ID = p.Product_ID
+JOIN 
+    toy_stores s ON sa.Store_ID = s.Store_ID
+WHERE 
+    s.Store_City = 'San Luis Potosi' 
+    AND sa.Date >= '2018-01-01' 
+    AND sa.Date <= '2018-12-31'
+GROUP BY 
+    s.Store_Name
+ORDER BY 
+    total_sales_value DESC
+LIMIT 5;
+17.------------------------------------------------
+
+18.nl:不同城市中销量最高的玩具产品类别是什么？------------------------------------------------
+18.expect sql------------------------------------------------
+with joined_data as (
+    select
+        s.store_id,
+        st.store_city,
+        p.product_category,
+        cast(s.units as bigint) as units
+    from
+        toy_sales s
+        inner join toy_stores st on s.store_id = st.store_id
+        inner join toy_products p on s.product_id = p.product_id
+),
+city_category_sales as (
+    select
+        store_city,
+        product_category,
+        sum(units) as total_units
+    from
+        joined_data
+    group by
+        store_city,
+        product_category
+),
+ranked_categories as (
+    select
+        store_city,
+        product_category,
+        total_units,
+        row_number() over (
+            partition by store_city
+            order by
+                total_units desc
+        ) as sales_rank
+    from
+        city_category_sales
+)
+select
+    store_city as `store_city`,
+    product_category as `product_category`
+from
+    ranked_categories
+where
+    sales_rank = 1
+18.generate------------------------------------------------
+SELECT Store_City, Product_Category
+FROM (
+    SELECT 
+        s.Store_City,
+        p.Product_Category,
+        SUM(sa.Units) AS total_units,
+        ROW_NUMBER() OVER (PARTITION BY s.Store_City ORDER BY SUM(sa.Units) DESC) AS rn
+    FROM toy_sales sa
+    JOIN toy_stores s ON sa.Store_ID = s.Store_ID
+    JOIN toy_products p ON sa.Product_ID = p.Product_ID
+    GROUP BY s.Store_City, p.Product_Category
+) t
+WHERE rn = 1;
+18.------------------------------------------------
+
+19.nl:墨西哥各玩具店在售商品的总销量和平均库存量分别是多少？------------------------------------------------
+19.expect sql------------------------------------------------
+WITH 
+-- 计算每个店铺的总销量
+sales_summary AS (
+    SELECT 
+        store_id,
+        CAST(SUM(units) AS TEXT) AS total_sales
+    FROM 
+        toy_sales
+    GROUP BY 
+        store_id
+),
+
+-- 计算每个店铺的平均库存量
+inventory_avg AS (
+    SELECT 
+        store_id,
+        CAST(AVG(stock_on_hand) AS TEXT) AS avg_stock
+    FROM 
+        toy_inventory
+    GROUP BY 
+        store_id
+)
+
+-- 全连接并输出所有店铺的三个字段，过滤掉两个字段都为NULL的记录
+SELECT 
+    CAST(st.store_id AS TEXT) as store_id,
+    COALESCE(ss.total_sales, 'NULL') AS total_sales,  
+    COALESCE(ia.avg_stock, 'NULL') AS avg_stock       
+FROM
+    toy_stores st
+LEFT JOIN  
+    sales_summary ss ON ss.store_id = st.store_id
+LEFT JOIN 
+    inventory_avg ia ON st.store_id = ia.store_id
+WHERE ss.total_sales IS NOT NULL OR ia.avg_stock IS NOT NULL
+ORDER BY st.store_id
+19.generate------------------------------------------------
+SELECT 
+    s.Store_Name,
+    SUM(sa.Units) AS total_units,
+    AVG(i.Stock_On_Hand) AS avg_stock_on_hand
+FROM toy_stores s
+JOIN toy_sales sa ON s.Store_ID = sa.Store_ID
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+GROUP BY s.Store_Name;
+19.------------------------------------------------
+
+20.nl:找出每个产品类别中销售额排名前三的店铺，并显示其总库存量------------------------------------------------
+20.expect sql------------------------------------------------
+WITH sales_data AS (
+    SELECT 
+        s.store_id,
+        p.product_category,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(p.product_price, '$', ''),
+                    ' ', ''
+                ),
+                ',', ''
+            ) AS REAL
+        ) AS price,
+        CAST(s.units AS INTEGER) AS units
+    FROM 
+        toy_sales s
+        JOIN toy_products p ON s.product_id = p.product_id
+),
+sales_summary AS (
+    SELECT 
+        store_id,
+        product_category,
+        SUM(units * price) AS total_sales
+    FROM 
+        sales_data
+    GROUP BY 
+        store_id, 
+        product_category
+),
+inventory_data AS (
+    SELECT 
+        i.store_id,
+        p.product_category,
+        CAST(i.stock_on_hand AS INTEGER) AS stock_on_hand
+    FROM 
+        toy_inventory i
+        JOIN toy_products p ON i.product_id = p.product_id
+),
+inventory_summary AS (
+    SELECT 
+        store_id,
+        product_category,
+        SUM(stock_on_hand) AS total_stock
+    FROM 
+        inventory_data
+    GROUP BY 
+        store_id, 
+        product_category
+),
+combined_sales_store AS (
+    SELECT 
+        ss.store_id,
+        ss.product_category,
+        ss.total_sales,
+        st.store_name
+    FROM 
+        sales_summary ss
+        JOIN toy_stores st ON ss.store_id = st.store_id
+),
+combined_data AS (
+    SELECT 
+        css.product_category,
+        css.store_name,
+        css.total_sales,
+        COALESCE(its.total_stock, 0) AS total_stock
+    FROM 
+        combined_sales_store css
+        LEFT JOIN inventory_summary its 
+            ON css.store_id = its.store_id 
+            AND css.product_category = its.product_category
+),
+ranked_data AS (
+    SELECT 
+        product_category,
+        store_name,
+        total_sales,
+        total_stock,
+        ROW_NUMBER() OVER (PARTITION BY product_category ORDER BY total_sales DESC) AS rank
+    FROM 
+        combined_data
+)
+SELECT 
+    product_category AS "产品类别",
+    store_name AS "店铺名称",
+    total_sales AS "总销售额",
+    total_stock AS "总库存量"
+FROM 
+    ranked_data
+WHERE 
+    rank <= 3
+20.generate------------------------------------------------
+WITH sales_by_category_store AS (
+  SELECT
+    p.Product_Category,
+    s.Store_ID,
+    SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) AS total_sales_value
+  FROM toy_sales s
+  JOIN toy_products p ON s.Product_ID = p.Product_ID
+  GROUP BY p.Product_Category, s.Store_ID
+),
+ranked_stores AS (
+  SELECT
+    Product_Category,
+    Store_ID,
+    total_sales_value,
+    ROW_NUMBER() OVER (PARTITION BY Product_Category ORDER BY total_sales_value DESC) AS rn
+  FROM sales_by_category_store
+),
+top3_stores AS (
+  SELECT
+    Product_Category,
+    Store_ID,
+    total_sales_value
+  FROM ranked_stores
+  WHERE rn <= 3
+),
+inventory_by_category_store AS (
+  SELECT
+    t3.Product_Category,
+    t3.Store_ID,
+    t3.total_sales_value,
+    COALESCE(SUM(i.Stock_On_Hand), 0) AS total_stock_on_hand
+  FROM top3_stores t3
+  LEFT JOIN toy_inventory i ON t3.Store_ID = i.Store_ID
+  GROUP BY t3.Product_Category, t3.Store_ID, t3.total_sales_value
+)
+SELECT
+  Product_Category,
+  Store_ID,
+  total_sales_value,
+  total_stock_on_hand
+FROM inventory_by_category_store
+ORDER BY Product_Category, total_sales_value DESC;
+20.------------------------------------------------
+
+21.nl:计算每家门店开业天数，并筛选出销售日期晚于开业日期的订单，最后统计各城市有效订单数量？------------------------------------------------
+21.expect sql------------------------------------------------
+WITH store_info AS (
+    SELECT
+        store_id,
+        store_open_date,
+        store_city
+    FROM
+        toy_stores
+),
+sales_data AS (
+    SELECT
+        s.store_id,
+        s.date AS sale_date,
+        s.sale_id
+    FROM
+        toy_sales s
+)
+SELECT
+    si.store_city AS store_city,
+    COUNT(DISTINCT sd.sale_id) AS valid_order_count
+FROM
+    sales_data sd
+INNER JOIN
+    store_info si
+ON
+    sd.store_id = si.store_id
+WHERE
+    sd.sale_date > si.store_open_date
+GROUP BY
+    si.store_city
+21.generate------------------------------------------------
+SELECT 
+    s.Store_City,
+    COUNT(*) AS valid_order_count
+FROM 
+    toy_sales sa
+JOIN 
+    toy_stores s ON sa.Store_ID = s.Store_ID
+WHERE 
+    DATE(sa.Date) > DATE(s.Store_Open_Date)
+GROUP BY 
+    s.Store_City;
+21.------------------------------------------------
+
+22.nl:如何计算各产品在同类产品中的价格竞争力排名，并找出排名前五的高竞争力产品？------------------------------------------------
+22.expect sql------------------------------------------------
+WITH product_clean AS (
+    SELECT 
+        Product_ID as product_id,
+        Product_Category as product_category,
+        CAST(
+            REPLACE(
+                REPLACE(
+                    REPLACE(Product_Price, '$', ''), 
+                    ' ', ''
+                ), 
+                ',', ''
+            ) AS REAL
+        ) as product_price_num
+    FROM 
+        toy_products
+    WHERE 
+        Product_Price IS NOT NULL 
+        AND Product_Price != ''
+),
+category_stats AS (
+    SELECT 
+        product_category,
+        AVG(product_price_num) as avg_price
+    FROM 
+        product_clean
+    GROUP BY 
+        product_category
+),
+competitiveness_ranking AS (
+    SELECT
+        pc.product_id,
+        pc.product_category,
+        pc.product_price_num,
+        ROW_NUMBER() OVER (
+            PARTITION BY pc.product_category 
+            ORDER BY pc.product_price_num ASC, pc.product_id ASC
+        ) as rank_result
+    FROM 
+        product_clean pc
+    JOIN 
+        category_stats cs 
+    ON 
+        pc.product_category = cs.product_category
+)
+SELECT
+    product_id,
+    product_category,
+    product_price_num as product_price,
+    rank_result as competitiveness_rank
+FROM 
+    competitiveness_ranking
+WHERE 
+    rank_result <= 5
+ORDER BY 
+    product_category, rank_result
+22.generate------------------------------------------------
+SELECT 
+    p.Product_Name,
+    p.Product_Price,
+    RANK() OVER (PARTITION BY p.Product_Category ORDER BY CAST(p.Product_Price AS DECIMAL) ASC) AS price_competitiveness_rank
+FROM 
+    toy_products p
+WHERE 
+    p.Product_Price IS NOT NULL 
+    AND p.Product_Price != ''
+ORDER BY 
+    price_competitiveness_rank
+LIMIT 5;
+22.------------------------------------------------
+
+23.nl:哪些产品的销售额在市中心店铺中排名前两位且总销量小于3？------------------------------------------------
+23.expect sql------------------------------------------------
+with 
+stores_residential as (
+    select store_id
+    from toy_stores
+    where store_location = 'Downtown'
+),
+sales_joined as (
+    select 
+        s.product_id,
+        cast(s.units as bigint) as units
+    from toy_sales s
+    join stores_residential sr
+    on s.store_id = sr.store_id
+),
+product_sales as (
+    select 
+        product_id,
+        sum(units) as total_units
+    from sales_joined
+    group by product_id
+    having sum(units) < 3
+),
+sales_ranked as (
+    select 
+        product_id,
+        total_units,
+        row_number() over (order by total_units desc) as rn
+    from product_sales
+)
+select 
+    p.product_name as `产品名称`,
+    sr.total_units as `总销量`
+from sales_ranked sr
+join toy_products p
+on sr.product_id = p.product_id
+where rn <= 2
+23.generate------------------------------------------------
+SELECT p.Product_Name
+FROM toy_sales s
+JOIN toy_products p ON s.Product_ID = p.Product_ID
+JOIN toy_stores st ON s.Store_ID = st.Store_ID
+WHERE st.Store_Location = '市中心'
+GROUP BY p.Product_ID, p.Product_Name
+HAVING SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) < 3
+ORDER BY SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) DESC
+LIMIT 2
+23.------------------------------------------------
+
+24.nl:筛选库存量高于该类产品平均售价的门店，并列出这些门店的位置------------------------------------------------
+24.expect sql------------------------------------------------
+with category_avg_price as (
+    select
+        product_category,
+        avg(
+            cast(trim(replace(product_price, '$', '')) as decimal)
+        ) as avg_price
+    from
+        toy_products
+    group by
+        product_category
+),
+valid_inventory as (
+    select
+        distinct i.store_id
+    from
+        toy_inventory i
+        inner join toy_products p on i.product_id = p.product_id
+        inner join category_avg_price cap on p.product_category = cap.product_category
+    where
+        cast(trim(i.stock_on_hand) as decimal) > cap.avg_price
+)
+select
+    store_id,
+    store_location
+from
+    toy_stores
+where
+    store_id in (
+        select
+            store_id
+        from
+            valid_inventory
+    )
+24.generate------------------------------------------------
+SELECT DISTINCT s.Store_Location
+FROM toy_stores s
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+JOIN toy_products p ON i.Product_ID = p.Product_ID
+WHERE i.Stock_On_Hand > CAST(p.Product_Price AS DECIMAL)
+24.------------------------------------------------
+
+25.nl:如何筛选出库存量高于平均水平的店铺及其库存排名？------------------------------------------------
+25.expect sql------------------------------------------------
+with avg_stock_cte as (
+    select avg(cast(stock_on_hand as bigint)) as avg_stock
+    from toy_inventory
+),
+store_inventory as (
+    select 
+        s.store_id,
+        s.store_name,
+        s.store_city,
+        sum(cast(i.stock_on_hand as bigint)) as total_stock
+    from 
+        toy_inventory i
+        join toy_stores s 
+        on i.store_id = s.store_id
+    group by 
+        s.store_id, s.store_name, s.store_city
+),
+filtered_stores as (
+    select 
+        store_id,
+        store_name,
+        store_city,
+        total_stock
+    from 
+        store_inventory 
+    where 
+        total_stock > (select avg_stock from avg_stock_cte)
+)
+select 
+    store_id as `store_id`,
+    store_name as `store_name`,
+    store_city as `store_city`,
+    total_stock as `total_stock`,
+    rank() over (order by total_stock desc) as `库存排名`
+from 
+    filtered_stores
+order by 
+    `库存排名`
+25.generate------------------------------------------------
+SELECT 
+    s.Store_ID,
+    s.Store_Name,
+    SUM(i.Stock_On_Hand) AS Total_Stock,
+    RANK() OVER (ORDER BY SUM(i.Stock_On_Hand) DESC) AS Stock_Rank
+FROM toy_stores s
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+GROUP BY s.Store_ID, s.Store_Name
+HAVING SUM(i.Stock_On_Hand) > (
+    SELECT AVG(store_total)
+    FROM (
+        SELECT SUM(Stock_On_Hand) AS store_total
+        FROM toy_inventory
+        GROUP BY Store_ID
+    ) t
+)
+ORDER BY Total_Stock DESC;
+25.------------------------------------------------
+
+26.nl:如何获取每家店铺每个产品的最新销售日期及其对应的销售排名？------------------------------------------------
+26.expect sql------------------------------------------------
+WITH sales_rank_cte AS (
+    SELECT
+        s.store_id,
+        s.product_id,
+        s.date,
+        ROW_NUMBER() OVER (
+            PARTITION BY s.store_id, s.product_id 
+            ORDER BY date(s.date) DESC
+        ) AS sale_rank
+    FROM
+        toy_sales s
+    INNER JOIN
+        toy_stores st 
+        ON s.store_id = st.store_id
+    INNER JOIN
+        toy_products pr 
+        ON s.product_id = pr.product_id
+)
+SELECT
+    store_id AS `store_id`,
+    product_id AS `product_id`,
+    date AS `date`,
+    sale_rank AS `sale_rank`
+FROM
+    sales_rank_cte
+26.generate------------------------------------------------
+SELECT 
+    s.Store_ID,
+    s.Product_ID,
+    MAX(s.Date) AS latest_sale_date,
+    ROW_NUMBER() OVER (PARTITION BY s.Store_ID ORDER BY MAX(s.Date) DESC) AS sale_rank
+FROM toy_sales s
+GROUP BY s.Store_ID, s.Product_ID
+ORDER BY s.Store_ID, sale_rank;
+26.------------------------------------------------
+
+27.nl:Mexicali市开业超过10年的门店中，销售额最高的产品是什么？------------------------------------------------
+27.expect sql------------------------------------------------
+WITH max_sale_date AS (
+    SELECT MAX(Date) AS max_date
+    FROM toy_sales
+),
+valid_stores AS (
+    SELECT store_id
+    FROM toy_stores
+    WHERE store_city = 'Mexicali'
+    AND (julianday((SELECT max_date FROM max_sale_date)) - julianday(store_open_date)) >= 3650
+),
+sales_detail AS (
+    SELECT 
+        s.product_id,
+        CAST(REPLACE(REPLACE(p.product_price, '$', ''), ' ', '') AS REAL) * CAST(s.units AS INTEGER) AS sale_amount
+    FROM toy_sales s
+    JOIN valid_stores v ON s.store_id = v.store_id
+    JOIN toy_products p ON s.product_id = p.product_id
+),
+product_ranking AS (
+    SELECT 
+        product_id,
+        SUM(sale_amount) AS total_sales,
+        ROW_NUMBER() OVER (ORDER BY SUM(sale_amount) DESC) AS rank
+    FROM sales_detail
+    GROUP BY product_id
+)
+SELECT 
+    p.product_name AS product_name
+FROM product_ranking r
+JOIN toy_products p ON r.product_id = p.product_id
+WHERE r.rank = 1
+27.generate------------------------------------------------
+SELECT p.Product_Name
+FROM toy_sales s
+JOIN toy_products p ON s.Product_ID = p.Product_ID
+JOIN toy_stores st ON s.Store_ID = st.Store_ID
+WHERE st.Store_City = 'Mexicali'
+  AND DATEDIFF(CURDATE(), DATE_FORMAT(st.Store_Open_Date, '%Y-%m-%d')) > 3650
+GROUP BY p.Product_Name
+ORDER BY SUM(s.Units * CAST(p.Product_Price AS DECIMAL)) DESC
+LIMIT 1
+27.------------------------------------------------
+
+28.nl:如何识别在店铺中销售额增长的玩具产品以及对应的月份？------------------------------------------------
+28.expect sql------------------------------------------------
+WITH      residential_stores AS (
+          SELECT    store_id
+          FROM      toy_stores
+          ),
+          sales_data AS (
+          SELECT    s.product_id,
+                    SUBSTR(s.date, 1, 7) AS sale_month,
+                    SUM(
+                    CAST(s.units AS INT) * CAST(
+                    REPLACE   (TRIM(p.product_price), '$', '') AS DOUBLE
+                    )
+                    ) AS monthly_sales
+          FROM      toy_sales s
+          JOIN      residential_stores rs ON s.store_id = rs.store_id
+          JOIN      toy_products p ON s.product_id = p.product_id
+          GROUP BY  s.product_id,
+                    SUBSTR(s.date, 1, 7)
+          ),
+          sales_growth AS (
+          SELECT    product_id,
+                    sale_month,
+                    monthly_sales,
+                    LAG(monthly_sales) OVER (
+                    PARTITION BY product_id
+                    ORDER BY  sale_month
+                    ) AS prev_sales
+          FROM      sales_data
+          )
+SELECT    DISTINCT product_id AS `product_id`,
+          sale_month AS `sale_month`
+FROM      (
+          SELECT    product_id,
+                    sale_month,
+                    CASE
+                              WHEN monthly_sales > prev_sales THEN 1
+                              ELSE 0
+                    END AS is_growing
+          FROM      sales_growth
+          ) t
+WHERE     is_growing = 1
+28.generate------------------------------------------------
+SELECT 
+    p.Product_Name,
+    s.Store_Name,
+    date_trunc('month', STR_TO_DATE(t.Date, '%Y-%m-%d')) AS sale_month,
+    SUM(t.Units * CAST(p.Product_Price AS DECIMAL)) AS total_sales_value
+FROM toy_sales t
+JOIN toy_products p ON t.Product_ID = p.Product_ID
+JOIN toy_stores s ON t.Store_ID = s.Store_ID
+GROUP BY p.Product_Name, s.Store_Name, date_trunc('month', STR_TO_DATE(t.Date, '%Y-%m-%d'))
+ORDER BY sale_month, total_sales_value DESC;
+28.------------------------------------------------
+
+29.nl:如何识别成本价低于同类产品平均价的玩具在商业区门店的销售情况？------------------------------------------------
+29.expect sql------------------------------------------------
+WITH category_avg_cost AS (
+    SELECT 
+        product_category,
+        AVG(CAST(REPLACE(REPLACE(product_cost, '$', ''), ' ', '') AS REAL)) AS avg_cost
+    FROM 
+        toy_products
+    GROUP BY 
+        product_category
+),
+low_cost_products AS (
+    SELECT 
+        p.product_id,
+        p.product_category,
+        CAST(REPLACE(REPLACE(p.product_cost, '$', ''), ' ', '') AS REAL) AS product_cost,
+        c.avg_cost
+    FROM 
+        toy_products p
+    JOIN 
+        category_avg_cost c
+        ON p.product_category = c.product_category
+    WHERE 
+        CAST(REPLACE(REPLACE(p.product_cost, '$', ''), ' ', '') AS REAL) < c.avg_cost
+),
+commercial_stores AS (
+    SELECT 
+        store_id
+    FROM 
+        toy_stores
+    WHERE 
+        store_location = 'Commercial'
+)
+SELECT 
+    s.date AS `date`,
+    s.product_id AS `product_id`,
+    s.store_id AS `store_id`,
+    s.units AS `units`,
+    l.product_cost AS `product_cost`,
+    l.avg_cost AS `category_avg_cost`
+FROM 
+    toy_sales s
+JOIN 
+    low_cost_products l
+    ON s.product_id = l.product_id
+JOIN 
+    commercial_stores c
+    ON s.store_id = c.store_id
+29.generate------------------------------------------------
+SELECT 
+    s.Sale_ID,
+    st.Store_Name,
+    p.Product_Name,
+    s.Units,
+    p.Product_Cost,
+    AVG(p.Product_Cost) OVER (PARTITION BY p.Product_Category) AS Avg_Cost_By_Category,
+    s.Units * p.Product_Price AS Sale_Amount
+FROM toy_sales s
+JOIN toy_products p ON s.Product_ID = p.Product_ID
+JOIN toy_stores st ON s.Store_ID = st.Store_ID
+WHERE p.Product_Cost < (
+    SELECT AVG(p2.Product_Cost)
+    FROM toy_products p2
+    WHERE p2.Product_Category = p.Product_Category
+)
+AND st.Store_Location = '商业区';
+29.------------------------------------------------
+
+30.nl:哪些商店在开业三年后的库存周转率高于或等于同类商店平均水平？------------------------------------------------
+30.expect sql------------------------------------------------
+WITH store_opening_dates AS (
+    SELECT
+        store_id,
+        store_open_date AS open_date,
+        date(store_open_date, '+36 months') AS third_year_date
+    FROM
+        toy_stores
+),
+valid_sales AS (
+    SELECT
+        s.store_id,
+        SUM(CAST(s.units AS INTEGER)) AS total_units
+    FROM
+        toy_sales s
+        JOIN store_opening_dates sod ON s.store_id = sod.store_id
+    WHERE
+        s.date >= sod.third_year_date
+    GROUP BY
+        s.store_id
+),
+store_inventory AS (
+    SELECT
+        store_id,
+        SUM(CAST(stock_on_hand AS INTEGER)) AS total_stock
+    FROM
+        toy_inventory
+    GROUP BY
+        store_id
+),
+turnover_rates AS (
+    SELECT
+        vs.store_id,
+        (vs.total_units * 1.0) / si.total_stock AS turnover_rate,
+        st.store_city
+    FROM
+        valid_sales vs
+        JOIN store_inventory si ON vs.store_id = si.store_id
+        JOIN toy_stores st ON vs.store_id = st.store_id
+),
+city_avg_turnover AS (
+    SELECT
+        store_city,
+        AVG(turnover_rate) AS avg_rate
+    FROM
+        turnover_rates
+    GROUP BY
+        store_city
+)
+SELECT
+    tr.store_id,
+    tr.turnover_rate AS "库存周转率",
+    cat.avg_rate AS "同类平均周转率"
+FROM
+    turnover_rates tr
+    JOIN city_avg_turnover cat ON tr.store_city = cat.store_city
+    JOIN toy_stores st ON tr.store_id = st.store_id
+WHERE
+    tr.turnover_rate >= cat.avg_rate
+30.generate------------------------------------------------
+WITH store_opened_three_years_ago AS (
+    SELECT 
+        Store_ID,
+        Store_Name,
+        Store_City,
+        Store_Open_Date,
+        date_add('year', 3, str_to_date(Store_Open_Date, '%Y-%m-%d')) AS Three_Years_Later
+    FROM toy_stores
+),
+sales_last_year AS (
+    SELECT 
+        s.Store_ID,
+        s.Product_ID,
+        SUM(s.Units) AS Total_Units_Sold
+    FROM toy_sales s
+    INNER JOIN store_opened_three_years_ago so ON s.Store_ID = so.Store_ID
+    WHERE str_to_date(s.Date, '%Y-%m-%d') >= so.Three_Years_Later
+      AND str_to_date(s.Date, '%Y-%m-%d') < date_add('year', 1, so.Three_Years_Later)
+    GROUP BY s.Store_ID, s.Product_ID
+),
+inventory_at_start AS (
+    SELECT 
+        i.Store_ID,
+        i.Product_ID,
+        i.Stock_On_Hand
+    FROM toy_inventory i
+    INNER JOIN store_opened_three_years_ago so ON i.Store_ID = so.Store_ID
+),
+avg_turnover_by_category AS (
+    SELECT 
+        p.Product_Category,
+        AVG(COALESCE(s.Total_Units_Sold, 0) * 1.0 / NULLIF(i.Stock_On_Hand, 0)) AS Avg_Turnover_Rate
+    FROM toy_products p
+    INNER JOIN inventory_at_start i ON p.Product_ID = i.Product_ID
+    LEFT JOIN sales_last_year s ON p.Product_ID = s.Product_ID
+    WHERE i.Stock_On_Hand > 0
+    GROUP BY p.Product_Category
+),
+store_turnover AS (
+    SELECT 
+        so.Store_ID,
+        so.Store_Name,
+        so.Store_City,
+        p.Product_Category,
+        COALESCE(SUM(s.Total_Units_Sold), 0) * 1.0 / NULLIF(SUM(i.Stock_On_Hand), 0) AS Turnover_Rate
+    FROM store_opened_three_years_ago so
+    INNER JOIN toy_inventory i ON so.Store_ID = i.Store_ID
+    INNER JOIN toy_products p ON i.Product_ID = p.Product_ID
+    LEFT JOIN sales_last_year s ON so.Store_ID = s.Store_ID AND i.Product_ID = s.Product_ID
+    WHERE i.Stock_On_Hand > 0
+    GROUP BY so.Store_ID, so.Store_Name, so.Store_City, p.Product_Category
+)
+SELECT DISTINCT
+    st.Store_Name,
+    st.Store_City
+FROM store_turnover st
+INNER JOIN avg_turnover_by_category ac ON st.Product_Category = ac.Product_Category
+WHERE st.Turnover_Rate >= ac.Avg_Turnover_Rate;
+30.------------------------------------------------
+
+31.nl:如何列出2007年第四季度开业的店铺中Art & Crafts类商品的销售总利润？------------------------------------------------
+31.expect sql------------------------------------------------
+WITH stores_opened_in_q4 AS (
+    SELECT store_id
+    FROM toy_stores
+    WHERE Store_Open_Date >= '2007-10-01' 
+      AND Store_Open_Date <= '2007-12-31'
+),
+art_products AS (
+    SELECT 
+        product_id,
+        CAST(REPLACE(REPLACE(Product_Price, '$', ''), ' ', '') AS REAL) AS product_price,
+        CAST(REPLACE(REPLACE(Product_Cost, '$', ''), ' ', '') AS REAL) AS product_cost
+    FROM toy_products
+    WHERE Product_Category = 'Art & Crafts'
+)
+SELECT
+    SUM(CAST(s.Units AS INTEGER) * (ap.product_price - ap.product_cost)) AS `销售总利润`
+FROM
+    toy_sales s
+    INNER JOIN stores_opened_in_q4 st ON s.Store_ID = st.store_id
+    INNER JOIN art_products ap ON s.Product_ID = ap.product_id;
+31.generate------------------------------------------------
+SELECT 
+    SUM(s.Units * (p.Product_Price - p.Product_Cost)) AS total_profit
+FROM 
+    toy_sales s
+JOIN 
+    toy_products p ON s.Product_ID = p.Product_ID
+JOIN 
+    toy_stores st ON s.Store_ID = st.Store_ID
+WHERE 
+    p.Product_Category = 'Art & Crafts'
+    AND st.Store_Open_Date >= '2007-10-01'
+    AND st.Store_Open_Date <= '2007-12-31'
+31.------------------------------------------------
+
+32.nl:如何找出库存量高于平均水平的门店及其所在城市？------------------------------------------------
+32.expect sql------------------------------------------------
+with store_total_stock as (
+    select
+        store_id,
+        sum(cast(stock_on_hand as int)) as total_stock
+    from
+        toy_inventory
+    group by
+        store_id
+)
+select
+    s.store_id as `store_id`,
+    s.store_city as `store_city`
+from
+    toy_stores s
+inner join
+    store_total_stock sts
+on
+    s.store_id = sts.store_id
+where
+    sts.total_stock > (
+        select
+            avg(total_stock)
+        from
+            store_total_stock
+    )
+32.generate------------------------------------------------
+SELECT DISTINCT s.Store_Name, s.Store_City
+FROM toy_stores s
+JOIN toy_inventory i ON s.Store_ID = i.Store_ID
+WHERE i.Stock_On_Hand > (
+    SELECT AVG(Stock_On_Hand)
+    FROM toy_inventory
+    WHERE Stock_On_Hand IS NOT NULL
+)
+32.------------------------------------------------
+

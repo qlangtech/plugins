@@ -29,9 +29,9 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
+import com.qlangtech.tis.plugin.ontology.chatbi.DefaultChatBIService;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
-import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
@@ -60,6 +60,10 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
     @FormField(type = FormFieldType.INT_NUMBER, ordinal = 2, validate = {Validator.integer, Validator.require})
     public Integer maxRetrvalCount;
 
+    private LLMProvider getLlmProvider(IPluginContext pluginContext) {
+        return LLMProvider.load(pluginContext, llm);
+    }
+
     @Override
     protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context,
                                            ManipulateItemsProcessor itemsProcessor) {
@@ -67,11 +71,12 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         if (itemsProcessor.isDeleteProcess()) {
             return;
         }
+        DefaultChatBIService.getInstance().setLlmProvider(this.getLlmProvider(pluginContext));
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(itemsProcessor.getPluginMeta());
-        OntologySyncQueue.enqueue(() -> {
-            IPluginContext.setPluginContext(pluginContext);
-            OntologyNeo4jSyncService.getInstance().fullRebuild(meta.getDomain());
-        });
+        //OntologySyncQueue.enqueue(() -> {
+        IPluginContext.setPluginContext(pluginContext);
+        OntologyNeo4jSyncService.getInstance().fullRebuild(meta.getDomain());
+        //});
     }
 
     @Override

@@ -38,6 +38,10 @@
     <dependencies>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-sql-parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
             <version>${tis.version}</version>
         </dependency>
@@ -50,6 +54,18 @@
             <groupId>com.microsoft.onnxruntime</groupId>
             <artifactId>onnxruntime</artifactId>
             <version>1.17.3</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.11.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

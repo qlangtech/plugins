@@ -25,5 +25,11 @@
     "label": "语义角色",
     "help": "ChatBI查询中的语义角色",
     "dftVal": "Unknown"
+  },
+  "physicalExpression": {
+    "label": "物理表达式",
+    "help": "用于描述从物理存储格式到查询可用格式的转换，使用 {col} 作为列名占位符。",
+    "rows": 2,
+    "placeholder": "示例：REPLACE(TRIM({col}), '$', '') - 清洗货币符号"
   }
 }

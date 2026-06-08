@@ -1,0 +1,8 @@
+{
+  "inferInstances": {
+    "label": "推理结果",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.impl.infer.InferenceParseCreatorFactory",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Execute.getInferInstances():uncache_true",
+    "viewtype": "tuplelist"
+  }
+}

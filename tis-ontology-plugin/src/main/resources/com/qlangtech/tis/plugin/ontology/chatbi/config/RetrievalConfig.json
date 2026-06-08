@@ -1,0 +1,22 @@
+{
+  "topKSeeds": {
+    "label": "Top-K 种子数",
+    "help": "每个向量索引各取的入口节点数。增大可提高召回率但增加 token 消耗。推荐范围：3-10",
+    "dftVal": 5
+  },
+  "maxHops": {
+    "label": "最大扩展跳数",
+    "help": "沿 LINKED_TO 关系扩展的最大跳数。0=不扩展，1-3 合理，>3 易导致结果爆炸",
+    "dftVal": 2
+  },
+  "tokenBudget": {
+    "label": "Token 预算",
+    "help": "序列化 prompt 的 token 上限（按 4 chars ≈ 1 token 估算）。推荐范围：2000-5000",
+    "dftVal": 3000
+  },
+  "includeValueExamples": {
+    "label": "包含取值示例",
+    "help": "是否在 prompt 中带上 Enum 等取值示例。true 提高准确性但增加 token 消耗",
+    "dftVal": false
+  }
+}

@@ -88,10 +88,7 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implemen
             return Optional.empty();
         }
 
-        @Override
-        public String getDisplayName() {
-            return "第三步";
-        }
+
 
         @Override
         public String getStepDescription() {

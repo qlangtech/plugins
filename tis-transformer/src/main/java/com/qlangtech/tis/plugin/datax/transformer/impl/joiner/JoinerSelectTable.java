@@ -68,10 +68,6 @@ public class JoinerSelectTable extends OneStepOfMultiSteps implements Serializab
             return Step.Step2;
         }
 
-        @Override
-        public String getDisplayName() {
-            return "第二步";
-        }
 
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {

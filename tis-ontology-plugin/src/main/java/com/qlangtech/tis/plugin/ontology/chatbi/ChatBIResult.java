@@ -22,25 +22,55 @@ import java.util.List;
 /**
  * ChatBI 查询结果。
  *
- * @param sql   最终生成的 SQL，失败为 null
- * @param data  执行结果（可选），null 表示未执行
- * @param trace 全过程日志（检索、prompt、LLM、校验、执行等步骤）
- * @param error 失败原因，成功为 null
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
  */
-public record ChatBIResult(
-        String sql,
-        QueryResult data,
-        List<TraceStep> trace,
-        String error
-) {
+public class ChatBIResult {
+
+    private final String sql;
+    private final QueryResult data;
+    private final List<TraceStep> trace;
+    private final String error;
+    private final Exception exception;
+
+    public ChatBIResult(String sql, QueryResult data, List<TraceStep> trace, String error, Exception exception) {
+        this.sql = sql;
+        this.data = data;
+        this.trace = trace;
+        this.error = error;
+        this.exception = exception;
+    }
+
+    public String sql() {
+        return sql;
+    }
+
+    public QueryResult data() {
+        return data;
+    }
+
+    public List<TraceStep> trace() {
+        return trace;
+    }
+
+    public String error() {
+        return error;
+    }
+
+    public Exception exception() {
+        return exception;
+    }
+
     public static ChatBIResult success(String sql, QueryResult data, List<TraceStep> trace) {
-        return new ChatBIResult(sql, data, trace, null);
+        return new ChatBIResult(sql, data, trace, null, null);
     }
 
     public static ChatBIResult fail(String error, List<TraceStep> trace) {
-        return new ChatBIResult(null, null, trace, error);
+        return new ChatBIResult(null, null, trace, error, null);
+    }
+
+    public static ChatBIResult fail(String error, List<TraceStep> trace, Exception exception) {
+        return new ChatBIResult(null, null, trace, error, exception);
     }
 
     public boolean isSuccess() {

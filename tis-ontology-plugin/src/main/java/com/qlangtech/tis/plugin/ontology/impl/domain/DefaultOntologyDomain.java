@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyDomainManipulate;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.util.Optional;
 
@@ -69,6 +70,9 @@ public class DefaultOntologyDomain extends OntologyDomain implements IPluginStor
 
         @Override
         public final Optional<IPluginStore<OntologyDomainManipulate>> getManipulateStore() {
+            if (!UploadPluginMeta.containPluginMeta(IPluginContext.getThreadLocalInstance().getContext())) {
+                return Optional.empty();
+            }
             OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
             KeyedPluginStore.Key<OntologyDomainManipulate> manipulateStoreKey
                     = OntologyDomain.getStoreKey(pluginMeta.getDomain(), this.getManipulateExtendPoint());

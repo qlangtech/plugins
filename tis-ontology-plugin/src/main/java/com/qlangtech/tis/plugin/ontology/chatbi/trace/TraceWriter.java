@@ -75,6 +75,10 @@ public class TraceWriter {
                 }
             }
             logger.info("Trace written to: {}", traceFile.getAbsolutePath());
+
+            // 触发清理
+            TraceCleanupService.getInstance().triggerCleanup(domain);
+
             return traceFile;
         } catch (IOException e) {
             logger.error("Failed to write trace file: " + traceFile, e);

@@ -1,0 +1,17 @@
+{
+  "maxTracesPerDomain": {
+    "label": "最大 Trace 数",
+    "help": "最大保存的 trace 文件数。超过限制时删除最旧的文件。推荐范围：500-2000",
+    "dftVal": 500
+  },
+  "retentionDays": {
+    "label": "保留天数",
+    "help": "Trace 文件保留天数。超过此天数的日期目录会被自动删除。推荐范围：3-30",
+    "dftVal": 7
+  },
+  "enableAutoCleanup": {
+    "label": "启用自动清理",
+    "help": "是否启用自动清理机制。关闭后需要手动清理历史 trace 文件",
+    "dftVal": true
+  }
+}

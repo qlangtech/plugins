@@ -1,0 +1,23 @@
+{
+  "valueTypePrompt": {
+    "label": "Value Type提示词",
+    "rows": 3,
+    "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.valueType.getPrompt()",
+    "style": "codemirror",
+    "mode": "text/velocity"
+  },
+  "glossaryPrompt": {
+    "label": "Glossary（同义词）提示词",
+    "rows": 3,
+    "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.glossary.getPrompt()",
+    "style": "codemirror",
+    "mode": "text/velocity"
+  },
+  "sharedPropertyPrompt": {
+    "label": "Shared Property提示词",
+    "rows": 3,
+    "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.sharedPropertyConfig.getPrompt()",
+    "style": "codemirror",
+    "mode": "text/velocity"
+  }
+}

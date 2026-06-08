@@ -22,7 +22,8 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * KeywordWhitelistValidator 测试用例（§5.1 第 0 步）。
@@ -39,6 +40,35 @@ public class TestKeywordWhitelistValidator {
 
     private final KeywordWhitelistValidator validator = new KeywordWhitelistValidator();
     private final RetrievalResult mockContext = new RetrievalResult("", List.of(), List.of(), List.of());
+
+    @Test
+    public void testValidReplaceFunction() {
+        // String sql = "SELECT * FROM users WHERE status = 'active'";
+
+        String sql = """
+                WITH category_sales AS (
+                  SELECT
+                    p.Product_Category,
+                    SUM(CAST(REPLACE(TRIM(p.Product_Price), '$', '') AS DECIMAL(10,2)) * s.Units) AS category_revenue
+                  FROM toy_sales s
+                  JOIN toy_products p ON s.Product_ID = p.Product_ID
+                  GROUP BY p.Product_Category
+                  HAVING SUM(CAST(REPLACE(TRIM(p.Product_Price), '$', '') AS DECIMAL(10,2)) * s.Units) > 50
+                ),
+                total_sales AS (
+                  SELECT SUM(category_revenue) AS total_revenue
+                  FROM category_sales
+                )
+                SELECT
+                  cs.Product_Category,
+                  cs.category_revenue,
+                  ROUND(cs.category_revenue / ts.total_revenue * 100, 2) AS percentage_of_total
+                FROM category_sales cs
+                CROSS JOIN total_sales ts;
+                """;
+        ValidationResult result = validator.validate(sql, mockContext);
+        assertTrue("Valid SELECT should pass,validation result:" + result.reason() + ",issue:" + String.join(",", result.issues()), result.valid());
+    }
 
     @Test
     public void testValidSelect() {

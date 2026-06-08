@@ -20,7 +20,7 @@ import com.qlangtech.tis.datax.DAGSchedulerDetail;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
-import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate.DataXProcessorTemplateManipulateStore;
+import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate.AbstractTemplateManipulateStore;
 import com.qlangtech.tis.datax.StoreResourceType;
 import com.qlangtech.tis.exec.impl.DataXPipelineExecContext;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -111,13 +111,13 @@ public class DAGSchedulerActor extends AbstractActor {
     private void handleLoadSchedules(LoadSchedules msg) {
         logger.info("loading scheduled workflows from BatchJobCrontab plugin instances");
         try {
-            Map<String, DataXProcessorTemplateManipulateStore> registry =
+            Map<String, AbstractTemplateManipulateStore> registry =
                     DefaultDataXProcessorManipulate.getManipulateRegistry();
 
             int loaded = 0;
-            for (Map.Entry<String, DataXProcessorTemplateManipulateStore> entry : registry.entrySet()) {
+            for (Map.Entry<String, AbstractTemplateManipulateStore> entry : registry.entrySet()) {
                 String pipelineName = entry.getKey();
-                DataXProcessorTemplateManipulateStore store = entry.getValue();
+                AbstractTemplateManipulateStore store = entry.getValue();
                 for (DefaultDataXProcessorManipulate manipulate : store.getManipulates()) {
                     if (BatchJobCrontab.KEY_CRONTAB.equals(manipulate.identityValue())) {
                         BatchJobCrontab crontab = (BatchJobCrontab) manipulate;
@@ -340,12 +340,12 @@ public class DAGSchedulerActor extends AbstractActor {
         DAGSchedulerDetail detail = new DAGSchedulerDetail();
         try {
             CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.SPRING));
-            Map<String, DataXProcessorTemplateManipulateStore> registry =
+            Map<String, AbstractTemplateManipulateStore> registry =
                     DefaultDataXProcessorManipulate.getManipulateRegistry();
 
-            for (Map.Entry<String, DataXProcessorTemplateManipulateStore> registryEntry : registry.entrySet()) {
+            for (Map.Entry<String, AbstractTemplateManipulateStore> registryEntry : registry.entrySet()) {
                 DataXName pipelineName = DataXName.createDataXPipeline(registryEntry.getKey());
-                DataXProcessorTemplateManipulateStore store = registryEntry.getValue();
+                AbstractTemplateManipulateStore store = registryEntry.getValue();
                 for (DefaultDataXProcessorManipulate manipulate : store.getManipulates()) {
                     if (BatchJobCrontab.KEY_CRONTAB.equals(manipulate.identityValue())) {
                         BatchJobCrontab crontab = (BatchJobCrontab) manipulate;

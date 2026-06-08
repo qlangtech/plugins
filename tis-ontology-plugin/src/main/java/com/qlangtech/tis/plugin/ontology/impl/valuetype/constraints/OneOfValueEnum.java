@@ -27,18 +27,4 @@ public class OneOfValueEnum extends BasicMultiSelectSingleValElementCreatorFacto
     public OneOfValueEnum() {
         super();
     }
-    //    private String enumVal;
-//
-//    public String getEnumVal() {
-//        return enumVal;
-//    }
-//
-//    public void setEnumVal(String enumVal) {
-//        this.enumVal = enumVal;
-//    }
-//
-//    @Override
-//    public String getName() {
-//        return enumVal;
-//    }
 }

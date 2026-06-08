@@ -1,0 +1,38 @@
+{
+  "enableExplain": {
+    "label": "EXPLAIN 校验",
+    "help": "是否启用 EXPLAIN 动态校验。关闭可加快速度但降低准确性",
+    "dftVal": true
+  },
+  "enableKeywordCheck": {
+    "label": "关键字检查",
+    "help": "是否启用关键字白名单/黑名单校验。建议保持开启以确保安全",
+    "dftVal": true
+  },
+  "enableAstCheck": {
+    "label": "AST 校验",
+    "help": "是否启用 AST 语法树校验。检查表名、列名、JOIN 是否在 GraphRAG 白名单内",
+    "dftVal": true
+  },
+  "allowedFirstKeywords": {
+    "label": "允许首关键字",
+    "enumMode": "multiple",
+    "help": "允许的 SQL 首关键字白名单（逗号分隔，不区分大小写）。只有这些关键字开头的 SQL 才会被执行。安全建议：仅保留 SELECT 相关关键字",
+    "dftVal": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.dftAllowedFirstKeywords():uncache_true",
+    "enum": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.getAllowedFirstKeywordsCandidate()"
+  },
+  "forbiddenKeywords": {
+    "label": "禁止关键字",
+    "enumMode": "multiple",
+    "help": "禁止出现的关键字黑名单（逗号分隔，不区分大小写）。包含这些关键字的 SQL 会被拒绝。安全建议：禁止所有 DDL 和 DML 写操作",
+    "dftVal": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.dftForbiddenKeywords():uncache_true",
+    "enum": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.getForbiddenKeywordsCandidate()"
+  },
+  "safeFunctions": {
+    "label": "安全函数",
+    "enumMode": "multiple",
+    "help": "安全的字符串/数值函数（逗号分隔，不区分大小写）。这些函数即使与禁止关键字同名也会被豁免。例如：REPLACE 函数不会被误判为 CREATE OR REPLACE",
+    "dftVal": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.dftSafeFunctions():uncache_true",
+    "enum": "com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig.getSafeFunctionsCandidate()"
+  }
+}

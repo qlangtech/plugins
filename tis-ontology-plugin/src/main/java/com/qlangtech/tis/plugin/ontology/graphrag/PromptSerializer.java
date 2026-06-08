@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.qlangtech.tis.plugin.ontology.graphrag.SubgraphSnapshot.ObjectTypeNode.KEY_PHYSICAL_EXPRESSION;
+
 /**
  * 将子图序列化为 Markdown prompt 上下文，按 token 预算逐档剪枝。
  *
@@ -89,7 +91,7 @@ final class PromptSerializer {
                 if (StringUtils.isNotBlank(ot.alias)) sb.append(" (").append(ot.alias).append(')');
                 sb.append('\n');
                 if (StringUtils.isNotBlank(ot.physicalTable)) {
-                    sb.append("- physical: `").append(ot.physicalTable).append("`");
+                    sb.append("- ").append(KEY_PHYSICAL_EXPRESSION).append(": `").append(ot.physicalTable).append("`");
                     if (StringUtils.isNotBlank(ot.boundDsName)) {
                         sb.append(" @ ").append(ot.boundDsName);
                     }

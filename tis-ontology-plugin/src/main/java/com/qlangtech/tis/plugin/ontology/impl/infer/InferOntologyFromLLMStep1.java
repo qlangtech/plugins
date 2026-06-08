@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ontology;
+package com.qlangtech.tis.plugin.ontology.impl.infer;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
@@ -24,43 +24,48 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.tis.aiagent.core.IAgentContext;
 import com.qlangtech.tis.aiagent.llm.FlatJsonToTisConverter;
-import com.qlangtech.tis.aiagent.llm.ITISJsonSchema;
+import com.qlangtech.tis.aiagent.llm.LLMOptionParams;
 import com.qlangtech.tis.aiagent.llm.LLMProvider;
 import com.qlangtech.tis.aiagent.llm.TISJsonSchema;
-import com.qlangtech.tis.aiagent.llm.UserPrompt;
+import com.qlangtech.tis.datax.job.SSEEventWriter;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.impl.DefaultGroovyShellFactory;
-import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipuldateUtils;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyGlossary;
+import com.qlangtech.tis.plugin.ontology.OntologyLinker;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
+import com.qlangtech.tis.plugin.ontology.OntologyProperty;
+import com.qlangtech.tis.plugin.ontology.OntologySharedProperty;
+import com.qlangtech.tis.plugin.ontology.OntologyValueType;
+import com.qlangtech.tis.plugin.ontology.StreamingJsonOntologyParser;
+import com.qlangtech.tis.plugin.ontology.TargetProperty;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
-import com.qlangtech.tis.plugin.ontology.impl.glossary.DefaultOntologyGlossary;
-import com.qlangtech.tis.plugin.ontology.impl.linker.DefaultOntologyLinker;
-import com.qlangtech.tis.plugin.ontology.impl.sharedproperty.DefaultOntologySharedProperty;
-import com.qlangtech.tis.plugin.ontology.impl.valuetype.DefaultOntologyValueType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
-import com.qlangtech.tis.util.DescriptorsJSONForAIPrompt;
-import com.qlangtech.tis.util.DescriptorsMeta;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.PartialSettedPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
@@ -77,14 +82,15 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.ONTOLOGY_DOMAIN;
  * @date 2026/5/20
  */
 @SuppressWarnings("all")
-public class InferOntologyFromLLM extends OntologyDomainManipulate {
+public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
 
     //    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require, Validator.identity})
     //    public String ontologyDomain;
-    private static final String KEY_LINK_TYPES = "linkTypes";
-    private static final String KEY_SHARED_PROPERTIES = "sharedProperties";
-    private static final String KEY_VALUE_TYPES = "valueTypes";
-    private static final String KEY_GLOSSARIES = "glossaries";
+    public static final String KEY_LINK_TYPES = "linkTypes";
+    public static final String KEY_SHARED_PROPERTIES = "sharedProperties";
+    public static final String KEY_VALUE_TYPES = "valueTypes";
+    public static final String KEY_GLOSSARIES = "glossaries";
+    private static final Logger logger = LoggerFactory.getLogger(InferOntologyFromLLMStep1.class);
     /**
      * 大模型接口
      */
@@ -117,11 +123,16 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
     }
 
     @Override
-    protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context,
-                                           ManipulateItemsProcessor itemsProcessor) {
-        final Context ctx = context.orElseThrow();
+    protected void processPreSaved(IPluginContext pluginContext, Context ctx, OneStepOfMultiSteps[] preSavedStepPlugins) {
 
-        OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, context);
+//    }
+//
+//    @Override
+//    protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context,
+//                                           ManipulateItemsProcessor itemsProcessor) {
+        // final Context ctx = context.orElseThrow();
+
+        OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, Optional.of(ctx));
 
         List<OntologyObjectType> objectTypes = OntologyObjectType.loadAll(ometa.getDomain());
         if (objectTypes.isEmpty()) {
@@ -136,55 +147,157 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
         // UserProfile userProfile = UserProfile.load(pluginContext, true);
         LLMProvider llmProvider = this.getLlmProvider();
 
-        /**
-         * 大模型推断
-         */
-        LLMProvider.LLMResponse response = llmProvider.chatJson(
-                IAgentContext.createNull(),
-                new UserPrompt("Infer ontology relations", userPrompt),
-                Collections.singletonList(systemPrompt),
-                buildOutputJsonSchema());
+        LLMOptionParams optParams = new LLMOptionParams();
+        optParams.setStreamOutput(true);
 
-        if (!response.isSuccess() || response.getJsonContent() == null) {
-            throw new IllegalStateException("LLM inference failed: "
-                    + (response.getErrorMessage() != null ? response.getErrorMessage() : "no response"));
-        }
-        JSONObject jsonContent = response.getJsonContent();
+        // 使用并发队列收集流式解析结果
+        ConcurrentLinkedQueue<Pair<OntologyLinker, InferenceParse>> linkTypesQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Pair<OntologySharedProperty, InferenceParse>> sharedPropsQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Pair<OntologyValueType, InferenceParse>> valueTypesQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Pair<OntologyGlossary, InferenceParse>> glossariesQueue = new ConcurrentLinkedQueue<>();
 
-        DeserializeOntologyRes ontologyRes = deserializeOntologyRes(ometa.getDomain(), pluginContext, jsonContent, ctx);
+        // 创建流式解析器
+        StreamingJsonOntologyParser parser = new StreamingJsonOntologyParser();
+        AtomicBoolean hasError = new AtomicBoolean(false);
 
-        ontologyRes.create(pluginContext);
+        parser.setCallbacks(new StreamingJsonOntologyParser.Callbacks() {
+            @Override
+            public void onLinkType(JSONObject element) {
+                try {
+                    Pair<OntologyLinker, InferenceParse> result = deserializeElement(element, pluginContext, ctx);
+                    linkTypesQueue.add(result);
+                    logger.info("[Parsed LinkType: " + result.getKey().identityValue() + "]");
+                } catch (Exception e) {
+                    logger.warn("Error parsing LinkType: " + e.getMessage(), e);
+                    hasError.set(true);
+                }
+            }
 
-        //  System.out.println(linkTypes);
+            @Override
+            public void onSharedProperty(JSONObject element) {
+                try {
+                    Pair<OntologySharedProperty, InferenceParse> result = deserializeElement(element, pluginContext, ctx);
+                    sharedPropsQueue.add(result);
+                    logger.info("[Parsed SharedProperty: " + result.getKey().identityValue() + "]");
+                } catch (Exception e) {
+                    logger.warn("Error parsing SharedProperty: " + e.getMessage(), e);
+                    hasError.set(true);
+                }
+            }
 
-        // 把 vals 内的 primitive 字段（如 MetadataOfValueType.type:int）包装成 {_primaryVal: val}，
-        // 使其能被 AttrVals#parseAttrValMap 反序列化。详见 normalizeValsForReparse 注释。
-        // normalizeValsForReparse(jsonContent);
+            @Override
+            public void onValueType(JSONObject element) {
+                try {
+                    Pair<OntologyValueType, InferenceParse> result = deserializeElement(element, pluginContext, ctx);
+                    valueTypesQueue.add(result);
+                    logger.info("[Parsed ValueType: " + result.getKey().identityValue() + "]");
+                } catch (Exception e) {
+                    logger.warn("Error parsing ValueType: " + e.getMessage() + "\njson:\n" + element.toJSONString(), e);
+                    hasError.set(true);
+                }
+            }
 
-        //  pluginContext.setBizResult(context.orElseThrow(), jsonContent);
+            @Override
+            public void onGlossary(JSONObject element) {
+                try {
+                    Pair<OntologyGlossary, InferenceParse> result = deserializeElement(element, pluginContext, ctx);
+                    glossariesQueue.add(result);
+                    logger.info("[Parsed Glossary: " + result.getKey().identityValue() + "]");
+                } catch (Exception e) {
+                    logger.warn("Error parsing Glossary: " + e.getMessage(), e);
+                    hasError.set(true);
+                }
+            }
+        });
+
+
+        optParams.setStreamOutputConsumer((reader) -> {
+            reader.lines().forEach((line) -> {
+                if (StringUtils.isEmpty(line) || "data: [DONE]".equals(line)) {
+                    return;
+                }
+                try {
+                    JSONObject data = JSONObject.parseObject(SSEEventWriter.getDataContent(line));
+                    if (data == null) {
+                        return;
+                    }
+                    JSONArray choices = data.getJSONArray("choices");
+                    for (Object c : choices) {
+                        if (c instanceof JSONObject choice) {
+                            String content = choice.getJSONObject("delta").getString("content");
+                            if (content != null) {
+                                System.out.print(content);
+                                // 将内容喂给流式解析器
+                                parser.appendChunk(content);
+                                parser.parse();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(line, e);
+                }
+            });
+
+            // 完成解析
+            try {
+                parser.finish();
+            } catch (Exception e) {
+                throw new RuntimeException("Error finishing parser", e);
+            }
+        });
+//        /**
+//         * 大模型推断
+//         */
+//        LLMProvider.LLMResponse response = llmProvider.chatJson(
+//                IAgentContext.createNull(),
+//                new UserPrompt("Infer ontology relations", userPrompt),
+//                Collections.singletonList(systemPrompt),
+//                buildOutputJsonSchema(), optParams);
+//
+//        //  System.out.println(parser.buffer);
+//
+//        if (!response.isSuccess()) {
+//            throw new IllegalStateException("LLM inference failed: "
+//                    + (response.getErrorMessage() != null ? response.getErrorMessage() : "no response"));
+//        }
+//
+//        if (hasError.get()) {
+//            throw new IllegalStateException("Error occurred during streaming deserialization");
+//        }
+//
+//        // 流式模式下从队列构建结果
+//        DeserializeOntologyRes ontologyRes = new DeserializeOntologyRes(
+//                ometa.getDomain(),
+//                new ArrayList<>(linkTypesQueue),
+//                new ArrayList<>(sharedPropsQueue),
+//                new ArrayList<>(valueTypesQueue),
+//                new ArrayList<>(glossariesQueue)
+//        );
+//
+//        ontologyRes.create(pluginContext);
     }
 
-    public DeserializeOntologyRes deserializeOntologyRes(String ontologyDomain, IPluginContext pluginContext,
-                                                         JSONObject jsonContent
-            , Context ctx) {
-
-        JSONArray linkTypesJsonArray = jsonContent.getJSONArray(KEY_LINK_TYPES);
-        JSONArray sharedPropsJsonArray = jsonContent.getJSONArray(KEY_SHARED_PROPERTIES);
-        JSONArray valueTypesJsonArray = jsonContent.getJSONArray(KEY_VALUE_TYPES);
-        JSONArray glossariesJsonArray = jsonContent.getJSONArray(KEY_GLOSSARIES);
-
-        List<Pair<OntologyLinker, InferenceParse>> linkTypes //
-                = createOntologyResources(pluginContext, linkTypesJsonArray, ctx);
-        List<Pair<OntologySharedProperty, InferenceParse>> sharedProps  //
-                = createOntologyResources(pluginContext, sharedPropsJsonArray, ctx);
-        List<Pair<OntologyValueType, InferenceParse>> valueTypes //
-                = createOntologyResources(pluginContext, valueTypesJsonArray, ctx);
-        List<Pair<OntologyGlossary, InferenceParse>> glossaries //
-                = createOntologyResources(pluginContext, glossariesJsonArray, ctx);
-
-        return new DeserializeOntologyRes(ontologyDomain, linkTypes, sharedProps, valueTypes, glossaries);
-
-    }
+//    public DeserializeOntologyRes deserializeOntologyRes(String ontologyDomain, IPluginContext pluginContext,
+//                                                         JSONObject jsonContent
+//            , Context ctx) {
+//
+//        JSONArray linkTypesJsonArray = jsonContent.getJSONArray(KEY_LINK_TYPES);
+//        JSONArray sharedPropsJsonArray = jsonContent.getJSONArray(KEY_SHARED_PROPERTIES);
+//        JSONArray valueTypesJsonArray = jsonContent.getJSONArray(KEY_VALUE_TYPES);
+//        JSONArray glossariesJsonArray = jsonContent.getJSONArray(KEY_GLOSSARIES);
+//
+//        List<Pair<OntologyLinker, InferenceParse>> linkTypes //
+//                = createOntologyResources(pluginContext, linkTypesJsonArray, ctx);
+//        List<Pair<OntologySharedProperty, InferenceParse>> sharedProps  //
+//                = createOntologyResources(pluginContext, sharedPropsJsonArray, ctx);
+//        List<Pair<OntologyValueType, InferenceParse>> valueTypes //
+//                = createOntologyResources(pluginContext, valueTypesJsonArray, ctx);
+//        List<Pair<OntologyGlossary, InferenceParse>> glossaries //
+//                = createOntologyResources(pluginContext, glossariesJsonArray, ctx);
+//
+//        return new DeserializeOntologyRes(ontologyDomain, linkTypes, sharedProps, valueTypes, glossaries);
+//
+//    }
 
     private static class DeserializeOntologyRes {
         private final List<Pair<OntologyLinker, InferenceParse>> linkTypes;
@@ -228,7 +341,8 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             for (Pair<OntologySharedProperty, InferenceParse> sharedProperty : sharedProps) {
                 Ontology.OntologyEnum.SharedProperty.save(pluginContext, ontologyDomain, sharedProperty.getKey());
                 inferenceParse = sharedProperty.getValue();
-                for (TargetProperty targetProperty : inferenceParse.getTargetProps()) {
+                List<TargetProperty> targetProperties = inferenceParse.getTargetProps();
+                for (TargetProperty targetProperty : targetProperties) {
                     objectType = this.getObjectType(targetProperty);
                     objectType.setSharedProperty(targetProperty, sharedProperty.getKey());
                 }
@@ -236,7 +350,8 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             for (Pair<OntologyValueType, InferenceParse> valueType : valueTypes) {
                 Ontology.OntologyEnum.ValueType.save(pluginContext, ontologyDomain, valueType.getKey());
                 inferenceParse = valueType.getValue();
-                for (TargetProperty targetProperty : inferenceParse.getTargetProps()) {
+                List<TargetProperty> targetProperties = inferenceParse.getTargetProps();
+                for (TargetProperty targetProperty : targetProperties) {
                     objectType = this.getObjectType(targetProperty);
                     objectType.setValeType(targetProperty, valueType.getKey());
                 }
@@ -255,18 +370,27 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             IPluginContext pluginContext, JSONArray ontologyJsonArray, Context ctx) {
         List<Pair<TT, InferenceParse>> ress = ontologyJsonArray.stream().map((o) -> {
             if (o instanceof JSONObject json) {
-                AttrValMap valMap = AttrValMap.parseDescribableMap(Optional.empty(),
-                        FlatJsonToTisConverter.convert(json));
-                //json.getString("")
-                InferenceParse inferenceParseResult = InferenceParse.deserialize(json);
-
-                return Pair.of((TT) valMap.createDescribable((IControlMsgHandler) pluginContext, ctx).getInstance(),
-                        inferenceParseResult);
+                Pair<TT, InferenceParse> result = deserializeElement(json, pluginContext, ctx);
+                return result;
             } else {
                 throw new IllegalStateException("element must be type of " + JSONObject.class.getName());
             }
-        }).toList();
+        }).collect(Collectors.toList());
         return ress;
+    }
+
+    /**
+     * 反序列化单个本体元素
+     * 用于流式解析和批量解析共享逻辑
+     */
+    static <TT extends Ontology> Pair<TT, InferenceParse> deserializeElement(
+            JSONObject json, IPluginContext pluginContext, Context ctx) {
+        AttrValMap valMap = AttrValMap.parseDescribableMap(Optional.empty(),
+                FlatJsonToTisConverter.convert(json));
+        TT ontologyRes = (TT) valMap.createDescribable((IControlMsgHandler) pluginContext, ctx).getInstance();
+        InferenceParse inferenceParseResult = InferenceParse.deserialize(json, ontologyRes);
+
+        return Pair.of(ontologyRes, inferenceParseResult);
     }
 
 
@@ -356,6 +480,16 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
     //                """;
     //    }
 
+    private static class SystemPrompt4OntologyResource {
+        private final String title;
+        private final String content;
+
+        public SystemPrompt4OntologyResource(String title, String content) {
+            this.title = title;
+            this.content = content;
+        }
+    }
+
     private String buildSystemPrompt() {
 
         return """
@@ -364,30 +498,47 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
                 根据用户提供的表结构列表（JSON格式），请分析并推断以下本体对象：
                 
                 ## 1. Link Type（linkTypes）（关联关系）
-                表之间的关联关系，有三种类型：
+                表之间的关联关系，有2种类型：
                 - Object type foreign keys (token=1): 通过外键关联，用于一对一或一对多关系。
                   判断依据：某表的列名为 xxx_id 且另一张表名为 xxx 且有 id 主键。
-                - Join table dataset (token=2): 通过中间表关联，用于多对多关系。
-                  判断依据：某表只有两个外键列组成联合主键，分别指向两张实体表。
                 - Backing object type (token=3): 通过中间对象类型关联，用于带属性的多对多关系。
                   判断依据：某表有两个外键列但还有其他业务属性列。
                 
-                ### ⚠️ 核心优先级规则（最高优先级）：通用多重关联识别
+                ### ⚠️ 核心优先级与互斥规则（最高优先级）
                 
-                在进行任何技术性判定之前，请执行以下通用业务语义匹配逻辑。请务必遵循此逻辑，以确保处理生产环境中各种命名的表：
+                请严格遵守以下流程，确保输出结果的准确性和通用性。
                 
-                1.  **通用特征匹配（不再依赖具体词汇）**：
-                    *   **判定条件**：如果一张表（记为 Table_J）包含至少两列外键（例如 `ID_A`, `ID_B`），分别指向两张不同的维度表（Table_A, Table_B），**并且** Table_J 中还包含其他非外键的业务属性列（如数值、描述等，即非 `_ID` 结尾的列）。
-                    *   **结论**：请无条件推断为 `Backing object type` (token=3)。
-                    *   *注意：不要去猜测业务含义（如库存、销售），只要结构符合“双外键+属性”，就是 Backing object type。*
+                #### 🔍 1. 列名识别基础规则（通用过滤）
+                在进行任何关系推断前，先应用此规则过滤列名：
+                - **ID 特征要求**：只有列名包含明确 ID 特征（如 `_id`, `ID`, `_key`）时，才可被识别为外键或主键。
+                - **跳过非典型名**：如果列名仅为 `code`, `country_code`, `number`, `no` 等非典型命名，即使逻辑上像外键，也**必须跳过**，不生成任何 Link Type。
+                - **主键优先**：优先识别 `pk=true` 的列为关键连接点。
                 
-                2.  **解除路径占用（关键通用逻辑）**：
-                    *   **独立性原则**：**每张表都是独立的分析单元。**
-                    *   **逻辑说明**：即使你已经为实体对 (Table_A - Table_B) 创建了一个 `Backing object type` 连接（例如来自表 X），**如果遇到了另一张表 Y，且表 Y 也符合上述“双外键+属性”的特征**，你必须**再次**创建一个新的 `Backing object type` 连接。
-                    *   *通俗解释：不要去重。在数据库里，两张不同的表（哪怕它们连接的是相同的两张维度表），也代表了两种不同的物理存储和业务事实。一张表对应一个连接对象。*
+                #### 🚀 2. 两阶段物理隔离流程
                 
-                3.  **主键忽略（保留原有逻辑）**：
-                    *   满足上述特征时，忽略主键（pk）属性的真假，直接视为带属性的多对多关系。
+                请按顺序执行，且前一阶段的结果会物理影响后一阶段的输入。
+                
+                ##### 阶段 A：中间表（Backing Object）识别与吞噬 (Token 3)
+                1. **扫描目标**：查找同时满足以下条件的表：
+                   - 包含**至少两个**符合上述“ID 特征”的外键列（例如：`store_id` + `product_id`）。
+                   - 包含除外键外的**业务属性列**（如 `amount`, `date`, `stock`, `units`）。
+                2. **操作**：
+                   - 为该表生成 Token 3 (`RelationshipTypeBackingObjectType`)。
+                   - **【物理移除】**：立即将该表从你的“可用表池”中移除。在后续所有步骤中，你**看不见**这张表。
+                
+                ##### 阶段 B：简单外键连接 (Token 1)
+                1. **扫描目标**：仅在**未被移除**的表中，寻找“父表（主键）”与“子表（外键）”的一对多关系。
+                2. **操作**：
+                   - 生成 Token 1 (`RelationshipTypeObjectTypeForeignKeys`)。
+                3. **【关键限制】**：因为你已经在阶段 A 移除了中间表，所以这里**绝对不可能**出现中间表作为“子表”的连接。如果出现了，说明阶段 A 失败。
+                
+                #### ✅ 3. 通用最终验证
+                在输出 JSON 前，执行以下自检：
+                1. **互斥检查**：检查所有 Token 3 的 `joinObjectType.objectType`（中间表名）。
+                   - 确保这些表名**不出现在**任何 Token 1 的 `right.objectType`（子表侧）中。
+                2. **数量逻辑**：
+                   - 如果输入包含 N 张中间表，则最终 Link Types 数量应为 **N**（仅 Token 3），或者 **N + 剩余维度表连接数**。
+                   - 绝对不允许出现“中间表既在 Token 3 又在 Token 1”的情况。
                 
                 ## 2. Shared Property（sharedProperties，共享属性）
                 多个表中出现的相同语义的属性，适合抽取为共享属性复用。
@@ -419,8 +570,9 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
                 同义词请尽量覆盖：中文同义词、英文同义词、口语化表达、行业术语。
                 优先从列注释/表名中提取业务名词，避免编造。                    
                 
-                ## 输出要求
-                1. 请严格按照 response_format 中定义的 JSON Schema 格式输出。针对response_format 中 `linkTypes`，`sharedProperties` ，`valueTypes` ，`glossaries` 几种实例内容都请推断并填充。
+                ## 📝 最终输出格式 (严格遵守)
+                1. 我将通过流式接口接收你的响应。请不要输出任何解释性文字，直接输出 JSON 数据流，请**严格按照response_format中定义的json schema 格式输出**。针对response_format 中 `linkTypes`，`sharedProperties` ，`valueTypes` ，`glossaries` 几种实例内容进行推理。
+                
                 2. 请明确区分 response_format 中定义的 JSON Schema 中的`description`字段说明，`description`可以是对输入字段的说明，也可能是必须输入的属性之一，如下schema片段：
                    ```json
                    {
@@ -454,21 +606,21 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
     private TISJsonSchema buildOutputJsonSchema() {
         TISJsonSchema.Builder builder = TISJsonSchema.Builder.create("ontology_inference_result", Optional.empty());
 
-        // linkTypes array
-        builder.addProperty(KEY_LINK_TYPES, TISJsonSchema.FieldType.Array, "推断出的关联关系列表")
-                .setItems(buildLinkTypeItemSchema());
-
-        // sharedProperties array
-        builder.addProperty(KEY_SHARED_PROPERTIES, TISJsonSchema.FieldType.Array, "推断出的共享属性列表")
-                .setItems(buildSharedPropertyItemSchema());
-        //
-        // valueTypes array
-        builder.addProperty(KEY_VALUE_TYPES, TISJsonSchema.FieldType.Array, "推断出的值类型列表")
-                .setItems(buildValueTypeItemSchema());
-
-        // glossaries array
-        builder.addProperty(KEY_GLOSSARIES, TISJsonSchema.FieldType.Array, "推断出的业务术语列表")
-                .setItems(buildGlossaryItemSchema());
+//        // linkTypes array
+//        builder.addProperty(KEY_LINK_TYPES, TISJsonSchema.FieldType.Array, "推断出的关联关系列表")
+//                .setItems(buildLinkTypeItemSchema());
+//
+//        // sharedProperties array
+//        builder.addProperty(KEY_SHARED_PROPERTIES, TISJsonSchema.FieldType.Array, "推断出的共享属性列表")
+//                .setItems(buildSharedPropertyItemSchema());
+//        //
+//        // valueTypes array
+//        builder.addProperty(KEY_VALUE_TYPES, TISJsonSchema.FieldType.Array, "推断出的值类型列表")
+//                .setItems(buildValueTypeItemSchema());
+//
+//        // glossaries array
+//        builder.addProperty(KEY_GLOSSARIES, TISJsonSchema.FieldType.Array, "推断出的业务术语列表")
+//                .setItems(buildGlossaryItemSchema());
 
         return builder.build();
         //        TISJsonSchema schema = ;
@@ -481,9 +633,10 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
 
     public static void main(String[] args) {
         DefaultGroovyShellFactory.setInConsoleModule();
-        InferOntologyFromLLM infer = new InferOntologyFromLLM();
-        infer.llm = "qwen1";
-        String ontologyName = "falcon_14";
+        InferOntologyFromLLMStep1 infer = new InferOntologyFromLLMStep1();
+        infer.llm = "default";// "qwen1";// "qwen1";
+        // String ontologyName = "falcon_14";
+        String ontologyName = "order2";
         PartialSettedPluginContext pluginContext = IPluginContext.namedContext(ontologyName);
 
         //
@@ -496,6 +649,7 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
         DefaultContext context = new DefaultContext();
         pluginContext.setContext(context);
 
+        infer.manipuldateProcess(pluginContext, null, Optional.of(context));
 
         //        UploadPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta(UploadPluginMeta.create(Ontology
         //        .ONTOLOGY))
@@ -513,7 +667,7 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
         //        ontologyRes.create(pluginContext,ontologyName);
 
         // System.out.println(linker);
-        infer.manipuldateProcess(pluginContext, null, Optional.of(context));
+
 
         //        TISJsonSchema schema = infer.buildOutputJsonSchema();
         //
@@ -533,106 +687,6 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
         //        }
     }
 
-    /**
-     *
-     * @return
-     * @see OntologyLinker
-     */
-    private ITISJsonSchema buildLinkTypeItemSchema() {
-
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyLinker.DefaultDesc()),
-                        true, (b, desc) -> {
-                    // 推断元数据
-                    InferenceParse.add2SchemaBuilder(b);
-                }, (attr, addedProp) -> false);
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
-        ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
-        return schema;
-    }
-
-    /**
-     *
-     * @return
-     * @see OntologySharedProperty
-     */
-    private ITISJsonSchema buildSharedPropertyItemSchema() {
-
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologySharedProperty.DefaultDesc()),
-                        true
-                        , (b, desc) -> {
-                    InferenceParse.addTargetColumns2Schema(b);
-                    // 推断元数据
-                    //                    b.addProperty("confidence", TISJsonSchema.FieldType.String, "置信度")
-                    //                            .setValEnums("high", "medium", "low");
-                    InferenceParse.add2SchemaBuilder(b);
-                }, (attr, addedProp) -> false
-                );
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
-        return meta.getPluginJsonSchema().values().iterator().next();
-    }
-
-    /**
-     * 利用 {@link DescriptorsJSONForAIPrompt} 自动生成 {@link OntologyValueType} 的 schema。
-     * 由于 {@link OntologyValueType} 实现 {@link com.qlangtech.tis.extension.MultiStepsSupportHost}，
-     * 自动生成的 schema 形如 <code>{ impl, vals:{ multiStepsSavedItems:[{impl,vals},{impl,vals}] } }</code>，
-     * 与 {@link com.qlangtech.tis.extension.OneStepOfMultiSteps#parseStepsPlugin} 期望的反序列化格式天然对齐。
-     * 外层再平铺 sourceColumn / confidence / reason 三个推断元数据字段。
-     *
-     * @return
-     * @see OntologyValueType
-     */
-    private ITISJsonSchema buildValueTypeItemSchema() {
-
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyValueType.DefaultDesc()), true
-                        , (b, desc) -> {
-                    // 推断元数据
-                    // b.addProperty("sourceColumn", TISJsonSchema.FieldType.String, "来源列（表名.列名）");
-                    InferenceParse.addTargetColumns2Schema(b);
-
-                    InferenceParse.add2SchemaBuilder(b);
-
-                }, (attr, addedProp) -> false);
-
-        DescriptorsMeta meta
-                = descriptorsJSON.getDescriptorsJSON();
-
-        // host schema 形如 { impl, vals:{ multiStepsSavedItems:[...] } }
-        ITISJsonSchema hostSchema = meta.getFirstPluginJsonSchema();
-        return hostSchema;
-
-        //        TISJsonSchema.Builder b = TISJsonSchema.Builder.create("valueTypeItem", Optional.of("valueTypes"));
-        //
-        //        // 把 host schema 的 properties (impl, vals) 平铺到外层
-        //        JSONObject hostProps = hostSchema.schema().getJSONObject(TISJsonSchema.SCHEMA_PROPERTIES);
-        //        for (String key : hostProps.keySet()) {
-        //            b.addRawProperty(key, hostProps.getJSONObject(key), true);
-        //        }
-        //
-        //
-        //        return b.build();
-    }
-
-    /**
-     * @see OntologyGlossary
-     */
-    private ITISJsonSchema buildGlossaryItemSchema() {
-
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyGlossary.DefaultDesc()), true,
-                        (builder, desc) -> {
-                            InferenceParse.add2SchemaBuilder(builder);
-                        }, (attr, addedProp) -> false);
-
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
-
-        ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
-        StringBuilder prompt = new StringBuilder();
-        schema.appendFieldDescToPrompt(prompt);
-        return schema;
-    }
 
     /**
      * 把 LLM 返回 JSON 中的 primitive 值（Number / Boolean 等）递归包装成
@@ -671,7 +725,7 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
 
 
     @TISExtension
-    public static final class DftDesc extends OntologyDomainManipulate.BasicDesc implements IEndTypeGetter {
+    public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc {
         public DftDesc() {
             super();
             //            List<Pair<OntologyDomain, IPluginStore<OntologyDomain>>> domainList = OntologyDomain
@@ -679,6 +733,21 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             //            List<OntologyDomain> domains = domainList.stream().map(Pair::getKey).toList();
             //            this.registerSelectOptions("ontologyDomain", () -> domains);
             this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider::getExistProviders);
+        }
+
+        @Override
+        public OneStepOfMultiSteps.Step getStep() {
+            return Step.Step1;
+        }
+
+        @Override
+        public Optional<OneStepOfMultiSteps.BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
+            return Optional.of(new InferOntologyFromLLMStep2Prompt.DftDesc());
+        }
+
+        @Override
+        public String getStepDescription() {
+            return "基本设置";
         }
 
         @Override
@@ -714,14 +783,6 @@ public class InferOntologyFromLLM extends OntologyDomainManipulate {
             return true;
         }
 
-        @Override
-        public String getDisplayName() {
-            return "Infer Ontology From LLM";
-        }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.Ontology;
-        }
     }
 }

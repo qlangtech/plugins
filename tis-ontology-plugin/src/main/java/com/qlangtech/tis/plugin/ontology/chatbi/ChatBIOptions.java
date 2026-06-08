@@ -17,6 +17,9 @@
  */
 package com.qlangtech.tis.plugin.ontology.chatbi;
 
+import com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
 import com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions;
 
 /**
@@ -34,10 +37,23 @@ public record ChatBIOptions(
         boolean enableExplain
 ) {
     public static ChatBIOptions defaults() {
-        return new ChatBIOptions(RetrievalOptions.defaults(), true, false);
+        return new ChatBIOptions(RetrievalOptions.defaults(), true, true);
     }
 
     public static ChatBIOptions withRetrieval(RetrievalOptions retrievalOptions) {
-        return new ChatBIOptions(retrievalOptions, true, false);
+        return new ChatBIOptions(retrievalOptions, true, true);
+    }
+
+    /**
+     * 从配置对象构建 ChatBIOptions
+     */
+    public static ChatBIOptions fromConfig(RetrievalConfig retrievalConfig,
+                                           ValidationConfig validationConfig,
+                                           ExecutionConfig executionConfig) {
+        return new ChatBIOptions(
+                retrievalConfig.toRetrievalOptions(),
+                executionConfig.isExecuteQuery(),
+                validationConfig.isEnableExplain()
+        );
     }
 }

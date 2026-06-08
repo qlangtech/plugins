@@ -6,7 +6,7 @@
     "help": "选择需要导出作为本体对象的表"
   },
   "ontologyPkg": {
-    "label": "Ontology Domain",
+    "label": "本体(Ontology)域",
     "help": "选择目标本体管理域",
     "creator": {
       "assistType": "hyperlink",
@@ -14,7 +14,8 @@
       "plugin": [
         {
           "hetero": "ontology-domain",
-          "descName": "Ontology"
+          "descName": "Ontology",
+          "append": false
         }
       ],
       "label": "配置"

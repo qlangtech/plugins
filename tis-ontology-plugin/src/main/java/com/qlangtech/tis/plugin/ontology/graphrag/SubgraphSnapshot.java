@@ -28,7 +28,7 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/1
  */
-final class SubgraphSnapshot {
+public final class SubgraphSnapshot {
 
     /**
      * OT 节点（map key 为 OT 名，保持插入序）。
@@ -47,7 +47,10 @@ final class SubgraphSnapshot {
      */
     final List<GlossaryNode> glossaries = new ArrayList<>();
 
-    static final class ObjectTypeNode {
+    public static final class ObjectTypeNode {
+
+        public static final String KEY_PHYSICAL_EXPRESSION = "physical";
+
         final String name;
         final String alias;
         final String description;

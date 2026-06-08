@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -48,11 +49,30 @@ public class FalconChatBITestExample {
         return new FalconChatBITestExample(testCases);
     }
 
+    public List<FalconTestCase> getTestCasesByDbId(String dbId) {
+        return getTestCasesByDbId(dbId, Optional.empty(), false);
+    }
+
     /**
      * 根据 db_id 获取所有测试案例
      */
-    public List<FalconTestCase> getTestCasesByDbId(String dbId) {
-        return testCasesByDbId.getOrDefault(dbId, Collections.emptyList());
+    public List<FalconTestCase> getTestCasesByDbId(String dbId, Optional<Integer> questionIdCriteria, boolean collectAfterQuestionIdCriteria) {
+        List<FalconTestCase> testCases = testCasesByDbId.getOrDefault(dbId, Collections.emptyList());
+        return questionIdCriteria.map((questionId) -> {
+            AtomicBoolean collect = new AtomicBoolean(false);
+            return testCases.stream().filter((cas) -> {
+                if (collect.get()) {
+                    return true;
+                }
+                if (questionId.equals(cas.getQuestionId())) {
+                    if (collectAfterQuestionIdCriteria) {
+                        collect.set(true);
+                    }
+                    return true;
+                }
+                return false;
+            }).toList();
+        }).orElse(testCases);
     }
 
     /**

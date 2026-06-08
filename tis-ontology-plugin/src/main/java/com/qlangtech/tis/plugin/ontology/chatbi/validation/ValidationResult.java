@@ -17,28 +17,68 @@
  */
 package com.qlangtech.tis.plugin.ontology.chatbi.validation;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import java.util.List;
 
 /**
  * SQL 校验结果。
  *
- * @param valid  是否通过校验
- * @param reason 失败原因（valid=false 时填充）
- * @param issues 详细问题列表（可选）
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
  */
-public record ValidationResult(
-        boolean valid,
-        String reason,
-        List<String> issues
-) {
+public class ValidationResult {
+
+    private final boolean valid;
+    private final String reason;
+    private final List<String> issues;
+    private final Exception exception;
+
+    public ValidationResult(boolean valid, String reason, Exception exception, List<String> issues) {
+        this.valid = valid;
+        this.reason = reason;
+        this.issues = issues;
+        this.exception = exception;
+    }
+
+    public ValidationResult(boolean valid, String reason, List<String> issues) {
+        this(valid, reason, (valid ? null : new Exception(reason)), issues);
+    }
+
+    public boolean valid() {
+        return valid;
+    }
+
+    public String reason() {
+        return reason;
+    }
+
+    public String reasonAndIssue() {
+        StringBuffer buffer = new StringBuffer(this.reason());
+        if (CollectionUtils.isNotEmpty(this.issues)) {
+            buffer.append(",issue:").append(String.join(",", this.issues));
+        }
+        return buffer.toString();
+    }
+
+    public List<String> issues() {
+        return issues;
+    }
+
+    public Exception exception() {
+        return exception;
+    }
+
     public static ValidationResult ok() {
         return new ValidationResult(true, null, List.of());
     }
 
     public static ValidationResult fail(String reason) {
         return new ValidationResult(false, reason, List.of());
+    }
+
+    public static ValidationResult fail(String reason, Exception epx) {
+        return new ValidationResult(false, reason, epx, List.of());
     }
 
     public static ValidationResult fail(String reason, List<String> issues) {

@@ -1,0 +1,12 @@
+{
+  "maxRetry": {
+    "label": "重试次数",
+    "help": "LLM 生成失败时的最大重试次数。推荐范围：1-3，过高会增加延迟",
+    "dftVal": 2
+  },
+  "explainTimeout": {
+    "label": "超时",
+    "help": "EXPLAIN 查询的超时时间（秒）。推荐范围：3-10，视数据库性能调整",
+    "dftVal": 5
+  }
+}

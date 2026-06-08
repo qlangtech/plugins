@@ -18,8 +18,11 @@
 package com.qlangtech.tis.plugin.ontology.chatbi.prompt;
 
 import com.qlangtech.tis.aiagent.llm.UserPrompt;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+
+import static com.qlangtech.tis.plugin.ontology.graphrag.SubgraphSnapshot.ObjectTypeNode.KEY_PHYSICAL_EXPRESSION;
 
 /**
  * Prompt 拼装器（§4.2 T2）。
@@ -29,8 +32,14 @@ import java.util.List;
  */
 public class PromptBuilder {
 
-    public static List<String> buildSystemPrompt() {
-        return List.of(PromptTemplate.SYSTEM_PROMPT);
+    /**
+     * 构建 System Prompt（条件性包含物理表达式规则）
+     *
+     * @param graphragContext GraphRAG 检索到的业务上下文
+     */
+    public static List<String> buildSystemPrompt(String graphragContext) {
+        boolean hasPhysicalExpr = StringUtils.contains(graphragContext,"**" + KEY_PHYSICAL_EXPRESSION + "=");// graphragContext != null && graphragContext.contains("**" + KEY_PHYSICAL_EXPRESSION + "=");
+        return List.of(PromptTemplate.buildSystemPrompt(hasPhysicalExpr));
     }
 
     public static UserPrompt buildInitialPrompt(String nlq, String graphragContext) {
@@ -46,28 +55,45 @@ public class PromptBuilder {
     /**
      * 从 LLM 返回的 markdown 代码块中提取 SQL。
      * 支持格式：```sql\nSELECT...\n``` 或 ```\nSELECT...\n```
+     * 也支持前面有分析文本的情况（例如：字段映射分析 + 代码块）
      */
     public static String extractSqlFromCodeBlock(String llmResponse) {
         if (llmResponse == null || llmResponse.isEmpty()) {
             return "";
         }
 
-        String trimmed = llmResponse.trim();
+        String content = llmResponse.trim();
 
-        // 匹配 ```sql ... ``` 或 ``` ... ```
-        if (trimmed.startsWith("```")) {
-            int firstNewline = trimmed.indexOf('\n');
-            if (firstNewline == -1) {
-                return "";
-            }
-            int endIdx = trimmed.lastIndexOf("```");
-            if (endIdx <= firstNewline) {
-                return "";
-            }
-            return trimmed.substring(firstNewline + 1, endIdx).trim();
+        // 查找代码块起始标记（```sql 或 ```）
+        int codeBlockStart = content.indexOf("```sql");
+        boolean hasSqlMarker = true;
+        if (codeBlockStart == -1) {
+            // 尝试查找通用的 ```
+            codeBlockStart = content.indexOf("```");
+            hasSqlMarker = false;
         }
 
-        return trimmed;
+        if (codeBlockStart == -1) {
+            // 没有代码块标记，返回原文本
+            return content;
+        }
+
+        // 找到第一个换行符（代码块内容的起始）
+        int contentStart = content.indexOf('\n', codeBlockStart);
+        if (contentStart == -1) {
+            return "";
+        }
+        contentStart++; // 跳过换行符
+
+        // 找到代码块结束标记
+        int codeBlockEnd = content.indexOf("```", contentStart);
+        if (codeBlockEnd == -1) {
+            // 没有结束标记，取到末尾
+            return content.substring(contentStart).trim();
+        }
+
+        // 提取代码块内容
+        return content.substring(contentStart, codeBlockEnd).trim();
     }
 
     /**

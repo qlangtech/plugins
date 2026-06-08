@@ -163,11 +163,37 @@ public class TestPromptBuilder {
     }
 
     @Test
-    public void testBuildSystemPrompt() {
-        var systemPrompt = PromptBuilder.buildSystemPrompt();
+    public void testBuildSystemPromptWithoutPhysicalExpr() {
+        String graphragContext = "## ObjectTypes\n### users\n- columns:\n  - id : bigint PK\n  - name : text\n";
+        var systemPrompt = PromptBuilder.buildSystemPrompt(graphragContext);
         assertNotNull(systemPrompt);
         assertEquals("Should have one system prompt", 1, systemPrompt.size());
         assertTrue("Should mention Doris", systemPrompt.get(0).contains("Doris"));
         assertTrue("Should mention SQL", systemPrompt.get(0).contains("SQL"));
+        assertFalse("Should NOT contain physical expression rules when context has no physical=",
+                systemPrompt.get(0).contains("物理表达式处理规则"));
+    }
+
+    @Test
+    public void testBuildSystemPromptWithPhysicalExpr() {
+        String graphragContext = "## ObjectTypes\n### products\n- columns:\n"
+                + "  - Product_Price : text [Measure] **physical=`REPLACE(TRIM({col}), '$', '')`**\n";
+        var systemPrompt = PromptBuilder.buildSystemPrompt(graphragContext);
+        assertNotNull(systemPrompt);
+        assertEquals("Should have one system prompt", 1, systemPrompt.size());
+        assertTrue("Should mention Doris", systemPrompt.get(0).contains("Doris"));
+        assertTrue("Should contain physical expression rules when context has physical=",
+                systemPrompt.get(0).contains("物理表达式处理规则"));
+        assertTrue("Should mention {col} placeholder",
+                systemPrompt.get(0).contains("{col}"));
+    }
+
+    @Test
+    public void testBuildSystemPromptNullContext() {
+        var systemPrompt = PromptBuilder.buildSystemPrompt(null);
+        assertNotNull(systemPrompt);
+        assertEquals("Should have one system prompt", 1, systemPrompt.size());
+        assertFalse("Null context should not include physical expression rules",
+                systemPrompt.get(0).contains("物理表达式处理规则"));
     }
 }

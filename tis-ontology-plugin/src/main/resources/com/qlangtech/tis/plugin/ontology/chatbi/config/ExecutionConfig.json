@@ -1,0 +1,17 @@
+{
+  "executeQuery": {
+    "label": "执行查询",
+    "help": "是否执行生成的 SQL。false 则只生成不执行，适合调试和验证 SQL 生成效果",
+    "dftVal": true
+  },
+  "maxResultRows": {
+    "label": "最大结果行数",
+    "help": "最大返回结果行数，防止结果集过大导致前端 OOM。推荐范围：100-1000",
+    "dftVal": 200
+  },
+  "queryTimeout": {
+    "label": "查询超时（秒）",
+    "help": "SQL 查询超时时间（秒）。防止慢查询长时间占用资源。推荐范围：10-60",
+    "dftVal": 30
+  }
+}

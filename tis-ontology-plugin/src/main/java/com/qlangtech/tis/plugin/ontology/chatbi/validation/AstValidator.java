@@ -17,71 +17,79 @@
  */
 package com.qlangtech.tis.plugin.ontology.chatbi.validation;
 
-import com.facebook.presto.sql.parser.ParsingOptions;
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.*;
 import com.qlangtech.tis.plugin.ontology.graphrag.LinkerInfo;
 import com.qlangtech.tis.plugin.ontology.graphrag.RetrievalResult;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectVisitorAdapter;
+import net.sf.jsqlparser.util.TablesNamesFinder;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * AST 校验器（§5.1 T3）：检查表名/列名/JOIN 是否在 GraphRAG 白名单内。
  * <p>
- * 使用 Presto Parser（TIS 已集成）解析 SQL 为 AST，遍历节点校验。
+ * 使用 JSqlParser 解析 SQL 为 AST，支持多种 SQL 方言（MySQL, PostgreSQL, Oracle 等）。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
  */
 public class AstValidator implements SqlValidator {
 
-    private static final SqlParser SQL_PARSER = new SqlParser();
-
     @Override
     public ValidationResult validate(String sql, RetrievalResult context) {
-        if (sql == null || sql.isBlank()) {
+        if (StringUtils.isBlank(sql)) {
             return ValidationResult.fail("SQL is empty");
         }
 
-        // 去除末尾的分号（Presto Parser 不接受分号）
-        sql = sql.trim();
-        if (sql.endsWith(";")) {
-            sql = sql.substring(0, sql.length() - 1).trim();
-        }
+        // 去除末尾的分号
+        sql = StringUtils.substringBeforeLast(StringUtils.trim(sql), ";");//.trim();
+//        if (sql.endsWith(";")) {
+//            sql = sql.substring(0, sql.length() - 1).trim();
+//        }
 
         try {
-            ParsingOptions options = new ParsingOptions(ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE);
-            Statement statement = SQL_PARSER.createStatement(sql, options);
+            // 解析 SQL（支持多种方言）
+            Statement statement = CCJSqlParserUtil.parse(sql);
+
+            // 使用 TablesNamesFinder 收集表名
+            TablesNamesFinder tablesFinder = new TablesNamesFinder();
+            List<String> tableNames = tablesFinder.getTableList(statement);
+
+            // 收集 JOIN 关系和中间表
+            JoinCollector joinCollector = new JoinCollector();
+            if (statement instanceof Select) {
+                Select select = (Select) statement;
+                select.getSelectBody().accept(joinCollector);
+            }
 
             // 构建白名单集合
             Set<String> allowedTables = new HashSet<>(context.objectTypes());
-            Map<String, Set<String>> allowedColumns = buildColumnWhitelist(context);
             Set<JoinPair> allowedJoins = buildJoinWhitelist(context);
 
-            // 遍历 AST 收集使用的表/列/JOIN
-            AstCollector collector = new AstCollector();
-            collector.process(statement, null);
-
-            // 校验表名
+            // 校验表名（中间表不需要在白名单中）
             List<String> invalidTables = new ArrayList<>();
-            for (String table : collector.tables) {
-                if (!allowedTables.contains(table)) {
+            for (String table : tableNames) {
+                if (!allowedTables.contains(table) && !joinCollector.intermediateTables.contains(table)) {
                     invalidTables.add(table);
                 }
             }
 
-            // 校验列名（简化版：暂不处理表别名解析，假设列名格式为 table.column）
-            List<String> invalidColumns = new ArrayList<>();
-            for (String column : collector.columns) {
-                if (!isColumnAllowed(column, allowedColumns)) {
-                    invalidColumns.add(column);
-                }
-            }
-
-            // 校验 JOIN（简化版：暂不精确匹配 JOIN ON 条件）
+            // 校验 JOIN（涉及中间表的 JOIN 不需要在白名单中）
             List<String> invalidJoins = new ArrayList<>();
-            for (JoinPair join : collector.joins) {
-                if (!isJoinAllowed(join, allowedJoins)) {
+            for (JoinPair join : joinCollector.joins) {
+                if (!isJoinAllowed(join, allowedJoins, joinCollector.intermediateTables)) {
                     invalidJoins.add(join.left + " <-> " + join.right);
                 }
             }
@@ -90,9 +98,6 @@ public class AstValidator implements SqlValidator {
             List<String> issues = new ArrayList<>();
             if (!invalidTables.isEmpty()) {
                 issues.add("Invalid tables: " + invalidTables);
-            }
-            if (!invalidColumns.isEmpty()) {
-                issues.add("Invalid columns: " + invalidColumns);
             }
             if (!invalidJoins.isEmpty()) {
                 issues.add("Invalid joins: " + invalidJoins);
@@ -105,15 +110,8 @@ public class AstValidator implements SqlValidator {
             return ValidationResult.ok();
 
         } catch (Exception e) {
-            return ValidationResult.fail("SQL parsing failed: " + e.getMessage());
+            return ValidationResult.fail("SQL parsing failed: " + e.getMessage(), new Exception(sql, e));
         }
-    }
-
-    private Map<String, Set<String>> buildColumnWhitelist(RetrievalResult context) {
-        // 简化实现：从 GraphRAG 的 promptContext 中无法直接提取列名白名单
-        // 实际应从 Neo4j 或 OntologyObjectType.getCols() 获取
-        // 暂时返回空，表示不校验列名（由 EXPLAIN 兜底）
-        return Collections.emptyMap();
     }
 
     private Set<JoinPair> buildJoinWhitelist(RetrievalResult context) {
@@ -125,72 +123,123 @@ public class AstValidator implements SqlValidator {
         return pairs;
     }
 
-    private boolean isColumnAllowed(String column, Map<String, Set<String>> allowedColumns) {
-        // 简化：暂不校验列名（实际需要从 ObjectType 加载 Property 列表）
-        return true;
-    }
-
-    private boolean isJoinAllowed(JoinPair join, Set<JoinPair> allowedJoins) {
+    private boolean isJoinAllowed(JoinPair join, Set<JoinPair> allowedJoins, Set<String> intermediateTables) {
+        // 如果 JOIN 涉及中间表（CTE/子查询），则跳过白名单检查
+        if (intermediateTables.contains(join.left) || intermediateTables.contains(join.right)) {
+            return true;
+        }
         return allowedJoins.contains(join);
     }
 
     /**
-     * AST 收集器：遍历 AST 收集表名、列名、JOIN 关系。
+     * JOIN 收集器：遍历 AST 收集 JOIN 关系和中间表。
      */
-    private static class AstCollector extends DefaultTraversalVisitor<Void, Void> {
-        final Set<String> tables = new HashSet<>();
-        final Set<String> columns = new HashSet<>();
+    private static class JoinCollector extends SelectVisitorAdapter {
         final Set<JoinPair> joins = new HashSet<>();
-        final Set<String> cteNames = new HashSet<>();
+        final Set<String> intermediateTables = new HashSet<>();
 
         @Override
-        protected Void visitWith(With node, Void context) {
-            for (WithQuery query : node.getQueries()) {
-                cteNames.add(query.getName().toString());
+        public void visit(PlainSelect plainSelect) {
+            // 收集 WITH 子句中的 CTE 名称
+            if (plainSelect.getWithItemsList() != null) {
+                plainSelect.getWithItemsList().forEach(withItem -> {
+                    if (withItem.getAlias() != null) {
+                        intermediateTables.add(withItem.getAlias().getName());
+                    }
+                });
             }
-            return super.visitWith(node, context);
-        }
 
-        @Override
-        protected Void visitTable(Table node, Void context) {
-            String tableName = node.getName().toString();
-            if (!cteNames.contains(tableName)) {
-                tables.add(tableName);
-            }
-            return super.visitTable(node, context);
-        }
+            // 收集 JOIN 表
+            FromItem fromItem = plainSelect.getFromItem();
+            List<Join> joinsList = plainSelect.getJoins();
 
-        @Override
-        protected Void visitDereferenceExpression(DereferenceExpression node, Void context) {
-            // table.column 或 alias.column
-            String full = node.toString();
-            columns.add(full);
-            return super.visitDereferenceExpression(node, context);
-        }
+            if (joinsList != null && fromItem != null) {
+                // 构建别名到表名的映射
+                java.util.Map<String, String> aliasToTable = new java.util.HashMap<>();
 
-        @Override
-        protected Void visitJoin(Join node, Void context) {
-            // 提取左右表名（简化：假设是 Table 节点）
-            String left = extractTableName(node.getLeft());
-            String right = extractTableName(node.getRight());
-            // 只收集非 CTE 表之间的 JOIN，并且排除 CROSS JOIN（没有 ON 条件）
-            if (left != null && right != null && !cteNames.contains(left) && !cteNames.contains(right)) {
-                // 如果有 JOIN 条件（不是 CROSS JOIN），才需要校验 linker
-                if (node.getCriteria().isPresent()) {
-                    joins.add(new JoinPair(left, right));
+                // 处理 FROM 表
+                String fromTableName = extractTableName(fromItem);
+                if (fromTableName != null) {
+                    String fromAlias = fromItem.getAlias() != null ? fromItem.getAlias().getName() : fromTableName;
+                    aliasToTable.put(fromAlias, fromTableName);
+
+                    // 如果 FROM 是子查询且有别名，记录为中间表
+                    if (!isPhysicalTable(fromItem)) {
+                        intermediateTables.add(fromTableName);
+                    }
+                }
+
+                // 处理所有 JOIN 表
+                for (Join join : joinsList) {
+                    FromItem rightItem = join.getRightItem();
+                    String rightTableName = extractTableName(rightItem);
+
+                    if (rightTableName != null) {
+                        String rightAlias = rightItem.getAlias() != null ? rightItem.getAlias().getName() : rightTableName;
+                        aliasToTable.put(rightAlias, rightTableName);
+
+                        // 如果 JOIN 右侧是子查询且有别名，记录为中间表
+                        if (!isPhysicalTable(rightItem)) {
+                            intermediateTables.add(rightTableName);
+                        }
+                    }
+                }
+
+                // 重新遍历 JOIN，根据 ON 条件提取真实的表关系
+                for (Join join : joinsList) {
+                    Collection<Expression> onExpressions = join.getOnExpressions();
+                    if (onExpressions != null && !onExpressions.isEmpty()) {
+                        for (Expression onExpr : onExpressions) {
+                            // 从 ON 条件中提取涉及的表
+                            Set<String> tablesInCondition = extractTablesFromExpression(onExpr, aliasToTable);
+
+                            // 如果 ON 条件涉及两个表，记录它们的连接关系
+                            if (tablesInCondition.size() == 2) {
+                                java.util.Iterator<String> iter = tablesInCondition.iterator();
+                                String table1 = iter.next();
+                                String table2 = iter.next();
+                                joins.add(new JoinPair(table1, table2));
+                            }
+                        }
+                    }
                 }
             }
-            return super.visitJoin(node, context);
         }
 
-        private String extractTableName(Relation relation) {
-            if (relation instanceof Table) {
-                return ((Table) relation).getName().toString();
+        private String extractTableName(FromItem fromItem) {
+            if (fromItem instanceof Table) {
+                return ((Table) fromItem).getName();
             }
-            if (relation instanceof AliasedRelation) {
-                return extractTableName(((AliasedRelation) relation).getRelation());
+            // 对于子查询，返回其别名
+            if (fromItem.getAlias() != null) {
+                return fromItem.getAlias().getName();
             }
             return null;
+        }
+
+        private boolean isPhysicalTable(FromItem fromItem) {
+            return fromItem instanceof Table;
+        }
+
+        /**
+         * 从表达式中提取涉及的表名（通过列引用的表别名）
+         */
+        private Set<String> extractTablesFromExpression(Expression expr, java.util.Map<String, String> aliasToTable) {
+            Set<String> tables = new HashSet<>();
+            String exprStr = expr.toString();
+
+            // 简单解析：提取形如 "alias.column" 的模式
+            // 例如：s.Product_ID = p.Product_ID 会提取 s 和 p
+            for (String alias : aliasToTable.keySet()) {
+                if (exprStr.contains(alias + ".")) {
+                    String tableName = aliasToTable.get(alias);
+                    if (tableName != null) {
+                        tables.add(tableName);
+                    }
+                }
+            }
+
+            return tables;
         }
     }
 
@@ -201,7 +250,7 @@ public class AstValidator implements SqlValidator {
             if (!(o instanceof JoinPair pair)) return false;
             // 双向匹配
             return (left.equals(pair.left) && right.equals(pair.right)) ||
-                   (left.equals(pair.right) && right.equals(pair.left));
+                    (left.equals(pair.right) && right.equals(pair.left));
         }
 
         @Override

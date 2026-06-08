@@ -1,1 +1,47 @@
-{  "name": {    "label": "任务名称",    "help": "推断任务的唯一标识",    "dftVal": "chat_bi",    "readonly": true  },  "llm": {    "label": "大模型",    "help": "用于自动化SQL生成推理LLM接口",    "creator": {      "label": "配置",      "plugin": [        {          "hetero": "params-cfg-user-isolation",          "targetItemDesc": "LLM",          "descName": "QWen"        }      ]    }  },  "maxRetrvalCount": {    "label": "最大获取记录",    "dftVal": 200,    "help": "最大检索记录条数，防止获取记录数目太多导致信息过载"  }}
+{
+  "name": {
+    "label": "任务名称",
+    "help": "推断任务的唯一标识",
+    "dftVal": "chat_bi",
+    "readonly": true
+  },
+  "llm": {
+    "label": "大模型",
+    "help": "用于自动化SQL生成推理LLM接口",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "params-cfg-user-isolation",
+          "targetItemDesc": "LLM",
+          "descName": "QWen"
+        }
+      ]
+    }
+  },
+  "retrievalConfig": {
+    "label": "检索",
+    "help": "Neo4j GraphRAG 检索相关参数配置",
+    "dftVal": "Retrieval Config"
+  },
+  "retryConfig": {
+    "label": "重试",
+    "help": "LLM 重试和超时相关参数配置",
+    "dftVal": "Retry Config"
+  },
+  "validationConfig": {
+    "label": "SQL校验",
+    "help": "SQL 校验相关参数配置（关键字白名单、EXPLAIN 校验等）",
+    "dftVal": "Validation Config"
+  },
+  "executionConfig": {
+    "label": "执行",
+    "help": "SQL 执行相关参数配置（结果集限制、超时等）",
+    "dftVal": "Execution Config"
+  },
+  "traceConfig": {
+    "label": "追踪",
+    "help": "Trace 日志相关参数配置（保留策略、自动清理等）",
+    "dftVal": "Trace Config"
+  }
+}

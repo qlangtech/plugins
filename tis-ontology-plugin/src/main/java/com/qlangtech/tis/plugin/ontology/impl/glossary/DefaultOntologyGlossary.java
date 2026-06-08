@@ -40,7 +40,12 @@ public class DefaultOntologyGlossary extends OntologyGlossary implements IPlugin
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
         final DefaultOntologyGlossary self = this;
-        OntologySyncQueue.enqueue(() -> OntologyNeo4jSyncService.getInstance().syncGlossary(domain, self));
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+            @Override
+            protected void sync() {
+                OntologyNeo4jSyncService.getInstance().syncGlossary(domain, self);
+            }
+        });
     }
 
     @TISExtension

@@ -55,7 +55,12 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
         final DefaultOntologyLinker self = this;
-        OntologySyncQueue.enqueue(() -> OntologyNeo4jSyncService.getInstance().syncLinker(domain, self));
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+            @Override
+            protected void sync() {
+                OntologyNeo4jSyncService.getInstance().syncLinker(domain, self);
+            }
+        });
     }
 
     @TISExtension
@@ -68,10 +73,15 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
         public List<List<ITISJsonSchema>> generateMultiStepsSchemaForAIPrompt() {
             List<List<ITISJsonSchema>> result = Lists.newArrayList();
             for (RelationshipType relationType : RelationshipType.values()) {
+                if (relationType == RelationshipType.JoinTableDataset) {
+                    // 看起来 JoinTableDataset这种类型的join方式并不需要，让大模型识别过程中直接跳过
+                    continue;
+                }
                 List<ITISJsonSchema> oneOfSteps = Lists.newArrayList();
                 DescriptorsJSONForAIPrompt<?> inner = new DescriptorsJSONForAIPrompt<>(
                         Collections.singletonList(new RelationshipTypeSetter.Desc()), false,
-                        (builder, descriptor) -> {},
+                        (builder, descriptor) -> {
+                        },
                         (attr, addedProp) -> {
                             if (StringUtils.equals(attr.getFieldKey(), RelationshipTypeSetter.KEY_RELATIONSHIP_TYPE)) {
                                 addedProp.setConst(relationType.getToken(), relationType.getDescription());

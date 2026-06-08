@@ -40,11 +40,6 @@ public class JoinerSelectDataSource extends OneStepOfMultiSteps implements Seria
     public static class Desc extends OneStepOfMultiSteps.BasicDesc {
 
         @Override
-        public String getDisplayName() {
-            return "第一步";
-        }
-
-        @Override
         public String getStepDescription() {
             return "选择DataSource";
         }

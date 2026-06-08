@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.plugin.ontology.sync;
 
+import com.qlangtech.tis.util.IPluginContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +51,29 @@ public class OntologySyncQueue {
         worker.start();
     }
 
-    /** 提交一个同步任务到队列（非阻塞）。 */
-    public static void enqueue(Runnable task) {
+    /**
+     * 提交一个同步任务到队列（非阻塞）。
+     */
+    public static void enqueue(OntologySyncTask task) {
         QUEUE.offer(task);
+    }
+
+    public static abstract class OntologySyncTask implements Runnable {
+        private final IPluginContext pluginContext;
+        private final Object context;
+
+        public OntologySyncTask(IPluginContext pluginContext) {
+            this.pluginContext = pluginContext;
+            this.context = pluginContext.getContext().getContext();
+        }
+
+        protected abstract void sync();
+
+        @Override
+        public void run() {
+            IPluginContext.setPluginContext(pluginContext);
+            pluginContext.getContext().setContext(context);
+            this.sync();
+        }
     }
 }

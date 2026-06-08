@@ -30,11 +30,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
 import com.qlangtech.tis.plugin.ontology.chatbi.DefaultChatBIService;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -55,10 +57,34 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
     public String llm;
 
     /**
-     * chatBI 最大检索记录条数，放置获取记录数目太多导致信息过载
+     * 检索配置
      */
-    @FormField(type = FormFieldType.INT_NUMBER, ordinal = 2, validate = {Validator.integer, Validator.require})
-    public Integer maxRetrvalCount;
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig retrievalConfig;
+
+    /**
+     * 重试配置
+     */
+    @FormField(ordinal = 4, validate = {Validator.require})
+    public com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig;
+
+    /**
+     * 校验配置
+     */
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig;
+
+    /**
+     * 执行配置
+     */
+    @FormField(ordinal = 6, validate = {Validator.require})
+    public com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig;
+
+    /**
+     * Trace 配置
+     */
+    @FormField(ordinal = 7, validate = {Validator.require})
+    public com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig traceConfig;
 
     private LLMProvider getLlmProvider(IPluginContext pluginContext) {
         return LLMProvider.load(pluginContext, llm);
@@ -71,12 +97,63 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         if (itemsProcessor.isDeleteProcess()) {
             return;
         }
-        DefaultChatBIService.getInstance().setLlmProvider(this.getLlmProvider(pluginContext));
+        DefaultChatBIService chatBIService = DefaultChatBIService.getInstance();
+        chatBIService.setLlmProvider(this.getLlmProvider(pluginContext));
+
+        // 初始化配置到服务
+        chatBIService.setConfigs(
+                this.retryConfig != null ? this.retryConfig : createDefaultRetryConfig(),
+                this.validationConfig != null ? this.validationConfig : createDefaultValidationConfig(),
+                this.executionConfig != null ? this.executionConfig : createDefaultExecutionConfig()
+        );
+
+        // 初始化 Trace 清理服务
+        com.qlangtech.tis.plugin.ontology.chatbi.trace.TraceCleanupService.getInstance()
+                .setConfig(this.traceConfig != null ? this.traceConfig : createDefaultTraceConfig());
+
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(itemsProcessor.getPluginMeta());
         //OntologySyncQueue.enqueue(() -> {
         IPluginContext.setPluginContext(pluginContext);
         OntologyNeo4jSyncService.getInstance().fullRebuild(meta.getDomain());
         //});
+    }
+
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig createDefaultRetryConfig() {
+        com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig config =
+                new com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig();
+        config.maxRetry = 2;
+        config.explainTimeout = Duration.ofSeconds(5);
+        return config;
+    }
+
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig createDefaultValidationConfig() {
+        com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig config =
+                new com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig();
+        config.enableExplain = true;
+        config.enableKeywordCheck = true;
+        config.enableAstCheck = true;
+        config.allowedFirstKeywords = ValidationConfig.dftAllowedFirstKeywords();// "SELECT,WITH,EXPLAIN,SHOW,DESC,DESCRIBE";
+        config.forbiddenKeywords = ValidationConfig.dftForbiddenKeywords();// "DROP,DELETE,TRUNCATE,ALTER,INSERT,UPDATE,GRANT,REVOKE,EXEC,EXECUTE,CREATE,REPLACE";
+        config.safeFunctions = ValidationConfig.dftSafeFunctions();// "REPLACE,TRIM,SUBSTRING,CONCAT,CAST,CONVERT";
+        return config;
+    }
+
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig createDefaultExecutionConfig() {
+        com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig config =
+                new com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig();
+        config.executeQuery = true;
+        config.maxResultRows = 200;
+        config.queryTimeout = Duration.ofSeconds(30);
+        return config;
+    }
+
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig createDefaultTraceConfig() {
+        com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig config =
+                new com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig();
+        config.maxTracesPerDomain = 1000;
+        config.retentionDays = 7;
+        config.enableAutoCleanup = true;
+        return config;
     }
 
     @Override

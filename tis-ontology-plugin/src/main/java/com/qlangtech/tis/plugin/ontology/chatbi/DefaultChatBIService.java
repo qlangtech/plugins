@@ -30,8 +30,6 @@ import com.qlangtech.tis.plugin.ontology.chatbi.validation.ValidationResult;
 import com.qlangtech.tis.plugin.ontology.graphrag.DefaultGraphRAGService;
 import com.qlangtech.tis.plugin.ontology.graphrag.GraphRAGService;
 import com.qlangtech.tis.plugin.ontology.graphrag.RetrievalResult;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,11 +54,13 @@ public class DefaultChatBIService implements ChatBIService {
     private final GraphRAGService graphRAGService = DefaultGraphRAGService.getInstance();
     private final KeywordWhitelistValidator keywordValidator = new KeywordWhitelistValidator();
     private final AstValidator astValidator = new AstValidator();
-    private final ExplainValidator explainValidator = new ExplainValidator();
-
-    private static final int MAX_RETRY = 2;
 
     private LLMProvider llmProvider;
+
+    // 配置对象（从 EnableChatBI 注入）
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig;
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig;
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig;
 
     public static DefaultChatBIService getInstance() {
         return INSTANCE;
@@ -71,6 +71,14 @@ public class DefaultChatBIService implements ChatBIService {
 
     public void setLlmProvider(LLMProvider llmProvider) {
         this.llmProvider = Objects.requireNonNull(llmProvider, "param llmProvider can not be null");
+    }
+
+    public void setConfigs(com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig,
+                          com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig,
+                          com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig) {
+        this.retryConfig = Objects.requireNonNull(retryConfig, "retryConfig can not be null");
+        this.validationConfig = Objects.requireNonNull(validationConfig, "validationConfig can not be null");
+        this.executionConfig = Objects.requireNonNull(executionConfig, "executionConfig can not be null");
     }
 
     @Override
@@ -93,8 +101,9 @@ public class DefaultChatBIService implements ChatBIService {
             }
 
             // Step 2: 拼装 Prompt
-            List<String> systemPrompt = PromptBuilder.buildSystemPrompt();
-            UserPrompt userPrompt = PromptBuilder.buildInitialPrompt(nlq, retrievalResult.promptContext());
+            String graphragContext = retrievalResult.promptContext();
+            List<String> systemPrompt = PromptBuilder.buildSystemPrompt(graphragContext);
+            UserPrompt userPrompt = PromptBuilder.buildInitialPrompt(nlq, graphragContext);
             int tokens = PromptBuilder.estimateTokens(systemPrompt.get(0) + userPrompt.getPrompt());
             trace.add(TraceStep.prompt(tokens, systemPrompt.get(0), userPrompt.getPrompt()));
 
@@ -102,8 +111,9 @@ public class DefaultChatBIService implements ChatBIService {
             String candidateSql = null;
             ValidationResult validationResult = null;
             int attempt = 0;
+            int maxRetry = retryConfig != null ? retryConfig.getMaxRetry() : 2;
 
-            while (attempt <= MAX_RETRY) {
+            while (attempt <= maxRetry) {
                 attempt++;
 
                 // Step 3: LLM 调用
@@ -132,7 +142,7 @@ public class DefaultChatBIService implements ChatBIService {
                 trace.add(TraceStep.extract(candidateSql));
 
                 // Step 4: 静态校验
-                validationResult = validateSql(candidateSql, retrievalResult, opts.enableExplain());
+                validationResult = validateSql(domain, candidateSql, retrievalResult, opts.enableExplain());
                 JSONObject issues = new JSONObject();
                 issues.put("issues", validationResult.issues());
                 trace.add(TraceStep.validate(validationResult.valid(), validationResult.reason(), issues));
@@ -145,14 +155,14 @@ public class DefaultChatBIService implements ChatBIService {
                 if (validationResult.reason() != null && validationResult.reason().contains("keyword")) {
                     logger.warn("Keyword whitelist validation failed (no retry): {}", validationResult.reason());
                     TraceWriter.writeTrace(domain, nlq, trace);
-                    return ChatBIResult.fail(validationResult.reason(), trace);
+                    return ChatBIResult.fail(validationResult.reasonAndIssue(), trace, validationResult.exception());
                 }
 
                 // 其它失败：重试
-                if (attempt <= MAX_RETRY) {
+                if (attempt <= maxRetry) {
                     logger.info("Validation failed (attempt {}), retrying with error feedback", attempt);
                     userPrompt = PromptBuilder.buildRetryPrompt(nlq, retrievalResult.promptContext(),
-                            candidateSql, validationResult.reason());
+                            candidateSql, validationResult.reasonAndIssue());
                 } else {
                     logger.warn("Max retry reached, validation still failed");
                 }
@@ -173,9 +183,8 @@ public class DefaultChatBIService implements ChatBIService {
             if (validationResult.valid()) {
                 return ChatBIResult.success(candidateSql, queryResult, trace);
             } else {
-                List<String> is = validationResult.issues();
-                return ChatBIResult.fail(validationResult.reason() //
-                        + (CollectionUtils.isNotEmpty(is) ? (",issue:" + String.join("," + is)) : StringUtils.EMPTY), trace);
+                return ChatBIResult.fail(validationResult.reasonAndIssue() ,
+                        trace, validationResult.exception());
             }
 
         } catch (Exception e) {
@@ -196,21 +205,27 @@ public class DefaultChatBIService implements ChatBIService {
         return this.llmProvider.chat(IAgentContext.createNull(), userPrompt, systemPrompt);
     }
 
-    private ValidationResult validateSql(String sql, RetrievalResult context, boolean enableExplain) {
+    private ValidationResult validateSql(String domain, String sql, RetrievalResult context, boolean enableExplain) {
         // 第 0 步：关键字白名单（失败不重试）
-        ValidationResult keywordResult = keywordValidator.validate(sql, context);
+        ValidationResult keywordResult = validationConfig != null ?
+                keywordValidator.validate(sql, context, validationConfig) :
+                keywordValidator.validate(sql, context);
         if (!keywordResult.valid()) {
             return keywordResult;
         }
 
         // 第 1 步：AST 校验
-        ValidationResult astResult = astValidator.validate(sql, context);
-        if (!astResult.valid()) {
-            return astResult;
+        if (validationConfig == null || validationConfig.isEnableAstCheck()) {
+            ValidationResult astResult = astValidator.validate(sql, context);
+            if (!astResult.valid()) {
+                return astResult;
+            }
         }
 
         // 第 2 步：EXPLAIN 校验（可选）
         if (enableExplain) {
+            int explainTimeout = retryConfig != null ? retryConfig.getExplainTimeout() : 5;
+            ExplainValidator explainValidator = new ExplainValidator(domain, explainTimeout);
             ValidationResult explainResult = explainValidator.validate(sql, context);
             if (!explainResult.valid()) {
                 return explainResult;
@@ -224,6 +239,9 @@ public class DefaultChatBIService implements ChatBIService {
         // TODO: 从 DataSourceFactory 获取连接执行 SQL
         // 一期暂不实现，返回空结果
         logger.warn("Query execution not implemented yet");
+        int maxResultRows = executionConfig != null ? executionConfig.getMaxResultRows() : 200;
+        int queryTimeout = executionConfig != null ? executionConfig.getQueryTimeout() : 30;
+        // 实际执行时需要使用 Statement.setMaxRows(maxResultRows) 和 Statement.setQueryTimeout(queryTimeout)
         return QueryResult.empty();
     }
 }

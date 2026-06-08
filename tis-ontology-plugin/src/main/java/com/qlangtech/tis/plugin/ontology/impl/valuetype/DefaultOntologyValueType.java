@@ -54,7 +54,7 @@ import static com.qlangtech.tis.plugin.ontology.impl.valuetype.MetadataOfValueTy
  * @see ConstraintsOfValueType
  * @see MetadataOfValueType
  */
-public class DefaultOntologyValueType extends OntologyValueType implements IPluginStore.AfterPluginSaved {
+public final class DefaultOntologyValueType extends OntologyValueType implements IPluginStore.AfterPluginSaved {
 
     @Override
     public MetadataOfValueType getMeta() {
@@ -70,7 +70,12 @@ public class DefaultOntologyValueType extends OntologyValueType implements IPlug
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
         final DefaultOntologyValueType self = this;
-        OntologySyncQueue.enqueue(() -> OntologyNeo4jSyncService.getInstance().syncValueType(domain, self));
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+            @Override
+            protected void sync() {
+                OntologyNeo4jSyncService.getInstance().syncValueType(domain, self);
+            }
+        });
     }
 
     @TISExtension
@@ -115,7 +120,8 @@ public class DefaultOntologyValueType extends OntologyValueType implements IPlug
                 List<ITISJsonSchema> oneOfSteps = Lists.newArrayList();
                 DescriptorsJSONForAIPrompt<?> inner = new DescriptorsJSONForAIPrompt<>(
                         Collections.singletonList(new MetadataOfValueType.Desc()), false,
-                        (builder, descriptor) -> {},
+                        (builder, descriptor) -> {
+                        },
                         (attr, addedProp) -> {
                             if (org.apache.commons.lang3.StringUtils.equals(attr.getFieldKey(), MetadataOfValueType.KEY_TYPE)) {
                                 addedProp.setValEnums(entry.getValue().stream().map(OntologyType::getValue).toArray());

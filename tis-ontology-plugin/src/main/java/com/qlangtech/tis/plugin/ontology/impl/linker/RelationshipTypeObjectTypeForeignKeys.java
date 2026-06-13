@@ -22,6 +22,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+
+import java.util.List;
 
 /**
  * Object type foreign keys
@@ -47,17 +50,26 @@ public class RelationshipTypeObjectTypeForeignKeys extends LinkResources {
         return IdentityName.create(left.getObjectType() + "_join_" + right.getObjectType());
     }
 
+    private static final Cardinality defaultCardinality = Cardinality.MANY_ONE;
+
     @Override
     public ObjectLinkerPair getLinks() {
         return new ObjectLinkerPair(
                 new ObjectLinkInfo(
                         left.getObjectType(), left.targetField,
                         right.getObjectType(), right.targetField,
-                        Cardinality.MANY_ONE),
+                        defaultCardinality),
                 new ObjectLinkInfo(
                         left.getObjectType(), left.targetField,
                         right.getObjectType(), right.targetField,
-                        Cardinality.MANY_ONE));
+                        defaultCardinality));
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        UDFDesc l = new UDFDesc("Left", left.getObjectType() + "." + left.targetField);
+        UDFDesc r = new UDFDesc("Right", right.getObjectType() + "." + right.targetField);
+        return List.of(l, r, new UDFDesc("Cardinality", defaultCardinality.name()));
     }
 
     @TISExtension
@@ -66,12 +78,9 @@ public class RelationshipTypeObjectTypeForeignKeys extends LinkResources {
             super();
         }
 
-        //        @Override
-        //        public String getStepDescription() {
-        //            return "Object type foreign keys";
-        //        }
+
         @Override
-        protected final RelationshipType getRelationShipType() {
+        public final RelationshipType getRelationShipType() {
             return RelationshipType.ObjectTypeForeignKeys;
         }
     }

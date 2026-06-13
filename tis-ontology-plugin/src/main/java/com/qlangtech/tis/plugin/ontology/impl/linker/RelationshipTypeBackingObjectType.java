@@ -18,16 +18,22 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.linker;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -52,6 +58,25 @@ public class RelationshipTypeBackingObjectType extends LinkResources {
     }
 
     @Override
+    public List<UDFDesc> getLiteria() {
+        ObjectLinkerPair links = getLinks();
+        ObjectLinkInfo leftLink = links.left();
+        ObjectLinkInfo rightLink = links.right();
+
+
+        UDFDesc left = new UDFDesc("Left" //
+                , List.of(new UDFDesc("Source", leftLink.source() + "." + leftLink.sourceField()),
+                new UDFDesc("Target", leftLink.target() + "." + leftLink.targetField())
+                , new UDFDesc("Cardinality", leftLink.cardinality().name())));
+
+        UDFDesc right = new UDFDesc("Right" //
+                , List.of(new UDFDesc("Source", rightLink.source() + "." + rightLink.sourceField()),
+                new UDFDesc("Target", rightLink.target() + "." + rightLink.targetField())
+                , new UDFDesc("Cardinality", rightLink.cardinality().name())));
+        return List.of(left, right);
+    }
+
+    @Override
     public ObjectLinkerPair getLinks() {
         if (!(joinObjectType instanceof JoinReference jr)) {
             throw new IllegalStateException(
@@ -70,16 +95,23 @@ public class RelationshipTypeBackingObjectType extends LinkResources {
     }
 
     private static String inferPk(String otName) {
+        Optional<OntologyProperty> pk = getObjectTypePK(otName);
+        return pk.map(OntologyProperty::getName).orElseThrow(() -> new IllegalStateException("object-type '" + otName + "' has no PK column"));
+//        for (OntologyProperty col : ot.getCols()) {
+//            if (Boolean.TRUE.equals(col.pk)) {
+//                return col.getName();
+//            }
+//        }
+//        throw new IllegalStateException("object-type '" + otName + "' has no PK column");
+    }
+
+    private static Optional<OntologyProperty> getObjectTypePK(String otName) {
         IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         OntologyObjectType ot = Ontology.loadObjectTypeDetail(meta.getDomain(), otName);
-        for (OntologyProperty col : ot.getCols()) {
-            if (Boolean.TRUE.equals(col.pk)) {
-                return col.getName();
-            }
-        }
-        throw new IllegalStateException("object-type '" + otName + "' has no PK column");
+        return ot.getPk();
     }
+
 
     @TISExtension
     public static class DefDesc extends BasicLinkResourceDesc {
@@ -88,8 +120,20 @@ public class RelationshipTypeBackingObjectType extends LinkResources {
         }
 
         @Override
-        protected RelationshipType getRelationShipType() {
+        public RelationshipType getRelationShipType() {
             return RelationshipType.BackingObjectType;
+        }
+
+        public boolean validateLeftObjectType(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            if (getObjectTypePK(value).isEmpty()) {
+                msgHandler.addFieldError(context, fieldName, "该实例还未设置主键");
+                return false;
+            }
+            return true;
+        }
+
+        public boolean validateRightObjectType(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return validateLeftObjectType(msgHandler, context, fieldName, value);
         }
     }
 }

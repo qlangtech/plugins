@@ -23,18 +23,24 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.annotation.JSONType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IdentityDesc;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
+import com.qlangtech.tis.plugin.ontology.BasicOntologyPropertyTypeRef;
 import com.qlangtech.tis.plugin.ontology.OntologyPropertyTypeRef;
 import com.qlangtech.tis.plugin.ontology.OntologySharedProperty;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.OntologyValueType;
 import com.qlangtech.tis.plugin.ontology.PropertyRoleType;
 import com.qlangtech.tis.plugin.ontology.SemanticRole;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.typeref.DefaultPropertyTypeRef;
 import com.qlangtech.tis.plugin.ontology.impl.typeref.SharedPropertyTypeRef;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
 
@@ -44,7 +50,7 @@ import java.util.Objects;
  * @date 2026/5/28
  */
 @JSONType(serializer = OntologyPropertyJsonSerializer.class)
-public class DefaultOntologyProperty extends OntologyProperty {
+public class DefaultOntologyProperty extends OntologyProperty implements IdentityDesc<OntologyProperty> {
     public DefaultOntologyProperty() {
     }
 
@@ -58,7 +64,12 @@ public class DefaultOntologyProperty extends OntologyProperty {
 
     @JSONField(serialize = false)
     @FormField(ordinal = 2, validate = {Validator.require})
-    public OntologyPropertyTypeRef typeRef;
+    public BasicOntologyPropertyTypeRef typeRef;
+
+    @Override
+    public OntologyPropertyTypeRef getPropertyTypeRef() {
+        return Objects.requireNonNull(typeRef, "typeRef can not be null");
+    }
 
     /**
      * ChatBI 语义角色 —— 子类对应 {@link SemanticRole} 中的一项，
@@ -74,6 +85,11 @@ public class DefaultOntologyProperty extends OntologyProperty {
     @Override
     public OntologyType parseOntologyType() {
         return this.typeRef.getOntologyType();
+    }
+
+    @Override
+    public OntologyProperty describePlugin() {
+        return this;
     }
 
     /**
@@ -110,6 +126,18 @@ public class DefaultOntologyProperty extends OntologyProperty {
                 return false;
             }
 
+            OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta();
+            OntologyObjectType objectType = Ontology.loadObjectTypeDetail(meta.getDomain(), meta.getObjectType());
+
+            if (meta.isCreate()) {
+                long findCount = objectType.getCols().stream()
+                        .filter((prop) -> StringUtils.equalsIgnoreCase(prop.name, property.getName()))
+                        .count();
+                if (findCount > 0) {
+                    msgHandler.addFieldError(context, FIELD_NAME, "已经有同名属性(‘" + property.getName() + "’)存在");
+                    return false;
+                }
+            }
             return true;
         }
     }

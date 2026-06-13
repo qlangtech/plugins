@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.List;
 
@@ -45,6 +46,11 @@ public class RelationshipTypeJoinTableDataset extends LinkResources {
         return descs.stream().filter((desc) -> {
             return isJoin == desc.isJoin();
         }).toList();
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        throw new UnsupportedOperationException("shall not present on ai prompt");
     }
 
     @Override
@@ -73,7 +79,7 @@ public class RelationshipTypeJoinTableDataset extends LinkResources {
         }
 
         @Override
-        protected RelationshipType getRelationShipType() {
+        public RelationshipType getRelationShipType() {
             return RelationshipType.JoinTableDataset;
         }
     }

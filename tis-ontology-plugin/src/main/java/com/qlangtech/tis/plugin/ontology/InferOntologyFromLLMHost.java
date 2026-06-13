@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.ontology;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.MultiStepsSupportHost;
 import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;
@@ -10,14 +10,19 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.infer.DeserializeOntologyRes;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Execute;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Prompt;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep3Execute;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep3Prompt;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  *
@@ -34,6 +39,20 @@ public class InferOntologyFromLLMHost extends OntologyDomainManipulate implement
     }
 
     @Override
+    protected void afterManipuldateProcess(IPluginContext pluginContext
+            , Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
+        // super.afterManipuldateProcess(pluginContext, context, itemsProcessor);
+        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(itemsProcessor.getPluginMeta());
+        DeserializeOntologyRes ontologyRes
+                = DeserializeOntologyRes.getDomainInferResult(meta.getDomain());
+        // 创建实例，并且在注册器中注销
+        int createResCount = ontologyRes.create(pluginContext);
+        if (createResCount > 0) {
+            pluginContext.addActionMessage(context.orElseThrow(), "已经成功创建" + createResCount + "条Ontology（本体）资源");
+        }
+    }
+
+    @Override
     public OneStepOfMultiSteps[] getMultiStepsSavedItems() {
         return this._stepsPlugin;
     }
@@ -41,11 +60,11 @@ public class InferOntologyFromLLMHost extends OntologyDomainManipulate implement
 
     @Override
     public String identityValue() {
-        return "";
+        return "infer_ontology_from_llm";
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<InferOntologyFromLLMHost> implements MultiStepsSupportHostDescriptor<InferOntologyFromLLMHost>, IEndTypeGetter, DescriptorUseableShortComment {
+    public static class DftDesc extends BasicDesc implements MultiStepsSupportHostDescriptor<InferOntologyFromLLMHost>, IEndTypeGetter, DescriptorUseableShortComment {
 
         @Override
         public Class<InferOntologyFromLLMHost> getHostClass() {

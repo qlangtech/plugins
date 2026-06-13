@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.OntologyValueType;
@@ -76,6 +77,20 @@ public final class DefaultOntologyValueType extends OntologyValueType implements
                 OntologyNeo4jSyncService.getInstance().syncValueType(domain, self);
             }
         });
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = com.google.common.collect.Lists.newArrayList();
+        MetadataOfValueType meta = this.getMeta();
+        literia.add(new UDFDesc("Name", meta.getName()));
+        literia.add(new UDFDesc("Type", meta.ontologyType().getLiteria()));
+        literia.add(new UDFDesc("Description", meta.getDescription()));
+        ConstraintsOfValueType constraints = this.getConstraintsStep();
+        if (constraints != null && constraints.constraint != null) {
+            literia.addAll(constraints.constraint.getLiteria());
+        }
+        return literia;
     }
 
     @TISExtension

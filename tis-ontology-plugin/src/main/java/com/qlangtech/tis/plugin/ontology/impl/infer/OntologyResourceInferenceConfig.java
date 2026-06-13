@@ -14,6 +14,7 @@ import com.qlangtech.tis.util.DescriptorsJSONForAIPrompt;
 import com.qlangtech.tis.util.DescriptorsMeta;
 
 import java.util.Collections;
+import java.util.function.Supplier;
 
 /**
  *
@@ -23,18 +24,12 @@ import java.util.Collections;
 @SuppressWarnings("all")
 public class OntologyResourceInferenceConfig {
     private final Ontology.OntologyEnum ontologyEnum;
-    private final ITISJsonSchema jsonSchema;
+    private final Supplier<ITISJsonSchema> jsonSchema;
     private final String description;
     private final String llmPrompt;
 
-
-//    public static final OntologyResourceInferenceConfig valueType = new OntologyResourceInferenceConfig(Ontology.OntologyEnum.ValueType, );
-//
-//    public static final OntologyResourceInferenceConfig sharedProperty
-//            = new OntologyResourceInferenceConfig(Ontology.OntologyEnum.SharedProperty
-//            , buildSharedPropertyItemSchema(), "Shared Property（sharedProperties，共享属性）");
-
-    public OntologyResourceInferenceConfig(Ontology.OntologyEnum ontologyEnum, ITISJsonSchema jsonSchema, String description, String llmPrompt) {
+    public OntologyResourceInferenceConfig(Ontology.OntologyEnum ontologyEnum //
+            , Supplier<ITISJsonSchema> jsonSchema, String description, String llmPrompt) {
         this.ontologyEnum = ontologyEnum;
         this.jsonSchema = jsonSchema;
         this.description = description;
@@ -50,6 +45,18 @@ public class OntologyResourceInferenceConfig {
         return llmPrompt;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public String getInferenceType(){
+        return ontologyEnum.getTypeIdentity();
+    }
+
+    public ITISJsonSchema getJsonSchema() {
+        return this.jsonSchema.get();
+    }
+
     /**
      *
      * @return
@@ -57,19 +64,19 @@ public class OntologyResourceInferenceConfig {
      */
     private static OntologyResourceInferenceConfig buildSharedPropertyItemSchema() {
 
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologySharedProperty.DefaultDesc()),
-                        true
-                        , (b, desc) -> {
-                    InferenceParse.addTargetColumns2Schema(b);
-                    // 推断元数据
-                    //                    b.addProperty("confidence", TISJsonSchema.FieldType.String, "置信度")
-                    //                            .setValEnums("high", "medium", "low");
-                    InferenceParse.add2SchemaBuilder(b);
-                }, (attr, addedProp) -> false
-                );
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
-        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.SharedProperty, meta.getPluginJsonSchema().values().iterator().next()
+
+        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.SharedProperty, () -> {
+            DescriptorsJSONForAIPrompt descriptorsJSON =
+                    new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologySharedProperty.DefaultDesc()),
+                            true
+                            , (b, desc) -> {
+                        InferenceParse.addTargetColumns2Schema(b);
+                        InferenceParse.add2SchemaBuilder(b);
+                    }, (attr, addedProp) -> false
+                    );
+            DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
+            return meta.getPluginJsonSchema().values().iterator().next();
+        }
                 , "Shared Property（sharedProperties，共享属性）"//
                 , """
                 多个表中出现的相同语义的属性，适合抽取为共享属性复用。
@@ -85,16 +92,19 @@ public class OntologyResourceInferenceConfig {
      */
     private static OntologyResourceInferenceConfig buildLinkTypeItemSchema() {
 
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyLinker.DefaultDesc()),
-                        true, (b, desc) -> {
-                    // 推断元数据
-                    InferenceParse.add2SchemaBuilder(b);
-                }, (attr, addedProp) -> false);
 
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
-        ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
-        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.Linker, schema //
+        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.Linker, () -> {
+            DescriptorsJSONForAIPrompt descriptorsJSON =
+                    new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyLinker.DefaultDesc()),
+                            true, (b, desc) -> {
+                        // 推断元数据
+                        InferenceParse.add2SchemaBuilder(b);
+                    }, (attr, addedProp) -> false);
+
+            DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
+            ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
+            return schema;
+        }  //
                 , "Link Type（linkTypes）（关联关系）" //
                 , """
                 表之间的关联关系，有2种类型：
@@ -154,23 +164,27 @@ public class OntologyResourceInferenceConfig {
      */
     private static OntologyResourceInferenceConfig buildValueTypeItemSchema() {
 
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyValueType.DefaultDesc()), true
-                        , (b, desc) -> {
-                    // 推断元数据
-                    // b.addProperty("sourceColumn", TISJsonSchema.FieldType.String, "来源列（表名.列名）");
-                    InferenceParse.addTargetColumns2Schema(b);
 
-                    InferenceParse.add2SchemaBuilder(b);
+        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.ValueType, () -> {
+            DescriptorsJSONForAIPrompt descriptorsJSON =
+                    new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyValueType.DefaultDesc()), true
+                            , (b, desc) -> {
+                        // 推断元数据
+                        // b.addProperty("sourceColumn", TISJsonSchema.FieldType.String, "来源列（表名.列名）");
+                        InferenceParse.addTargetColumns2Schema(b);
 
-                }, (attr, addedProp) -> false);
+                        InferenceParse.add2SchemaBuilder(b);
 
-        DescriptorsMeta meta
-                = descriptorsJSON.getDescriptorsJSON();
+                    }, (attr, addedProp) -> false);
 
-        // host schema 形如 { impl, vals:{ multiStepsSavedItems:[...] } }
-        ITISJsonSchema hostSchema = meta.getFirstPluginJsonSchema();
-        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.ValueType, hostSchema //
+            DescriptorsMeta meta
+                    = descriptorsJSON.getDescriptorsJSON();
+
+            // host schema 形如 { impl, vals:{ multiStepsSavedItems:[...] } }
+            ITISJsonSchema hostSchema = meta.getFirstPluginJsonSchema();
+
+            return hostSchema;
+        }  //
                 , "Value Types（valueTypes，值类型 + 约束）" //
                 , """
                 列值有明确约束的属性，适合定义为值类型。
@@ -178,17 +192,6 @@ public class OntologyResourceInferenceConfig {
                 - 列注释中包含枚举值列表（如 "PENDING/PAID/SHIPPED"）→ Enum 约束
                 - 列类型暗示范围约束（如 VARCHAR(3) 可能是国家代码）→ Range 约束                
                 """);
-
-        //        TISJsonSchema.Builder b = TISJsonSchema.Builder.create("valueTypeItem", Optional.of("valueTypes"));
-        //
-        //        // 把 host schema 的 properties (impl, vals) 平铺到外层
-        //        JSONObject hostProps = hostSchema.schema().getJSONObject(TISJsonSchema.SCHEMA_PROPERTIES);
-        //        for (String key : hostProps.keySet()) {
-        //            b.addRawProperty(key, hostProps.getJSONObject(key), true);
-        //        }
-        //
-        //
-        //        return b.build();
     }
 
     /**
@@ -196,18 +199,21 @@ public class OntologyResourceInferenceConfig {
      */
     private static OntologyResourceInferenceConfig buildGlossaryItemSchema() {
 
-        DescriptorsJSONForAIPrompt descriptorsJSON =
-                new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyGlossary.DefaultDesc()), true,
-                        (builder, desc) -> {
-                            InferenceParse.add2SchemaBuilder(builder);
-                        }, (attr, addedProp) -> false);
 
-        DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
+        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.Glossary, () -> {
+            DescriptorsJSONForAIPrompt descriptorsJSON =
+                    new DescriptorsJSONForAIPrompt<>(Collections.singletonList(new DefaultOntologyGlossary.DefaultDesc()), true,
+                            (builder, desc) -> {
+                                InferenceParse.add2SchemaBuilder(builder);
+                            }, (attr, addedProp) -> false);
 
-        ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
-        StringBuilder prompt = new StringBuilder();
-        schema.appendFieldDescToPrompt(prompt);
-        return new OntologyResourceInferenceConfig(Ontology.OntologyEnum.Glossary, schema //
+            DescriptorsMeta meta = descriptorsJSON.getDescriptorsJSON();
+
+            ITISJsonSchema schema = meta.getFirstPluginJsonSchema();
+            StringBuilder prompt = new StringBuilder();
+            schema.appendFieldDescToPrompt(prompt);
+            return schema;
+        }  //
                 , "Glossary（glossaries，业务术语 / 同义词词典）"//
                 , """
                 业务术语字典，用于 ChatBI 自然语言到 SQL 的桥接，把用户口语化的业务名词映射到本体对象。

@@ -1,0 +1,9 @@
+{
+  "linkTypePrompt": {
+    "label": "Link Type提示词",
+    "rows": 7,
+    "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.linkerType.getPrompt()",
+    "style": "codemirror",
+    "mode": "text/velocity"
+  }
+}

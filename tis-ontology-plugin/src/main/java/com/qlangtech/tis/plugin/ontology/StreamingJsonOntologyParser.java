@@ -27,10 +27,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Objects;
 
-import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_GLOSSARIES;
-import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_LINK_TYPES;
-import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_SHARED_PROPERTIES;
-import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_VALUE_TYPES;
+//import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_GLOSSARIES;
+//import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_LINK_TYPES;
+//import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_SHARED_PROPERTIES;
+//import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.KEY_VALUE_TYPES;
 
 /**
  * 流式 JSON 解析器，用于增量反序列化 LLM 返回的本体推断结果
@@ -57,6 +57,10 @@ public class StreamingJsonOntologyParser {
     private boolean inString = false;
     private boolean escapeNext = false;
     private int processedUpTo = 0; // Track how much of the buffer we've processed
+
+
+    public StreamingJsonOntologyParser() {
+    }
 
     public interface Callbacks {
         void onLinkType(JSONObject element);
@@ -173,13 +177,14 @@ public class StreamingJsonOntologyParser {
                         }
 
                         String fieldName = json.substring(i + 1, closingQuote);
-                        if (KEY_LINK_TYPES.equals(fieldName)) {
+
+                        if (Ontology.OntologyEnum.Linker.typeIdentity.equals(fieldName)) {
                             currentArray = CurrentArray.LINK_TYPES;
-                        } else if (KEY_SHARED_PROPERTIES.equals(fieldName)) {
+                        } else if (Ontology.OntologyEnum.SharedProperty.typeIdentity.equals(fieldName)) {
                             currentArray = CurrentArray.SHARED_PROPERTIES;
-                        } else if (KEY_VALUE_TYPES.equals(fieldName)) {
+                        } else if (Ontology.OntologyEnum.ValueType.typeIdentity.equals(fieldName)) {
                             currentArray = CurrentArray.VALUE_TYPES;
-                        } else if (KEY_GLOSSARIES.equals(fieldName)) {
+                        } else if (Ontology.OntologyEnum.Glossary.typeIdentity.equals(fieldName)) {
                             currentArray = CurrentArray.GLOSSARIES;
                         }
                         // unknown field: just skip past the closing quote and keep currentArray as-is

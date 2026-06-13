@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
@@ -37,6 +38,7 @@ import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.ws.rs.NotSupportedException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -92,6 +94,17 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
 
     public final List<OntologyProperty> getCols() {
         return this.getPropsStep().getCols();
+    }
+
+    @Override
+    public void addCol(OntologyProperty property) {
+        this.getPropsStep().getCols().add(property);
+    }
+
+    @Override
+    public void deleteCol(OntologyProperty property) {
+        this.getPropsStep().getCols() //
+                .removeIf(next -> StringUtils.equalsIgnoreCase(next.getName(), property.getName()));
     }
 
     @JSONField(serialize = false)
@@ -160,6 +173,12 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
         throw new IllegalStateException("can not find property:" + targetProperty + " in objectType:" + this.getName());
     }
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        throw new NotSupportedException();
+    }
+
+
     @TISExtension
     public static class DefaultDesc extends BasicDesc implements MultiStepsSupportHostDescriptor<OntologyObjectType> {
         public DefaultDesc() {
@@ -178,7 +197,7 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
 
         @Override
         public String getDisplayName() {
-            return "Object Type";
+            return "ObjectType";
         }
 
         @Override

@@ -37,6 +37,11 @@ import java.util.regex.Pattern;
  * @date 2026/4/19
  */
 public class Regex extends ValueConstraint {
+    @Override
+    public java.util.List<com.qlangtech.tis.plugin.datax.transformer.UDFDesc> getLiteria() {
+        return java.util.List.of(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Pattern", this.pattern));
+    }
+
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String pattern;
 

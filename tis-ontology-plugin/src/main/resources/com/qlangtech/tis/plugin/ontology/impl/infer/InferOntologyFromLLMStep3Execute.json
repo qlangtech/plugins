@@ -1,7 +1,7 @@
 {
-  "inferInstances": {
+  "inferLinkerInstances": {
     "label": "推理结果",
-    "elementCreator": "com.qlangtech.tis.plugin.ontology.impl.infer.impl.NorLinkTypeInferenceParseCreatorFactory",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.impl.infer.impl.LinkTypeInferenceParseCreatorFactory",
     "enum": "com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Execute.getInferInstances():uncache_true",
     "viewtype": "tuplelist"
   }

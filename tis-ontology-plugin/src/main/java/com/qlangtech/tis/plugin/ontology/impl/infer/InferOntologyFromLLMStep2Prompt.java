@@ -1,14 +1,19 @@
 package com.qlangtech.tis.plugin.ontology.impl.infer;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep1.getOntologyPluginMeta;
 
 /**
  * 确认valueType的提示词
@@ -27,6 +32,19 @@ public class InferOntologyFromLLMStep2Prompt extends OneStepOfMultiSteps {
     @FormField(type = FormFieldType.TEXTAREA, ordinal = 3, validate = {Validator.require})
     public String sharedPropertyPrompt;
 
+    @Override
+    protected void processPreSaved(IPluginContext pluginContext, Context ctx, OneStepOfMultiSteps[] preSavedStepPlugins) {
+        InferOntologyFromLLMStep1 step1 = (InferOntologyFromLLMStep1) preSavedStepPlugins[Step.Step1.getStepIndex()];
+        OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, Optional.of(ctx));
+
+        DeserializeOntologyRes.getOntologyResInfer(ometa.getDomain(),pluginContext,ctx,this,step1);
+
+
+
+
+
+
+    }
 
     @TISExtension
     public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc {

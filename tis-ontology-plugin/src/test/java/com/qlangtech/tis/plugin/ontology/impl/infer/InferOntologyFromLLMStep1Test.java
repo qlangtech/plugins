@@ -23,9 +23,9 @@ public class InferOntologyFromLLMStep1Test {
 
     @Test
     public void testBuildLinkTypeItemSchema() {
-        InferOntologyFromLLMStep1 inferOntologyFromLLMStep1 = new InferOntologyFromLLMStep1();
+        // InferOntologyFromLLMStep1 inferOntologyFromLLMStep1 = new InferOntologyFromLLMStep1();
 
-        ITISJsonSchema linkSchema = inferOntologyFromLLMStep1.buildLinkTypeItemSchema();
+        ITISJsonSchema linkSchema = OntologyResourceInferenceConfig.linkerType.getJsonSchema();
 
         System.out.println(JsonUtil.toString(linkSchema.root(), true));
     }
@@ -46,17 +46,17 @@ public class InferOntologyFromLLMStep1Test {
          * 										"typeMetas": [],
          * 										"_mcols": [{
          * 											"enumVal": "1"
-         * 								             }, {
+         *                                             }, {
          * 											"enumVal": "2"
          *                                        }]}
-         * 								}
-         * 							},
+         *                                }
+         *                            },
          * 							"caseInsensitive": {
          * 								"_primaryVal": true
-         * 							}
-         * 						}
-         * 					}
-         * 				}
+         *                            }
+         *                        }
+         *                    }
+         *                }
          *
          * </pre>
          */
@@ -94,7 +94,7 @@ public class InferOntologyFromLLMStep1Test {
         PartialSettedPluginContext pluginContext = IPluginContext.namedContext("test");
         Context context = new DefaultContext();
         pluginContext.setContext(context);
-        Pair<OntologySharedProperty, InferenceParse> result = deserializeElement(valType, pluginContext, context);
+        Pair<OntologySharedProperty, InferenceParse> result = deserializeElement(1, DeserializeOntologyRes.InferBatch.NorLinkTypeBatch, valType, pluginContext, context);
         Assert.assertNotNull(result);
     }
 }

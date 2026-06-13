@@ -18,13 +18,16 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.valuetype.constraints;
 
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ValueConstraint;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,6 +42,13 @@ public class Range4TimeStamp extends ValueConstraint {
 
     @FormField(ordinal = 1, type = FormFieldType.DateTime, validate = {Validator.require})
     public java.util.Date max;
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(
+                new UDFDesc("From", TimeFormat.yyyyMMdd_HH_mm_ss.format(this.min))
+                , new UDFDesc("To", TimeFormat.yyyyMMdd_HH_mm_ss.format(this.max)));
+    }
 
     @TISExtension
     public static class DefaultDesc extends BaseDesc {

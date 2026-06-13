@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.ontology.impl.glossary;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import com.qlangtech.tis.plugin.ds.BasicMultiSelectSingleValElementCreatorFactory;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyGlossary;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
@@ -27,6 +29,9 @@ import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
 import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
 import com.qlangtech.tis.util.IPluginContext;
 
+import com.google.common.collect.Lists;
+
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,6 +51,21 @@ public class DefaultOntologyGlossary extends OntologyGlossary implements IPlugin
                 OntologyNeo4jSyncService.getInstance().syncGlossary(domain, self);
             }
         });
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = Lists.newArrayList();
+        literia.add(new UDFDesc("Term", this.term));
+        literia.add(new UDFDesc("Description", this.description));
+        // Synonyms: join all synonym values as a comma-separated string
+        List<String> synonymVals = this.getSynonyms().stream()
+                .map(BasicMultiSelectSingleValElementCreatorFactory.OneOfMultiElement::getEnumVal)
+                .collect(java.util.stream.Collectors.toList());
+        literia.add(new UDFDesc("Synonyms", String.join(", ", synonymVals)));
+        // Target: use getTargetLiteral() which provides a meaningful description of the target
+        literia.add(new UDFDesc("Target", this.target.getTargetLiteral()));
+        return literia;
     }
 
     @TISExtension

@@ -22,7 +22,10 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -30,7 +33,7 @@ import java.util.Set;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/4/19
  */
-public abstract class ValueConstraint implements Describable<ValueConstraint> {
+public abstract class ValueConstraint implements Describable<ValueConstraint>, PluginLiteria {
 
 
     @Override

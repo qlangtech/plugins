@@ -24,7 +24,9 @@ import com.qlangtech.tis.aiagent.llm.ITISJsonSchema;
 import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyLinker;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
@@ -61,6 +63,23 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
                 OntologyNeo4jSyncService.getInstance().syncLinker(domain, self);
             }
         });
+    }
+
+    @Override
+    public final IEndTypeGetter.EndType getEndType() {
+        return ((LinkResources.BasicLinkResourceDesc) getLinkResourcesStep().getDescriptor()).getRelationShipType().getEndType();
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = Lists.newArrayList();
+        // Step1: relationship type
+        RelationshipTypeSetter typeSetter = (RelationshipTypeSetter) stepsPlugin[0];
+        literia.add(new UDFDesc("RelType", typeSetter.getRelationshipType().getName()));
+        // Step2: link resources (source → target with optional field info)
+        LinkResources linkResources = getLinkResourcesStep();
+        literia.add(new UDFDesc("Linker", linkResources.getLiteria()));
+        return literia;
     }
 
     @TISExtension

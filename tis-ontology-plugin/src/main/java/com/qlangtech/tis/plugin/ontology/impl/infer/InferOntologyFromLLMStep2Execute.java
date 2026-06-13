@@ -16,10 +16,13 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/8
  */
+@SuppressWarnings("all")
 public class InferOntologyFromLLMStep2Execute extends OneStepOfMultiSteps {
 
     /**
      * 可能有三种类型
+     *
+     * @see BaseInferenceParseCreatorFactory
      */
     @FormField(type = FormFieldType.MULTI_SELECTABLE, ordinal = 1, validate = {Validator.require})
     public List<InferenceParse<Ontology>> inferInstances;
@@ -29,10 +32,10 @@ public class InferOntologyFromLLMStep2Execute extends OneStepOfMultiSteps {
     }
 
     @TISExtension
-    public static final class DftDesc extends BasicDesc {
+    public static final class DftDesc extends BasicInfterExecuteDesc {
         @Override
-        public Step getStep() {
-            return Step.Step3;
+        public OneStepOfMultiSteps.Step getStep() {
+            return OneStepOfMultiSteps.Step.Step3;
         }
 
         @Override
@@ -44,5 +47,12 @@ public class InferOntologyFromLLMStep2Execute extends OneStepOfMultiSteps {
         public String getStepDescription() {
             return String.join(",", List.of(Ontology.OntologyEnum.ValueType.name())) + "等资源推理";
         }
+
+        @Override
+        protected DeserializeOntologyRes.InferBatch getInferBatch() {
+            DeserializeOntologyRes.InferBatch inferBatch = DeserializeOntologyRes.InferBatch.NorLinkTypeBatch;
+            return inferBatch;
+        }
     }
+
 }

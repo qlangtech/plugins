@@ -18,15 +18,20 @@
 package com.qlangtech.tis.plugin.ontology.impl.sharedproperty;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologySharedProperty;
+import com.qlangtech.tis.plugin.ontology.OntologyUtils;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
 import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -48,6 +53,18 @@ public class DefaultOntologySharedProperty extends OntologySharedProperty implem
         });
     }
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = Lists.newArrayList();
+        literia.add(new UDFDesc("Name", this.name));
+        literia.add(new UDFDesc("Type", this.getOntologyType().getLiteria()));
+        literia.add(new UDFDesc("Description", this.description));
+        if (org.apache.commons.lang.StringUtils.isNotBlank(this.alias)) {
+            literia.add(new UDFDesc("Alias", this.alias));
+        }
+        return literia;
+    }
+
     @TISExtension
     public static class DefaultDesc extends Ontology.BasicDesc {
         public DefaultDesc() {
@@ -57,6 +74,12 @@ public class DefaultOntologySharedProperty extends OntologySharedProperty implem
         @Override
         public EndType getEndType() {
             return EndType.Shared;
+        }
+
+
+        public boolean validateName(
+                IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return OntologyUtils.validateIdentityDuplicate(msgHandler, context, Optional.of(fieldName), OntologyEnum.SharedProperty, value);
         }
 
         @Override

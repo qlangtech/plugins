@@ -15,7 +15,7 @@
     "placeholder": "例如: order_status"
   },
   "type": {
-    "label": "Type",
+    "label": "类型",
     "enum": "com.qlangtech.tis.plugin.ontology.OntologyType.availableTypes()"
   }
 }

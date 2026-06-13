@@ -101,7 +101,7 @@ public class OntologyNeo4jSyncService {
         for (OntologySharedProperty sp : Ontology.loadAllSharedProperties(domain)) {
             syncSharedProperty(domain, sp);
         }
-        for (OntologyValueType vt : Ontology.loadAllObjectTypes(domain)) {
+        for (OntologyValueType vt : Ontology.loadAllValueTypes(domain)) {
             syncValueType(domain, vt);
         }
         for (OntologyGlossary g : Ontology.loadAllGlossary(domain)) {
@@ -197,7 +197,7 @@ public class OntologyNeo4jSyncService {
             // Property → ValueType or SharedProperty 关系
             if (prop instanceof com.qlangtech.tis.plugin.ontology.impl.objtype.DefaultOntologyProperty dp) {
                 if (dp.typeRef instanceof DefaultPropertyTypeRef dtr
-                        && dtr.valueType != null && !dtr.valueType.isBlank()) {
+                        && StringUtils.isNoneBlank(dtr.valueType)) {
                     tx.execute("""
                             MATCH (pr:Property {domain: $domain, otName: $otName, name: $propName}),
                                   (vt:ValueType {domain: $domain, name: $vtName})

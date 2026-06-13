@@ -23,8 +23,10 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ValueConstraint;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,6 +41,11 @@ public class Range4Integer extends ValueConstraint {
 
     @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer max;
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("Min", String.valueOf(this.min)), new UDFDesc("Max", String.valueOf(this.max)));
+    }
 
     @TISExtension
     public static class DefaultDesc extends BaseDesc {

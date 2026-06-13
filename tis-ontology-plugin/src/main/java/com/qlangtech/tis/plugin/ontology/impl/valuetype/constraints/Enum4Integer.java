@@ -23,10 +23,13 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import com.qlangtech.tis.plugin.ds.BasicMultiSelectSingleValElementCreatorFactory;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ValueConstraint;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -40,16 +43,24 @@ public class Enum4Integer extends ValueConstraint {
     @FormField(ordinal = 0, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<OneOfValueEnum> enumVals;
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("enumVals"
+                , this.enumVals.stream().map(BasicMultiSelectSingleValElementCreatorFactory.OneOfMultiElement::getEnumVal)
+                .collect(Collectors.joining(","))));
+    }
 
     @TISExtension
     public static class DftDesc extends ValueConstraint.BaseDesc {
         public DftDesc() {
             super();
         }
+
         @Override
         public Set<IEndTypeGetter.EndType> specializedTypeEnds() {
             return Set.of(IEndTypeGetter.EndType.DataTypeInteger);
         }
+
         @Override
         public String getDisplayName() {
             return "Enum";

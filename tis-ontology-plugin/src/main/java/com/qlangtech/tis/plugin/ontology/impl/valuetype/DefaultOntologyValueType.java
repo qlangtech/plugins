@@ -69,12 +69,12 @@ public final class DefaultOntologyValueType extends OntologyValueType implements
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
-        String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
+        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         final DefaultOntologyValueType self = this;
-        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(meta) {
             @Override
-            protected void sync() {
-                OntologyNeo4jSyncService.getInstance().syncValueType(domain, self);
+            protected void sync(OntologyPluginMeta meta) {
+                OntologyNeo4jSyncService.getInstance().syncValueType(meta.getDomain(), self);
             }
         });
     }

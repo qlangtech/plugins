@@ -2,6 +2,10 @@ package com.qlangtech.tis.plugin.ontology.chatbi;
 
 import com.qlangtech.tis.aiagent.llm.LLMProvider;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig;
+import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +15,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +33,41 @@ public class DefaultChatBIServiceITTest {
 
         FalconChatBITestExample chatBITestExample = FalconChatBITestExample.load();
 
-        List<FalconTestCase> cases = chatBITestExample.getTestCasesByDbId("14", Optional.of(294),true);
+        List<FalconTestCase> cases = chatBITestExample.getTestCasesByDbId("14", Optional.of(294), true);
 
-        DefaultChatBIService chatBIService = DefaultChatBIService.getInstance();
-        DefaultChatBIService.getInstance().setLlmProvider( //
+        DefaultChatBIService chatBIService = new DefaultChatBIService();
+        chatBIService.setLlmProvider(
                 LLMProvider.load(IPluginContext.namedContext("test").setLoginUser((() -> "admin")), "qwen1"));
+
+        // 配置 RetrievalConfig
+        RetrievalConfig retrievalConfig = new RetrievalConfig();
+        retrievalConfig.topKSeeds = 5;
+        retrievalConfig.maxHops = 2;
+        retrievalConfig.tokenBudget = 3000;
+        retrievalConfig.includeValueExamples = false;
+
+        // 配置 RetryConfig
+        RetryConfig retryConfig = new RetryConfig();
+        retryConfig.maxRetry = 2;
+        retryConfig.explainTimeout = Duration.ofSeconds(5);
+
+        // 配置 ValidationConfig
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.enableExplain = true;
+        validationConfig.enableKeywordCheck = true;
+        validationConfig.enableAstCheck = true;
+        validationConfig.allowedFirstKeywords = ValidationConfig.dftAllowedFirstKeywords();
+        validationConfig.forbiddenKeywords = ValidationConfig.dftForbiddenKeywords();
+        validationConfig.safeFunctions = ValidationConfig.dftSafeFunctions();
+
+        // 配置 ExecutionConfig
+        ExecutionConfig executionConfig = new ExecutionConfig();
+        executionConfig.executeQuery = true;
+        executionConfig.maxResultRows = 200;
+        executionConfig.queryTimeout = Duration.ofSeconds(30);
+
+        chatBIService.setConfigs(retryConfig, validationConfig, executionConfig, retrievalConfig);
+
         int index = 1;
         ChatBIEvaluationResult evaluationResult = new ChatBIEvaluationResult();
         try {
@@ -42,8 +77,10 @@ public class DefaultChatBIServiceITTest {
                 evaluationResult.appendLine(index + ".expect sql------------------------------------------------");
                 evaluationResult.appendLine(c.getFirstSql());
 
-                ChatBIResult chatBIResult = chatBIService.ask("falcon_14"
-                        , c.getQuestion(), ChatBIOptions.defaults());
+                /**
+                 * 执行查询
+                 */
+                ChatBIResult chatBIResult = chatBIService.ask("falcon_14", c.getQuestion());
                 Assert.assertNotNull(chatBIResult);
                 if (!chatBIResult.isSuccess()) {
                     throw new IllegalStateException(chatBIResult.error(), chatBIResult.exception());

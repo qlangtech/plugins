@@ -55,12 +55,12 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
-        String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
+        OntologyPluginMeta domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         final DefaultOntologyLinker self = this;
-        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(domain) {
             @Override
-            protected void sync() {
-                OntologyNeo4jSyncService.getInstance().syncLinker(domain, self);
+            protected void sync(OntologyPluginMeta domain) {
+                OntologyNeo4jSyncService.getInstance().syncLinker(domain.getDomain(), self);
             }
         });
     }

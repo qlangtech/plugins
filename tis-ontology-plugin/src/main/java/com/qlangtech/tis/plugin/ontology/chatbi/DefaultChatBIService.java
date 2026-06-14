@@ -41,6 +41,8 @@ import java.util.Objects;
  * ChatBI 服务默认实现（§5 T5：重试编排）。
  * <p>
  * 流水线：检索 → 拼装 Prompt → LLM 调用 → 静态校验 → EXPLAIN 校验（可选）→ 执行（可选）。
+ * <p>
+ * 每个 ontology 域对应一个独立实例，由 {@link com.qlangtech.tis.plugin.ontology.EnableChatBI} 持有并懒加载。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
@@ -48,8 +50,6 @@ import java.util.Objects;
 public class DefaultChatBIService implements ChatBIService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultChatBIService.class);
-
-    private static final DefaultChatBIService INSTANCE = new DefaultChatBIService();
 
     private final GraphRAGService graphRAGService = DefaultGraphRAGService.getInstance();
     private final KeywordWhitelistValidator keywordValidator = new KeywordWhitelistValidator();
@@ -61,12 +61,9 @@ public class DefaultChatBIService implements ChatBIService {
     private com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig;
     private com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig;
     private com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig;
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig retrievalConfig;
 
-    public static DefaultChatBIService getInstance() {
-        return INSTANCE;
-    }
-
-    private DefaultChatBIService() {
+    public DefaultChatBIService() {
     }
 
     public void setLlmProvider(LLMProvider llmProvider) {
@@ -74,22 +71,27 @@ public class DefaultChatBIService implements ChatBIService {
     }
 
     public void setConfigs(com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig,
-                          com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig,
-                          com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig) {
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig,
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig,
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig retrievalConfig) {
         this.retryConfig = Objects.requireNonNull(retryConfig, "retryConfig can not be null");
         this.validationConfig = Objects.requireNonNull(validationConfig, "validationConfig can not be null");
         this.executionConfig = Objects.requireNonNull(executionConfig, "executionConfig can not be null");
+        this.retrievalConfig = Objects.requireNonNull(retrievalConfig, "retrievalConfig can not be null");
     }
 
     @Override
-    public ChatBIResult ask(String domain, String nlq, ChatBIOptions opts) {
+    public ChatBIResult ask(String domain, String nlq) {
         List<TraceStep> trace = new ArrayList<>();
         long startTime = System.currentTimeMillis();
 
         try {
             // Step 1: 检索
             long t1 = System.currentTimeMillis();
-            RetrievalResult retrievalResult = graphRAGService.retrieve(domain, nlq, opts.retrievalOptions());
+            com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions retrievalOptions =
+                    Objects.requireNonNull(retrievalConfig, "retrievalConfig can not be null").toRetrievalOptions();
+            // : com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions.defaults();
+            RetrievalResult retrievalResult = graphRAGService.retrieve(domain, nlq, retrievalOptions);
             long t2 = System.currentTimeMillis();
             trace.add(TraceStep.retrieve(retrievalResult.objectTypes().size(), retrievalResult.linkers().size(), t2 - t1));
 
@@ -112,6 +114,7 @@ public class DefaultChatBIService implements ChatBIService {
             ValidationResult validationResult = null;
             int attempt = 0;
             int maxRetry = retryConfig != null ? retryConfig.getMaxRetry() : 2;
+            boolean enableExplain = validationConfig != null && validationConfig.isEnableExplain();
 
             while (attempt <= maxRetry) {
                 attempt++;
@@ -142,7 +145,7 @@ public class DefaultChatBIService implements ChatBIService {
                 trace.add(TraceStep.extract(candidateSql));
 
                 // Step 4: 静态校验
-                validationResult = validateSql(domain, candidateSql, retrievalResult, opts.enableExplain());
+                validationResult = validateSql(domain, candidateSql, retrievalResult, enableExplain);
                 JSONObject issues = new JSONObject();
                 issues.put("issues", validationResult.issues());
                 trace.add(TraceStep.validate(validationResult.valid(), validationResult.reason(), issues));
@@ -170,7 +173,8 @@ public class DefaultChatBIService implements ChatBIService {
 
             // Step 6: 执行（可选）
             QueryResult queryResult = null;
-            if (validationResult.valid() && opts.executeQuery()) {
+            boolean executeQuery = executionConfig == null || executionConfig.isExecuteQuery();
+            if (validationResult.valid() && executeQuery) {
                 long t5 = System.currentTimeMillis();
                 queryResult = executeQuery(domain, candidateSql);
                 long t6 = System.currentTimeMillis();
@@ -183,7 +187,7 @@ public class DefaultChatBIService implements ChatBIService {
             if (validationResult.valid()) {
                 return ChatBIResult.success(candidateSql, queryResult, trace);
             } else {
-                return ChatBIResult.fail(validationResult.reasonAndIssue() ,
+                return ChatBIResult.fail(validationResult.reasonAndIssue(),
                         trace, validationResult.exception());
             }
 
@@ -196,9 +200,6 @@ public class DefaultChatBIService implements ChatBIService {
     }
 
     private LLMProvider.LLMResponse invokeLLM(String domain, UserPrompt userPrompt, List<String> systemPrompt) {
-        // TODO: 从 EnableChatBI 配置中加载 LLM Provider
-        // 暂时抛异常，提示未配置
-        // throw new UnsupportedOperationException("LLM Provider not configured. Please enable ChatBI for domain: " + domain);
         if (this.llmProvider == null) {
             throw new IllegalStateException("llmProvider can not be null");
         }

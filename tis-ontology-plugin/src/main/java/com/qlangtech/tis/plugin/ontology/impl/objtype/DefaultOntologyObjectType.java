@@ -55,12 +55,12 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
-        String domain = OntologyPluginMeta.createPluginMeta(pluginContext.getContext()).getDomain();
+        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         final DefaultOntologyObjectType self = this;
-        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(pluginContext) {
+        OntologySyncQueue.enqueue(new OntologySyncQueue.OntologySyncTask(meta) {
             @Override
-            protected void sync() {
-                OntologyNeo4jSyncService.getInstance().syncObjectType(domain, self);
+            protected void sync(OntologyPluginMeta meta) {
+                OntologyNeo4jSyncService.getInstance().syncObjectType(meta.getDomain(), self);
             }
         });
     }

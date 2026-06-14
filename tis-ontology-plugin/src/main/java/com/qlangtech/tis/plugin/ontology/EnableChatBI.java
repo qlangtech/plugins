@@ -24,11 +24,16 @@ import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.PayloadLink;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityDesc;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
+import com.qlangtech.tis.plugin.manipulate.ManipulatePluginCacheRegister;
+import com.qlangtech.tis.plugin.ontology.chatbi.ChatBIService;
 import com.qlangtech.tis.plugin.ontology.chatbi.DefaultChatBIService;
 import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
@@ -38,6 +43,7 @@ import com.qlangtech.tis.util.IPluginContext;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
@@ -47,8 +53,18 @@ import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/28
+ * @see DefaultChatBIService
  */
-public class EnableChatBI extends OntologyDomainManipulate implements IManipulateStatus, IdentityDesc<JSONObject> {
+public class EnableChatBI extends OntologyDomainManipulate implements IManipulateStatus, IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
+
+    public static final String KEY_ID_NAME = "chat_bi";
+    private String ontologyDomain;
+    private transient ChatBIService _chatBIService;
+
+    public static EnableChatBI load(String ontologyDomain) {
+        ManipulatePluginCacheRegister.TemplateManipulateStore<OntologyDomainManipulate> manipulateStore = getManipulateStore(ontologyDomain, false);
+        return manipulateStore.getManipuldate(IdentityName.create(KEY_ID_NAME), EnableChatBI.class);
+    }
 
     /**
      * 大模型接口
@@ -86,8 +102,28 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
     @FormField(ordinal = 7, validate = {Validator.require})
     public com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig traceConfig;
 
-    private LLMProvider getLlmProvider(IPluginContext pluginContext) {
-        return LLMProvider.load(pluginContext, llm);
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        _chatBIService = null;
+    }
+
+    /**
+     * 获取当前域对应的 ChatBIService 实例（懒加载，每个 EnableChatBI 实例独立持有）。
+     */
+    public ChatBIService getChatBIService() {
+        if (_chatBIService == null) {
+            DefaultChatBIService svc = new DefaultChatBIService();
+            svc.setLlmProvider(LLMProvider.load(
+                    IPluginContext.namedContext(this.ontologyDomain).setLoginUser(() -> "system"), this.llm));
+            svc.setConfigs(
+                    retryConfig != null ? retryConfig : createDefaultRetryConfig(),
+                    validationConfig != null ? validationConfig : createDefaultValidationConfig(),
+                    executionConfig != null ? executionConfig : createDefaultExecutionConfig(),
+                    retrievalConfig != null ? retrievalConfig : createDefaultRetrievalConfig()
+            );
+            _chatBIService = svc;
+        }
+        return _chatBIService;
     }
 
     @Override
@@ -97,15 +133,6 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         if (itemsProcessor.isDeleteProcess()) {
             return;
         }
-        DefaultChatBIService chatBIService = DefaultChatBIService.getInstance();
-        chatBIService.setLlmProvider(this.getLlmProvider(pluginContext));
-
-        // 初始化配置到服务
-        chatBIService.setConfigs(
-                this.retryConfig != null ? this.retryConfig : createDefaultRetryConfig(),
-                this.validationConfig != null ? this.validationConfig : createDefaultValidationConfig(),
-                this.executionConfig != null ? this.executionConfig : createDefaultExecutionConfig()
-        );
 
         // 初始化 Trace 清理服务
         com.qlangtech.tis.plugin.ontology.chatbi.trace.TraceCleanupService.getInstance()
@@ -132,9 +159,9 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         config.enableExplain = true;
         config.enableKeywordCheck = true;
         config.enableAstCheck = true;
-        config.allowedFirstKeywords = ValidationConfig.dftAllowedFirstKeywords();// "SELECT,WITH,EXPLAIN,SHOW,DESC,DESCRIBE";
-        config.forbiddenKeywords = ValidationConfig.dftForbiddenKeywords();// "DROP,DELETE,TRUNCATE,ALTER,INSERT,UPDATE,GRANT,REVOKE,EXEC,EXECUTE,CREATE,REPLACE";
-        config.safeFunctions = ValidationConfig.dftSafeFunctions();// "REPLACE,TRIM,SUBSTRING,CONCAT,CAST,CONVERT";
+        config.allowedFirstKeywords = ValidationConfig.dftAllowedFirstKeywords();
+        config.forbiddenKeywords = ValidationConfig.dftForbiddenKeywords();
+        config.safeFunctions = ValidationConfig.dftSafeFunctions();
         return config;
     }
 
@@ -144,6 +171,16 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         config.executeQuery = true;
         config.maxResultRows = 200;
         config.queryTimeout = Duration.ofSeconds(30);
+        return config;
+    }
+
+    private com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig createDefaultRetrievalConfig() {
+        com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig config =
+                new com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig();
+        config.topKSeeds = 5;
+        config.maxHops = 2;
+        config.tokenBudget = 3000;
+        config.includeValueExamples = false;
         return config;
     }
 
@@ -167,6 +204,17 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         return new ManipulateStateSummary(
                 Collections.singletonList(IManipulateStatus.create("正常"))
                 , summary.toString(), true);
+    }
+
+    @Override
+    public Optional<PayloadLink> manipulateManagerPath() {
+        return Optional.of(new PayloadLink("查看状态", "/base/ontology/" + this.ontologyDomain + "/chat-bi"));
+    }
+
+    @Override
+    public void beforeSaved(IPluginContext pluginContext, Optional<Context> context) {
+        OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
+        this.ontologyDomain = Objects.requireNonNull(pluginMeta, "pluginMeta can not be null").getDomain();
     }
 
     @TISExtension

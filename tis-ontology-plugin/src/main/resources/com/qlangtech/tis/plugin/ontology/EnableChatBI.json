@@ -2,7 +2,7 @@
   "name": {
     "label": "任务名称",
     "help": "推断任务的唯一标识",
-    "dftVal": "chat_bi",
+    "dftVal": "com.qlangtech.tis.plugin.ontology.EnableChatBI.KEY_ID_NAME",
     "readonly": true
   },
   "llm": {

@@ -172,7 +172,7 @@ public class OntologyNeo4jSyncService {
             syncProperty(domain, ot.getName(), cols.get(i), i);
         }
 
-        log.debug("[Neo4jSync] synced ObjectType={} with {} properties", ot.getName(), cols.size());
+        log.info("[Neo4jSync] synced ObjectType={} with {} properties", ot.getName(), cols.size());
     }
 
     public void syncProperty(String domain, String otName, OntologyProperty prop, int ordinal) {
@@ -257,7 +257,7 @@ public class OntologyNeo4jSyncService {
                 tx.commit();
             }
         }
-        log.debug("[Neo4jSync] synced Linker={}", linkerName);
+        log.info("[Neo4jSync] synced Linker={}", linkerName);
     }
 
     public void syncSharedProperty(String domain, OntologySharedProperty sp) {
@@ -275,6 +275,7 @@ public class OntologyNeo4jSyncService {
                     """, p);
             tx.commit();
         }
+        log.info("[Neo4jSync] synced SharedProperty={}", sp.name);
     }
 
     public void syncValueType(String domain, OntologyValueType vt) {
@@ -292,6 +293,7 @@ public class OntologyNeo4jSyncService {
                     """, p);
             tx.commit();
         }
+        log.info("[Neo4jSync] synced ValueType={}", vt.identityValue());
     }
 
     /**
@@ -343,7 +345,7 @@ public class OntologyNeo4jSyncService {
     // ================================================================
 
     public void patrolOrphanNodes() {
-        log.debug("[Neo4jPatrol] starting orphan node patrol ...");
+        log.info("[Neo4jPatrol] starting orphan node patrol ...");
         for (Pair<OntologyDomain, ?> pair : OntologyDomain.getDoaminList()) {
             String domain = pair.getKey().name;
             patrolDomain(domain);

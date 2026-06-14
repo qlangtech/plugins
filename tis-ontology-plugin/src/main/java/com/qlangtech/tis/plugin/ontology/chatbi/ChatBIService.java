@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugin.ontology.chatbi;
  * ChatBI 服务接口：NL2SQL 主流程。
  * <p>
  * 设计参见 {@code design/chat-bi/04-nl-to-sql.md}。
+ * <p>
+ * 每个 ontology 域对应一个独立实例，由 {@link com.qlangtech.tis.plugin.ontology.EnableChatBI} 持有。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
@@ -30,18 +32,12 @@ public interface ChatBIService {
 
     /**
      * 给定自然语言问句，生成并执行 SQL。
+     * <p>
+     * 检索参数、是否执行、是否 EXPLAIN 校验等选项均由实现类从自身配置中读取。
      *
      * @param domain 本体域名
      * @param nlq    自然语言问句
-     * @param opts   查询选项（检索参数、是否执行、是否 EXPLAIN 校验）
      * @return ChatBI 结果（含 SQL、执行结果、trace、错误）
      */
-    ChatBIResult ask(String domain, String nlq, ChatBIOptions opts);
-
-    /**
-     * 获取单例实例。
-     */
-    static ChatBIService getInstance() {
-        return DefaultChatBIService.getInstance();
-    }
+    ChatBIResult ask(String domain, String nlq);
 }

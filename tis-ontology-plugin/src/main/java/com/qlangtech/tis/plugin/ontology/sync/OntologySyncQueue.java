@@ -17,10 +17,13 @@
  */
 package com.qlangtech.tis.plugin.ontology.sync;
 
+import com.qlangtech.tis.plugin.ontology.EnableChatBI;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.util.IPluginContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -55,25 +58,31 @@ public class OntologySyncQueue {
      * 提交一个同步任务到队列（非阻塞）。
      */
     public static void enqueue(OntologySyncTask task) {
-        QUEUE.offer(task);
+        OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta(task.pluginContext.getContext());
+        EnableChatBI chatBI = EnableChatBI.load(pluginMeta.getDomain());
+        if (chatBI != null) {
+            QUEUE.offer(task);
+        }
     }
 
     public static abstract class OntologySyncTask implements Runnable {
         private final IPluginContext pluginContext;
         private final Object context;
+        private final OntologyPluginMeta pluginMeta;
 
-        public OntologySyncTask(IPluginContext pluginContext) {
-            this.pluginContext = pluginContext;
-            this.context = pluginContext.getContext().getContext();
+        public OntologySyncTask(OntologyPluginMeta pluginMeta) {
+            this.pluginContext = Objects.requireNonNull(pluginMeta).getDelegate().getPluginContext();
+            this.context = this.pluginContext.getContext().getContext();
+            this.pluginMeta = pluginMeta;
         }
 
-        protected abstract void sync();
+        protected abstract void sync(OntologyPluginMeta pluginMeta);
 
         @Override
         public void run() {
             IPluginContext.setPluginContext(pluginContext);
             pluginContext.getContext().setContext(context);
-            this.sync();
+            this.sync(pluginMeta);
         }
     }
 }

@@ -39,6 +39,11 @@ public class InferOntologyFromLLMHost extends OntologyDomainManipulate implement
     }
 
     @Override
+    public void initialize() {
+
+    }
+
+    @Override
     protected void afterManipuldateProcess(IPluginContext pluginContext
             , Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
         // super.afterManipuldateProcess(pluginContext, context, itemsProcessor);

@@ -27,15 +27,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 /**
  * Trace 日志写入器（§7 T6）。
  * <p>
- * 落盘到 {@code <TIS.dataDir>/chatbi/trace/<yyyy-mm-dd>/<reqId>.jsonl}。
+ * 落盘到 {@code <TIS.dataDir>/chatbi/trace/<domain>/<yyyyMMddHHmmss>-<reqId>.jsonl}。
+ * 文件名前缀携带创建时间，同一域下按文件名字典序即为时间顺序，无需日期子目录。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/2
@@ -44,30 +44,28 @@ public class TraceWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(TraceWriter.class);
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     /**
      * 写入完整 trace。
      *
      * @param domain 本体域名
      * @param nlq    自然语言问句
      * @param trace  trace 步骤列表
+     * @param reqId  请求 ID，格式为 yyyyMMddHHmmss-{uuid32}，由 ask() 开头生成
      * @return trace 文件路径
      */
-    public static File writeTrace(String domain, String nlq, List<TraceStep> trace) {
-        String reqId = generateRequestId();
-        File traceFile = getTraceFile(reqId);
+    public static File writeTrace(String domain, String nlq, List<TraceStep> trace, String reqId) {
+        File traceFile = getTraceFile(domain, reqId);
 
         try {
             traceFile.getParentFile().mkdirs();
             try (PrintWriter writer = new PrintWriter(new FileWriter(traceFile))) {
                 // 写入请求头
-                writer.println(JSON.toJSONString(Map.of(
-                        "reqId", reqId,
-                        "domain", domain,
-                        "nlq", nlq,
-                        "timestamp", System.currentTimeMillis()
-                )));
+                Map<String, Object> header = new HashMap<>();
+                header.put("reqId", reqId);
+                header.put("domain", domain);
+                header.put("nlq", nlq);
+                header.put("timestamp", System.currentTimeMillis());
+                writer.println(JSON.toJSONString(header));
 
                 // 写入每一步 trace
                 for (TraceStep step : trace) {
@@ -86,24 +84,12 @@ public class TraceWriter {
         }
     }
 
-    private static File getTraceFile(String reqId) {
+    /**
+     * 路径：{dataDir}/chatbi/trace/{domain}/{reqId}.jsonl
+     * reqId 已携带 yyyyMMddHHmmss 前缀，文件系统字典序即时间顺序。
+     */
+    static File getTraceFile(String domain, String reqId) {
         File dataDir = Config.getDataDir();
-        String today = LocalDate.now().format(DATE_FORMATTER);
-        return new File(dataDir, "chatbi/trace/" + today + "/" + reqId + ".jsonl");
-    }
-
-    private static String generateRequestId() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
-    private static class Map {
-        static java.util.Map<String, Object> of(String k1, Object v1, String k2, Object v2, String k3, Object v3, String k4, Object v4) {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
-            map.put(k1, v1);
-            map.put(k2, v2);
-            map.put(k3, v3);
-            map.put(k4, v4);
-            return map;
-        }
+        return new File(dataDir, "chatbi/trace/" + domain + "/" + reqId + ".jsonl");
     }
 }

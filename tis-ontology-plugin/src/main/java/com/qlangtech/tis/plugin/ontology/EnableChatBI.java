@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
 import com.qlangtech.tis.plugin.manipulate.ManipulatePluginCacheRegister;
+import com.qlangtech.tis.plugin.ontology.chatbi.ChatBIResult;
 import com.qlangtech.tis.plugin.ontology.chatbi.ChatBIService;
 import com.qlangtech.tis.plugin.ontology.chatbi.DefaultChatBIService;
 import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
@@ -55,7 +56,7 @@ import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
  * @date 2026/5/28
  * @see DefaultChatBIService
  */
-public class EnableChatBI extends OntologyDomainManipulate implements IManipulateStatus, IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
+public class EnableChatBI extends OntologyDomainManipulate implements ChatBIService, IManipulateStatus, IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
 
     public static final String KEY_ID_NAME = "chat_bi";
     private String ontologyDomain;
@@ -110,7 +111,7 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
     /**
      * 获取当前域对应的 ChatBIService 实例（懒加载，每个 EnableChatBI 实例独立持有）。
      */
-    public ChatBIService getChatBIService() {
+    private ChatBIService getChatBIService() {
         if (_chatBIService == null) {
             DefaultChatBIService svc = new DefaultChatBIService();
             svc.setLlmProvider(LLMProvider.load(
@@ -127,6 +128,16 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
     }
 
     @Override
+    public ChatBIResult ask(String domain, String nlq) {
+        return getChatBIService().ask(domain, nlq);
+    }
+
+    @Override
+    public void initialize() {
+        OntologyNeo4jSyncService.getInstance();
+    }
+
+    @Override
     protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context,
                                            ManipulateItemsProcessor itemsProcessor) {
         super.afterManipuldateProcess(pluginContext, context, itemsProcessor);
@@ -135,8 +146,8 @@ public class EnableChatBI extends OntologyDomainManipulate implements IManipulat
         }
 
         // 初始化 Trace 清理服务
-        com.qlangtech.tis.plugin.ontology.chatbi.trace.TraceCleanupService.getInstance()
-                .setConfig(this.traceConfig != null ? this.traceConfig : createDefaultTraceConfig());
+//        com.qlangtech.tis.plugin.ontology.chatbi.trace.TraceCleanupService.getInstance()
+//                .setConfig(this.traceConfig != null ? this.traceConfig : createDefaultTraceConfig());
 
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(itemsProcessor.getPluginMeta());
         //OntologySyncQueue.enqueue(() -> {

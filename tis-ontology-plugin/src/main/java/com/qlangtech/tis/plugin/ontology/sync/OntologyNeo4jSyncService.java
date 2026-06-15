@@ -40,7 +40,21 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.*;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.CARDINALITY;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.DOMAIN;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.LINKER_NAME;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.NAME;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.OT_NAME;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.PROP_NAME;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.REL_TYPE;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.SOURCE;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.SOURCE_FIELD;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.SP_NAME;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.TARGET;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.TARGET_FIELD;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.TERM;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.VAL;
+import static com.qlangtech.tis.plugin.ontology.sync.CypherParams.VT_NAME;
 
 /**
  * 将本体实体实时同步到 Neo4j 图数据库。
@@ -54,6 +68,10 @@ public class OntologyNeo4jSyncService {
     private static final Logger log = LoggerFactory.getLogger(OntologyNeo4jSyncService.class);
 
     private static volatile OntologyNeo4jSyncService INSTANCE;
+
+//    static {
+//        Objects.requireNonNull(getInstance(), OntologyNeo4jSyncService.class.getSimpleName() + " can not be null");
+//    }
 
     private final GraphDatabaseService db;
     private final OntologyGraphMapper mapper;
@@ -70,6 +88,14 @@ public class OntologyNeo4jSyncService {
                     OntologyEmbeddingService emb = new OntologyEmbeddingService();
                     INSTANCE = new OntologyNeo4jSyncService(Neo4jStoreManager.getInstance().getDatabase(), emb);
                     new Neo4jBootstrapper(INSTANCE.db, INSTANCE).bootstrap();
+                    // 注册图谱统计 Provider，让抽象层 Ontology.queryGraphStats() 能调用
+                    Ontology.registerGraphStatsProvider(domain -> {
+                        OntologyNeo4jSyncService.Neo4jDomainStats s = INSTANCE.getStats(domain);
+                        return new Ontology.OntologyGraphStats(
+                                s.objectTypeCount(), s.propertyCount(), s.linkerCount(),
+                                s.glossaryCount(), s.sharedPropertyCount(), s.valueTypeCount(),
+                                s.lastSyncAt());
+                    });
                 }
             }
         }
@@ -338,6 +364,62 @@ public class OntologyNeo4jSyncService {
 
             tx.commit();
         }
+    }
+
+    // ================================================================
+    //  图谱统计（ChatBI 状态页用）
+    // ================================================================
+
+    /**
+     * 统计指定 domain 下各类节点/关系的数量及最后同步时间。
+     */
+    public record Neo4jDomainStats(
+            long objectTypeCount,
+            long propertyCount,
+            long linkerCount,
+            long glossaryCount,
+            long sharedPropertyCount,
+            long valueTypeCount,
+            long lastSyncAt   // Neo4j timestamp() 毫秒，0 表示无数据
+    ) {
+    }
+
+    public Neo4jDomainStats getStats(String domain) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(domain)) {
+            throw new IllegalArgumentException("param domain can not be empty");
+        }
+        try (Transaction tx = db.beginTx()) {
+            long otCount = countNodes(tx, "MATCH (n:ObjectType {domain:$d}) RETURN count(n) AS c", domain);
+            long prCount = countNodes(tx, "MATCH (n:Property {domain:$d}) RETURN count(n) AS c", domain);
+            long lkCount = countNodes(tx, "MATCH ()-[r:LINKED_TO {domain:$d}]->() RETURN count(r) AS c", domain);
+            long glCount = countNodes(tx, "MATCH (n:Glossary {domain:$d}) RETURN count(n) AS c", domain);
+            long spCount = countNodes(tx, "MATCH (n:SharedProperty {domain:$d}) RETURN count(n) AS c", domain);
+            long vtCount = countNodes(tx, "MATCH (n:ValueType {domain:$d}) RETURN count(n) AS c", domain);
+            long lastSync = maxUpdatedAt(tx, domain);
+            tx.commit();
+            return new Neo4jDomainStats(otCount, prCount, lkCount, glCount, spCount, vtCount, lastSync);
+        }
+    }
+
+    private long countNodes(Transaction tx, String cypher, String domain) {
+        var result = tx.execute(cypher, Map.of("d", domain));
+        if (result.hasNext()) {
+            Object val = result.next().get("c");
+            return val instanceof Number n ? n.longValue() : 0L;
+        }
+        return 0L;
+    }
+
+    private long maxUpdatedAt(Transaction tx, String domain) {
+        // 取所有非关系节点的 updatedAt 最大值
+        var result = tx.execute(
+                "MATCH (n {domain:$d}) WHERE n.updatedAt IS NOT NULL RETURN max(n.updatedAt) AS maxTs",
+                Map.of("d", domain));
+        if (result.hasNext()) {
+            Object val = result.next().get("maxTs");
+            return val instanceof Number n ? n.longValue() : 0L;
+        }
+        return 0L;
     }
 
     // ================================================================

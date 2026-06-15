@@ -18,24 +18,30 @@
 package com.qlangtech.tis.plugin.ontology.chatbi.trace;
 
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.plugin.ontology.chatbi.config.TraceConfig;
+import com.qlangtech.tis.plugin.ontology.EnableChatBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Trace 清理服务（单例）。
  * <p>
  * 负责按时间和数量清理历史 trace 文件。
+ * <p>
+ * trace 文件命名格式：{@code yyyyMMddHHmmss-{uuid32}.jsonl}，
+ * 直接从文件名前14位解析创建时间，无需日期子目录。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/4
@@ -43,14 +49,15 @@ import java.util.stream.Collectors;
 public class TraceCleanupService {
 
     private static final Logger logger = LoggerFactory.getLogger(TraceCleanupService.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /** 文件名前14位：yyyyMMddHHmmss */
+    private static final DateTimeFormatter DATETIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private static volatile TraceCleanupService INSTANCE;
 
     private final ScheduledExecutorService cleanupExecutor;
     private final Map<String, Long> lastCleanupTimeByDomain = new ConcurrentHashMap<>();
-
-    private TraceConfig traceConfig;
 
     private TraceCleanupService() {
         this.cleanupExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -71,15 +78,13 @@ public class TraceCleanupService {
         return INSTANCE;
     }
 
-    public void setConfig(TraceConfig config) {
-        this.traceConfig = config;
-    }
-
     /**
      * 触发清理（写入 trace 时调用）
      */
     public void triggerCleanup(String domain) {
-        if (traceConfig == null || !traceConfig.isEnableAutoCleanup()) {
+        EnableChatBI chatBI = EnableChatBI.load(domain);
+
+        if (chatBI == null || !chatBI.traceConfig.isEnableAutoCleanup()) {
             return;
         }
 
@@ -95,7 +100,7 @@ public class TraceCleanupService {
         // 异步执行清理
         cleanupExecutor.submit(() -> {
             try {
-                performCleanup(domain);
+                performCleanup(chatBI, domain);
             } catch (Exception e) {
                 logger.error("Failed to cleanup trace for domain: " + domain, e);
             }
@@ -103,94 +108,77 @@ public class TraceCleanupService {
     }
 
     /**
-     * 执行清理
+     * 执行清理：
+     * 1. 删除创建时间早于 retentionDays 的文件（从文件名前14位解析）
+     * 2. 若文件总数超过 maxTracesPerDomain，按文件名字典序倒序（即时间倒序）保留最新的
      */
-    private void performCleanup(String domain) {
-        if (traceConfig == null) {
+    private void performCleanup(EnableChatBI chatBI, String domain) {
+        if (chatBI == null) {
             return;
         }
 
-        File traceBaseDir = new File(Config.getDataDir(), "chatbi/trace");
-        if (!traceBaseDir.exists()) {
+        File domainDir = new File(Config.getDataDir(), "chatbi/trace/" + domain);
+        if (!domainDir.exists()) {
             return;
         }
 
-        int retentionDays = traceConfig.getRetentionDays();
-        int maxTracesPerDomain = traceConfig.getMaxTracesPerDomain();
+        int retentionDays = chatBI.traceConfig.getRetentionDays();
+        int maxTracesPerDomain = chatBI.traceConfig.getMaxTracesPerDomain();
 
-        LocalDate cutoffDate = LocalDate.now().minusDays(retentionDays);
+        LocalDateTime cutoffTime = LocalDateTime.now().minusDays(retentionDays);
 
-        // Step 1: 删除过期的日期目录
-        File[] dateDirs = traceBaseDir.listFiles();
-        if (dateDirs == null) {
+        File[] traceFiles = domainDir.listFiles(f -> f.isFile() && f.getName().endsWith(".jsonl"));
+        if (traceFiles == null || traceFiles.length == 0) {
             return;
         }
 
-        int deletedDirs = 0;
-        for (File dateDir : dateDirs) {
-            if (!dateDir.isDirectory()) {
-                continue;
-            }
-
-            try {
-                LocalDate dirDate = LocalDate.parse(dateDir.getName(), DATE_FORMATTER);
-                if (dirDate.isBefore(cutoffDate)) {
-                    deleteDirectory(dateDir);
-                    deletedDirs++;
+        // Step 1: 删除过期文件（文件名前14位为创建时间）
+        List<File> validFiles = new ArrayList<>();
+        int deletedByAge = 0;
+        for (File file : traceFiles) {
+            LocalDateTime fileTime = parseCreateTime(file.getName());
+            if (fileTime != null && fileTime.isBefore(cutoffTime)) {
+                if (file.delete()) {
+                    deletedByAge++;
                 }
-            } catch (Exception e) {
-                logger.warn("Failed to parse date directory: " + dateDir.getName(), e);
+            } else {
+                validFiles.add(file);
             }
         }
-
-        // Step 2: 按 domain 限制文件数量
-        List<File> allTraceFiles = new ArrayList<>();
-        for (File dateDir : dateDirs) {
-            if (!dateDir.isDirectory() || !dateDir.exists()) {
-                continue;
-            }
-
-            File[] traceFiles = dateDir.listFiles(f -> f.getName().endsWith(".jsonl"));
-            if (traceFiles != null) {
-                allTraceFiles.addAll(Arrays.asList(traceFiles));
-            }
+        if (deletedByAge > 0) {
+            logger.info("Cleaned up {} expired trace files for domain: {}", deletedByAge, domain);
         }
 
-        // 按 domain 分组（从文件内容读取 domain 信息，这里简化为按文件名）
-        // 实际实现可能需要读取文件第一行的 domain 字段
-        // 这里简化为保留最新的 maxTracesPerDomain 个文件
-        if (allTraceFiles.size() > maxTracesPerDomain) {
-            allTraceFiles.sort(Comparator.comparingLong(File::lastModified).reversed());
-            int deletedFiles = 0;
-            for (int i = maxTracesPerDomain; i < allTraceFiles.size(); i++) {
-                if (allTraceFiles.get(i).delete()) {
-                    deletedFiles++;
+        // Step 2: 按文件名字典序倒序（时间倒序），超出 maxTracesPerDomain 的删除
+        if (validFiles.size() > maxTracesPerDomain) {
+            // 文件名已含时间前缀，字典序 = 时间顺序；倒序后前面是最新的
+            validFiles.sort(Comparator.comparing(File::getName).reversed());
+            int deletedByCount = 0;
+            for (int i = maxTracesPerDomain; i < validFiles.size(); i++) {
+                if (validFiles.get(i).delete()) {
+                    deletedByCount++;
                 }
             }
-
-            if (deletedFiles > 0) {
-                logger.info("Cleaned up {} old trace files for domain: {}", deletedFiles, domain);
+            if (deletedByCount > 0) {
+                logger.info("Cleaned up {} over-limit trace files for domain: {}", deletedByCount, domain);
             }
-        }
-
-        if (deletedDirs > 0) {
-            logger.info("Cleaned up {} expired date directories", deletedDirs);
         }
     }
 
-    private void deleteDirectory(File dir) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    deleteDirectory(file);
-                } else {
-                    file.delete();
-                }
-            }
+    /**
+     * 从文件名中解析创建时间（前14位 yyyyMMddHHmmss）。
+     * 文件名格式：{yyyyMMddHHmmss}-{uuid32}.jsonl
+     */
+    private LocalDateTime parseCreateTime(String fileName) {
+        if (fileName == null || fileName.length() < 14) {
+            return null;
         }
-        dir.delete();
-        logger.debug("Deleted trace directory: {}", dir.getAbsolutePath());
+        try {
+            return LocalDateTime.parse(fileName.substring(0, 14), DATETIME_FORMATTER);
+        } catch (DateTimeParseException e) {
+            logger.warn("Cannot parse create time from trace file name: {}", fileName);
+            return null;
+        }
     }
 
     public void shutdown() {

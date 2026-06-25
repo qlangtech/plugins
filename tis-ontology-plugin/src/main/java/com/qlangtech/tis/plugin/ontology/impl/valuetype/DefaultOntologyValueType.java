@@ -114,10 +114,10 @@ public final class DefaultOntologyValueType extends OntologyValueType implements
             return OntologyValueType.class;
         }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.OntologyValueType;
-        }
+//        @Override
+//        public EndType getEndType() {
+//            return EndType.OntologyValueType;
+//        }
 
         @Override
         public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {

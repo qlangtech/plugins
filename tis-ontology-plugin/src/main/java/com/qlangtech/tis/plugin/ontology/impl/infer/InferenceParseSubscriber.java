@@ -7,7 +7,8 @@ import java.util.concurrent.Flow;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/9
  */
-public class InferenceParseSubscriber implements Flow.Subscriber<InferenceParse<?>> {
+@SuppressWarnings("all")
+public class InferenceParseSubscriber implements Flow.Subscriber<InferenceParse> {
     private Flow.Subscription subscription;
     private final DeserializeOntologyRes.InferBatch inferBatch;
 

@@ -56,6 +56,11 @@ public class DataSourceBinding extends ObjectTypeBinding {
     public String physicalTableName;
 
     @Override
+    public boolean hasBound() {
+        return true;
+    }
+
+    @Override
     public DataSourceFactory getDataSource() {
         return DataSourceFactory.load(this.dbName);
     }

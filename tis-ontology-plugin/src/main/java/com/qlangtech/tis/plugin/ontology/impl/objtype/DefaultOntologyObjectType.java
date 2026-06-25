@@ -185,10 +185,10 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
             super();
         }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.OntologyObjectType;
-        }
+//        @Override
+//        public EndType getEndType() {
+//            return EndType.OntologyObjectType;
+//        }
 
         @Override
         public OntologyEnum getOntologyType() {

@@ -71,10 +71,10 @@ public class DefaultOntologySharedProperty extends OntologySharedProperty implem
             super();
         }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.Shared;
-        }
+//        @Override
+//        public EndType getEndType() {
+//            return EndType.Shared;
+//        }
 
 
         public boolean validateName(

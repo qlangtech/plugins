@@ -124,10 +124,10 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
             return OntologyEnum.Linker;
         }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.OntologyLink;
-        }
+//        @Override
+//        public EndType getEndType() {
+//            return EndType.OntologyLink;
+//        }
 
         @Override
         public String getDisplayName() {

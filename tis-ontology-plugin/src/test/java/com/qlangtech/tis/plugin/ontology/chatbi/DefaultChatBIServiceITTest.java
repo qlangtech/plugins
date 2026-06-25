@@ -80,7 +80,8 @@ public class DefaultChatBIServiceITTest {
                 /**
                  * 执行查询
                  */
-                ChatBIResult chatBIResult = chatBIService.ask("falcon_14", c.getQuestion());
+                ChatBIResult chatBIResult = chatBIService.ask("falcon_14", c.getQuestion(), (step) -> {
+                });
                 Assert.assertNotNull(chatBIResult);
                 if (!chatBIResult.isSuccess()) {
                     throw new IllegalStateException(chatBIResult.error(), chatBIResult.exception());

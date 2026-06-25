@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.PayloadLink;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityDesc;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -32,10 +33,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.manipulate.ManipulateItemsProcessor;
+import com.qlangtech.tis.plugin.ds.manipulate.ManipuldateUtils;
 import com.qlangtech.tis.plugin.manipulate.ManipulatePluginCacheRegister;
 import com.qlangtech.tis.plugin.ontology.chatbi.ChatBIResult;
 import com.qlangtech.tis.plugin.ontology.chatbi.ChatBIService;
 import com.qlangtech.tis.plugin.ontology.chatbi.DefaultChatBIService;
+import com.qlangtech.tis.plugin.ontology.chatbi.TraceStep;
 import com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
@@ -44,8 +47,10 @@ import com.qlangtech.tis.util.IPluginContext;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
 
@@ -56,7 +61,8 @@ import static com.qlangtech.tis.manage.common.UserProfile.KEY_FIELD_LLM_NAME;
  * @date 2026/5/28
  * @see DefaultChatBIService
  */
-public class EnableChatBI extends OntologyDomainManipulate implements ChatBIService, IManipulateStatus, IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
+public class EnableChatBI extends OntologyDomainManipulate implements ChatBIService, IManipulateStatus //
+        , IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
 
     public static final String KEY_ID_NAME = "chat_bi";
     private String ontologyDomain;
@@ -115,7 +121,7 @@ public class EnableChatBI extends OntologyDomainManipulate implements ChatBIServ
         if (_chatBIService == null) {
             DefaultChatBIService svc = new DefaultChatBIService();
             svc.setLlmProvider(LLMProvider.load(
-                    IPluginContext.namedContext(this.ontologyDomain).setLoginUser(() -> "system"), this.llm));
+                    IPluginContext.namedContext(this.ontologyDomain).setLoginUser(() -> Config.ADMIN_NAME), this.llm));
             svc.setConfigs(
                     retryConfig != null ? retryConfig : createDefaultRetryConfig(),
                     validationConfig != null ? validationConfig : createDefaultValidationConfig(),
@@ -128,8 +134,8 @@ public class EnableChatBI extends OntologyDomainManipulate implements ChatBIServ
     }
 
     @Override
-    public ChatBIResult ask(String domain, String nlq) {
-        return getChatBIService().ask(domain, nlq);
+    public ChatBIResult ask(String domain, String nlq, Consumer<TraceStep> stepCallback) {
+        return getChatBIService().ask(domain, nlq, stepCallback);
     }
 
     @Override
@@ -247,6 +253,18 @@ public class EnableChatBI extends OntologyDomainManipulate implements ChatBIServ
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            ManipulateItemsProcessor itemProcess //
+                    = ManipuldateUtils.instance((IPluginContext) msgHandler, context, null, (m) -> {
+            });
+            OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta(itemProcess.getPluginMeta());
+            List<OntologyObjectType> objectTypes = OntologyObjectType.loadAll(pluginMeta.getDomain());
+            List<String> objTypes = objectTypes.stream() //
+                    .filter((ot) -> !ot.getDataSourceBinding().hasBound()) //
+                    .map((ot) -> "\"" + ot.getName() + "\"").toList();
+            if (!objTypes.isEmpty()) {
+                msgHandler.addErrorMessage(context, String.valueOf(Ontology.OntologyEnum.ObjectType) + ":" + String.join(",", objTypes) + "还未绑定数据源");
+                return false;
+            }
             return true;
         }
 

@@ -105,7 +105,7 @@ public class TestTraceStep {
 
     @Test
     public void testErrorStep() {
-        TraceStep step = TraceStep.error("llm", "Connection timeout");
+        TraceStep step = TraceStep.error("llm", "Connection timeout", null);
         assertEquals("llm", step.step());
         assertFalse("Should not be ok", step.ok());
         assertEquals("Connection timeout", step.message());

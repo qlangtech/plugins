@@ -1,23 +1,26 @@
 {
   "valueTypePrompt": {
-    "label": "Value Type提示词",
+    "label": "Value Type 提示词",
     "rows": 3,
     "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.valueType.getPrompt()",
+    "help": "用于LLM推理使用生成Value Type提示词，可按照需要修改",
     "style": "codemirror",
-    "mode": "text/velocity"
+    "mode": "text/markdown"
   },
   "glossaryPrompt": {
     "label": "Glossary（同义词）提示词",
+    "help": "用于LLM推理使用生成Glossary提示词，可按照需要修改",
     "rows": 3,
     "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.glossary.getPrompt()",
     "style": "codemirror",
-    "mode": "text/velocity"
+    "mode": "text/markdown"
   },
   "sharedPropertyPrompt": {
-    "label": "Shared Property提示词",
+    "label": "Shared Property 提示词",
+    "help": "用于LLM推理使用生成Shared Property提示词，可按照需要修改",
     "rows": 3,
     "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.sharedPropertyConfig.getPrompt()",
     "style": "codemirror",
-    "mode": "text/velocity"
+    "mode": "text/markdown"
   }
 }

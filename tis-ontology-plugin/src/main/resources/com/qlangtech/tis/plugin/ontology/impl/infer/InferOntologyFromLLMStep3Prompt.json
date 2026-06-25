@@ -1,9 +1,10 @@
 {
   "linkTypePrompt": {
     "label": "Link Type提示词",
+    "help": "用于LLM推理使用生成Link Type提示词，可按照需要修改",
     "rows": 7,
     "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.linkerType.getPrompt()",
     "style": "codemirror",
-    "mode": "text/velocity"
+    "mode": "text/markdown"
   }
 }

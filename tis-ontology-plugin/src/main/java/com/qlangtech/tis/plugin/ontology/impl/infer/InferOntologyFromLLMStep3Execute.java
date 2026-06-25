@@ -7,7 +7,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.Ontology;
-import com.qlangtech.tis.plugin.ontology.OntologyLinker;
 import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.Optional;
 public class InferOntologyFromLLMStep3Execute extends OneStepOfMultiSteps {
 
     @FormField(type = FormFieldType.MULTI_SELECTABLE, ordinal = 1, validate = {Validator.require})
-    public List<InferenceParse<OntologyLinker>> inferLinkerInstances;
+    public List<InferenceParse> inferLinkerInstances;
 
 
     @Override

@@ -26,10 +26,11 @@ public class InferenceParseJsonSerializer implements ObjectSerializer {
         try {
             JSONObject j = new JSONObject();
             j.put("id", prop.getId());
-            j.put("name", prop.getName());
-            j.put("reason", prop.getReason());
+            j.put(InferenceParse.KEY_NAME, prop.getName());
+            j.put(InferenceParse.KEY_REASON, prop.getReason());
             j.put(Option.KEY_END_TYPE, prop.endType().getVal());
-            j.put("confidence", prop.getConfidence().getToken());
+            j.put(InferenceParse.KEY_CONFIDENCE, prop.getConfidence().getToken());
+            j.put(InferenceParse.KEY_SELECTED, prop.isSelected());
             return j;
         } catch (Exception e) {
             throw new RuntimeException(e);

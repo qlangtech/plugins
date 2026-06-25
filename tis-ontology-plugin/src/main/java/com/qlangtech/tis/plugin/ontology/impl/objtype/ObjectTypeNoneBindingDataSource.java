@@ -46,6 +46,11 @@ public class ObjectTypeNoneBindingDataSource extends ObjectTypeBinding {
     }
 
     @Override
+    public boolean hasBound() {
+        return false;
+    }
+
+    @Override
     public final List<ColumnMetaData> resolveTabCols() {
         return Collections.emptyList();
     }

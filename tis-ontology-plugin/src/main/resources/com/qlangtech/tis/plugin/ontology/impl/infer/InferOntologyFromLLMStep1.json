@@ -15,6 +15,16 @@
           "hetero": "params-cfg-user-isolation",
           "targetItemDesc": "LLM",
           "descName": "QWen"
+        },
+        {
+          "hetero": "params-cfg-user-isolation",
+          "targetItemDesc": "LLM",
+          "descName": "DeepSeek"
+        },
+        {
+          "hetero": "params-cfg-user-isolation",
+          "targetItemDesc": "LLM",
+          "descName": "Anthropic"
         }
       ]
     }

@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.plugin.ontology.chatbi.config;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
@@ -24,6 +25,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 import java.util.Objects;
 
@@ -61,6 +63,41 @@ public class TraceConfig implements Describable<TraceConfig> {
         @Override
         public String getDisplayName() {
             return "Trace Config";
+        }
+
+
+        public boolean validateMaxTracesPerDomain(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int maxTraces = Integer.parseInt(value);
+            int min = 100;
+            int max = 3000;
+            if (maxTraces < min) {
+                msgHandler.addFieldError(context, fieldName, "不能小于" + min);
+                return false;
+            }
+
+            if (maxTraces > max) {
+                msgHandler.addFieldError(context, fieldName, "不能大于" + max);
+                return false;
+            }
+
+            return true;
+        }
+
+        public boolean validateRetentionDays(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int retentionDays = Integer.parseInt(value);
+            int min = 1;
+            int max = 30;
+            if (retentionDays < min) {
+                msgHandler.addFieldError(context, fieldName, "不能小于" + min);
+                return false;
+            }
+
+            if (retentionDays > max) {
+                msgHandler.addFieldError(context, fieldName, "不能大于" + max);
+                return false;
+            }
+
+            return true;
         }
 
         @Override

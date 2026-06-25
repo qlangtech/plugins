@@ -1,8 +1,8 @@
 {
   "maxTracesPerDomain": {
     "label": "最大 Trace 数",
-    "help": "最大保存的 trace 文件数。超过限制时删除最旧的文件。推荐范围：500-2000",
-    "dftVal": 500
+    "help": "最大保存的 trace 文件数。超过限制时删除最旧的文件。推荐范围：100-1000",
+    "dftVal": 100
   },
   "retentionDays": {
     "label": "保留天数",

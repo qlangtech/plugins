@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.linker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
@@ -39,6 +40,12 @@ public class RelationshipTypeObjectTypeForeignKeys extends LinkResources {
     @FormField(ordinal = 0, validate = {Validator.require})
     public LinkReference left;
 
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String cardinality;
+
+    private Cardinality getCardinality(){
+        return Cardinality.valueOf(this.cardinality);
+    }
     /**
      * 维表（1）
      */
@@ -50,26 +57,27 @@ public class RelationshipTypeObjectTypeForeignKeys extends LinkResources {
         return IdentityName.create(left.getObjectType() + "_join_" + right.getObjectType());
     }
 
-    private static final Cardinality defaultCardinality = Cardinality.MANY_ONE;
+  //  private static final Cardinality defaultCardinality = Cardinality.MANY_ONE;
 
     @Override
     public ObjectLinkerPair getLinks() {
+        Cardinality cardinality = getCardinality();
         return new ObjectLinkerPair(
                 new ObjectLinkInfo(
                         left.getObjectType(), left.targetField,
                         right.getObjectType(), right.targetField,
-                        defaultCardinality),
+                        cardinality),
                 new ObjectLinkInfo(
                         left.getObjectType(), left.targetField,
                         right.getObjectType(), right.targetField,
-                        defaultCardinality));
+                        cardinality));
     }
 
     @Override
     public List<UDFDesc> getLiteria() {
         UDFDesc l = new UDFDesc("Left", left.getObjectType() + "." + left.targetField);
         UDFDesc r = new UDFDesc("Right", right.getObjectType() + "." + right.targetField);
-        return List.of(l, r, new UDFDesc("Cardinality", defaultCardinality.name()));
+        return List.of(l, r, new UDFDesc("Cardinality", getCardinality().name()));
     }
 
     @TISExtension

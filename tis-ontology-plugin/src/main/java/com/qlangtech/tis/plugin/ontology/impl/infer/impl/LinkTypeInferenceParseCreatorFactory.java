@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.ontology.impl.infer.impl;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.impl.infer.BaseInferenceParseCreatorFactory;
+import com.qlangtech.tis.plugin.ontology.impl.infer.DeserializeOntologyRes;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep3Execute;
 
 import java.util.Set;
@@ -16,6 +17,11 @@ public class LinkTypeInferenceParseCreatorFactory extends BaseInferenceParseCrea
     @Override
     protected Set<Ontology.OntologyEnum> getSupportOntologyEnum() {
         return Set.of(Ontology.OntologyEnum.Linker);
+    }
+
+    @Override
+    protected DeserializeOntologyRes.InferBatch getInferBatch() {
+        return DeserializeOntologyRes.InferBatch.LinkTypeBatch;
     }
 
     @Override

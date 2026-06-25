@@ -18,17 +18,22 @@ import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Exe
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep2Prompt;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep3Execute;
 import com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMStep3Prompt;
+import com.qlangtech.tis.plugin.ontology.impl.infer.InferenceParse;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.ListUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/6/8
  */
+@SuppressWarnings("all")
 public class InferOntologyFromLLMHost extends OntologyDomainManipulate implements IdentityName, MultiStepsSupportHost,
         IPluginStore.ManipuldateProcessor {
     private OneStepOfMultiSteps[] _stepsPlugin;
@@ -47,11 +52,23 @@ public class InferOntologyFromLLMHost extends OntologyDomainManipulate implement
     protected void afterManipuldateProcess(IPluginContext pluginContext
             , Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
         // super.afterManipuldateProcess(pluginContext, context, itemsProcessor);
+        InferOntologyFromLLMStep2Execute step2execute = (InferOntologyFromLLMStep2Execute) _stepsPlugin[OneStepOfMultiSteps.Step.Step3.getStepIndex()];
+        InferOntologyFromLLMStep3Execute step3execute = (InferOntologyFromLLMStep3Execute) _stepsPlugin[OneStepOfMultiSteps.Step.Step5.getStepIndex()];
+        Set<Integer> skipIds = Sets.newHashSet();
+        ListUtils.union(step3execute.inferLinkerInstances, step2execute.inferInstances).forEach((presult) -> {
+            if (presult instanceof InferenceParse inferenceParse) {
+                if (!inferenceParse.isSelected()) {
+                    skipIds.add(inferenceParse.getId());
+                }
+            } else {
+                throw new IllegalStateException("instance presult must be type of " + InferenceParse.class.getSimpleName() + " but now is " + presult.getClass().getSimpleName());
+            }
+        });
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(itemsProcessor.getPluginMeta());
         DeserializeOntologyRes ontologyRes
                 = DeserializeOntologyRes.getDomainInferResult(meta.getDomain());
         // 创建实例，并且在注册器中注销
-        int createResCount = ontologyRes.create(pluginContext);
+        int createResCount = ontologyRes.create(skipIds, pluginContext);
         if (createResCount > 0) {
             pluginContext.addActionMessage(context.orElseThrow(), "已经成功创建" + createResCount + "条Ontology（本体）资源");
         }

@@ -22,6 +22,9 @@ import com.qlangtech.tis.aiagent.core.IAgentContext;
 import com.qlangtech.tis.aiagent.llm.LLMProvider;
 import com.qlangtech.tis.aiagent.llm.UserPrompt;
 import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.chatbi.prompt.PromptBuilder;
 import com.qlangtech.tis.plugin.ontology.chatbi.trace.TraceWriter;
 import com.qlangtech.tis.plugin.ontology.chatbi.validation.AstValidator;
@@ -31,12 +34,15 @@ import com.qlangtech.tis.plugin.ontology.chatbi.validation.ValidationResult;
 import com.qlangtech.tis.plugin.ontology.graphrag.DefaultGraphRAGService;
 import com.qlangtech.tis.plugin.ontology.graphrag.GraphRAGService;
 import com.qlangtech.tis.plugin.ontology.graphrag.RetrievalResult;
+import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -77,19 +83,15 @@ public class DefaultChatBIService implements ChatBIService {
     }
 
     public void setConfigs(com.qlangtech.tis.plugin.ontology.chatbi.config.RetryConfig retryConfig,
-                          com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig,
-                          com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig,
-                          com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig retrievalConfig) {
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.ValidationConfig validationConfig,
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.ExecutionConfig executionConfig,
+                           com.qlangtech.tis.plugin.ontology.chatbi.config.RetrievalConfig retrievalConfig) {
         this.retryConfig = Objects.requireNonNull(retryConfig, "retryConfig can not be null");
         this.validationConfig = Objects.requireNonNull(validationConfig, "validationConfig can not be null");
         this.executionConfig = Objects.requireNonNull(executionConfig, "executionConfig can not be null");
         this.retrievalConfig = Objects.requireNonNull(retrievalConfig, "retrievalConfig can not be null");
     }
 
-    @Override
-    public ChatBIResult ask(String domain, String nlq) {
-        return ask(domain, nlq, step -> {});
-    }
 
     @Override
     public ChatBIResult ask(String domain, String nlq, java.util.function.Consumer<TraceStep> stepCallback) {
@@ -105,7 +107,7 @@ public class DefaultChatBIService implements ChatBIService {
             com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions retrievalOptions =
                     retrievalConfig != null ? retrievalConfig.toRetrievalOptions()
                             : com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions.defaults();
-            RetrievalResult retrievalResult = graphRAGService.retrieve(domain, nlq, retrievalOptions);
+            final RetrievalResult retrievalResult = graphRAGService.retrieve(domain, nlq, retrievalOptions);
             long t2 = System.currentTimeMillis();
             TraceStep retrieveStep = TraceStep.retrieve(retrievalResult.objectTypes().size(), retrievalResult.linkers().size(), t2 - t1);
             trace.add(retrieveStep);
@@ -113,7 +115,7 @@ public class DefaultChatBIService implements ChatBIService {
 
             if (retrievalResult.objectTypes().isEmpty()) {
                 String error = "No relevant ontology found for query: " + nlq;
-                TraceStep errStep = TraceStep.error("retrieve", error);
+                TraceStep errStep = TraceStep.error("retrieve", error, null);
                 trace.add(errStep);
                 stepCallback.accept(errStep);
                 TraceWriter.writeTrace(domain, nlq, trace, reqId);
@@ -146,7 +148,7 @@ public class DefaultChatBIService implements ChatBIService {
 
                 if (!llmResponse.isSuccess()) {
                     String error = "LLM invocation failed: " + llmResponse.getErrorMessage();
-                    TraceStep llmErrStep = TraceStep.error("llm", error);
+                    TraceStep llmErrStep = TraceStep.error("llm", error, null);
                     trace.add(llmErrStep);
                     stepCallback.accept(llmErrStep);
                     TraceWriter.writeTrace(domain, nlq, trace, reqId);
@@ -162,7 +164,7 @@ public class DefaultChatBIService implements ChatBIService {
                 candidateSql = PromptBuilder.extractSqlFromCodeBlock(llmResponse.getContent());
                 if (candidateSql.isBlank()) {
                     String error = "Failed to extract SQL from LLM response";
-                    TraceStep extractErrStep = TraceStep.error("extract", error);
+                    TraceStep extractErrStep = TraceStep.error("extract", error, null);
                     trace.add(extractErrStep);
                     stepCallback.accept(extractErrStep);
                     TraceWriter.writeTrace(domain, nlq, trace, reqId);
@@ -176,6 +178,11 @@ public class DefaultChatBIService implements ChatBIService {
                 validationResult = validateSql(domain, candidateSql, retrievalResult, enableExplain);
                 JSONObject issues = new JSONObject();
                 issues.put("issues", validationResult.issues());
+                Exception exp = null;
+                if ((exp = validationResult.exception()) != null) {
+                    Throwable cause = exp.getCause();
+                    issues.put("exception", ExceptionUtils.getStackTrace(cause != null ? cause : exp));
+                }
                 TraceStep validateStep = TraceStep.validate(validationResult.valid(), validationResult.reason(), issues);
                 trace.add(validateStep);
                 stepCallback.accept(validateStep);
@@ -206,7 +213,7 @@ public class DefaultChatBIService implements ChatBIService {
             boolean executeQuery = executionConfig == null || executionConfig.isExecuteQuery();
             if (validationResult.valid() && executeQuery) {
                 long t5 = System.currentTimeMillis();
-                queryResult = executeQuery(domain, candidateSql);
+                queryResult = executeQuery(domain, retrievalResult, candidateSql);
                 long t6 = System.currentTimeMillis();
                 TraceStep execStep = TraceStep.execute(queryResult.rowCount(), t6 - t5);
                 trace.add(execStep);
@@ -224,7 +231,7 @@ public class DefaultChatBIService implements ChatBIService {
 
         } catch (Exception e) {
             logger.error("ChatBI ask failed", e);
-            TraceStep exceptionStep = TraceStep.error("exception", e.getMessage());
+            TraceStep exceptionStep = TraceStep.error("exception", e.getMessage(), e);
             trace.add(exceptionStep);
             stepCallback.accept(exceptionStep);
             TraceWriter.writeTrace(domain, nlq, trace, reqId);
@@ -269,13 +276,60 @@ public class DefaultChatBIService implements ChatBIService {
         return ValidationResult.ok();
     }
 
-    private QueryResult executeQuery(String domain, String sql) {
-        // TODO: 从 DataSourceFactory 获取连接执行 SQL
-        // 一期暂不实现，返回空结果
-        logger.warn("Query execution not implemented yet");
-        int maxResultRows = executionConfig != null ? executionConfig.getMaxResultRows() : 200;
-        int queryTimeout = executionConfig != null ? executionConfig.getQueryTimeout() : 30;
-        // 实际执行时需要使用 Statement.setMaxRows(maxResultRows) 和 Statement.setQueryTimeout(queryTimeout)
-        return QueryResult.empty();
+    private QueryResult executeQuery(String domain, RetrievalResult retrievalResult, String sql) {
+        DataSourceFactory dataSource = null;
+        for (String objType : retrievalResult.objectTypes()) {
+            OntologyObjectType objectType = Ontology.loadObjectTypeDetail(domain, objType);
+            dataSource = objectType.getDataSourceBinding().getDataSource();
+            break;
+        }
+        final QueryResult[] queryResult = new QueryResult[1];
+        final int maxResultRows = executionConfig != null ? executionConfig.getMaxResultRows() : 200;
+        Objects.requireNonNull(dataSource, "dataSource can not be null")
+                .visitFirstConnection((conn) -> {
+                    try {
+                        //  通过以下方法创建QueryResult
+                        List<Map<String, Object>> rows = Lists.newArrayList();
+                        List<String> columns = Lists.newArrayList();
+                        final boolean[] columnsInitialized = {false};
+                        final int[] actualRowsRef = {0};
+                        final boolean[] truncatedRef = {false};
+                        conn.query(sql, result -> {
+                            // 首次回调时初始化列名
+                            if (!columnsInitialized[0]) {
+                                java.sql.ResultSetMetaData meta = result.getMetaData();
+                                int colCount = meta.getColumnCount();
+                                for (int i = 1; i <= colCount; i++) {
+                                    columns.add(meta.getColumnLabel(i));
+                                }
+                                columnsInitialized[0] = true;
+                            }
+                            actualRowsRef[0]++;
+                            // 超过 maxResultRows 时标记截断并停止迭代
+                            if (rows.size() >= maxResultRows) {
+                                truncatedRef[0] = true;
+                                return false;
+                            }
+                            // 构建当前行的 Map
+                            Map<String, Object> row = new java.util.LinkedHashMap<>();
+                            for (int i = 0; i < columns.size(); i++) {
+                                row.put(columns.get(i), result.getObject(i + 1));
+                            }
+                            rows.add(row);
+                            return true;
+                        });
+                        queryResult[0] = new QueryResult(columns, rows, rows.size(), truncatedRef[0], actualRowsRef[0]);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        return queryResult[0];
+//        // 一期暂不实现，返回空结果
+//        logger.warn("Query execution not implemented yet");
+//
+//        int queryTimeout = executionConfig != null ? executionConfig.getQueryTimeout() : 30;
+//        // 实际执行时需要使用 Statement.setMaxRows(maxResultRows) 和 Statement.setQueryTimeout(queryTimeout)
+//        return QueryResult.empty();
     }
 }

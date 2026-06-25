@@ -1,11 +1,13 @@
 package com.qlangtech.tis.plugin.ontology.impl.infer;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,12 +25,18 @@ public class InferOntologyFromLLMStep2Execute extends OneStepOfMultiSteps {
      * 可能有三种类型
      *
      * @see BaseInferenceParseCreatorFactory
+     * @see NorLinkTypeInferenceParseCreatorFactory
      */
     @FormField(type = FormFieldType.MULTI_SELECTABLE, ordinal = 1, validate = {Validator.require})
-    public List<InferenceParse<Ontology>> inferInstances;
+    public List<InferenceParse> inferInstances;
 
-    public static List<InferenceParse<Ontology>> getInferInstances() {
+    public static List<InferenceParse> getInferInstances() {
         return Collections.emptyList();
+    }
+
+    @Override
+    protected void processPreSaved(IPluginContext pluginContext, Context currentCtx, OneStepOfMultiSteps[] preSavedStepPlugins) {
+        super.processPreSaved(pluginContext, currentCtx, preSavedStepPlugins);
     }
 
     @TISExtension

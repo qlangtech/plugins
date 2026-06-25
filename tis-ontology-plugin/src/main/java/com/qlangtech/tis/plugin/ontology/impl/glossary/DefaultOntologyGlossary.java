@@ -74,10 +74,10 @@ public class DefaultOntologyGlossary extends OntologyGlossary implements IPlugin
             super();
         }
 
-        @Override
-        public EndType getEndType() {
-            return EndType.OntologyGlossary;
-        }
+//        @Override
+//        public EndType getEndType() {
+//            return EndType.OntologyGlossary;
+//        }
 
         @Override
         public OntologyEnum getOntologyType() {

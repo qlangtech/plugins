@@ -84,7 +84,7 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
     /**
      * 大模型接口
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, validate = {Validator.identity})
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, validate = {Validator.identity, Validator.require})
     public String llm;
 
     /**
@@ -123,6 +123,24 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
         // final Context ctx = context.orElseThrow();
 
         OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, Optional.of(ctx));
+
+        DeserializeOntologyRes ontologyRes
+                = DeserializeOntologyRes.getDomainInferResult(ometa.getDomain(), false
+                , (inferManager, res) -> {
+                    if (res != null && inferManager.remove(ometa.getDomain(), res)) {
+                        logger.info("ontology domain:{} relevant inferManager has been remove from register,", ometa.getDomain());
+                    }
+                    return res;
+                });
+
+        if (ontologyRes != null) {
+            ontologyRes.stopInferTask(DeserializeOntologyRes.InferBatch.LinkTypeBatch);
+            ontologyRes.clearDomainQueues(DeserializeOntologyRes.InferBatch.LinkTypeBatch);
+
+            ontologyRes.stopInferTask(DeserializeOntologyRes.InferBatch.NorLinkTypeBatch);
+            ontologyRes.clearDomainQueues(DeserializeOntologyRes.InferBatch.NorLinkTypeBatch);
+        }
+
 
 //        List<OntologyObjectType> objectTypes = OntologyObjectType.loadAll(ometa.getDomain());
 //        if (objectTypes.isEmpty()) {
@@ -192,6 +210,7 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
                 FlatJsonToTisConverter.convert(json));
         TT ontologyRes = (TT) valMap.createDescribable((IControlMsgHandler) pluginContext, ctx).getInstance();
         InferenceParse inferenceParseResult = InferenceParse.deserialize(id, inferBatch, json, ontologyRes);
+        inferenceParseResult.setSelected(true);
 
         return Pair.of(ontologyRes, inferenceParseResult);
     }
@@ -296,7 +315,7 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
     public static void main(String[] args) throws Exception {
         DefaultGroovyShellFactory.setInConsoleModule();
         InferOntologyFromLLMStep1 infer = new InferOntologyFromLLMStep1();
-        infer.llm = "default";// "qwen1";// "qwen1";
+        infer.llm = "Anthropic"; //"default";// "qwen1";// "qwen1";
 
         //String ontologyName = "order2";
         PartialSettedPluginContext pluginContext = initPluginContext(ontologyName);// IPluginContext.namedContext(ontologyName);
@@ -331,8 +350,16 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
 
         Future<?> future = DeserializeOntologyRes.getOntologyResInfer(ontologyName, pluginContext, context, step3Prompt, infer);
 
+
         DeserializeOntologyRes ontologyRes
                 = DeserializeOntologyRes.getDomainInferResult(ontologyName);
+        ontologyRes.subscribe(new InferenceParseSubscriber(DeserializeOntologyRes.InferBatch.LinkTypeBatch) {
+            @Override
+            public void onNext(InferenceParse item) {
+                // super.onNext(item);
+                System.out.println(item.getName());
+            }
+        });
 
         future.get();
         ConcurrentLinkedQueue<Pair<OntologyLinker, InferenceParse>> linkTypesQueue = ontologyRes.linkTypesQueue;
@@ -378,7 +405,7 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
 
 
     @TISExtension
-    public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc {
+    public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc implements FormFieldType.IMultiSelectValidator {
         public DftDesc() {
             super();
             //            List<Pair<OntologyDomain, IPluginStore<OntologyDomain>>> domainList = OntologyDomain

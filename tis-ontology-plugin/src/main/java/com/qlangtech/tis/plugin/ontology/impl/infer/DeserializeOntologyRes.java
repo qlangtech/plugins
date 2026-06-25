@@ -9,8 +9,9 @@ import com.qlangtech.tis.aiagent.llm.LLMOptionParams;
 import com.qlangtech.tis.aiagent.llm.LLMProvider;
 import com.qlangtech.tis.aiagent.llm.TISJsonSchema;
 import com.qlangtech.tis.aiagent.llm.UserPrompt;
-import com.qlangtech.tis.datax.job.SSEEventWriter;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.llm.impl.qwen.sampling.TemperatureSampling;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyGlossary;
 import com.qlangtech.tis.plugin.ontology.OntologyLinker;
@@ -41,6 +42,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -74,9 +77,10 @@ public class DeserializeOntologyRes {
     private final JSONObject tablesPayload;
     private final LLMProvider llmProvider;
     private final AtomicInteger idIndex = new AtomicInteger();
-    private final SubmissionPublisher<InferenceParse<?>> publisher;
+    private final SubmissionPublisher<InferenceParse> publisher;
+    private final List<String> targetObjectTypes;
 
-    public DeserializeOntologyRes(String ontologyDomain, LLMProvider llmProvider) {
+    public DeserializeOntologyRes(String ontologyDomain, List<IdentityName> targetObjectTypes, LLMProvider llmProvider) {
         this.linkTypesQueue = new ConcurrentLinkedQueue<>();
         this.sharedPropsQueue = new ConcurrentLinkedQueue<>();
         this.valueTypesQueue = new ConcurrentLinkedQueue<>();
@@ -88,8 +92,10 @@ public class DeserializeOntologyRes {
             throw new IllegalStateException("domain '" + ontologyDomain
                     + "' has no ObjectType, please export tables first");
         }
+        this.targetObjectTypes = Objects.requireNonNull(targetObjectTypes) //
+                .stream().map((name) -> name.identityValue()).toList();
         this.publisher = new SubmissionPublisher<>();
-        this.tablesPayload = buildTablesPayload(objectTypes);
+        this.tablesPayload = buildTablesPayload(targetObjectTypes, objectTypes);
     }
 
     /**
@@ -131,11 +137,21 @@ public class DeserializeOntologyRes {
     }
 
     public static DeserializeOntologyRes getDomainInferResult(String ontologyDomain) {
+        return getDomainInferResult(ontologyDomain, true //
+                , (inferManager, res) -> res);
+    }
+
+    public static DeserializeOntologyRes getDomainInferResult(String ontologyDomain, boolean validateNull //
+            , BiFunction<ConcurrentMap<String, DeserializeOntologyRes>, DeserializeOntologyRes, DeserializeOntologyRes> callback) {
         if (StringUtils.isEmpty(ontologyDomain)) {
             throw new IllegalArgumentException("param ontologyDomain can not be empty");
         }
-        return Objects.requireNonNull(ontologyResInferManager.get(ontologyDomain)
-                , "ontologyDomain:" + ontologyDomain + " relevant DeserializeOntologyRes can not be null");
+        DeserializeOntologyRes res = ontologyResInferManager.get(ontologyDomain);
+        if (validateNull) {
+            Objects.requireNonNull(res
+                    , "ontologyDomain:" + ontologyDomain + " relevant DeserializeOntologyRes can not be null");
+        }
+        return callback.apply(ontologyResInferManager, res);
     }
 
     public List<InferenceParse> getTargetInferenceParseResult(Set<Ontology.OntologyEnum> filterCriteria) {
@@ -156,12 +172,15 @@ public class DeserializeOntologyRes {
     public static void getOntologyResInfer(String domain, IPluginContext pluginContext, Context ctx //
             , InferOntologyFromLLMStep2Prompt step2Prompt, InferOntologyFromLLMStep1 step1) {
         DeserializeOntologyRes ontologyRes = getDeserializeOntologyRes(domain, step1);
-
+        InferBatch batch = InferBatch.NorLinkTypeBatch;
+        logger.info("try to start {} infer,object type size:{}，names：{}" //
+                , batch, ontologyRes.targetObjectTypes.size(), String.join(",", ontologyRes.targetObjectTypes));
         if (ontologyRes.otherReferSignal.compareAndSet(false, true)) {
+            logger.info("get start {} infer", batch);
             ontologyRes.otherReferSignalResult.setComplete(false);
             ontologyRes.otherReferSignalResult.setFaild(false);
             Object context = pluginContext.getContext().getContext();
-            InferBatch batch = InferBatch.NorLinkTypeBatch;
+
             Future<?> future = inferExecutor.submit(() -> {
                 boolean falid = true;
 
@@ -182,7 +201,46 @@ public class DeserializeOntologyRes {
                 }
             });
             ontologyRes.runningFutures.put(batch, future);
+        } else {
+            logger.info("has not acquire the start lock for {} infer", batch);
         }
+    }
+
+    public static Future<?> getOntologyResInfer(String domain, IPluginContext pluginContext, Context ctx //
+            , InferOntologyFromLLMStep3Prompt step3Prompt, InferOntologyFromLLMStep1 step1) {
+        DeserializeOntologyRes ontologyRes = getDeserializeOntologyRes(domain, step1);
+        InferBatch batch = InferBatch.LinkTypeBatch;
+
+        logger.info("try to start {} infer,object type size:{}，names:{}", batch
+                , ontologyRes.targetObjectTypes.size(), String.join(",", ontologyRes.targetObjectTypes));
+        if (ontologyRes.linkerReferSignal.compareAndSet(false, true)) {
+            logger.info("get start {} infer", batch);
+            Object context = pluginContext.getContext().getContext();
+
+            Future<?> future = inferExecutor.submit(() -> {
+                ontologyRes.linkerReferSignalResult.setComplete(false);
+                ontologyRes.linkerReferSignalResult.setFaild(false);
+                boolean falid = true;
+
+                try {
+                    IPluginContext.setPluginContext(pluginContext);
+                    pluginContext.getContext().setContext(context);
+                    ontologyRes.executeInfer(batch, pluginContext, ctx
+                            , Pair.of(OntologyResourceInferenceConfig.linkerType, step3Prompt.linkTypePrompt));
+                    falid = false;
+                } finally {
+                    ontologyRes.runningFutures.remove(InferBatch.LinkTypeBatch);
+                    ontologyRes.notifyBatchComplete(batch);
+                    ontologyRes.linkerReferSignalResult.setComplete(true);
+                    ontologyRes.linkerReferSignalResult.setFaild(falid);
+                }
+            });
+            ontologyRes.runningFutures.put(batch, future);
+            return future;
+        } else {
+            logger.info("has not acquire the start lock for {} infer", batch);
+        }
+        return null;
     }
 
     /**
@@ -264,53 +322,29 @@ public class DeserializeOntologyRes {
         }
     }
 
-    public static Future<?> getOntologyResInfer(String domain, IPluginContext pluginContext, Context ctx //
-            , InferOntologyFromLLMStep3Prompt step3Prompt, InferOntologyFromLLMStep1 step1) {
-        DeserializeOntologyRes ontologyRes = getDeserializeOntologyRes(domain, step1);
-
-        if (ontologyRes.linkerReferSignal.compareAndSet(false, true)) {
-            Object context = pluginContext.getContext().getContext();
-            InferBatch batch = InferBatch.LinkTypeBatch;
-            Future<?> future = inferExecutor.submit(() -> {
-                ontologyRes.linkerReferSignalResult.setComplete(false);
-                ontologyRes.linkerReferSignalResult.setFaild(false);
-                boolean falid = true;
-
-                try {
-                    IPluginContext.setPluginContext(pluginContext);
-                    pluginContext.getContext().setContext(context);
-                    ontologyRes.executeInfer(batch, pluginContext, ctx
-                            , Pair.of(OntologyResourceInferenceConfig.linkerType, step3Prompt.linkTypePrompt));
-                    falid = false;
-                } finally {
-                    ontologyRes.runningFutures.remove(InferBatch.LinkTypeBatch);
-                    ontologyRes.notifyBatchComplete(batch);
-                    ontologyRes.linkerReferSignalResult.setComplete(true);
-                    ontologyRes.linkerReferSignalResult.setFaild(falid);
-                }
-            });
-            ontologyRes.runningFutures.put(batch, future);
-            return future;
-        }
-        return null;
-    }
-
 
     private static DeserializeOntologyRes getDeserializeOntologyRes(String domain, InferOntologyFromLLMStep1 step1) {
         DeserializeOntologyRes ontologyRes = ontologyResInferManager.computeIfAbsent(domain, (d) -> {
 
             // 流式模式下从队列构建结果
             return new DeserializeOntologyRes(
-                    domain, Objects.requireNonNull(step1.getLlmProvider(), "llmProvider can not be null")
+                    domain, step1.targetTables, Objects.requireNonNull(step1.getLlmProvider(), "llmProvider can not be null")
             );
         });
         return ontologyRes;
     }
 
-    private static JSONObject buildTablesPayload(List<OntologyObjectType> objectTypes) {
+    private static JSONObject buildTablesPayload(List<IdentityName> targetObjectTypes, List<OntologyObjectType> objectTypes) {
         JSONObject payload = new JSONObject();
         JSONArray tables = new JSONArray();
+        Set<String> acceptObjTypes = targetObjectTypes.stream() //
+                .map((name) -> name.identityValue())//
+                .collect(Collectors.toSet());
+
         for (OntologyObjectType ot : objectTypes) {
+            if (!acceptObjTypes.contains(ot.getName())) {
+                continue;
+            }
             JSONObject tableObj = new JSONObject();
             tableObj.put("name", ot.getName());
             JSONArray columns = new JSONArray();
@@ -328,6 +362,9 @@ public class DeserializeOntologyRes {
             tableObj.put("columns", columns);
             tables.add(tableObj);
         }
+        if (tables.size() < 1) {
+            throw new IllegalStateException("tables can not be empty");
+        }
         payload.put("tables", tables);
         return payload;
     }
@@ -341,15 +378,24 @@ public class DeserializeOntologyRes {
         });
     }
 
-    public int create(IPluginContext pluginContext) {
+    public int create(Set<Integer> skipIds, IPluginContext pluginContext) {
         InferenceParse inferenceParse = null;
         int createResCount = 0;
+        int skipCount = 0;
         OntologyObjectType objectType = null;
         for (Pair<OntologyLinker, InferenceParse> linker : linkTypesQueue) {
+            if (skipIds.contains(linker.getValue().getId())) {
+                skipCount++;
+                continue;
+            }
             Ontology.OntologyEnum.Linker.save(pluginContext, ontologyDomain, linker.getKey());
             createResCount++;
         }
         for (Pair<OntologySharedProperty, InferenceParse> sharedProperty : sharedPropsQueue) {
+            if (skipIds.contains(sharedProperty.getValue().getId())) {
+                skipCount++;
+                continue;
+            }
             Ontology.OntologyEnum.SharedProperty.save(pluginContext, ontologyDomain, sharedProperty.getKey());
             inferenceParse = sharedProperty.getValue();
             List<TargetProperty> targetProperties = inferenceParse.getTargetProps();
@@ -360,6 +406,10 @@ public class DeserializeOntologyRes {
             createResCount++;
         }
         for (Pair<OntologyValueType, InferenceParse> valueType : valueTypesQueue) {
+            if (skipIds.contains(valueType.getValue().getId())) {
+                skipCount++;
+                continue;
+            }
             Ontology.OntologyEnum.ValueType.save(pluginContext, ontologyDomain, valueType.getKey());
             inferenceParse = valueType.getValue();
             List<TargetProperty> targetProperties = inferenceParse.getTargetProps();
@@ -370,6 +420,10 @@ public class DeserializeOntologyRes {
             createResCount++;
         }
         for (Pair<OntologyGlossary, InferenceParse> glossary : glossariesQueue) {
+            if (skipIds.contains(glossary.getValue().getId())) {
+                skipCount++;
+                continue;
+            }
             Ontology.OntologyEnum.Glossary.save(pluginContext, ontologyDomain, glossary.getKey());
             createResCount++;
         }
@@ -377,7 +431,7 @@ public class DeserializeOntologyRes {
         updatedObjectType.forEach((objectTypeName, objType) -> {
             Ontology.OntologyEnum.ObjectType.save(pluginContext, this.ontologyDomain, objType);
         });
-
+        logger.info("create ontology resource count:{},skip count:{}", createResCount, skipCount);
         // 最后需要将ontologyDomain将对应的注册实例删除掉
         ontologyResInferManager.remove(this.ontologyDomain);
         return createResCount;
@@ -393,7 +447,7 @@ public class DeserializeOntologyRes {
         return builder.build();
     }
 
-    enum InferBatch {
+    public enum InferBatch {
         LinkTypeBatch, NorLinkTypeBatch
     }
 
@@ -442,6 +496,10 @@ public class DeserializeOntologyRes {
 
         LLMOptionParams optParams = new LLMOptionParams();
         optParams.setStreamOutput(true);
+        // 设置随机性为0
+        TemperatureSampling temperature = new TemperatureSampling();
+        temperature.temperature = 0f;
+        optParams.setSampling(temperature);
 
 
         // 创建流式解析器
@@ -511,42 +569,48 @@ public class DeserializeOntologyRes {
         });
 
 
-        optParams.setStreamOutputConsumer((reader) -> {
-            reader.lines().forEach((line) -> {
-                // 优先检查取消标志（对阻塞 I/O 友好，不依赖线程中断）
-                if (cancelFlag.get()) {
-                    logger.info("executeInfer: cancelFlag set, stopping stream processing for batch={}", inferBatch);
-                    throw new RuntimeException(new InterruptedException("infer task cancelled by cancelFlag"));
-                }
-                // 备用：检查线程中断信号（由 stopInferTask cancel(true) 触发）
-                if (Thread.currentThread().isInterrupted()) {
-                    logger.info("executeInfer: thread interrupted, stopping stream processing");
-                    throw new RuntimeException(new InterruptedException("infer task cancelled"));
-                }
-                if (StringUtils.isEmpty(line) || "data: [DONE]".equals(line)) {
-                    return;
-                }
-                try {
-                    JSONObject data = JSONObject.parseObject(SSEEventWriter.getDataContent(line));
-                    if (data == null) {
-                        return;
-                    }
-                    JSONArray choices = data.getJSONArray("choices");
-                    for (Object c : choices) {
-                        if (c instanceof JSONObject choice) {
-                            String content = choice.getJSONObject("delta").getString("content");
-                            if (content != null) {
-                                // System.out.print(content);
-                                // 将内容喂给流式解析器
-                                parser.appendChunk(content);
-                                parser.parse();
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(line, e);
-                }
-            });
+        optParams.setStreamOutputConsumer((line) -> {
+            //   reader.lines().forEach((line) -> {
+            // 优先检查取消标志（对阻塞 I/O 友好，不依赖线程中断）
+            if (cancelFlag.get()) {
+                logger.info("executeInfer: cancelFlag set, stopping stream processing for batch={}", inferBatch);
+                throw new RuntimeException(new InterruptedException("infer task cancelled by cancelFlag"));
+            }
+            // 备用：检查线程中断信号（由 stopInferTask cancel(true) 触发）
+            if (Thread.currentThread().isInterrupted()) {
+                logger.info("executeInfer: thread interrupted, stopping stream processing");
+                throw new RuntimeException(new InterruptedException("infer task cancelled"));
+            }
+            if (StringUtils.isEmpty(line) || "data: [DONE]".equals(line)) {
+                return;
+            }
+
+
+            try {
+                // System.out.print(line);
+                parser.appendChunk(line);
+                parser.parse();
+//                JSONObject data = JSONObject.parseObject(SSEEventWriter.getDataContent(line));
+//                if (data == null) {
+//                    return;
+//                }
+//                JSONArray choices = data.getJSONArray("choices");
+//                for (Object c : choices) {
+//                    if (c instanceof JSONObject choice) {
+//                        String content = choice.getJSONObject("delta").getString("content");
+//                        if (content != null) {
+//                            // System.out.print(content);
+//                            // 将内容喂给流式解析器
+//                            parser.appendChunk(content);
+//                            parser.parse();
+//                        }
+//                    }
+//                }
+            } catch (Exception e) {
+                throw new RuntimeException(line, e);
+            }
+            //}
+            // );
 
             // 完成解析
             try {

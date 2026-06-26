@@ -67,7 +67,9 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
 
     @Override
     public final IEndTypeGetter.EndType getEndType() {
-        return ((LinkResources.BasicLinkResourceDesc) getLinkResourcesStep().getDescriptor()).getRelationShipType().getEndType();
+        return getLinkTypeEnd();
+//        return getRelationTypeSetterStep().getRelationshipType().getEndType();
+//        return ((LinkResources.BasicLinkResourceDesc) getLinkResourcesStep().getDescriptor()).getRelationShipType().getEndType();
     }
 
     @Override

@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -74,12 +75,7 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.ONTOLOGY_DOMAIN;
 @SuppressWarnings("all")
 public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
 
-    //    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require, Validator.identity})
-    //    public String ontologyDomain;
-//    public static final String KEY_LINK_TYPES = "linkTypes";
-//    public static final String KEY_SHARED_PROPERTIES = "sharedProperties";
-//    public static final String KEY_VALUE_TYPES = "valueTypes";
-//    public static final String KEY_GLOSSARIES = "glossaries";
+    private static final String KEY_FIELD_TARGET_TABLES = "targetTables";
     private static final Logger logger = LoggerFactory.getLogger(InferOntologyFromLLMStep1.class);
     /**
      * 大模型接口
@@ -408,10 +404,6 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
     public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc implements FormFieldType.IMultiSelectValidator {
         public DftDesc() {
             super();
-            //            List<Pair<OntologyDomain, IPluginStore<OntologyDomain>>> domainList = OntologyDomain
-            //            .getDoaminList();
-            //            List<OntologyDomain> domains = domainList.stream().map(Pair::getKey).toList();
-            //            this.registerSelectOptions("ontologyDomain", () -> domains);
             this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider::getExistProviders);
         }
 
@@ -430,11 +422,20 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
             return "基本设置";
         }
 
+        private static final Integer MAX_INFERE_OBJECT_TYPE_COUNT = 30;
+
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             //  return super.validateAll(msgHandler, context, postFormVals);
             OntologyPluginMeta ometa = getOntologyPluginMeta((IPluginContext) msgHandler, Optional.of(context));
-
+            InferOntologyFromLLMStep1 step1 = postFormVals.newInstance();
+            Set<String> targetObjType
+                    = step1.targetTables.stream().map((target) -> target.identityValue()).collect(Collectors.toSet());
+            if (targetObjType.size() > MAX_INFERE_OBJECT_TYPE_COUNT) {
+                msgHandler.addFieldError(context, KEY_FIELD_TARGET_TABLES
+                        , "为了避免LLM推理超时，目前最大可选数量为：" + MAX_INFERE_OBJECT_TYPE_COUNT + "，当前已选数量为：" + targetObjType.size());
+                return false;
+            }
             List<OntologyObjectType> objectTypes = OntologyObjectType.loadAll(ometa.getDomain());
             if (objectTypes.isEmpty()) {
                 throw new IllegalStateException("domain '" + ometa.getDomain()
@@ -443,6 +444,9 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
             Optional<OntologyProperty> pk = null;
             List<OntologyObjectType> lackPkObjTypes = Lists.newArrayList();
             for (OntologyObjectType objType : objectTypes) {
+                if (!targetObjType.contains(objType.getName())) {
+                    continue;
+                }
                 if (objType.hasDisablePK()) {
                     continue;
                 }

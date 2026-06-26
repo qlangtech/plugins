@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ontology.chatbi.validation.KeywordWhitelistValid
 import com.qlangtech.tis.plugin.ontology.chatbi.validation.ValidationResult;
 import com.qlangtech.tis.plugin.ontology.graphrag.DefaultGraphRAGService;
 import com.qlangtech.tis.plugin.ontology.graphrag.GraphRAGService;
+import com.qlangtech.tis.plugin.ontology.graphrag.LinkerInfo;
 import com.qlangtech.tis.plugin.ontology.graphrag.RetrievalResult;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -44,7 +45,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * ChatBI 服务默认实现（§5 T5：重试编排）。
@@ -94,7 +97,12 @@ public class DefaultChatBIService implements ChatBIService {
 
 
     @Override
-    public ChatBIResult ask(String domain, String nlq, java.util.function.Consumer<TraceStep> stepCallback) {
+    public ChatBIResult ask(String domain, String nlq, boolean forceQueryExecute, java.util.function.Consumer<TraceStep> stepCallback) {
+
+        if (forceQueryExecute && !this.executionConfig.isExecuteQuery()) {
+            throw new IllegalStateException("ExecuteQuery is not enable, please switch it on. in ontology domain:" + domain);
+        }
+
         // 请求 ID：yyyyMMddHHmmss-{uuid32}，贯穿整个流水线，用作 trace 文件名
         String createTime = TimeFormat.yyyyMMddHHmmss.format(new Date());// LocalDateTime.now().format(DATETIME_FORMATTER);
         String reqId = createTime + "-" + UUID.randomUUID().toString().replace("-", "");
@@ -109,7 +117,12 @@ public class DefaultChatBIService implements ChatBIService {
                             : com.qlangtech.tis.plugin.ontology.graphrag.RetrievalOptions.defaults();
             final RetrievalResult retrievalResult = graphRAGService.retrieve(domain, nlq, retrievalOptions);
             long t2 = System.currentTimeMillis();
-            TraceStep retrieveStep = TraceStep.retrieve(retrievalResult.objectTypes().size(), retrievalResult.linkers().size(), t2 - t1);
+            Set<String> linkers = retrievalResult.linkers().stream().map(LinkerInfo::linkerName).collect(Collectors.toSet());
+            TraceStep retrieveStep = TraceStep.retrieve(retrievalResult.objectTypes().size(), linkers.size(), t2 - t1);
+            JSONObject data = Objects.requireNonNull(retrieveStep.data(), "data can not be null");
+            data.put("ots", String.join(",", retrievalResult.objectTypes()));
+            data.put("linkers", String.join(",", linkers));
+            data.put("glossaries", String.join(",", retrievalResult.glossaryTerms()));
             trace.add(retrieveStep);
             stepCallback.accept(retrieveStep);
 
@@ -211,7 +224,7 @@ public class DefaultChatBIService implements ChatBIService {
             // Step 6: 执行（可选）
             QueryResult queryResult = null;
             boolean executeQuery = executionConfig == null || executionConfig.isExecuteQuery();
-            if (validationResult.valid() && executeQuery) {
+            if (Objects.requireNonNull(validationResult, "validationResult can not be null").valid() && executeQuery) {
                 long t5 = System.currentTimeMillis();
                 queryResult = executeQuery(domain, retrievalResult, candidateSql);
                 long t6 = System.currentTimeMillis();

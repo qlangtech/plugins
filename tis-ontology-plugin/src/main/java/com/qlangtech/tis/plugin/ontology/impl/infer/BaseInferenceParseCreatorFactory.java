@@ -43,7 +43,8 @@ public abstract class BaseInferenceParseCreatorFactory implements ElementCreator
                 Integer id = col.getInteger("id");
                 Boolean selected = col.getBoolean(KEY_SELECTED);
 
-                Ontology.OntologyEnum ontologyEnum = Ontology.OntologyEnum.parse(IEndTypeGetter.EndType.parse(col.getString(Option.KEY_END_TYPE)));
+               // Ontology.OntologyEnum ontologyEnum = null;
+                IEndTypeGetter.EndType endType = IEndTypeGetter.EndType.parse(col.getString(Option.KEY_END_TYPE));
 //                Ontology ontologyRes = switch (ontologyEnum) {
 //                    case ValueType -> new DefaultOntologyValueType();
 //                    case Linker -> new DefaultOntologyLinker();
@@ -58,7 +59,7 @@ public abstract class BaseInferenceParseCreatorFactory implements ElementCreator
 
                 InferenceParse infer = new InferenceParse(id, this.getInferBatch(), col.getString(InferenceParse.KEY_REASON)
                         , InferenceParse.InferenceConfidence.parse(col.getString(InferenceParse.KEY_CONFIDENCE))
-                        , col.getString(InferenceParse.KEY_NAME), ontologyEnum, Collections.emptyList());
+                        , col.getString(InferenceParse.KEY_NAME), endType, null, Collections.emptyList());
 
 //                InferenceParse.deserialize(id, this.getInferBatch(), col, ontologyRes);
 //

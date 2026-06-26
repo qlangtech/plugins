@@ -134,8 +134,8 @@ public class EnableChatBI extends OntologyDomainManipulate implements ChatBIServ
     }
 
     @Override
-    public ChatBIResult ask(String domain, String nlq, Consumer<TraceStep> stepCallback) {
-        return getChatBIService().ask(domain, nlq, stepCallback);
+    public ChatBIResult ask(String domain, String nlq, boolean forceQueryExecute, Consumer<TraceStep> stepCallback) {
+        return getChatBIService().ask(domain, nlq, forceQueryExecute, stepCallback);
     }
 
     @Override

@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyLinker;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
 import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
@@ -66,8 +67,18 @@ public class DefaultOntologyLinker extends OntologyLinker implements IPluginStor
     }
 
     @Override
+    public Optional<OntologyObjectType> getJoinerObjectType(OntologyPluginMeta meta) {
+        LinkResources linkResource = getLinkResourcesStep();
+        if (linkResource instanceof RelationshipTypeBackingObjectType backObjectType) {
+            return Optional.of(Ontology.loadObjectTypeDetail(meta.getDomain(), backObjectType.joinObjectType.getObjectType()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public final IEndTypeGetter.EndType getEndType() {
-        return getLinkTypeEnd();
+        return this.getLinkTypeEnd();
 //        return getRelationTypeSetterStep().getRelationshipType().getEndType();
 //        return ((LinkResources.BasicLinkResourceDesc) getLinkResourcesStep().getDescriptor()).getRelationShipType().getEndType();
     }

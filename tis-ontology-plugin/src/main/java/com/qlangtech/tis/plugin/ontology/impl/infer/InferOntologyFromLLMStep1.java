@@ -71,6 +71,7 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.ONTOLOGY_DOMAIN;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/20
+ * @see InferOntologyFromLLMHost
  */
 @SuppressWarnings("all")
 public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {

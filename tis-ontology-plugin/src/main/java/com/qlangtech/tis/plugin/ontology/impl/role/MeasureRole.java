@@ -17,8 +17,10 @@
  */
 package com.qlangtech.tis.plugin.ontology.impl.role;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
+import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -33,6 +35,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 度量（Measure）角色。承载 derived property 配置——多跳 link 链路 + 聚合方式 + 单位/精度。
@@ -112,9 +115,24 @@ public class MeasureRole extends PropertyRoleType {
 
                         OntologyPluginMeta ontologyMeta = new OntologyPluginMeta(meta);
                         OntologyLinker objLinker = OntologyLinker.load(ontologyMeta.getDomain(), linkerName);
+
+                        List<OptionWithEndType> colOpts = Lists.newArrayList();
+
                         OntologyObjectType otherObjType = objLinker.getTargetLinkerEnd(ontologyMeta);
-                        return otherObjType.getColOpts();
+                        colOpts.addAll(rewriteColOpts(otherObjType));
+
+                        Optional<OntologyObjectType> joinEnd = objLinker.getJoinerObjectType(ontologyMeta);
+                        joinEnd.ifPresent((joiner) -> {
+                            colOpts.addAll(rewriteColOpts(joiner));
+                        });
+                        return colOpts;
                     });
+        }
+
+        private static List<OptionWithEndType> rewriteColOpts(OntologyObjectType otherObjType) {
+            return otherObjType.getColOpts().stream().map((end) -> {
+                return end.clone(() -> otherObjType.getName() + "." + end.getValue()).setDescription(otherObjType.getName());
+            }).toList();
         }
 
         @Override

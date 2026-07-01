@@ -1,1 +1,23 @@
-{  "linkers": {    "label": "连接(s)",    "elementCreator": "com.qlangtech.tis.plugin.ontology.impl.role.OntologyLinkerRefCreatorFactory",    "enum": "java.util.Collections.emptyList()",    "viewtype": "tuplelist"  }}
+{
+  "linkers": {
+    "label": "关联链路",
+    "help": "通过 Link 关联到目标对象的链路，目前最多支持一跳，用于在链路末端的对象上取值进行聚合计算",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.impl.role.OntologyLinkerRefCreatorFactory",
+    "enum": "java.util.Collections.emptyList()",
+    "viewtype": "tuplelist"
+  },
+  "aggregation": {
+    "label": "聚合函数",
+    "help": "对链路末端对象类型施加的聚合方式，例如求和、平均值、计数、去重计数、最大值、最小值等"
+  },
+  "unit": {
+    "label": "单位",
+    "help": "度量值的单位，例如：元、个、次，留空表示无单位",
+    "placeholder": "例如: 元"
+  },
+  "precision": {
+    "label": "精度",
+    "help": "度量值的小数位数精度，留空表示不限制精度",
+    "placeholder": "例如: 2"
+  }
+}

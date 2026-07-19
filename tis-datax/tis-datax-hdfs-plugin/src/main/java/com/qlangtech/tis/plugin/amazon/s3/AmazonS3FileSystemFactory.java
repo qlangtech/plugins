@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
+import java.time.Duration;
 
 import static com.qlangtech.tis.plugin.amazon.s3.S3FileSystem.SCHEMA_S3;
 
@@ -61,8 +62,10 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
     public UserToken userToken;
 
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean pathStyleAccess ;
+    public Boolean pathStyleAccess;
 
+    @FormField(ordinal = 7, type = FormFieldType.DURATION_OF_SECOND, advance = true, validate = {})
+    public Duration connectionTimeoutSeconds;
 
 //    public String accessKey;
 //    public String secretKey;
@@ -155,6 +158,28 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                     }
                 });
 
+                // 设置连接和 Socket 超时
+                if (connectionTimeoutSeconds != null && !connectionTimeoutSeconds.isZero() && !connectionTimeoutSeconds.isNegative()) {
+                    int timeoutMillis = (int) connectionTimeoutSeconds.toMillis();
+                    logger.info("Setting S3A timeout configuration: {}ms", timeoutMillis);
+
+                    // 连接建立超时（毫秒） "fs.s3a.connection.establish.timeout"
+                    conf.setInt(Constants.ESTABLISH_TIMEOUT, timeoutMillis);
+                    // Socket 读取超时（毫秒）"fs.s3a.connection.timeout"
+                    conf.setInt(Constants.SOCKET_TIMEOUT, timeoutMillis);
+                    // 连接池获取超时（毫秒）
+                    conf.setInt("fs.s3a.connection.request.timeout", timeoutMillis);
+
+                    // AWS SDK 底层 HTTP 客户端超时配置 "fs.s3a.connection.maximum"
+                    conf.setInt(Constants.MAXIMUM_CONNECTIONS, 15);
+                    // "fs.s3a.attempts.maximum"
+                    conf.setInt(Constants.MAX_ERROR_RETRIES, 1);
+                    // "fs.s3a.retry.limit"
+                    conf.setInt(Constants.RETRY_LIMIT, 0);
+
+                    // 设置 AWS SDK ClientConfiguration 超时 "fs.s3a.aws.credentials.provider"
+                    conf.set(Constants.AWS_CREDENTIALS_PROVIDER, "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider");
+                }
 
                 conf.reloadConfiguration();
                 return conf;
@@ -196,18 +221,22 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
 
 
     private static ITISFileSystem createFS(AmazonS3FileSystemFactory fsFactory) {
-        // ClassLoader currLoader = Thread.currentThread().getContextClassLoader();
         try {
             Configuration cfg = fsFactory.getConfiguration();
             final String s3Path = fsFactory.getFSAddress();
 
+            String timeoutDesc = (fsFactory.connectionTimeoutSeconds != null)
+                    ? fsFactory.connectionTimeoutSeconds.getSeconds() + "秒"
+                    : "默认";
+            logger.info("create connection for S3 fs，endpoint: {}, bucket: {}, config for timeout: {}",
+                    fsFactory.endpoint, fsFactory.bucket, timeoutDesc);
 
             return new S3FileSystem(S3HdfsUtils.getFileSystem(
                     s3Path, cfg), s3Path, fsFactory.getRootDir());
 
             // Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("create connection for S3/MinIO service faild: " + e.getMessage(), e);
         } finally {
             // Thread.currentThread().setContextClassLoader(currLoader);
         }
@@ -262,37 +291,34 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            // String hdfsAddress = null;
-//            try {
-//                FileSystemFactory hdfsFactory = postFormVals.newInstance();
-//                //Configuration conf = hdfsFactory.getConfiguration();
-//                ITISFileSystem hdfs = hdfsFactory.getFileSystem();
-//                final IPath rootPath = hdfs.getRootDir();
-//                try {
-//                    IPathInfo rootInfo = hdfs.getFileInfo(rootPath);
-//                    if (!rootInfo.isDir()) {
-//                        //   rootDir
-//                        msgHandler.addFieldError(context, KEY_ROOT_DIR, "必须为目录");
-//                        return false;
-//                    }
-//                } catch (Exception e) {
-//                    Logger.warn(String.valueOf(rootPath), e);
-//                    msgHandler.addFieldError(context, KEY_ROOT_DIR, e.getMessage());
-//                    return false;
-//                }
-//                //hdfs.listChildren(hdfs.getPath("/"));
-//                msgHandler.addActionMessage(context, "hdfs连接正常");
-//                hdfs.close();
-//                return true;
-//            } catch (Exception e) {
-//                Logger.warn(e.getMessage(), e);
-//
-////                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,"
-////                        + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "=" + hdfsAddress + ",错误:" + errMsg.getMessage());
-//                processError(msgHandler, context, e);
-//                return false;
-//            }
-            return true;
+
+            AmazonS3FileSystemFactory fs = postFormVals.newInstance();
+            fs.connectionTimeoutSeconds = Duration.ofSeconds(5);
+
+            try {
+                ITISFileSystem s3FileSystem = fs.getFileSystem();
+                final com.qlangtech.tis.fs.IPath rootPath = s3FileSystem.getRootDir();
+
+                try {
+                    com.qlangtech.tis.fs.IPathInfo rootInfo = s3FileSystem.getFileInfo(rootPath);
+                    if (!rootInfo.isDir()) {
+                        msgHandler.addFieldError(context, "rootDir", "路径必须为目录");
+                        return false;
+                    }
+                } catch (Exception e) {
+                    logger.warn("can not connect to S3/MinIO path: " + rootPath, e);
+                    msgHandler.addFieldError(context, "rootDir", "无法访问指定路径: " + e.getMessage());
+                    return false;
+                }
+
+                msgHandler.addActionMessage(context, "S3/MinIO连接验证成功，bucket: " + fs.bucket + ", endpoint: " + fs.endpoint);
+                s3FileSystem.close();
+                return true;
+            } catch (Exception e) {
+                logger.warn("faild on S3/MinIO connection", e);
+                msgHandler.addFieldError(context, "endpoint", "连接失败，请检查endpoint、bucket、accessKey和secretKey配置是否正确: " + e.getMessage());
+                return false;
+            }
         }
 
 //        protected void processError(IControlMsgHandler msgHandler, Context context, Exception e) {

@@ -9,5 +9,9 @@
       "plugin": [
       ]
     }
+  },
+  "physicalTableName": {
+    "label": "目标表",
+    "help": "选择目标表作为绑定对象，请先选择‘数据源’"
   }
 }

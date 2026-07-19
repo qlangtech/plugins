@@ -30,6 +30,7 @@ import com.qlangtech.tis.powerjob.model.PEWorkflowDAG;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,17 +240,23 @@ public class TaskWorkerActor extends AbstractActorWithStash {
                 self.tell(new TaskFinished(successMsg), ActorRef.noSender());
             } catch (Exception e) {
                 long executionTime = System.currentTimeMillis() - startTime;
-                logger.error("Task execution failed: instanceId={}, nodeId={}, executionTime={}ms",
-                        msg.getTaskId(), node.getNodeId(), executionTime, e);
+                if (ExceptionUtils.indexOfThrowable(e, java.lang.InterruptedException.class) < 0) {
+                    logger.error("Task execution failed: instanceId={}, nodeId={}, executionTime={}ms",
+                            msg.getTaskId(), node.getNodeId(), executionTime, e);
 
-                String errorMessage = e.getMessage() + "\n" + extractStackTrace(e);
-                NodeCompleted failureMsg = new NodeCompleted(
-                        msg.getTaskId(),
-                        node.getNodeId(),
-                        InstanceStatus.FAILED,
-                        errorMessage
-                );
-                self.tell(new TaskFinished(failureMsg), ActorRef.noSender());
+                    String errorMessage = e.getMessage() + "\n" + extractStackTrace(e);
+                    NodeCompleted failureMsg = new NodeCompleted(
+                            msg.getTaskId(),
+                            node.getNodeId(),
+                            InstanceStatus.FAILED,
+                            errorMessage
+                    );
+                    self.tell(new TaskFinished(failureMsg), ActorRef.noSender());
+                } else {
+                    // java.lang.InterruptedException 说明被主动终止任务了
+                    logger.warn("Task execution has been cancel: instanceId={}, nodeId={}, executionTime={}ms",
+                            msg.getTaskId(), node.getNodeId(), executionTime, e);
+                }
             }
         });
     }

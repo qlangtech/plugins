@@ -26,5 +26,10 @@
   "pathStyleAccess": {
     "label": "路径访问模式",
     "dftVal": false
+  },
+  "connectionTimeoutSeconds": {
+    "label": "连接超时",
+    "dftVal": 15,
+    "help": "连接S3/MinIO服务的超时时间（秒），默认15秒。超时后会抛出连接失败异常"
   }
 }

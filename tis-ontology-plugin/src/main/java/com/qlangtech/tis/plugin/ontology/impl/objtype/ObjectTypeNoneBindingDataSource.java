@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ontology.impl.objtype;
 
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -56,7 +57,7 @@ public class ObjectTypeNoneBindingDataSource extends ObjectTypeBinding {
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<ObjectTypeBinding> {
+    public static class DftDesc extends Descriptor<ObjectTypeBinding> implements DescriptorUseableShortComment, IEndTypeGetter {
         public DftDesc() {
             super();
         }
@@ -64,6 +65,16 @@ public class ObjectTypeNoneBindingDataSource extends ObjectTypeBinding {
         @Override
         public String getDisplayName() {
             return KEY_DISPLAY_NAME;
+        }
+
+        @Override
+        public String shortComment() {
+            return "不绑定数据源";
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Forbiden;
         }
     }
 }

@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.qlangtech.tis.plugin.amazon.s3.S3FileSystem.SCHEMA_S3;
 
@@ -25,88 +28,101 @@ import static com.qlangtech.tis.plugin.amazon.s3.S3FileSystem.SCHEMA_S3;
 class S3HdfsUtils {
     private static final Logger logger = LoggerFactory.getLogger(S3HdfsUtils.class);
     private static final Map<String, FileSystem> fileSys = new HashMap<String, FileSystem>();
+    private static final Lock lock = new ReentrantLock();
+    private static final int LOCK_TIMEOUT_SECONDS = 10;
+    private static final int FS_CREATION_TIMEOUT_SECONDS = 30;
 
     public static FileSystem getFileSystem(String s3Path, Configuration config) {
 
         FileSystem fileSystem = fileSys.get(s3Path);
         if (fileSystem == null) {
-            synchronized (S3HdfsUtils.class) {
+            boolean lockAcquired = false;
+            try {
+                lockAcquired = lock.tryLock(LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                if (!lockAcquired) {
+                    throw new RuntimeException("Failed to acquire filesystem lock within " + LOCK_TIMEOUT_SECONDS
+                            + " seconds, possible deadlock or long-running operation detected");
+                }
+
                 try {
                     fileSystem = fileSys.get(s3Path);
                     if (fileSystem == null) {
-//                            Configuration conf = new Configuration();
-//                            conf.set(FsPermission.UMASK_LABEL, "000");
-//                            // fs.defaultFS
-//                            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
-
-//                            //https://segmentfault.com/q/1010000008473574
-//                            Logger.info("userHostname:{}", userHostname);
-//                            if (userHostname != null && userHostname) {
-//                                conf.set("dfs.client.use.datanode.hostname", "true");
-//                            }
-//
-//                            conf.set("fs.default.name", hdfsAddress);
-//                            conf.set("hadoop.job.ugi", "admin");
-//                            try (InputStream input = new ByteArrayInputStream(hdfsContent.getBytes(TisUTF8.get()))) {
-//                                conf.addResource(input);
-//                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
-//                                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
-                        config.set(FileSystem.FS_DEFAULT_NAME_KEY, s3Path);
-                        FileSystem fs = FileSystem.get(config);
-                        if (!SCHEMA_S3.equalsIgnoreCase(fs.getScheme())) {
-                            throw new IllegalStateException("fileSystem " + fs.getScheme() + "(" + fs.getClass().getName() + ") must be " + SCHEMA_S3);
+                        // 使用 ExecutorService 实现文件系统创建超时控制
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        try {
+                            Future<FileSystem> future = executor.submit(() -> createFileSystem(s3Path, config));
+                            fileSystem = future.get(FS_CREATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                            fileSys.put(s3Path, fileSystem);
+                        } catch (TimeoutException e) {
+                            throw new RuntimeException("Timeout creating S3 FileSystem after " + FS_CREATION_TIMEOUT_SECONDS
+                                    + " seconds for path: " + s3Path, e);
+                        } catch (ExecutionException e) {
+                            Throwable cause = e.getCause();
+                            if (cause instanceof TisException) {
+                                throw (TisException) cause;
+                            }
+                            throw TisException.create("Failed to create S3 FileSystem for path: " + s3Path
+                                    + ", detail: " + cause.getMessage(), cause);
+                        } finally {
+                            executor.shutdownNow();
                         }
-                        fileSystem = new FilterFileSystem(fs) {
-                            @Override
-                            public boolean delete(Path f, boolean recursive) throws IOException {
-                                try {
-                                    return super.delete(f, recursive);
-                                } catch (Exception e) {
-                                    throw new RuntimeException("path:" + f, e);
-                                }
-                            }
-
-                            @Override
-                            public boolean mkdirs(Path f, FsPermission permission) throws IOException {
-                                return super.mkdirs(f, FsPermission.getDirDefault());
-                            }
-
-                            @Override
-                            public FSDataOutputStream create(Path f, FsPermission permission
-                                    , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
-
-//                                    if (f.getName().indexOf("hoodie.properties") > -1) {
-//                                        throw new IllegalStateException("not support:" + f.getName());
-//                                    }
-
-                                return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
-                            }
-
-//                                @Override
-//                                public FileStatus[] listStatus(Path f) throws IOException {
-//                                    return super.listStatus(f);
-//                                }
-
-                            @Override
-                            public void close() throws IOException {
-                                // super.close();
-                                // 设置不被关掉
-                            }
-                        };
-                        fileSystem.listStatus(new Path("/"));
-                        logger.info("successful create hdfs with hdfsAddress:" + s3Path);
-                        fileSys.put(s3Path, fileSystem);
                     }
 
                 } catch (Throwable e) {
-                    // throw new RuntimeException("link faild:" + hdfsAddress, e);
-                    throw TisException.create("link faild:" + s3Path + ",detail:" + e.getMessage(), e);
-                } finally {
-
+                    if (e instanceof TisException) {
+                        throw (TisException) e;
+                    }
+                    throw TisException.create("Failed to get S3 FileSystem for path: " + s3Path
+                            + ", detail: " + e.getMessage(), e);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for filesystem lock", e);
+            } finally {
+                if (lockAcquired) {
+                    lock.unlock();
                 }
             }
 
         }
+        return fileSystem;
+    }
+
+
+    private static FileSystem createFileSystem(String s3Path, Configuration config) throws IOException {
+        config.set(FileSystem.FS_DEFAULT_NAME_KEY, s3Path);
+        FileSystem fs = FileSystem.get(config);
+        if (!SCHEMA_S3.equalsIgnoreCase(fs.getScheme())) {
+            throw new IllegalStateException("fileSystem " + fs.getScheme() + "(" + fs.getClass().getName() + ") must be " + SCHEMA_S3);
+        }
+        FileSystem fileSystem = new FilterFileSystem(fs) {
+            @Override
+            public boolean delete(Path f, boolean recursive) throws IOException {
+                try {
+                    return super.delete(f, recursive);
+                } catch (Exception e) {
+                    throw new RuntimeException("path:" + f, e);
+                }
+            }
+
+            @Override
+            public boolean mkdirs(Path f, FsPermission permission) throws IOException {
+                return super.mkdirs(f, FsPermission.getDirDefault());
+            }
+
+            @Override
+            public FSDataOutputStream create(Path f, FsPermission permission
+                    , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
+                return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
+            }
+
+            @Override
+            public void close() throws IOException {
+                // 设置不被关掉
+            }
+        };
+        fileSystem.listStatus(new Path("/"));
+        logger.info("successful create hdfs with hdfsAddress:" + s3Path);
         return fileSystem;
     }
 

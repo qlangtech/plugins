@@ -135,6 +135,14 @@ public class OntologyResourceInferenceConfig {
                    - 为该表生成 Token 3 (`RelationshipTypeBackingObjectType`)。
                    - **【物理移除】**：立即将该表从你的“可用表池”中移除。在后续所有步骤中，你**看不见**这张表。
                 
+                例如，有以下三张表：
+                * store(store_id(pk=true),store_name)
+                * product(product_id(pk=true),product_name)
+                * sales(sale_id(pk=true),store_id,product_id,create_date)
+                
+                将 sales 作为`Token 3` 中间表 以store_id连接store(store_id)，以product_id连接product(product_id)，注意：无论sales(sale_id) 是否是`pk`都不影响`Token 3`的识别
+                   
+                
                 ##### 阶段 B：简单外键连接 (Token 1)
                 1. **扫描目标**：仅在**未被移除**的表中，寻找“父表（主键）”与“子表（外键）”的一对多关系。
                 2. **操作**：

@@ -26,12 +26,16 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.IdentityDesc;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyDomainManipulate;
+import com.qlangtech.tis.plugin.ontology.OntologyUtils;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
@@ -40,11 +44,14 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/28
  */
-public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved {
+public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved , IdentityDesc<OntologyDomain.OntologyDomainPojo> {
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
-
+    }
+    @Override
+    public OntologyDomainPojo describePlugin() {
+        return this.convertPojo();
     }
 
     @TISExtension
@@ -67,6 +74,19 @@ public class DefaultOntologyDomain extends OntologyDomain implements IPluginStor
         public Class<OntologyDomainManipulate> getManipulateExtendPoint() {
             return OntologyDomainManipulate.class;
         }
+
+
+
+        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Pair<OntologyDomain, IPluginStore<OntologyDomain>> existDoamin = OntologyDomain.load(value);
+            if (existDoamin.getKey() != null) {
+                msgHandler.addFieldError(context, fieldName, OntologyUtils.createDuplicateError(value));
+                return false;
+            }
+            return true;
+        }
+
+
 
         @Override
         public final Optional<IPluginStore<OntologyDomainManipulate>> getManipulateStore() {

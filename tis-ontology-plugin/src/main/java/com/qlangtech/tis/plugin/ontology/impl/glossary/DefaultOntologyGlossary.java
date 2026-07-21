@@ -24,9 +24,11 @@ import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ds.BasicMultiSelectSingleValElementCreatorFactory;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyGlossary;
+import com.qlangtech.tis.plugin.ontology.OntologyUtils;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.sync.OntologyNeo4jSyncService;
 import com.qlangtech.tis.plugin.ontology.sync.OntologySyncQueue;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
 import com.google.common.collect.Lists;
@@ -74,10 +76,13 @@ public class DefaultOntologyGlossary extends OntologyGlossary implements IPlugin
             super();
         }
 
-//        @Override
+        //        @Override
 //        public EndType getEndType() {
 //            return EndType.OntologyGlossary;
 //        }
+        public boolean validateTerm(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return OntologyUtils.validateIdentityDuplicate(msgHandler, context, Optional.of(fieldName), OntologyEnum.Glossary, value);
+        }
 
         @Override
         public OntologyEnum getOntologyType() {

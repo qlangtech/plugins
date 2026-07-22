@@ -610,7 +610,7 @@ public class WorkflowInstanceActor extends AbstractActor {
 
         // 过滤出任务节点
         List<PEWorkflowDAG.Node> taskNodes =
-                readyNodes.stream().filter(n -> WorkflowNodeType.TASK == n.getNodeType()).collect(Collectors.toList());
+                readyNodes.stream().filter(n -> WorkflowNodeType.TASK == n.getNodeType()).toList();
 
         // 设置状态为QUEUED并加入队列
         for (PEWorkflowDAG.Node taskNode : taskNodes) {

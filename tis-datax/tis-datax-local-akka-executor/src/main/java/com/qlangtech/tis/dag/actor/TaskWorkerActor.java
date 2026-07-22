@@ -190,7 +190,7 @@ public class TaskWorkerActor extends AbstractActorWithStash {
      * @param msg 任务执行消息
      */
     private void handleTaskExecution(TaskExecutionMessage msg) {
-        PEWorkflowDAG.Node node = msg.getNode();
+        final PEWorkflowDAG.Node node = msg.getNode();
         logger.info("Handling TaskExecution: instanceId={}, nodeId={}",
                 msg.getTaskId(), node.getNodeId());
 

@@ -57,7 +57,6 @@ public class KerberosUserToken extends UserToken implements IKerberosUserToken {
             if ((ex = exRef.get()) != null) {
                 throw new IllegalStateException("krb5:" + krb5Res.getKrb5Path().getAbsolutePath() + ",error:" + ex.getMessage(), ex);
             } else {
-                // throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
             }
         }
         return result;
@@ -65,7 +64,7 @@ public class KerberosUserToken extends UserToken implements IKerberosUserToken {
 
     @Override
     public IKerberos getKerberosCfg() {
-        return IKerberos.getKerberosCfg(kerberos); //ParamsConfig.getItem(kerberos, IKerberos.IDENTITY);
+        return IKerberos.getKerberosCfg(kerberos);
     }
 
     @TISExtension

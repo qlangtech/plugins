@@ -5,6 +5,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
+          "targetItemDesc": "Flink-Cluster",
           "descName": "Flink-Cluster"
         }
       ]

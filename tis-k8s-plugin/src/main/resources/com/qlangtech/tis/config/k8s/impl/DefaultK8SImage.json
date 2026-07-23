@@ -8,7 +8,8 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "k8s"
+          "descName": "k8s",
+          "targetItemDesc": "k8s"
         }
       ]
     }

@@ -12,6 +12,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
+          "targetItemDesc": "aliyunToken",
           "descName": "aliyunToken"
         }
       ],

@@ -25,6 +25,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
+          "targetItemDesc": "DataX-global",
           "descName": "DataX-global"
         }
       ],

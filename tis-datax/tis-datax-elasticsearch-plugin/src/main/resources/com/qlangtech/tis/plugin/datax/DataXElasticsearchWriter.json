@@ -6,7 +6,8 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "elasticToken"
+          "descName": "elasticToken",
+          "targetItemDesc": "elasticToken"
         }
       ]
     }

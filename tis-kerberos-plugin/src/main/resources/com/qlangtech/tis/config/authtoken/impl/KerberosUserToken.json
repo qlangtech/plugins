@@ -5,6 +5,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
+          "targetItemDesc": "kerberos",
           "descName": "kerberos"
         }
       ],

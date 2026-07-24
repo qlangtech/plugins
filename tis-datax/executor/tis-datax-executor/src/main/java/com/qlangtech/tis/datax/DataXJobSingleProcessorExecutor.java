@@ -120,7 +120,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
 
                 runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());
 
-                logger.info("waitForTerminator jobId:{},dataxName:{},taskExpireHours:{}", jobId, dataxName, jobSubmitParams.taskExpireHours);
+                logger.info("waitForTerminator jobId:{},dataxName:{},taskExpireHours:{}", jobId, dataxName, jobSubmitParams.taskExpireHours.toHours());
                 waitForTerminator(jobId, dataxName, jobSubmitParams.taskExpireHours, resultHandler);
 
             }

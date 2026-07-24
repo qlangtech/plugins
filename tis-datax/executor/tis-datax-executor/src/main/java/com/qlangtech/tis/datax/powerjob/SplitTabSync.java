@@ -41,7 +41,7 @@ public class SplitTabSync {
             DataXJobRunEnvironmentParamsSetter runEnvironmentParamsSetter =
                     (DataXJobRunEnvironmentParamsSetter) dataXJobSubmit;
             DataxPrePostConsumer prePostConsumer = BasicTISTableDumpProcessor.createPrePostConsumer();
-            runEnvironmentParamsSetter.setClasspath(prePostConsumer.getClasspath());
+           // runEnvironmentParamsSetter.setClasspath(prePostConsumer.getClasspath());
             // runEnvironmentParamsSetter.setWorkingDirectory(prePostConsumer.getWorkingDirectory());
             runEnvironmentParamsSetter.setExtraJavaSystemPramsSuppiler(prePostConsumer.getExtraJavaSystemPramsSuppiler());
         }

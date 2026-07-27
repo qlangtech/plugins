@@ -429,9 +429,168 @@ public class TISActorSystem {
             actorCounts.put("WorkflowInstanceRegion", workflowInstanceRegion != null ? 1 : 0);
             actorCounts.put("DAGSchedulerActor", dagSchedulerActor != null ? 1 : 0);
             status.setActorCounts(actorCounts);
+
+            // Build actor topology
+            status.setActorTopology(buildActorTopology(actorCounts));
         }
 
         return status;
+    }
+
+    /**
+     * Build actor topology data structure based on design document
+     * Reference: design/dag/actor-message-topology.md
+     *
+     * @param actorCounts Current actor counts
+     * @return ActorTopology with nodes and relations
+     */
+    private ActorSystemStatus.ActorTopology buildActorTopology(java.util.Map<String, Integer> actorCounts) {
+        ActorSystemStatus.ActorTopology topology = new ActorSystemStatus.ActorTopology();
+
+        // Build actor nodes
+        java.util.List<ActorSystemStatus.ActorNode> nodes = new java.util.ArrayList<>();
+
+        // 1. WorkflowInstance Sharding Region (路由层)
+        ActorSystemStatus.ActorNode workflowRegion = new ActorSystemStatus.ActorNode();
+        workflowRegion.setId("WorkflowInstanceRegion");
+        workflowRegion.setName("工作流实例分片路由");
+        workflowRegion.setType("router");
+        workflowRegion.setDescription("根据workflowInstanceId自动路由消息到对应的WorkflowInstanceActor，实现负载均衡和故障恢复");
+        workflowRegion.setCount(actorCounts.getOrDefault("WorkflowInstanceRegion", 0));
+        workflowRegion.setPath("/user/workflow-instance-region");
+        workflowRegion.setClickable(false);
+        nodes.add(workflowRegion);
+
+        // 2. WorkflowInstanceActor (有状态实例)
+        ActorSystemStatus.ActorNode workflowInstance = new ActorSystemStatus.ActorNode();
+        workflowInstance.setId("WorkflowInstanceActor");
+        workflowInstance.setName("工作流实例Actor");
+        workflowInstance.setType("stateful");
+        workflowInstance.setDescription("管理单个工作流实例的完整生命周期，缓存状态避免重复数据库查询，计算就绪节点并分发任务，实现并发控制（默认最多5个并发任务）");
+        workflowInstance.setCount(null); // Dynamic, varies by active workflows
+        workflowInstance.setPath("/user/workflow-instance-region/*");
+        workflowInstance.setClickable(false);
+        nodes.add(workflowInstance);
+
+        // 3. NodeDispatcherActor (任务分发器)
+        ActorSystemStatus.ActorNode nodeDispatcher = new ActorSystemStatus.ActorNode();
+        nodeDispatcher.setId("NodeDispatcherActor");
+        nodeDispatcher.setName("任务分发器Actor");
+        nodeDispatcher.setType("worker");
+        nodeDispatcher.setDescription("分发任务到TaskWorker，创建节点执行记录，设置超时监控，记录任务执行位置，通过getSender()保持原始sender");
+        nodeDispatcher.setCount(actorCounts.getOrDefault("NodeDispatcherActor", 0));
+        nodeDispatcher.setPath("/user/node-dispatcher");
+        nodeDispatcher.setClickable(false);
+        nodes.add(nodeDispatcher);
+
+        // 4. TaskWorker ClusterRouterPool (任务执行路由池)
+        ActorSystemStatus.ActorNode taskRouter = new ActorSystemStatus.ActorNode();
+        taskRouter.setId("TaskWorkerPool");
+        taskRouter.setName("任务执行路由池");
+        taskRouter.setType("router");
+        taskRouter.setDescription("通过ClusterRouterPool分布式部署，支持轮询（RoundRobin）负载均衡，每个节点最多10个Worker实例，集群总共最多100个Worker实例");
+        taskRouter.setCount(null); // Dynamic pool
+        taskRouter.setPath("/user/node-dispatcher/task-worker-cluster-pool");
+        taskRouter.setClickable(false);
+        nodes.add(taskRouter);
+
+        // 5. TaskWorkerActor (任务执行器)
+        ActorSystemStatus.ActorNode taskWorker = new ActorSystemStatus.ActorNode();
+        taskWorker.setId("TaskWorkerActor");
+        taskWorker.setName("任务执行器Actor");
+        taskWorker.setType("worker");
+        taskWorker.setDescription("执行具体的DataX任务，捕获执行结果和异常，通过getSender()直接回复给WorkflowInstanceActor，避免消息转发层级");
+        taskWorker.setCount(null); // Dynamic, varies by active tasks
+        taskWorker.setPath("/user/node-dispatcher/task-worker-cluster-pool/*");
+        taskWorker.setClickable(false);
+        nodes.add(taskWorker);
+
+        // 6. DAGSchedulerActor (调度器 - 已优化移除，但保留以兼容旧系统)
+        ActorSystemStatus.ActorNode dagScheduler = new ActorSystemStatus.ActorNode();
+        dagScheduler.setId("DAGSchedulerActor");
+        dagScheduler.setName("DAG调度器Actor");
+        dagScheduler.setType("deprecated");
+        dagScheduler.setDescription("【已优化移除】原用于转发消息到WorkflowInstanceRegion，现在客户端直接发送消息到Region，减少消息转发层级，降低延迟约10-20%");
+        dagScheduler.setCount(actorCounts.getOrDefault("DAGSchedulerActor", 0));
+        dagScheduler.setPath("/user/dag-scheduler");
+        dagScheduler.setClickable(true); // Detail page available
+        nodes.add(dagScheduler);
+
+        // 7. ClusterManagerActor (集群管理)
+        ActorSystemStatus.ActorNode clusterManager = new ActorSystemStatus.ActorNode();
+        clusterManager.setId("ClusterManagerActor");
+        clusterManager.setName("集群管理器Actor");
+        clusterManager.setType("cluster");
+        clusterManager.setDescription("订阅Akka Cluster事件（MemberUp/MemberRemoved/UnreachableMember），处理节点上线/下线，触发故障恢复机制");
+        clusterManager.setCount(actorCounts.getOrDefault("ClusterManagerActor", 0));
+        clusterManager.setPath("/user/cluster-manager");
+        clusterManager.setClickable(false);
+        nodes.add(clusterManager);
+
+        topology.setNodes(nodes);
+
+        // Build actor relations (message flows)
+        java.util.List<ActorSystemStatus.ActorRelation> relations = new java.util.ArrayList<>();
+
+        // Client/API → WorkflowInstanceRegion
+        ActorSystemStatus.ActorRelation r1 = new ActorSystemStatus.ActorRelation();
+        r1.setFrom("Client");
+        r1.setTo("WorkflowInstanceRegion");
+        r1.setMessageType("StartWorkflow");
+        r1.setDescription("客户端直接发送启动工作流消息到分片路由");
+        relations.add(r1);
+
+        // WorkflowInstanceRegion → WorkflowInstanceActor
+        ActorSystemStatus.ActorRelation r2 = new ActorSystemStatus.ActorRelation();
+        r2.setFrom("WorkflowInstanceRegion");
+        r2.setTo("WorkflowInstanceActor");
+        r2.setMessageType("StartWorkflow");
+        r2.setDescription("分片路由根据instanceId路由消息到对应Actor实例");
+        relations.add(r2);
+
+        // WorkflowInstanceActor → NodeDispatcherActor
+        ActorSystemStatus.ActorRelation r3 = new ActorSystemStatus.ActorRelation();
+        r3.setFrom("WorkflowInstanceActor");
+        r3.setTo("NodeDispatcherActor");
+        r3.setMessageType("DispatchTask");
+        r3.setDescription("工作流实例计算就绪节点后分发任务");
+        relations.add(r3);
+
+        // NodeDispatcherActor → TaskWorkerPool
+        ActorSystemStatus.ActorRelation r4 = new ActorSystemStatus.ActorRelation();
+        r4.setFrom("NodeDispatcherActor");
+        r4.setTo("TaskWorkerPool");
+        r4.setMessageType("TaskExecutionMessage");
+        r4.setDescription("通过getSender()保持原始sender，将任务消息发送到路由池");
+        relations.add(r4);
+
+        // TaskWorkerPool → TaskWorkerActor
+        ActorSystemStatus.ActorRelation r5 = new ActorSystemStatus.ActorRelation();
+        r5.setFrom("TaskWorkerPool");
+        r5.setTo("TaskWorkerActor");
+        r5.setMessageType("TaskExecutionMessage");
+        r5.setDescription("路由池使用轮询策略分发任务到Worker实例");
+        relations.add(r5);
+
+        // TaskWorkerActor → WorkflowInstanceActor (direct reply)
+        ActorSystemStatus.ActorRelation r6 = new ActorSystemStatus.ActorRelation();
+        r6.setFrom("TaskWorkerActor");
+        r6.setTo("WorkflowInstanceActor");
+        r6.setMessageType("NodeCompleted");
+        r6.setDescription("任务完成后通过getSender()直接回复，避免经过中间层");
+        relations.add(r6);
+
+        // WorkflowInstanceActor → NodeDispatcherActor (continue dispatch)
+        ActorSystemStatus.ActorRelation r7 = new ActorSystemStatus.ActorRelation();
+        r7.setFrom("WorkflowInstanceActor");
+        r7.setTo("NodeDispatcherActor");
+        r7.setMessageType("DispatchTask");
+        r7.setDescription("收到完成消息后计算新的就绪节点，继续分发");
+        relations.add(r7);
+
+        topology.setRelations(relations);
+
+        return topology;
     }
 
     /**

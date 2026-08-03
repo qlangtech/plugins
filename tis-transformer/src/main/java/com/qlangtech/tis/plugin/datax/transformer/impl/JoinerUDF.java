@@ -18,6 +18,8 @@ import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSelectDataSource;
 import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSelectTable;
 import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinerSetMatchConditionAndCols;
+import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinCacheKeyBuilder;
+import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheFull;
 import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.TargetRowsCache;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -36,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -68,6 +72,15 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
     private transient int errorCount;
     private transient StringBuffer _selectSQL;
 
+    private transient JoinerSelectDataSource _joinerSelectDataSource;
+    private transient JoinerSelectTable _joinerSelectTable;
+    private transient JoinerSetMatchConditionAndCols _joinerSetMatchConditionAndCols;
+    private transient DataSourceFactory _dataSourceFactory;
+    private transient String _prefix;
+    private transient JoinCacheKeyBuilder _keyBuilder;
+    private transient StringBuffer _preloadSQL;
+    private transient PreparedStatement _selectPreparedStatement;
+
     @Override
     public OneStepOfMultiSteps[] getMultiStepsSavedItems() {
         return this.stepsPlugin;
@@ -90,77 +103,73 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
         return Lists.newArrayList();
     }
 
+    private void ensureInit() {
+        if (_keyBuilder != null) {
+            return;
+        }
+        _joinerSelectDataSource = getJoinerSelectDataSource();
+        _joinerSelectTable = getJoinerSelectTable();
+        _joinerSetMatchConditionAndCols = getJoinerSetMatchConditionAndCols();
+        _dataSourceFactory = _joinerSelectDataSource.getDataSourceFactory();
+        _prefix = getOutputColPrefix(_joinerSetMatchConditionAndCols);
+        _keyBuilder = new JoinCacheKeyBuilder(
+                _joinerSetMatchConditionAndCols.matchCondition,
+                _joinerSetMatchConditionAndCols.filterConditions);
+    }
+
     @Override
     public void evaluate(ColumnAwareRecord record) {
-
-        JoinerSelectDataSource joinerSelectDataSource = this.getJoinerSelectDataSource();
-        JoinerSelectTable joinerSelectTable = this.getJoinerSelectTable();
-        JoinerSetMatchConditionAndCols joinerSetMatchConditionAndCols = this.getJoinerSetMatchConditionAndCols();
-        DataSourceFactory dataSource = joinerSelectDataSource.getDataSourceFactory();
-
-        TargetRowsCache.JoinCacheKey cacheKey = new TargetRowsCache.JoinCacheKey();
+        ensureInit();
+        TargetRowsCache.JoinCacheKey cacheKey = null;
         try {
-            /**
-             * 指定主表与子表的关联条件
-             */
-            List<TableJoinMatchCondition> matchCondition = joinerSetMatchConditionAndCols.matchCondition;
+            List<TableJoinMatchCondition> matchCondition = _joinerSetMatchConditionAndCols.matchCondition;
             if (CollectionUtils.isEmpty(matchCondition)) {
                 throw new IllegalStateException("matchCondition can not be empty");
             }
 
+            cacheKey = _keyBuilder.buildFromRecord(record, matchCondition);
 
-            for (TableJoinMatchCondition mc : matchCondition) {
-                // 从主表中拿到记录值
-                Object valPrimary = record.getColumn(mc.getPrimaryTableMatchColName());
-                cacheKey.addParam(mc.getDimensionMatchColName()).addPrimaryVal(valPrimary);
-            }
+            TargetRowsCache cache = _joinerSelectTable.cache;
+            TargetRowsCache.JoinCacheValue exist;
 
-            /**
-             * 指定主表或者子表的过滤条件
-             */
-            List<TableJoinFilterCondition> filterConditions = joinerSetMatchConditionAndCols.filterConditions;
-            for (TableJoinFilterCondition fc : filterConditions) {
-                if (fc.getTableType() == TableJoinFilterConditionCreatorFactory.TableType.Dimension) {
-                    cacheKey.addParam(fc.getColumnName()).addParam(fc.getValue());
+            if (cache.isFullPreload()) {
+                if (cacheKey.hasNullPrimaryVal()) {
+                    return;
                 }
-            }
-
-            TargetRowsCache.JoinCacheValue exist = null;
-            if (joinerSelectTable.cache.isOn()) {
-                exist = joinerSelectTable.cache.getFromCache(cacheKey);
+                ((TargetRowsCacheFull) cache).preload(this::preloadAll);
+                exist = cache.getFromCache(cacheKey);
                 if (exist == null) {
-                    // 缓存中没有，不存在
-                    exist = selectFromDB(dataSource, matchCondition, cacheKey, joinerSelectTable.tagetTable, joinerSetMatchConditionAndCols);
-                    joinerSelectTable.cache.set2Cache(cacheKey, exist);
+                    return;
+                }
+            } else if (cache.isOn()) {
+                exist = cache.getFromCache(cacheKey);
+                if (exist == null) {
+                    exist = selectFromDB(_dataSourceFactory, matchCondition, cacheKey, _joinerSelectTable.tagetTable, _joinerSetMatchConditionAndCols);
+                    cache.set2Cache(cacheKey, exist);
                 }
             } else {
-                exist = selectFromDB(dataSource, matchCondition, cacheKey, joinerSelectTable.tagetTable, joinerSetMatchConditionAndCols);
+                exist = selectFromDB(_dataSourceFactory, matchCondition, cacheKey, _joinerSelectTable.tagetTable, _joinerSetMatchConditionAndCols);
             }
 
             if (exist.isNull()) {
-                // 缓存实例为空直接退出
                 return;
             }
-            final String prefix = getOutputColPrefix(joinerSetMatchConditionAndCols);
-            Object colVal = null;
-            for (CMeta tc : joinerSetMatchConditionAndCols.targetCols) {
+            Object colVal;
+            for (CMeta tc : _joinerSetMatchConditionAndCols.targetCols) {
                 colVal = exist.get(tc.getName());
                 if (colVal != null) {
-                    record.setColumn(prefix + tc.getName(), colVal);
+                    record.setColumn(_prefix + tc.getName(), colVal);
                 }
             }
         } catch (Throwable e) {
-            if (joinerSetMatchConditionAndCols.skipError) {
+            if (_joinerSetMatchConditionAndCols.skipError) {
                 if (((errorCount++) % 100) == 0) {
-                    // 100个错误打印一个日志
                     logger.warn(String.valueOf(cacheKey), e);
-                    return;
                 }
             } else {
                 throw new RuntimeException(e);
             }
         }
-
     }
 
     private static String getOutputColPrefix(JoinerSetMatchConditionAndCols joinerSetMatchConditionAndCols) {
@@ -171,7 +180,21 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         this._selectSQL = null;
         this._jdbcConnection = null;
+        this._joinerSelectDataSource = null;
+        this._joinerSelectTable = null;
+        this._joinerSetMatchConditionAndCols = null;
+        this._dataSourceFactory = null;
+        this._prefix = null;
+        this._keyBuilder = null;
+        this._preloadSQL = null;
         this.errorCount = 0;
+        if (this._selectPreparedStatement != null) {
+            try {
+                this._selectPreparedStatement.close();
+            } catch (SQLException ignore) {
+            }
+            this._selectPreparedStatement = null;
+        }
     }
 
     /**
@@ -203,27 +226,29 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
                 throw new IllegalStateException("cacheKey.getPrimaryValsLength()=" //
                         + cacheKey.getPrimaryValsLength() + " != matchCondition.size():" + matchCondition.size());
             }
-            try (PreparedStatement preparedStatement = connection.preparedStatement(selectSQL.toString())) {
 
-                for (int index = 0; index < matchCondition.size(); index++) {
-                    mc = matchCondition.get(index);
-                    preparedStatementSetter = mc.preparedStatementSetter();
-                    preparedStatementSetter.setVal(preparedStatement, index //
-                            , Objects.requireNonNull(cacheKey.getPrimaryVal(index) //
-                                    , "index:" + index + ",match condition:" + mc.getDimensionMatchColName()));
-                    //  mc.setVal(preparedStatement, paramIndex, cacheKey.getPrimaryVal());
-                }
+            PreparedStatement preparedStatement = this._selectPreparedStatement;
+            if (preparedStatement == null) {
+                preparedStatement = connection.preparedStatement(selectSQL.toString());
+                this._selectPreparedStatement = preparedStatement;
+            }
+            for (int index = 0; index < matchCondition.size(); index++) {
+                mc = matchCondition.get(index);
+                preparedStatementSetter = mc.preparedStatementSetter();
+                preparedStatementSetter.setVal(preparedStatement, index //
+                        , Objects.requireNonNull(cacheKey.getPrimaryVal(index) //
+                                , "index:" + index + ",match condition:" + mc.getDimensionMatchColName()));
+            }
 
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        queryResult.setNull(false);
-                        int colNum = 1;
-                        Object colVal = null;
-                        for (CMeta targetCol : targetCols) {
-                            colVal = resultSet.getObject(colNum++);
-                            if (colVal != null) {
-                                queryResult.put(targetCol.getName(), colVal);
-                            }
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    queryResult.setNull(false);
+                    int colNum = 1;
+                    Object colVal = null;
+                    for (CMeta targetCol : targetCols) {
+                        colVal = resultSet.getObject(colNum++);
+                        if (colVal != null) {
+                            queryResult.put(targetCol.getName(), colVal);
                         }
                     }
                 }
@@ -251,34 +276,87 @@ public class JoinerUDF extends UDFDefinition implements MultiStepsSupportHost, I
                 } else {
                     first = false;
                 }
-                // TODO:这里如果是非数字类型的话，需要对valPrimary加单引号处理
-                _selectSQL.append(dataSource.getEscapedEntity(mc.getDimensionMatchColName()) + " = ?");
+                _selectSQL.append(dataSource.getEscapedEntity(mc.getDimensionMatchColName())).append(" = ?");
             }
 
-            /**
-             * 指定主表或者子表的过滤条件
-             */
-            List<TableJoinFilterCondition> filterConditions = joinerSetMatchConditionAndCols.filterConditions;
-            for (TableJoinFilterCondition fc : filterConditions) {
-                if (fc.getTableType() == TableJoinFilterConditionCreatorFactory.TableType.Dimension) {
-                    // cacheKey.addParam(fc.getColumnName()).addParam(fc.getValue());
-                    _selectSQL.append(" AND ").append(dataSource.getEscapedEntity(fc.getColumnName())).append(fc.getOperator().getToken());
-                    switch (fc.getValueType()) {
-                        case NUMBER:
-                        case BOOLEAN: {
-                            _selectSQL.append(fc.getValue());
-                            break;
-                        }
-                        case STRING: {
-                            _selectSQL.append("'").append(fc.getValue()).append("'");
-                            break;
-                        }
+            appendDimFilterConditions(_selectSQL, dataSource, joinerSetMatchConditionAndCols.filterConditions, true);
+        }
+
+        return _selectSQL;
+    }
+
+    private StringBuffer getPreloadSQL(DataSourceFactory dataSource, List<TableJoinMatchCondition> matchCondition, String tagetTable, JoinerSetMatchConditionAndCols joinerSetMatchConditionAndCols, List<CMeta> targetCols) {
+        if (this._preloadSQL == null) {
+            _preloadSQL = new StringBuffer();
+            _preloadSQL.append("SELECT ");
+            _preloadSQL.append(matchCondition.stream()
+                    .map((mc) -> dataSource.getEscapedEntity(mc.getDimensionMatchColName()))
+                    .collect(Collectors.joining(",")));
+            if (!targetCols.isEmpty()) {
+                _preloadSQL.append(",");
+                _preloadSQL.append(targetCols.stream()
+                        .map((col) -> dataSource.getEscapedEntity(col.getName()))
+                        .collect(Collectors.joining(",")));
+            }
+            _preloadSQL.append(" FROM ").append(dataSource.getEscapedEntity(tagetTable));
+            appendDimFilterConditions(_preloadSQL, dataSource, joinerSetMatchConditionAndCols.filterConditions, false);
+        }
+        return _preloadSQL;
+    }
+
+    private void appendDimFilterConditions(StringBuffer sql, DataSourceFactory dataSource, List<TableJoinFilterCondition> filterConditions, boolean hasWhere) {
+        if (CollectionUtils.isEmpty(filterConditions)) {
+            return;
+        }
+        for (TableJoinFilterCondition fc : filterConditions) {
+            if (fc.getTableType() == TableJoinFilterConditionCreatorFactory.TableType.Dimension) {
+                if (!hasWhere) {
+                    sql.append(" WHERE ");
+                    hasWhere = true;
+                } else {
+                    sql.append(" AND ");
+                }
+                sql.append(dataSource.getEscapedEntity(fc.getColumnName())).append(fc.getOperator().getToken());
+                switch (fc.getValueType()) {
+                    case NUMBER:
+                    case BOOLEAN: {
+                        sql.append(fc.getValue());
+                        break;
+                    }
+                    case STRING: {
+                        sql.append("'").append(fc.getValue()).append("'");
+                        break;
                     }
                 }
             }
         }
+    }
 
-        return _selectSQL;
+    private void preloadAll(TargetRowsCache.RowSink sink) throws Exception {
+        JDBCConnection connection = getJdbcConnection(_dataSourceFactory);
+        List<TableJoinMatchCondition> matchCondition = _joinerSetMatchConditionAndCols.matchCondition;
+        List<CMeta> targetCols = _joinerSetMatchConditionAndCols.targetCols;
+        StringBuffer sql = getPreloadSQL(_dataSourceFactory, matchCondition, _joinerSelectTable.tagetTable, _joinerSetMatchConditionAndCols, targetCols);
+
+        try (Statement stmt = connection.createStatement()) {
+            stmt.setFetchSize(1000);
+            try (ResultSet rs = stmt.executeQuery(sql.toString())) {
+                int matchCount = matchCondition.size();
+                while (rs.next()) {
+                    TargetRowsCache.JoinCacheKey key = _keyBuilder.buildFromResultSet(rs, matchCondition);
+                    TargetRowsCache.JoinCacheValue val = new TargetRowsCache.JoinCacheValue();
+                    val.setNull(false);
+                    int colIdx = matchCount + 1;
+                    for (CMeta tc : targetCols) {
+                        Object v = rs.getObject(colIdx++);
+                        if (v != null) {
+                            val.put(tc.getName(), v);
+                        }
+                    }
+                    sink.accept(key, val);
+                }
+            }
+        }
     }
 
     private transient JDBCConnection _jdbcConnection;

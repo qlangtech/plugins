@@ -59,6 +59,21 @@ public abstract class TargetRowsCache implements Describable<TargetRowsCache>, S
             return this.primaryVals.get(index);
         }
 
+        /**
+         * 主表侧的 join key 是否存在 null 值
+         * <p>null 在 SQL join 中本就不匹配，全量预加载模式下据此直接判为未命中</p>
+         *
+         * @return
+         */
+        public boolean hasNullPrimaryVal() {
+            for (Object val : primaryVals) {
+                if (val == null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof JoinCacheKey)) return false;
@@ -93,6 +108,39 @@ public abstract class TargetRowsCache implements Describable<TargetRowsCache>, S
     public abstract JoinCacheValue getFromCache(JoinCacheKey key);
 
     public abstract JoinCacheValue set2Cache(JoinCacheKey key, JoinCacheValue val);
+
+    /**
+     * 是否为全量预加载模式：是则 JoinerUDF 在首次 evaluate 时触发一次 {@link #preload(BulkLoader)} 全量加载，
+     * 之后所有记录只做内存查找，不再访问 DB
+     *
+     * @return
+     */
+    public boolean isFullPreload() {
+        return false;
+    }
+
+    /**
+     * 触发维度表全量加载，仅 {@link #isFullPreload()} 为 true 的实现需要支持
+     *
+     * @param loader 由 JoinerUDF 提供，负责执行批量查询并将结果逐行推给 {@link RowSink}
+     */
+    public void preload(BulkLoader loader) {
+        throw new UnsupportedOperationException("preload is not supported by " + this.getClass().getSimpleName());
+    }
+
+    /**
+     * 全量加载执行器：执行批量查询，将维度表逐行 emit 给 sink
+     */
+    public interface BulkLoader {
+        void load(RowSink sink) throws Exception;
+    }
+
+    /**
+     * 全量加载的行接收器
+     */
+    public interface RowSink {
+        void accept(JoinCacheKey key, JoinCacheValue value);
+    }
 
     @JSONField(serialize = false)
     @Override

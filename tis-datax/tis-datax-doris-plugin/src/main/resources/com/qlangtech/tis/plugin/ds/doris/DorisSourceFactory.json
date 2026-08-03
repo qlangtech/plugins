@@ -21,7 +21,9 @@
     "dftVal": 9030
   },
   "catalog": {
-    "dftVal": "default"
+    "label": "Catalog",
+    "dftVal": "default",
+    "help": "Doris Catalog 配置，默认使用内置 catalog；如需通过 Doris 访问 Paimon 等外部 catalog 的外表，请选择自定义并填写目标 catalog 名称"
   },
   "loadUrl": {
     "help": "Doris FE的地址用于Streamload，可以为多个fe地址，fe_ip:fe_http_port",

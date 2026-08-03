@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.ds.impl;
 
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -27,7 +28,7 @@ public class CatalogSpecific extends DataSourceCatalog {
     }
 
     @TISExtension
-    public static class DefaultDesc extends Descriptor<DataSourceCatalog> {
+    public static class DefaultDesc extends Descriptor<DataSourceCatalog> implements DescriptorUseableShortComment {
         public DefaultDesc() {
             super();
         }
@@ -35,6 +36,11 @@ public class CatalogSpecific extends DataSourceCatalog {
         @Override
         public String getDisplayName() {
             return SWITCH_CUSTOMIZE;
+        }
+
+        @Override
+        public String shortComment() {
+            return "指定catalog";
         }
     }
 }

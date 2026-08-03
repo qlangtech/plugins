@@ -129,5 +129,10 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate
         public String getDisplayName() {
             return "Add Monitor for Alert";
         }
+
+        @Override
+        public String shortComment() {
+            return "实时增量同步报警功能";
+        }
     }
 }

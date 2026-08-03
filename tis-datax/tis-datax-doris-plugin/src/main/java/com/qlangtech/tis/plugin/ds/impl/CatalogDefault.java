@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.ds.impl;
 
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceCatalog;
 
@@ -23,7 +24,7 @@ public class CatalogDefault extends DataSourceCatalog {
     }
 
     @TISExtension
-    public static class DefaultDesc extends Descriptor<DataSourceCatalog> {
+    public static class DefaultDesc extends Descriptor<DataSourceCatalog> implements DescriptorUseableShortComment {
         public DefaultDesc() {
             super();
         }
@@ -31,6 +32,11 @@ public class CatalogDefault extends DataSourceCatalog {
         @Override
         public String getDisplayName() {
             return SWITCH_DEFAULT;
+        }
+
+        @Override
+        public String shortComment() {
+            return "默认catalog";
         }
     }
 }

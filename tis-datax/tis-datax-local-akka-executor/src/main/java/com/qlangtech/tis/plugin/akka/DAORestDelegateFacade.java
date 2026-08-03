@@ -43,6 +43,14 @@ public class DAORestDelegateFacade implements IWorkflowDAOFacade {
                                 return IExecChainContext.insertDAGNodeExecution( //
                                         (DagNodeExecution) Objects.requireNonNull(args[0], "exec node can not be null"));
                             }
+                            case "updateStatusOnStarted": {
+                                return IExecChainContext.updateDAGNodeExecStatusOnStarted( //
+                                        (DagNodeExecution) Objects.requireNonNull(args[0], "exec node can not be null"));
+                            }
+                            case "updateStatusOnCompleted": {
+                                return IExecChainContext.updateDAGNodeExecStatusOnCompleted( //
+                                        (DagNodeExecution) Objects.requireNonNull(args[0], "exec node can not be null"));
+                            }
                             default:
                                 throw new IllegalStateException("method:" + methodName + " is not supported for:" + IDAGNodeExecutionDAO.class.getSimpleName());
                         }

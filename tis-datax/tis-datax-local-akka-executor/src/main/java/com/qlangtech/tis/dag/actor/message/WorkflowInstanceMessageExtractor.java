@@ -20,6 +20,7 @@ import akka.cluster.sharding.ShardRegion;
  * - UpdateContext
  * - CancelWorkflow
  * - QueryWorkflowStatus
+ * - QueryQueueStatus
  *
  * @author 百岁(baisui@qlangtech.com)
  * @date 2026-02-01
@@ -53,6 +54,8 @@ public class WorkflowInstanceMessageExtractor extends ShardRegion.HashCodeMessag
             return String.valueOf(((CancelWorkflow) message).getWorkflowInstanceId());
         } else if (message instanceof QueryWorkflowStatus) {
             return String.valueOf(((QueryWorkflowStatus) message).getWorkflowInstanceId());
+        } else if (message instanceof QueryQueueStatus) {
+            return String.valueOf(((QueryQueueStatus) message).getWorkflowInstanceId());
         }
         return null;
     }

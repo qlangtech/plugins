@@ -11,9 +11,12 @@ import com.qlangtech.tis.dag.actor.message.CancelTasks;
 import com.qlangtech.tis.dag.actor.message.CancelWorkflow;
 import com.qlangtech.tis.dag.actor.message.DispatchTask;
 import com.qlangtech.tis.dag.actor.message.NodeCompleted;
+import com.qlangtech.tis.dag.actor.message.QueryQueueStatus;
 import com.qlangtech.tis.dag.actor.message.QueryWorkflowStatus;
+import com.qlangtech.tis.dag.actor.message.QueueStatusResponse;
 import com.qlangtech.tis.dag.actor.message.StartWorkflow;
 import com.qlangtech.tis.dag.actor.message.UpdateContext;
+import com.qlangtech.tis.datax.ActorSystemStatus;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmitParams;
 import com.qlangtech.tis.datax.LifeCycleHook;
@@ -37,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -178,6 +182,7 @@ public class WorkflowInstanceActor extends AbstractActor {
                 .match(UpdateContext.class, this::handleUpdateContext) //
                 .match(CancelWorkflow.class, this::handleCancelWorkflow) //
                 .match(QueryWorkflowStatus.class, this::handleQueryWorkflowStatus) //
+                .match(QueryQueueStatus.class, this::handleQueryQueueStatus) //
                 .match(ReceiveTimeout.class, this::handleTimeout) //
                 .matchAny(msg -> logger.warn("Received unknown message: type={}, content={}", msg.getClass().getName(), msg)).build();
     }
@@ -468,6 +473,70 @@ public class WorkflowInstanceActor extends AbstractActor {
     private void handleTimeout(ReceiveTimeout msg) {
         logger.warn("Workflow instance idle timeout, stopping actor: workflowInstanceId={}", taskId);
         stopSelf("handleTimeout: ReceiveTimeout idle timeout");
+    }
+
+    /**
+     * 处理查询队列状态消息
+     * 用于监控面板实时展示等待队列和运行队列
+     */
+    private void handleQueryQueueStatus(QueryQueueStatus msg) {
+        logger.debug("Handling QueryQueueStatus: workflowInstanceId={}", msg.getWorkflowInstanceId());
+
+        try {
+            QueueStatusResponse response = new QueueStatusResponse();
+            response.setWorkflowInstanceId(msg.getWorkflowInstanceId());
+            response.setMaxConcurrentTasks(this.maxConcurrentTasks);
+
+            // 转换等待队列
+            List<ActorSystemStatus.QueuedTask> waitingTasks = new ArrayList<>();
+            for (PEWorkflowDAG.Node node : this.waitingQueue) {
+                ActorSystemStatus.QueuedTask task = new ActorSystemStatus.QueuedTask();
+                task.setNodeId(node.getNodeId());
+                task.setNodeName(node.getNodeName());
+                task.setTaskId(this.taskId);
+                // 简化实现：使用当前时间作为排队时间
+                task.setQueuedTime(System.currentTimeMillis());
+                waitingTasks.add(task);
+            }
+            response.setWaitingQueue(waitingTasks);
+
+            // 转换运行任务
+            List<ActorSystemStatus.RunningTask> runningTasksList = new ArrayList<>();
+            for (Long nodeId : this.runningTasks) {
+                PEWorkflowDAG.Node node = findNodeById(nodeId);
+                if (node != null) {
+                    ActorSystemStatus.RunningTask task = new ActorSystemStatus.RunningTask();
+                    task.setNodeId(nodeId);
+                    task.setNodeName(node.getNodeName());
+                    task.setTaskId(this.taskId);
+                    // 简化实现：使用当前时间
+                    task.setStartTime(System.currentTimeMillis());
+                    task.setWorkerAddress("unknown");
+                    runningTasksList.add(task);
+                }
+            }
+            response.setRunningTasks(runningTasksList);
+
+            getSender().tell(response, getSelf());
+
+        } catch (Exception e) {
+            logger.error("Failed to query queue status: workflowInstanceId={}",
+                    msg.getWorkflowInstanceId(), e);
+            getSender().tell(new akka.actor.Status.Failure(e), getSelf());
+        }
+    }
+
+    /**
+     * 根据 nodeId 查找节点
+     */
+    private PEWorkflowDAG.Node findNodeById(Long nodeId) {
+        if (this.dag == null || this.dag.getNodes() == null) {
+            return null;
+        }
+        return this.dag.getNodes().stream()
+                .filter(n -> n.getNodeId().equals(nodeId))
+                .findFirst()
+                .orElse(null);
     }
 
     // ==================== 辅助方法 ====================

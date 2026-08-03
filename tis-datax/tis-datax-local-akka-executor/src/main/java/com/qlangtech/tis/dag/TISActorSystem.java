@@ -6,10 +6,13 @@ import akka.cluster.sharding.ClusterSharding;
 import akka.cluster.sharding.ClusterShardingSettings;
 import akka.cluster.sharding.ShardRegion;
 import akka.pattern.Patterns;
+import akka.util.Timeout;
 import com.qlangtech.tis.dag.actor.ClusterManagerActor;
 import com.qlangtech.tis.dag.actor.DAGSchedulerActor;
 import com.qlangtech.tis.dag.actor.NodeDispatcherActor;
 import com.qlangtech.tis.dag.actor.WorkflowInstanceActor;
+import com.qlangtech.tis.dag.actor.message.QueryQueueStatus;
+import com.qlangtech.tis.dag.actor.message.QueueStatusResponse;
 import com.qlangtech.tis.dag.actor.message.WorkflowInstanceMessageExtractor;
 import com.qlangtech.tis.datax.ActorSystemStatus;
 import com.qlangtech.tis.plugin.akka.DAORestDelegateFacade;
@@ -31,14 +34,14 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 启动 worker-only 节点：
- *   export AKKA_ROLES="worker"
- *   export AKKA_HOSTNAME="192.168.1.101"
- *   export AKKA_PORT=2552
- *   export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551"
+ * export AKKA_ROLES="worker"
+ * export AKKA_HOSTNAME="192.168.1.101"
+ * export AKKA_PORT=2552
+ * export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551"
  * 启动seed节点：
- *   export AKKA_HOSTNAME="192.168.1.100"
- *   export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551" #可以不设置就是127.0.0.1
- *
+ * export AKKA_HOSTNAME="192.168.1.100"
+ * export AKKA_SEED_NODES="akka://TIS-DAG-System@192.168.1.100:2551" #可以不设置就是127.0.0.1
+ * <p>
  * TIS Actor System 管理器
  * 负责 Actor System 的初始化、配置和生命周期管理
  * <p>
@@ -99,7 +102,6 @@ public class TISActorSystem {
         set(tisActorSystem);
         return tisActorSystem;
     }
-
 
 
     private static final Logger logger = LoggerFactory.getLogger(TISActorSystem.class);
@@ -432,6 +434,11 @@ public class TISActorSystem {
 
             // Build actor topology
             status.setActorTopology(buildActorTopology(actorCounts));
+
+            // Collect queue data from all active workflow instances
+            if (initialized) {
+                collectQueueData(status);
+            }
         }
 
         return status;
@@ -592,6 +599,165 @@ public class TISActorSystem {
 
         return topology;
     }
+
+    /**
+     * 收集所有活跃工作流的队列数据
+     * 聚合所有 WorkflowInstanceActor 的等待队列和运行队列
+     *
+     * @param status ActorSystemStatus 对象，将填充队列数据
+     */
+    private void collectQueueData(ActorSystemStatus status) {
+        try {
+            // 从 Akka Sharding Region 获取所有活跃的 WorkflowInstanceActor ID
+            java.util.List<Integer> activeWorkflowIds = getActiveWorkflowIds();
+
+            if (activeWorkflowIds.isEmpty()) {
+                logger.debug("No active workflows, skipping queue data collection");
+                // 设置空列表
+                status.setWaitingQueue(new java.util.ArrayList<>());
+                status.setRunningQueue(new java.util.ArrayList<>());
+                // status.setCompletedTasks(new java.util.ArrayList<>()); 已废弃
+                status.setMaxConcurrentTasks(5);
+                return;
+            }
+
+            logger.info("Collecting queue data from {} active workflows", activeWorkflowIds.size());
+
+            // 聚合所有工作流的队列数据
+            java.util.List<ActorSystemStatus.QueuedTask> allWaitingTasks = new java.util.ArrayList<>();
+            java.util.List<ActorSystemStatus.RunningTask> allRunningTasks = new java.util.ArrayList<>();
+            int maxConcurrent = 5; // 默认值
+
+            // 向每个 WorkflowInstanceActor 发送查询消息
+            for (Integer workflowId : activeWorkflowIds) {
+                try {
+                    QueryQueueStatus queryMsg = new QueryQueueStatus(workflowId);
+
+                    // 使用 Akka Patterns.ask 发送查询消息并等待响应
+                    Future<Object> future = Patterns.ask(
+                            workflowInstanceRegion,
+                            queryMsg,
+                            Timeout.create(java.time.Duration.ofSeconds(5))
+                    );
+
+                    Object result = Await.result(future, Duration.create(5, TimeUnit.SECONDS));
+
+                    if (result instanceof QueueStatusResponse) {
+                        QueueStatusResponse response = (QueueStatusResponse) result;
+                        allWaitingTasks.addAll(response.getWaitingQueue());
+                        allRunningTasks.addAll(response.getRunningTasks());
+                        maxConcurrent = Math.max(maxConcurrent, response.getMaxConcurrentTasks());
+
+                        logger.debug("Collected queue data from workflow {}: waiting={}, running={}",
+                                workflowId, response.getWaitingQueue().size(), response.getRunningTasks().size());
+                    }
+                } catch (Exception e) {
+                    logger.warn("Failed to query queue status for workflow: workflowId={}, error={}",
+                            workflowId, e.getMessage(), e);
+                    // 继续查询其他工作流，不中断整个收集过程
+                }
+            }
+
+            // 设置聚合数据
+            status.setWaitingQueue(allWaitingTasks);
+            status.setRunningQueue(allRunningTasks);
+            status.setMaxConcurrentTasks(maxConcurrent);
+
+            logger.info("Queue data collection completed: totalWaiting={}, totalRunning={}, maxConcurrent={}",
+                    allWaitingTasks.size(), allRunningTasks.size(), maxConcurrent);
+
+            // 收集已完成任务（从数据库查询）
+          //  collectCompletedTasks(status);
+
+        } catch (Exception e) {
+            logger.error("Failed to collect queue data", e);
+            // 失败不影响其他状态数据的返回，设置空列表
+            status.setWaitingQueue(new java.util.ArrayList<>());
+            status.setRunningQueue(new java.util.ArrayList<>());
+           // status.setCompletedTasks(new java.util.ArrayList<>());
+            status.setMaxConcurrentTasks(5);
+        }
+    }
+
+    /**
+     * 从 Akka Sharding Region 获取所有活跃的 WorkflowInstanceActor ID
+     * 使用 GetShardRegionState 查询 Shard Region 中所有活跃的实体
+     *
+     * @return 活跃的工作流实例 ID 列表
+     */
+    private java.util.List<Integer> getActiveWorkflowIds() {
+        java.util.List<Integer> workflowIds = new java.util.ArrayList<>();
+
+        try {
+            // 向 ShardRegion 发送 GetShardRegionState 消息查询所有活跃实体
+            Future<Object> future = Patterns.ask(
+                    workflowInstanceRegion,
+                    ShardRegion.getShardRegionStateInstance(),
+                    Timeout.create(java.time.Duration.ofSeconds(5))
+            );
+
+            Object result = Await.result(future, Duration.create(5, TimeUnit.SECONDS));
+
+            if (result instanceof ShardRegion.CurrentShardRegionState) {
+                ShardRegion.CurrentShardRegionState state = (ShardRegion.CurrentShardRegionState) result;
+
+                // 遍历所有 Shard，提取实体 ID
+                for (ShardRegion.ShardState shardState : scala.collection.JavaConverters.asJavaIterable(state.shards())) {
+                    // 每个 Shard 包含多个实体 ID
+                    for (String entityId : scala.collection.JavaConverters.asJavaIterable(shardState.entityIds())) {
+                        try {
+                            // 实体 ID 就是 workflowInstanceId (Integer)
+                            Integer workflowId = Integer.parseInt(entityId);
+                            workflowIds.add(workflowId);
+                        } catch (NumberFormatException e) {
+                            logger.warn("Invalid entity ID format: {}", entityId);
+                        }
+                    }
+                }
+
+                logger.debug("Found {} active workflow instances from ShardRegion", workflowIds.size());
+            }
+
+        } catch (Exception e) {
+            logger.error("Failed to query active workflow IDs from ShardRegion", e);
+        }
+
+        return workflowIds;
+    }
+
+    /**
+     * 从数据库查询已完成的任务
+     *
+     * @param status ActorSystemStatus 对象，将填充已完成任务数据
+     */
+//    private void collectCompletedTasks(ActorSystemStatus status) {
+//        try {
+//            // 查询最近1小时内完成的任务，最多100条
+//            long oneHourMillis = 60 * 60 * 1000L;
+//            java.util.List<com.qlangtech.tis.workflow.pojo.DagNodeExecution> completedExecutions =
+//                    workflowDAOFacade.getDagNodeExecutionDAO().selectRecentlyCompletedTasks(100, oneHourMillis);
+//
+//            java.util.List<ActorSystemStatus.CompletedTask> completedTasks = new java.util.ArrayList<>();
+//            for (com.qlangtech.tis.workflow.pojo.DagNodeExecution execution : completedExecutions) {
+//                ActorSystemStatus.CompletedTask task = new ActorSystemStatus.CompletedTask();
+//                task.setNodeId(execution.getNodeId());
+//                task.setNodeName(execution.getNodeName());
+//                task.setTaskId(execution.getWorkflowInstanceId());
+//                task.setStartTime(execution.getStartTime());
+//                task.setEndTime(execution.getFinishedTime());
+//                task.setStatus(execution.getStatus());
+//                completedTasks.add(task);
+//            }
+//
+//            status.setCompletedTasks(completedTasks);
+//
+//            logger.debug("Completed tasks collection: count={}", completedTasks.size());
+//
+//        } catch (Exception e) {
+//            logger.error("Failed to collect completed tasks", e);
+//            status.setCompletedTasks(new java.util.ArrayList<>());
+//        }
+//    }
 
     /**
      * 优雅关闭 Actor System

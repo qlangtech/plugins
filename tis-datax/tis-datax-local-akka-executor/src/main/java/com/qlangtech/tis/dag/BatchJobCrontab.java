@@ -51,7 +51,6 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
     }
 
 
-
     /**
      * //@see DAGWorkflowServlet
      *
@@ -69,7 +68,7 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         }
 
         List<HttpUtils.PostParam> params = Lists.newArrayList();
-       // params.add(new HttpUtils.PostParam(HttpUtils.KEY_METHOD, HttpUtils.KEY_METHOD_HANDLE_REGISTER_SCHEDULE));
+        // params.add(new HttpUtils.PostParam(HttpUtils.KEY_METHOD, HttpUtils.KEY_METHOD_HANDLE_REGISTER_SCHEDULE));
         params.addAll(HttpUtils.dataXToParams(pluginContext.getCollectionName()));
         params.add(new HttpUtils.PostParam(TriggerType.KEY_CONTAB, this.crontab));
         params.add(new HttpUtils.PostParam(TriggerType.KEY_CRONTAB_TURN_ON, !itemsProcessor.isDeleteProcess() && this.turnOn));
@@ -140,5 +139,9 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         }
 
 
+        @Override
+        public String shortComment() {
+            return "定时触发批量数据同步任务";
+        }
     }
 }

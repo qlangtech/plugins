@@ -1,6 +1,8 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl.joiner;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -10,12 +12,17 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.table.join.TableJoinFilterCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchCondition;
 import com.qlangtech.tis.plugin.table.join.TableJoinMatchConditionCreatorFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -23,7 +30,7 @@ import java.util.Optional;
  * @date 2026/1/13
  */
 public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implements Serializable {
-
+    private static final String FIELD_TARGET_COLS = "targetCols";
     /**
      * 定义join match 规则，例如：source.order_id = target.order_id，可以定义多个关联条件
      */
@@ -69,6 +76,29 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implemen
 
     @Override
     protected void processPreSaved(IPluginContext pluginContext, Context currentCtx, OneStepOfMultiSteps[] preSavedStepPlugins) {
+        IControlMsgHandler msgHandler = (IControlMsgHandler) pluginContext;
+        JSONObject postContent = null;
+        if ((postContent = pluginContext.getJSONPostContent()) != null) {
+            JSONArray sourceCols = postContent.getJSONArray(TableJoinMatchConditionCreatorFactory.KEY_SOURCE_TAB_COLS);
+            List<String> pcols = sourceCols.stream().map((c) -> (String) ((JSONObject) c).get(CMeta.FIELD_NAME)).toList();
+            //JoinerSelectDataSource step1 = (JoinerSelectDataSource) preSavedStepPlugins[0];
+            //JoinerSelectTable step2 = (JoinerSelectTable) preSavedStepPlugins[Step.Step2.getStepIndex()];
+            // List<ColumnMetaData> pcols = step2.reflectTabCols(preSavedStepPlugins);
+
+            final Set<String> targetColSet = this.targetCols.stream().map(CMeta::getName)
+                    .collect(Collectors.toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER)));
+            Set<String> duplicateCols
+                    = pcols.stream()
+                    .filter(targetColSet::contains)
+                    .collect(Collectors.toSet());
+
+            if (CollectionUtils.isNotEmpty(duplicateCols)) {
+                msgHandler.addFieldError(currentCtx, FIELD_TARGET_COLS, "被选列："
+                        + duplicateCols.stream().map((col) -> "'" + col + "'")
+                        .collect(Collectors.joining(",")) + "与源表列存在重复");
+            }
+        }
+
 
     }
 
@@ -87,7 +117,6 @@ public class JoinerSetMatchConditionAndCols extends OneStepOfMultiSteps implemen
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
             return Optional.empty();
         }
-
 
 
         @Override

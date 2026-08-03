@@ -1,0 +1,5 @@
+{
+  "name": {
+    "help": "需要连接的 Doris catalog 名称，例如访问 Paimon 外表时填写 paimon"
+  }
+}

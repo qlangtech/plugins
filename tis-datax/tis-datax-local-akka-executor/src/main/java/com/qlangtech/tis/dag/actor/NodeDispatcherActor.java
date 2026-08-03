@@ -139,7 +139,7 @@ public class NodeDispatcherActor extends AbstractActor {
      * 实现步骤：
      * 1. 创建任务执行上下文
      * 2. 加载工作流上下文
-     * 3. 创建或更新节点执行记录（状态为 RUNNING）
+     * 3. 创建或更新节点执行记录（初始状态为 WAITING，Worker 实际开始执行后由 handleTaskStarted 更新为 RUNNING）
      * 4. 路由到 Worker
      * 5. 设置超时监控
      *
@@ -187,11 +187,33 @@ public class NodeDispatcherActor extends AbstractActor {
         } catch (Exception e) {
             logger.error("Failed to dispatch task: instanceId={}, nodeId={}", msg.getTaskId(),
                     node.getNodeId(), e);
+            // 若执行记录已插入（状态为 WAITING），将其更新为 FAILED；若插入本身就失败则影响 0 行，无害
+            updateTerminalStatus(msg.getTaskId(), node.getNodeId(),
+                    InstanceStatus.FAILED, "Failed to dispatch task: " + e.getMessage());
             // 通知 WorkflowInstanceActor 任务分发失败
             // 通过 Cluster Sharding Region 转发，确保消息被正确路由
             NodeCompleted failureMsg = new NodeCompleted(msg.getTaskId(), node.getNodeId(),
                     InstanceStatus.FAILED, "Failed to dispatch task: " + e.getMessage());
             workflowInstanceRegion.tell(failureMsg, getSelf());
+        }
+    }
+
+    /**
+     * 回写节点执行记录的终态（SUCCEED/FAILED/STOPPED）、结果与完成时间。
+     * 失败仅记录日志，不影响 Actor 主流程。
+     */
+    private void updateTerminalStatus(Integer taskId, Long nodeId, InstanceStatus status, String result) {
+        try {
+            DagNodeExecution execution = new DagNodeExecution();
+            execution.setWorkflowInstanceId(taskId);
+            execution.setNodeId(nodeId);
+            execution.setStatus(status.getDesc());
+            execution.setResult(result);
+            execution.setFinishedTime(new Date());
+            dagNodeExecutionDAO.updateStatusOnCompleted(execution);
+        } catch (Exception e) {
+            logger.error("Failed to update node execution terminal status: taskId={}, nodeId={}, status={}",
+                    taskId, nodeId, status, e);
         }
     }
 
@@ -201,9 +223,11 @@ public class NodeDispatcherActor extends AbstractActor {
         execution.setWorkflowInstanceId(msg.getTaskId());
         execution.setNodeId(node.getNodeId());
         execution.setNodeName(node.getNodeName());
+        execution.setTaskName(node.getNodeName());
         execution.setNodeType(node.getNodeType().toString());
-        execution.setStatus(InstanceStatus.RUNNING.getDesc());
-        execution.setStartTime(new Date());
+        // 此时任务仅被分发到路由，Worker 可能处于 busy 状态将消息 stash 排队，
+        // 真正的 RUNNING 状态在收到 TaskStarted 后由 handleTaskStarted 回写
+        execution.setStatus(InstanceStatus.WAITING.getDesc());
         execution.setWorkerAddress(getLocalAddress());
         execution.setSkipWhenFailed(node.getSkipWhenFailed());
         execution.setEnable(node.getEnable());
@@ -233,12 +257,16 @@ public class NodeDispatcherActor extends AbstractActor {
                 msg.getWorkflowInstanceId(), msg.getNodeId(),
                 System.currentTimeMillis() - entry.startTime);
 
+        String timeoutResult = "Task execution timeout after " + (System.currentTimeMillis() - entry.startTime) + "ms";
+        // 回写 DB 终态为 FAILED
+        updateTerminalStatus(msg.getWorkflowInstanceId(), msg.getNodeId(), InstanceStatus.FAILED, timeoutResult);
+
         // 向 WorkflowInstanceActor 发送失败消息（通过 Cluster Sharding Region 转发）
         NodeCompleted failureMsg = new NodeCompleted(
                 msg.getWorkflowInstanceId(),
                 msg.getNodeId(),
                 InstanceStatus.FAILED,
-                "Task execution timeout after " + (System.currentTimeMillis() - entry.startTime) + "ms"
+                timeoutResult
         );
         workflowInstanceRegion.tell(failureMsg, getSelf());
     }
@@ -267,6 +295,10 @@ public class NodeDispatcherActor extends AbstractActor {
         logger.info("NodeCompleted: workflowInstanceId={}, nodeId={}, status={}, forwarding to WorkflowInstanceActor via shard region",
                 msg.getWorkflowInstanceId(), msg.getNodeId(), msg.getStatus());
 
+        // 回写 DB 终态（SUCCEED/FAILED）。
+        // 仅在 entry 存在时回写：entry 不存在说明超时已触发或实例已取消，终态已定，不可被迟到的完成消息覆盖
+        updateTerminalStatus(msg.getWorkflowInstanceId(), msg.getNodeId(), msg.getStatus(), msg.getResult());
+
         // 通过 Cluster Sharding Region 转发给 WorkflowInstanceActor，确保消息被正确路由
         workflowInstanceRegion.tell(msg, getSelf());
     }
@@ -275,6 +307,10 @@ public class NodeDispatcherActor extends AbstractActor {
      * Handle TaskStarted message from TaskWorkerActor.
      * Updates the activeWorkerRegistry with the real cluster address
      * of the worker node that is executing the task.
+     * <p>
+     * 同时将 DB 中的节点执行记录由 WAITING 更新为 RUNNING，并记录实际开始时间。
+     * 注意：仅当 activeWorkerRegistry 中存在对应 entry 时才回写，
+     * 避免任务在 Worker stash 排队期间实例被取消后，状态被"复活"为 RUNNING。
      *
      * @param msg TaskStarted message containing actual worker address
      */
@@ -283,6 +319,18 @@ public class NodeDispatcherActor extends AbstractActor {
         ActiveWorkerEntry entry = activeWorkerRegistry.get(workerKey);
         if (entry != null) {
             entry.workerAddress = msg.getWorkerAddress();
+            try {
+                DagNodeExecution execution = new DagNodeExecution();
+                execution.setWorkflowInstanceId(msg.getTaskId());
+                execution.setNodeId(msg.getNodeId());
+                execution.setStatus(InstanceStatus.RUNNING.getDesc());
+                execution.setStartTime(new Date());
+                execution.setWorkerAddress(msg.getWorkerAddress());
+                dagNodeExecutionDAO.updateStatusOnStarted(execution);
+            } catch (Exception e) {
+                logger.error("Failed to update node execution status to RUNNING: taskId={}, nodeId={}",
+                        msg.getTaskId(), msg.getNodeId(), e);
+            }
             logger.info("TaskStarted: taskId={}, nodeId={}, workerAddress={}",
                     msg.getTaskId(), msg.getNodeId(), msg.getWorkerAddress());
         } else {
@@ -305,6 +353,8 @@ public class NodeDispatcherActor extends AbstractActor {
             ActiveWorkerEntry entry = activeWorkerRegistry.remove(workerKey);
             if (entry != null) {
                 removed++;
+                // 实例被取消，将节点执行记录更新为 STOPPED，避免记录永远停留在 WAITING/RUNNING
+                updateTerminalStatus(msg.getTaskId(), nodeId, InstanceStatus.STOPPED, "Task canceled");
             }
         }
 

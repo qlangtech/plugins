@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache;
 
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.TargetRowsCache;
@@ -35,7 +36,7 @@ public class TargetRowsCacheOff extends TargetRowsCache {
     }
 
     @TISExtension
-    public static class OffDesc extends Descriptor<TargetRowsCache> {
+    public static class OffDesc extends Descriptor<TargetRowsCache> implements DescriptorUseableShortComment {
         public OffDesc() {
             super();
         }
@@ -43,6 +44,11 @@ public class TargetRowsCacheOff extends TargetRowsCache {
         @Override
         public String getDisplayName() {
             return SWITCH_OFF;
+        }
+
+        @Override
+        public String shortComment() {
+            return "不开启缓存";
         }
     }
 }

@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -83,12 +84,17 @@ public class TargetRowsCacheOn extends TargetRowsCache implements IPluginStore.A
     }
 
     @TISExtension
-    public static class OnDesc extends Descriptor<TargetRowsCache> {
+    public static class OnDesc extends Descriptor<TargetRowsCache> implements DescriptorUseableShortComment {
         static final Integer maxSize10w = 100000;
         static final Integer maxDuration10min = 600;
 
         public OnDesc() {
             super();
+        }
+
+        @Override
+        public String shortComment() {
+            return "以 LRU 缓存维度表热点数据，适合大表且无法全量预加载的场景";
         }
 
         public boolean validateMaxSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
@@ -127,5 +133,7 @@ public class TargetRowsCacheOn extends TargetRowsCache implements IPluginStore.A
         public String getDisplayName() {
             return SWITCH_ON;
         }
+
+
     }
 }

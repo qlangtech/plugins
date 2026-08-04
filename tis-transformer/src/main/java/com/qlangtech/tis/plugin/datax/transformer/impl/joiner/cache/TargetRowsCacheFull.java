@@ -1,8 +1,8 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -100,7 +100,7 @@ public class TargetRowsCacheFull extends TargetRowsCache implements IPluginStore
     }
 
     @TISExtension
-    public static class FullDesc extends Descriptor<TargetRowsCache> {
+    public static class FullDesc extends Descriptor<TargetRowsCache> implements DescriptorUseableShortComment {
 
         public FullDesc() {
             super();
@@ -123,7 +123,12 @@ public class TargetRowsCacheFull extends TargetRowsCache implements IPluginStore
 
         @Override
         public String getDisplayName() {
-            return "On(Full Preload)";
+            return "on(Full Preload)";
+        }
+
+        @Override
+        public String shortComment() {
+            return "适用于维度表不大、可消除 N+1 点查开销的场景";
         }
     }
 }

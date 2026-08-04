@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheFull;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/1/15
  * @see JoinerSetMatchConditionAndCols
+ * @see TargetRowsCacheFull
  */
 public abstract class TargetRowsCache implements Describable<TargetRowsCache>, Serializable {
     public abstract boolean isOn();

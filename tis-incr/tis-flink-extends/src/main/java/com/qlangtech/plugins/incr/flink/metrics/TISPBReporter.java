@@ -37,6 +37,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.metrics.CharacterFilter;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.Gauge;
+import org.apache.flink.metrics.Meter;
 import org.apache.flink.metrics.Metric;
 import org.apache.flink.metrics.MetricConfig;
 import org.apache.flink.metrics.MetricGroup;
@@ -67,6 +68,9 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 
     private final ConcurrentMap<String /**metric identity*/, Pair<String /**metricName*/, MetricGroup>>
             gaugeMetricIdentifierMapper = Maps.newConcurrentMap();
+
+    private final ConcurrentMap<String /**metric identity*/, Pair<String /**metricName*/, MetricGroup>>
+            meterMetricIdentifierMapper = Maps.newConcurrentMap();
 
     //private static final ConcurrentMap<String /**taskId*/, MasterJob> receivedTaskControllerMessage = Maps.newConcurrentMap();
 
@@ -124,8 +128,12 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
             if (IIncreaseCounter.COLLECTABLE_TABLE_COUNT_METRIC.contains(metricName)) {
                 //  System.out.println(metricName);
                 counterMetricIdentifierMapper.put(name, Pair.of(metricName, group));
-            } else if (IIncreaseCounter.COLLECTABLE_METRIC_LIMIT_GAUGE.contains(metricName)) {
+            } else if (IIncreaseCounter.COLLECTABLE_METRIC_LIMIT_GAUGE.contains(metricName)
+                    || IIncreaseCounter.COLLECTABLE_LAG_GAUGE.contains(metricName)
+                    || IIncreaseCounter.COLLECTABLE_BACKPRESSURE_GAUGE.contains(metricName)) {
                 gaugeMetricIdentifierMapper.put(name, Pair.of(metricName, group));
+            } else if (IIncreaseCounter.COLLECTABLE_THROUGHPUT_METER.contains(metricName)) {
+                meterMetricIdentifierMapper.put(name, Pair.of(metricName, group));
             }
 
         }
@@ -139,6 +147,8 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
             counterMetricIdentifierMapper.remove(name);
         } else if (metric.getMetricType() == MetricType.GAUGE) {
             gaugeMetricIdentifierMapper.remove(name);
+        } else if (metric.getMetricType() == MetricType.METER) {
+            meterMetricIdentifierMapper.remove(name);
         }
 
     }
@@ -170,6 +180,15 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
             metricGroup = gaugeMetricIdentifierMapper.get(metricID);
             if (metricGroup != null) {
                 metrics.add(new UseableGaugeMetricForTIS(gauge, /**metricName*/metricGroup.getKey(), metricGroup.getRight()));
+            }
+        }
+
+        for (Map.Entry<Meter, String> entry : this.meters.entrySet()) {
+            Meter meter = entry.getKey();
+            metricID = entry.getValue();
+            metricGroup = meterMetricIdentifierMapper.get(metricID);
+            if (metricGroup != null) {
+                metrics.add(new UseableMeterMetricForTIS(meter, /**metricName*/metricGroup.getKey(), metricGroup.getRight()));
             }
         }
 
@@ -283,20 +302,42 @@ public class TISPBReporter extends AbstractReporter implements Scheduled {
 
         @Override
         public void putCounterMetric(TableSingleDataIndexStatus singleDataIndexStatus) {
-            LimitRateTypeAndRatePerSecNums origin = singleDataIndexStatus.getIncrRateLimitConfig();
-            LimitRateTypeAndRatePerSecNums config = null;
+            if (IIncreaseCounter.COLLECTABLE_METRIC_LIMIT_GAUGE.contains(this.metricName)) {
+                LimitRateTypeAndRatePerSecNums origin = singleDataIndexStatus.getIncrRateLimitConfig();
+                LimitRateTypeAndRatePerSecNums config = null;
 
-            if (METRIC_LIMIT_RATE_CONTROLLER_TYPE.equals(this.metricName)) {
-                config = new LimitRateTypeAndRatePerSecNums(RateControllerType.parse((short) getMetricVal()), origin.getPerSecRateNums());
-            } else if (METRIC_LIMIT_RATE_PER_SECOND_NUMS.equals(this.metricName)) {
-                config = new LimitRateTypeAndRatePerSecNums(origin.getControllerType().orElse(null), (int) getMetricVal());
+                if (METRIC_LIMIT_RATE_CONTROLLER_TYPE.equals(this.metricName)) {
+                    config = new LimitRateTypeAndRatePerSecNums(RateControllerType.parse((short) getMetricVal()), origin.getPerSecRateNums());
+                } else if (METRIC_LIMIT_RATE_PER_SECOND_NUMS.equals(this.metricName)) {
+                    config = new LimitRateTypeAndRatePerSecNums(origin.getControllerType().orElse(null), (int) getMetricVal());
+                } else {
+                    throw new IllegalStateException("illegal metricName:" + this.metricName);
+                }
+
+                singleDataIndexStatus.setIncrRateLimitConfig(config);
             } else {
-                throw new IllegalStateException("illegal metricName:" + this.metricName);
+                // 通用 Gauge 透传（延迟、反压等）
+                Object val = getMetricVal();
+                if (val instanceof Number) {
+                    singleDataIndexStatus.put(this.metricName, ((Number) val).longValue());
+                }
             }
+        }
+    }
 
-            singleDataIndexStatus.setIncrRateLimitConfig(config);
+    private static class UseableMeterMetricForTIS extends UseableMetricForTIS<Meter> {
+        public UseableMeterMetricForTIS(Meter meter, String metricName, MetricGroup metricGroup) {
+            super(meter, metricName, metricGroup);
         }
 
+        @Override
+        protected Double getMetricVal() {
+            return this.metric.getRate();
+        }
 
+        @Override
+        public void putCounterMetric(TableSingleDataIndexStatus singleDataIndexStatus) {
+            singleDataIndexStatus.put(this.metricName, Math.round(getMetricVal()));
+        }
     }
 }

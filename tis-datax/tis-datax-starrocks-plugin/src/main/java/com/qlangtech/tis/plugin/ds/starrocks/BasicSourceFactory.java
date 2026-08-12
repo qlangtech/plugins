@@ -27,7 +27,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -59,7 +58,7 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
         }
     }
 
-    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
 
 

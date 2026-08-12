@@ -16,7 +16,7 @@ import org.bson.BsonBinary;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonBoolean;
 import org.bson.BsonDocument;
-import org.bson.BsonInt64;
+import org.bson.BsonNumber;
 import org.bson.BsonRegularExpression;
 import org.bson.BsonTimestamp;
 import org.bson.BsonType;
@@ -379,8 +379,8 @@ public class MongoDataXColUtils {
     public static class MongoBigIntDTOConvert implements FunctionWithPayload {
         @Override
         public Object apply(BsonValue o, Object... payloads) {
-            BsonInt64 val = (BsonInt64) o;
-            return val.getValue();
+            BsonNumber val = (BsonNumber) o;
+            return val.longValue();
         }
     }
 

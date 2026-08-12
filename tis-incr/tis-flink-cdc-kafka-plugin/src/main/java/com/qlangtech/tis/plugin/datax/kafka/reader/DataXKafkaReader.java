@@ -62,7 +62,9 @@ import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory.BasicFormatDescriptor;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
@@ -100,9 +102,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.qlangtech.tis.plugin.annotation.Validator.host;
 import static com.qlangtech.tis.plugin.annotation.Validator.identity;
 import static com.qlangtech.tis.plugin.annotation.Validator.require;
 import static com.qlangtech.tis.plugin.ds.ContextParamConfig.KEY_DB_CONTEXT_PARAM_NAME;
@@ -116,8 +120,9 @@ import static com.qlangtech.tis.plugin.ds.ContextParamConfig.KEY_DB_CONTEXT_PARA
 public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, KeyedPluginStore.IPluginKeyAware {
     private static final Logger logger = LoggerFactory.getLogger(DataXKafkaReader.class);
     public static final String FIELD_KEY_FORMAT = "format";
+    public static final String FIELD_KEY_SUBSCRIPTION = "subscription";
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {require})
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {require, host})
     public String bootstrapServers;
 
     @FormField(ordinal = 1, validate = {require})
@@ -538,6 +543,20 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
             super();
         }
 
+        public boolean validateBootstrapServers(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Matcher hostMatcher = ValidatorCommons.host_pattern.matcher(value);
+            if (hostMatcher.matches()) {
+                if (!NetUtils.isPortAvailable(hostMatcher.group(1), Integer.parseInt(hostMatcher.group(2)))) {
+                    msgHandler.addFieldError(context, fieldName, "host不可触达");
+                    return false;
+                }
+            } else {
+                throw new IllegalStateException("host:" + value + " is illegal");
+            }
+
+            return true;
+        }
+
         @Override
         protected final boolean validateAll(
                 IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
@@ -553,6 +572,12 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
                 }
             } catch (Exception e) {
                 logger.warn("pipelineName:" + kafkaReader.dataXName, e);
+                org.apache.kafka.common.errors.UnknownTopicOrPartitionException indexOfUnknownTopicOrPartitionException = null;
+                if ((indexOfUnknownTopicOrPartitionException
+                        = ExceptionUtils.throwableOfThrowable(e, org.apache.kafka.common.errors.UnknownTopicOrPartitionException.class)) != null) {
+                    msgHandler.addFieldError(context, FIELD_KEY_SUBSCRIPTION, indexOfUnknownTopicOrPartitionException.getMessage());
+                    return false;
+                }
                 ErrMsg errMsg = TisException.getErrMsg(e);
                 msgHandler.addFieldError(context, FIELD_KEY_FORMAT, errMsg.getMessage());
                 return false;
@@ -561,6 +586,7 @@ public class DataXKafkaReader extends DataxReader implements AfterPluginSaved, K
 
             return super.validateAll(msgHandler, context, postFormVals);
         }
+
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {

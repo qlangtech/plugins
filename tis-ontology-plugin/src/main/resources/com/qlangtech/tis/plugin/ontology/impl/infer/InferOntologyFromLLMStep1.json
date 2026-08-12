@@ -10,28 +10,7 @@
     "help": "用于推断本体的LLM接口",
     "creator": {
       "label": "配置",
-      "plugin": [
-        {
-          "hetero": "params-cfg-user-isolation",
-          "targetItemDesc": "LLM",
-          "descName": "QWen"
-        },
-        {
-          "hetero": "params-cfg-user-isolation",
-          "targetItemDesc": "LLM",
-          "descName": "DeepSeek"
-        },
-        {
-          "hetero": "params-cfg-user-isolation",
-          "targetItemDesc": "LLM",
-          "descName": "Anthropic"
-        },
-        {
-          "hetero": "params-cfg-user-isolation",
-          "targetItemDesc": "LLM",
-          "descName": "Zhipu"
-        }
-      ]
+      "plugin":"com.qlangtech.tis.aiagent.llm.LLMProvider.useable()"
     }
   },
   "targetTables": {

@@ -195,7 +195,8 @@ public class WorkflowInstanceActor extends AbstractActor {
         this.taskId = msg.getTaskId();
         Integer preTaskId = msg.getPreTaskId();
         if (preTaskId != null) {
-            this.statusCollection = Optional.of(this.rpcRef.loadPhaseStatusFromLatest(preTaskId));
+            this.statusCollection = Optional.ofNullable((
+                    this.rpcRef.loadPhaseStatusFromLatest(preTaskId)));
         }
         // this.dataXName = Objects.requireNonNull(msg.getDataXName(), "dataXName can not be null");
         this.startWorkflow = Objects.requireNonNull(msg, "msg can not be  null");

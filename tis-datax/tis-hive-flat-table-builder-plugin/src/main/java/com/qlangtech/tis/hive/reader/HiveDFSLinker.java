@@ -33,7 +33,6 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.TableColsMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -44,12 +43,9 @@ import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
-import org.apache.hadoop.mapred.JobConf;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -165,6 +161,12 @@ public class HiveDFSLinker extends TDFSLinker {
 
     @TISExtension
     public static final class DftDescriptor extends BasicDescriptor implements IExclusiveTDFSType {
+
+        @Override
+        public String shortComment() {
+            return "Hive数据仓库";
+        }
+
 
         public DftDescriptor() {
             super();

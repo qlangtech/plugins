@@ -306,7 +306,7 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
                     , new BinaryRawValueDataConvert()
                     , new BinaryRawValueDataConvert()
                     , new FlinkCDCPipelineEventProcess(
-                            org.apache.flink.cdc.common.types.DataTypes.VARBINARY(type.getColumnSize()), new BinaryRawValueDataConvert())
+                    org.apache.flink.cdc.common.types.DataTypes.VARBINARY(type.getColumnSize()), new BinaryRawValueDataConvert())
                     , new RowFieldGetterFactory.BlobGetter(meta.getName(), colIndex));
             return col.setSourceDTOColValProcess(new BinaryRawValueDTOConvert());
         }
@@ -376,8 +376,8 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
             } else {
                 s = (Number) o;
             }
-
-            return new java.lang.Byte(s.byteValue());
+            return java.lang.Byte.valueOf(s.byteValue());
+            //    return new java.lang.Byte(s.byteValue());
             // return s.intValue();
         }
     }
@@ -385,11 +385,14 @@ public abstract class BasicFlinkDataMapper<IMPLDATA extends DATA, DATA> implemen
     static class IntegerConvert extends BiFunction {
         @Override
         public Object apply(Object o) {
-            if (o instanceof String) {
-                return Integer.parseInt((String) o);
+            if (o instanceof String s) {
+                return Integer.parseInt(s);
             }
-            if (o instanceof Number) {
-                return ((Number) o).intValue();
+            if (o instanceof Number i) {
+                return (i).intValue();
+            }
+            if (o instanceof Boolean b) {
+                return b ? 1 : 0;
             }
             return o;
         }

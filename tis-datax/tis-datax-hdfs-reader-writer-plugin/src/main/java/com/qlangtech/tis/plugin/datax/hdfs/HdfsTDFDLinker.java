@@ -91,6 +91,11 @@ public class HdfsTDFDLinker extends TDFSLinker {
         }
 
         @Override
+        public String shortComment() {
+            return "HDFS分布式存储";
+        }
+
+        @Override
         protected List<? extends IdentityName> createRefLinkers() {
             return TIS.getPluginStore(FileSystemFactory.class)
                     .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList());

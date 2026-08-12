@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 @Public
 public class HttpEndpoint extends ParamsConfig implements IHttpToken {
 
+    public static final String FIELD_ENDPOINT = "endpoint";
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 

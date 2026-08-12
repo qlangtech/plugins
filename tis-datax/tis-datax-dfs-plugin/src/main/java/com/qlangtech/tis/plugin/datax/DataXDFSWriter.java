@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * @see com.alibaba.datax.plugin.writer.ftpwriter.FtpWriter
  **/
 @Public
-public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
+public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost, TDFSLinker.TDFSLinkerGetter {
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public TDFSLinker dfsLinker;
@@ -80,6 +80,11 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
     public static List<? extends Descriptor> supportedWriterFormat(List<? extends Descriptor> descs) {
         return BasicPainFormatDescriptor.supportedFormat(false, descs);
+    }
+
+    @Override
+    public TDFSLinker getTDFSLinker() {
+        return Objects.requireNonNull(this.dfsLinker, "dfsLinker can not be null");
     }
 
     @Override

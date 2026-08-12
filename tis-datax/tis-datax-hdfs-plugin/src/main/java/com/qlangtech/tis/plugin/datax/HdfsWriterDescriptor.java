@@ -26,6 +26,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,7 @@ public abstract class HdfsWriterDescriptor extends DataxWriter.BaseDataxWriterDe
         super();
         this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME
                 , () -> TIS.getPluginStore(FileSystemFactory.class)
-                        .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+                        .getPlugins().stream().filter((Objects::nonNull)).collect(Collectors.toList()));
     }
 
     public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

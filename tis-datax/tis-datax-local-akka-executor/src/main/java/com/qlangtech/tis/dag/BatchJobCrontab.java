@@ -4,6 +4,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.assemble.TriggerType;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -24,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
@@ -59,7 +59,7 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
      * @param itemsProcessor
      */
     @Override
-    protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
+    protected void process(IPluginContext pluginContext, Context context, DataXName pipelineName, ManipulateItemsProcessor itemsProcessor) {
 
 
         final String getAssembleHttpHost = Config.getAssembleHttpHost();
@@ -74,6 +74,7 @@ public class BatchJobCrontab extends DefaultDataXProcessorManipulate implements 
         params.add(new HttpUtils.PostParam(TriggerType.KEY_CRONTAB_TURN_ON, !itemsProcessor.isDeleteProcess() && this.turnOn));
         HttpUtils.postAssembleDAGServlet(HttpUtils.KEY_METHOD_HANDLE_REGISTER_SCHEDULE, params, (respStream) -> null);
 
+        // super.afterManipuldateProcess(pluginContext, context, itemsProcessor);
     }
 
     @Override

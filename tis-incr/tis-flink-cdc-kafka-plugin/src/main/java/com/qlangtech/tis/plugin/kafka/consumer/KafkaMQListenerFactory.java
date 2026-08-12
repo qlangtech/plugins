@@ -22,7 +22,6 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCDCPipelineEventProcess;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -102,6 +101,11 @@ public class KafkaMQListenerFactory extends MQListenerFactory implements KeyedPl
         @Override
         public FlinkCol dateType(DataType type) {
             return super.dateType(type);
+        }
+
+        @Override
+        public FlinkCol intType(DataType type) {
+            return super.intType(type);
         }
 
         @Override

@@ -101,8 +101,8 @@ public class DataXHiveWriter extends BasicFSWriter
     @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
-    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public AutoCreateTable autoCreateTable;
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})

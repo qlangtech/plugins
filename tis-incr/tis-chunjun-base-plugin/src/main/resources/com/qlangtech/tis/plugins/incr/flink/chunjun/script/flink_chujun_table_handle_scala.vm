@@ -10,6 +10,7 @@ import com.qlangtech.tis.extension.TISExtension
 class ${config.javaName}SourceHandle extends TableRegisterFlinkSourceHandle {
     override protected def executeSql(tabEnv: TISTableEnvironment): Unit = {
 
+## $config is type of com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType.ChunjunTemplateData
 #foreach($i in $config.dumpTables  )
     #set($cols=${config.getCols($i)})
       tabEnv.insert(

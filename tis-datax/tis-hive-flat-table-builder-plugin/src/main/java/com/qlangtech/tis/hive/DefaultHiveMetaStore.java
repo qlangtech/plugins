@@ -16,7 +16,6 @@ import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDeUtils;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
-import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.thrift.TException;
@@ -49,15 +48,16 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         this.hiveCfg = hiveCfg;
     }
 
-    @Override
-    public String getServerVersion() {
+//    @Override
+//    public String getServerVersion() {
+//
 //        try {
-//           // return this.storeClient.getServerVersion();
+//            return this.storeClient.getServerVersion();
 //        } catch (TException e) {
 //            throw new RuntimeException(e);
-//        }a
-        return null;
-    }
+//        }
+//        return null;
+//    }
 
     @Override
     public void dropTable(String database, String tableName) {

@@ -79,6 +79,9 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
 
                 CommandLine cmdLine = new CommandLine("java");
                 cmdLine.addArgument("--add-opens").addArgument("java.base/java.lang=ALL-UNNAMED");
+                cmdLine.addArgument("--add-opens").addArgument("java.base/java.net=ALL-UNNAMED");
+                cmdLine.addArgument("--add-opens").addArgument("java.base/java.nio=ALL-UNNAMED");
+                cmdLine.addArgument("--add-opens").addArgument("java.base/sun.nio.ch=ALL-UNNAMED");
                 cmdLine.addArgument("-D" + Config.KEY_DATA_DIR + "=" + Config.getDataDir().getAbsolutePath());
                 cmdLine.addArgument("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=" + this.useRuntimePropEnvProps());
                 cmdLine.addArgument("-D" + TisAppLaunch.KEY_LOG_DIR + "=" + TisAppLaunch.getLogDir().getAbsolutePath());

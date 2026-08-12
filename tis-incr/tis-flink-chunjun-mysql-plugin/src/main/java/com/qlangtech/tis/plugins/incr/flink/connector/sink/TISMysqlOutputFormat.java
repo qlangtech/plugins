@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 
+import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.dtstack.chunjun.connector.mysql.sink.MysqlOutputFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -52,6 +53,11 @@ public final class TISMysqlOutputFormat extends MysqlOutputFormat {
 
     @Override
     protected void initializeRowConverter() {
-        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
+        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta
+                , JdbcColumnConverter::getRowDataValConverter
+                , (flinkCol) -> {
+                    return JdbcColumnConverter.createJdbcStatementValConverter(
+                            flinkCol.type.getLogicalType(), flinkCol.colType, flinkCol.getRowDataValGetter());
+                }));
     }
 }

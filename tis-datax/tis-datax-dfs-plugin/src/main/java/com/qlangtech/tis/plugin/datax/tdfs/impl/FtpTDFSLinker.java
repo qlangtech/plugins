@@ -77,6 +77,12 @@ public class FtpTDFSLinker extends TDFSLinker {
             return FTP_DISPLAY_NAME;
         }
 
+        @Override
+        public String shortComment() {
+            return "FTP文件传输";
+        }
+
+
         public DftDescriptor() {
             super();
         }

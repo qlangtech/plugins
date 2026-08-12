@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -86,7 +85,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     @FormField(validate = Validator.require, ordinal = 2)
     public ConnEntity connEntity;
 
-    @FormField(ordinal = 8, validate = {Validator.require})
+    @FormField(ordinal = 10, validate = {Validator.require})
     public Authorized allAuthorized;
 
 //    @FormField(ordinal = 14, type = FormFieldType.ENUM, validate = {Validator.require})

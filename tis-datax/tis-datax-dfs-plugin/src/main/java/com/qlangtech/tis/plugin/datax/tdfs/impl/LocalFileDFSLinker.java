@@ -69,6 +69,13 @@ public class LocalFileDFSLinker extends TDFSLinker {
         }
 
         @Override
+        public String shortComment() {
+            return "本地文件目录";
+        }
+
+
+
+        @Override
         protected List<IdentityName> createRefLinkers() {
             return Collections.emptyList();
         }

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.valuetype.constraints;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -26,6 +27,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ValueConstraint;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 import java.util.List;
 import java.util.Set;
@@ -36,6 +38,9 @@ import java.util.Set;
  * @date 2026/4/19
  */
 public class Range4TimeStamp extends ValueConstraint {
+
+    private static final String FIELD_MIN = "min";
+    private static final String FIELD_MAX = "max";
 
     @FormField(ordinal = 0, type = FormFieldType.DateTime, validate = {Validator.require})
     public java.util.Date min;
@@ -64,6 +69,17 @@ public class Range4TimeStamp extends ValueConstraint {
         @Override
         public Set<IEndTypeGetter.EndType> specializedTypeEnds() {
             return Set.of(IEndTypeGetter.EndType.DataTypeTime);
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            Range4TimeStamp range = postFormVals.newInstance();
+            if (range.min.after(range.max)) {
+                msgHandler.addFieldError(context, FIELD_MIN, "起始时间必须小于等于结束时间");
+                msgHandler.addFieldError(context, FIELD_MAX, "结束时间必须大于等于起始时间");
+                return false;
+            }
+            return true;
         }
 
         @Override

@@ -62,6 +62,17 @@ import java.util.Objects;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-27 16:55
  * @see DataXHiveWriter
+ *
+ * <pre>
+ *     从 Hive 3.x 开始做 Java 11 适配，但仍然不完整。你项目里的 CDH profile 用的就是 3.1.3（plugins/pom.xml:109）
+ *     ，它修复了不少反射问题，但 StringInternUtils 访问 java.net.URI 这类问题大概率还在。实际跑起来通常仍需要：
+ *
+ *   --add-opens java.base/java.lang=ALL-UNNAMED
+ *   --add-opens java.base/java.net=ALL-UNNAMED
+ *   --add-opens java.base/java.nio=ALL-UNNAMED
+ *   --add-opens java.base/sun.nio.ch=ALL-UNNAMED
+ * </pre>
+ *
  **/
 public class TisDataXHiveWriter extends Writer {
 

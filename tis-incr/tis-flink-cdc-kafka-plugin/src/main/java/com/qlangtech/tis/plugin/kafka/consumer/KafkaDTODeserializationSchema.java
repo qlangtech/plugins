@@ -62,7 +62,7 @@ public class KafkaDTODeserializationSchema implements DeserializationSchema<DTO>
                 Objects.requireNonNull(contextParamValsGetterMapper, "contextParamValsGetterMapper can not be null")
                         .entrySet().stream().collect(
                                 Collectors.toMap(
-                                        (entry) -> entry.getKey()
+                                        Map.Entry::getKey
                                         , (entry) -> new RunningContextParamSetter(new RdbmsRunningContext(StringUtils.EMPTY, entry.getKey()), entry.getValue())
                                         , (u, v) -> {
                                             throw new IllegalStateException(String.format("Duplicate key %s", u));

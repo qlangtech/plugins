@@ -1,6 +1,7 @@
 {
   "bucket": {
-    "help": "描述：OSS的bucket  "
+    "help": "描述：OSS的bucket  ",
+    "enum": "com.qlangtech.tis.plugin.datax.aliyunoss.AliyunOSSTDFSLinker.availableBuckets():uncache_true"
   },
   "path": {
     "label": "rootPath",

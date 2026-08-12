@@ -60,13 +60,13 @@ public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFac
     public static final String JDBC_SCHEMA_TYPE_V9 = "kingbase8";
     // public static final String JDBC_SCHEMA_TYPE_V8 = JDBC_SCHEMA_TYPE_V9;
     public static final String FIELD_DB_MODE = "dbMode";
-    @FormField(ordinal = 8, validate = {Validator.require})
+    @FormField(ordinal = 10, validate = {Validator.require})
     public KingBaseCompatibleMode dbMode;
 
-    @FormField(ordinal = 9, validate = {Validator.require})
+    @FormField(ordinal = 11, validate = {Validator.require})
     public KingBaseDispatch dispatch;
 
-    @FormField(ordinal = 10, validate = {Validator.require})
+    @FormField(ordinal = 12, validate = {Validator.require})
     public TISTimeZone timeZone;
 
     @Override

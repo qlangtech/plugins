@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.script;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -113,7 +112,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
             return getTableSinkTypeName(endType);
         }
 
-        public String getSourceTable(TableAlias alia) {
+        public String getSourceTable(IDataxProcessor.TableMap alia) {
             return alia.getTo() + KEY_STREAM_SOURCE_TABLE_SUFFIX;
         }
 

@@ -22,12 +22,21 @@ import com.alibaba.citrus.turbine.Context;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.Bucket;
 import com.aliyun.oss.model.BucketInfo;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IAliyunAccessKey;
 import com.qlangtech.tis.config.aliyun.IAliyunEndpoint;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
+import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.GroovyShellUtil;
+import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.manage.common.OptionWithEndType;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -35,13 +44,20 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
+import com.qlangtech.tis.runtime.module.action.IParamGetter;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiFunction;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,7 +67,7 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
     public static final String DATAX_NAME = "AlyiunOSS";
     public static final String FIELD_BUCKET = "bucket";
     private static final Logger logger = LoggerFactory.getLogger(AliyunOSSTDFSLinker.class);
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public String bucket;
 //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String object;
@@ -91,12 +107,59 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
         }
     }
 
+    /**
+     * 通过 OntologyProperty 的type 获取 valueType的下拉可选项目
+     *
+     * @return
+     */
+    public static List<OptionWithEndType> availableBuckets() {
+        Map<Class<? extends Descriptor>, Describable> classDescribableMap =
+                Objects.requireNonNull(GroovyShellUtil.pluginThreadLocal.get(), "classDescribableMap can not be null");
+        //  IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();
+//        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
+//        if (meta.getDelegate().isCreateProcess()) {
+//            return Collections.emptyList();
+//        }
+        if (MapUtils.isEmpty(classDescribableMap)) {
+            return Collections.emptyList();
+        }
+        for (Map.Entry<Class<? extends Descriptor>, Describable> entry : classDescribableMap.entrySet()) {
+            // DataXDFSWriter
+            if (!(entry.getValue() instanceof TDFSLinker.TDFSLinkerGetter linker)) {
+                throw new IllegalStateException("entry.getValue() must be type of "
+                        + TDFSLinker.TDFSLinkerGetter.class.getName() + " but now is " + entry.getValue().getClass().getName());
+            }
+            return getBuckets((AliyunOSSTDFSLinker) linker.getTDFSLinker());
+        }
+        throw new IllegalStateException("classDescribableMap.entrySet() can not be empty");
+    }
+
     @TISExtension
     public static class DftDescriptor extends BasicDescriptor {
+        public DftDescriptor() {
+            super();
+            this.valueChangePipe(KEY_FTP_SERVER_LINK, FIELD_BUCKET)
+                    .render(new BiFunction<UploadPluginMeta, IParamGetter, List<? extends Option>>() {
+                        @Override
+                        public List<? extends Option> apply(UploadPluginMeta pluginMeta, IParamGetter param) {
+
+                            AliyunOSSTDFSLinker linker = new AliyunOSSTDFSLinker();
+                            linker.linker = param.getString(KEY_FTP_SERVER_LINK);
+                            return getBuckets(linker);
+                        }
+                    });
+        }
+
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
         }
+
+        @Override
+        public String shortComment() {
+            return "阿里云对象存储";
+        }
+
 
         @Override
         protected List<? extends IdentityName> createRefLinkers() {
@@ -132,6 +195,16 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
             }
             return true;
         }
+    }
+
+    private static List<OptionWithEndType> getBuckets(AliyunOSSTDFSLinker linker) {
+        List<OptionWithEndType> buckets = Lists.newArrayList();
+        OSS oss = linker.createOSSClient();
+        for (Bucket bucket : oss.listBuckets()) {
+            buckets.add(new OptionWithEndType(bucket.getName(), bucket.getName(), IEndTypeGetter.EndType.Bucket)
+                    .setDescription("create:" + TimeFormat.yyyy_MM_dd.format(bucket.getCreationDate())));
+        }
+        return buckets;
     }
 
 }

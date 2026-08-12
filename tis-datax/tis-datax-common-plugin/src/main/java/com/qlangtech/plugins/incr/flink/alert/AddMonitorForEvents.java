@@ -4,6 +4,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -22,7 +23,6 @@ import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 为当前用户添加报警
@@ -89,10 +89,16 @@ public class AddMonitorForEvents extends DefaultDataXProcessorManipulate
         return AlertChannel.load(Sets.newHashSet(alertChannel));
     }
 
+//    @Override
+//    protected void (IPluginContext pluginContext, Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
+//
+//    }
+
     @Override
-    protected void afterManipuldateProcess(IPluginContext pluginContext, Optional<Context> context, ManipulateItemsProcessor itemsProcessor) {
+    protected void process(IPluginContext pluginContext, Context context, DataXName pipelineName, ManipulateItemsProcessor itemsProcessor) {
 
     }
+
 
 //    @Override
 //    public String identityValue() {

@@ -37,7 +37,8 @@ import java.util.Set;
  * @date 2026/4/19
  */
 public class Range4Decimal extends ValueConstraint {
-
+    private static final String FIELD_MIN = "min";
+    private static final String FIELD_MAX = "max";
     @FormField(ordinal = 0, type = FormFieldType.DECIMAL_NUMBER, validate = {Validator.require})
     public Float min;
 
@@ -69,8 +70,9 @@ public class Range4Decimal extends ValueConstraint {
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             Range4Decimal range = postFormVals.newInstance();
             if (range.min > range.max) {
-                msgHandler.addFieldError(context, "min", "必须小于" + range.max);
-                msgHandler.addFieldError(context, "max", "必须大于" + range.min);
+                msgHandler.addFieldError(context, FIELD_MIN, "必须小于" + range.max);
+                msgHandler.addFieldError(context, FIELD_MAX, "必须大于" + range.min);
+                return false;
             }
             return true;
         }

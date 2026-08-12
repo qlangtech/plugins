@@ -7,14 +7,12 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.AbstractPropAssist;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -36,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * 支持flink-cdc pipeline sink
@@ -67,7 +64,7 @@ public abstract class PipelineFlinkCDCSinkFactory<WRITER extends DataxWriter> ex
     public final IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
         return new AdapterStreamTemplateData(mergeData) {
             @Override
-            public List<TableAlias> getDumpTables() {
+            public List<IDataxProcessor.TableMap> getDumpTables() {
                 return Collections.singletonList(DTOSourceTagProcessFunction.createAllMergeTableAlias());
             }
         };
@@ -86,17 +83,17 @@ public abstract class PipelineFlinkCDCSinkFactory<WRITER extends DataxWriter> ex
         IFlinkColCreator<FlinkCol> sourceFlinkColCreator = Objects.requireNonNull(sourceListenerFactory,
                 "sourceListenerFactory").createFlinkColCreator(reader);
 
-        TableAlias allMergeTableAlias = DTOSourceTagProcessFunction.createAllMergeTableAlias();
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(Optional.empty(),
-                new DefaultTab(allMergeTableAlias.getFrom()));
-        tableMap.setFrom(allMergeTableAlias.getFrom());
-        tableMap.setTo(allMergeTableAlias.getTo());
+        IDataxProcessor.TableMap allMergeTableAlias = DTOSourceTagProcessFunction.createAllMergeTableAlias();
+//        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(Optional.empty(),
+//                new DefaultTab(allMergeTableAlias.getFrom()));
+//        tableMap.setFrom(allMergeTableAlias.getFrom());
+//        tableMap.setTo(allMergeTableAlias.getTo());
 
         @SuppressWarnings("all")
         WRITER writer = (WRITER) Objects.requireNonNull(dataxProcessor.getWriter(null),
                 dataxProcessor.identityValue() + " relevant Writer can not be null");
 
-        sinkFuncs.put(tableMap
+        sinkFuncs.put(allMergeTableAlias
                 , createPipelineEventSinkFunc(dataxProcessor, writer, tabs, sourceFlinkColCreator, streamFactory));
 
         return sinkFuncs;

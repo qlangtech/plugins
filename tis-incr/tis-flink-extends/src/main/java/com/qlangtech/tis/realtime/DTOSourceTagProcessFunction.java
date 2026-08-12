@@ -19,7 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.datax.DataXName;
-import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -40,8 +40,8 @@ import java.util.stream.Stream;
 public class DTOSourceTagProcessFunction extends SourceProcessFunction<DTO> {
     public static final String KEY_MERGE_ALL_TABS_IN_ONE_BUS = "merge_all_tabs_in_one_bus";
 
-    public static TableAlias createAllMergeTableAlias() {
-        return TableAlias.create(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS
+    public static IDataxProcessor.TableMap createAllMergeTableAlias() {
+        return IDataxProcessor.TableMap.create(DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS
                 , DTOSourceTagProcessFunction.KEY_MERGE_ALL_TABS_IN_ONE_BUS);
     }
 

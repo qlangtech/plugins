@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.valuetype.constraints;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -26,7 +27,9 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ds.BasicMultiSelectSingleValElementCreatorFactory;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ValueConstraint;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,6 +40,9 @@ import java.util.stream.Collectors;
  * @date 2026/4/19
  */
 public class Enum4Integer extends ValueConstraint {
+
+    private static final String FIELD_ENUM_VALS = "enumVals";
+
     /**
      * 选择多个可选的值
      */
@@ -59,6 +65,19 @@ public class Enum4Integer extends ValueConstraint {
         @Override
         public Set<IEndTypeGetter.EndType> specializedTypeEnds() {
             return Set.of(IEndTypeGetter.EndType.DataTypeInteger);
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            Enum4Integer constraint = postFormVals.newInstance();
+            Set<String> seen = new HashSet<>();
+            for (OneOfValueEnum val : constraint.enumVals) {
+                if (!seen.add(val.getEnumVal())) {
+                    msgHandler.addFieldError(context, FIELD_ENUM_VALS, "枚举值不能重复: " + val.getEnumVal());
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override

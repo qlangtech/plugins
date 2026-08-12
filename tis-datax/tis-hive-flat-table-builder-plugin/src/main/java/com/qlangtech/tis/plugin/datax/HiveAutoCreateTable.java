@@ -43,18 +43,19 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-17 10:46
  **/
+@SuppressWarnings("all")
 public class HiveAutoCreateTable extends ParamsAutoCreateTable<ColWrapper> {
 
-    private final Optional<String> tabProperties;
+    private final static Optional<String> tabProperties = Optional.empty();
 
 
-    public HiveAutoCreateTable() {
-        this(Optional.empty());
-    }
+//    public HiveAutoCreateTable() {
+//        this(Optional.empty());
+//    }
 
-    public HiveAutoCreateTable(Optional<String> tabProperties) {
-        this.tabProperties = tabProperties;
-    }
+//    public HiveAutoCreateTable(Optional<String> tabProperties) {
+//        this.tabProperties = tabProperties;
+//    }
 
     @Override
     public CreateTableSqlBuilder createSQLDDLBuilder(

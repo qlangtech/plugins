@@ -111,10 +111,7 @@ public class DefaultHiveMetaStore implements IHiveMetaStore {
         }
     }
 
-    @Override
-    public HiveConf getHiveCfg() {
-        return Objects.requireNonNull(this.hiveCfg, "hiveCfg can not be null");
-    }
+
 
     @Override
     public IMetaStoreClient unwrapClient() {

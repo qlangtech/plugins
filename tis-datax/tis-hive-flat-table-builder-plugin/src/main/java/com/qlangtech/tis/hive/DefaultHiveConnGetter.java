@@ -182,18 +182,58 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         return getiHiveMetaStore(this.metaStoreUrls, this.getUserToken());
     }
 
+    @Override
+    public HiveConf getHiveCfg() {
+        // return Objects.requireNonNull(this.hiveCfg, "hiveCfg can not be null");
+        return createHiveConf(this.metaStoreUrls, userToken);
+    }
+
+    /**
+     * 创建HiveConf实例，并根据userToken类型完成对应的属性初始化
+     */
+    public static HiveConf createHiveConf(String metaStoreUrls, UserToken userToken) {
+        HiveConf hiveCfg = new HiveConf();
+        hiveCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, metaStoreUrls);
+
+        try {
+            userToken.accept(new IUserTokenVisitor<Void>() {
+                @Override
+                public Void visit(IUserNamePasswordUserToken token) throws Exception {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public Void visit(IOffUserToken token) throws Exception {
+                    UserGroupInformation.setConfiguration(hiveCfg);
+                    return null;
+                }
+
+                @Override
+                public Void visit(IKerberosUserToken token) {
+                    // 有例子： https://blog.csdn.net/weixin_48231806/article/details/120007737
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL, token.getKerberosCfg().getPrincipal());
+                    hiveCfg.setBoolVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, true);
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT, "600s");
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_CONNECT_RETRY_DELAY, "5s");
+                    return null;
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return hiveCfg;
+    }
+
     public static IHiveMetaStore getiHiveMetaStore(String metaStoreUrls, UserToken userToken) {
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
-            HiveConf hiveCfg = new HiveConf();
-
-            hiveCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, metaStoreUrls);
+            HiveConf hiveCfg = createHiveConf(metaStoreUrls, userToken);
 
             //   HiveUserToken userToken = getUserToken();
             //if (userToken.isPresent()) {
             // HiveUserToken hiveToken = userToken.get();
-            return userToken.accept(new IUserTokenVisitor<IHiveMetaStore>() {
+            return userToken.accept(new IUserTokenVisitor<>() {
                 @Override
                 public IHiveMetaStore visit(IUserNamePasswordUserToken token) throws Exception {
                     throw new UnsupportedOperationException();
@@ -201,18 +241,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 
                 @Override
                 public IHiveMetaStore visit(IOffUserToken token) throws Exception {
-                    UserGroupInformation.setConfiguration(hiveCfg);
                     return createHiveMetaStore();
                 }
 
                 @Override
                 public IHiveMetaStore visit(IKerberosUserToken token) {
-                    // 有例子： https://blog.csdn.net/weixin_48231806/article/details/120007737
-                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL, token.getKerberosCfg().getPrincipal());
-                    hiveCfg.setBoolVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, true);
-                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT, "600s");
-                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_CONNECT_RETRY_DELAY, "5s");
-
                     return HdfsFileSystemFactory.setConfiguration(
                             token.getKerberosCfg(), DefaultHiveConnGetter.class, hiveCfg, () -> createHiveMetaStore());
                     //  token.getKerberosCfg().setConfiguration(hiveCfg);

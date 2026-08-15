@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.kingbase.mode;
 
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
@@ -51,14 +50,19 @@ public class OracleMode extends KingBaseCompatibleMode {
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<KingBaseCompatibleMode> {
+    public static class DftDesc extends KingBaseCompatibleMode.BasicDesc {
         public DftDesc() {
             super();
         }
 
         @Override
-        public String getDisplayName() {
-            return endType.name();
+        public EndType getEndType() {
+            return endType;
+        }
+
+        @Override
+        public String shortComment() {
+            return "金仓数据库Oracle兼容模式";
         }
     }
 }

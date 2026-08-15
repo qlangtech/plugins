@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,9 +116,18 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         return this.dbName;
     }
 
+    @Override
+    public HiveConf getHiveCfg() {
+        return Objects.requireNonNull(metadata, "metadata can not be null").createHiveConf();
+    }
+
     public HiveTable getHiveTableMeta(String tabEntityName) {
-        HiveTable table = this.metadata.createMetaStoreClient().getTable(this.dbName, tabEntityName);
-        return Objects.requireNonNull(table, "table:" + tabEntityName + " relevant table can not be null");
+        try (IHiveMetaStore storeClient = this.metadata.createMetaStoreClient()) {
+            HiveTable table = storeClient.getTable(this.dbName, tabEntityName);
+            return Objects.requireNonNull(table, "table:" + tabEntityName + " relevant table can not be null");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -298,7 +308,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                 try (IHiveMetaStore meta = ds.createMetaStoreClient()) {
                     // 暂且不知道如何校验
                     HiveContextConfig hiveConfig = HiveContextConfig.get();
-                  //  logger.info("hiveServerVer:{}", meta.getServerVersion());
+                    //  logger.info("hiveServerVer:{}", meta.getServerVersion());
                     meta.getTables(ds.getDbName());
                 } catch (IOException e) {
                     logger.warn(e.getMessage(), e);

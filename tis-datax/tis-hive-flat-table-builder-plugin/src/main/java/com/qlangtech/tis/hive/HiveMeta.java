@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +48,10 @@ public class HiveMeta implements Describable<HiveMeta> {
     public IHiveMetaStore createMetaStoreClient() {
         IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken);
         return hiveMetaStore;
+    }
+
+    public HiveConf createHiveConf(){
+        return DefaultHiveConnGetter.createHiveConf(this.metaStoreUrls, this.userToken);
     }
 
     @TISExtension

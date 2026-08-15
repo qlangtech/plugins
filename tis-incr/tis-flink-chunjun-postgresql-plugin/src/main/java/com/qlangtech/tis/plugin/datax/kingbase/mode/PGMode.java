@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.kingbase.mode;
 
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
@@ -26,8 +26,6 @@ import com.qlangtech.tis.plugin.datax.kingbase.KingBaseCompatibleMode;
 import java.util.Optional;
 
 import static com.qlangtech.tis.plugin.ds.BasicDataSourceFactory.PG_ESCAPE_COL_CHAR;
-
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -52,14 +50,19 @@ public class PGMode extends KingBaseCompatibleMode {
     }
 
     @TISExtension
-    public static class DftDesc extends Descriptor<KingBaseCompatibleMode> {
+    public static class DftDesc extends KingBaseCompatibleMode.BasicDesc {
         public DftDesc() {
             super();
         }
 
         @Override
-        public String getDisplayName() {
-            return EndType.Postgres.name();
+        public EndType getEndType() {
+            return endType;
+        }
+
+        @Override
+        public String shortComment() {
+            return "金仓数据库PostgreSQL兼容模式";
         }
     }
 }

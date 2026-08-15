@@ -193,13 +193,20 @@ public class DistributedAKKAJobDataXJobSubmit extends BasicDistributedSPIDataXJo
     @Override
     public void cancelTask(DataXName dataXName, Integer taskId) {
         TISActorSystem akkaSys = TISActorSystem.get();
+
+        // 先确认对应的 WorkflowInstanceActor 是否还活跃，避免向已超时销毁的实例发送
+        // CancelWorkflow 消息触发 Cluster Sharding 自动创建一个无意义的空 Actor
+        if (!akkaSys.isWorkflowInstanceActive(taskId)) {
+            throw TisException.create("workflow instance not active, may already finished or expired, taskId:" + taskId);
+        }
+
         CancelWorkflow cancelMsg = new CancelWorkflow(taskId);
         try {
             Future<Object> future = Patterns.ask(
                     akkaSys.getWorkflowInstanceRegion(), cancelMsg, Duration.create(30, TimeUnit.SECONDS).toMillis());
             Object result = Await.result(future, Duration.create(30, TimeUnit.SECONDS));
-            if (result instanceof akka.actor.Status.Failure) {
-                akka.actor.Status.Failure failure = (akka.actor.Status.Failure) result;
+            if (result instanceof akka.actor.Status.Failure failure) {
+                //akka.actor.Status.Failure failure = (akka.actor.Status.Failure) result;
                 throw new RuntimeException("failed to cancel workflow, taskId:" + taskId, failure.cause());
             }
             logger.info("workflow cancelled successfully, taskId: {}", taskId);

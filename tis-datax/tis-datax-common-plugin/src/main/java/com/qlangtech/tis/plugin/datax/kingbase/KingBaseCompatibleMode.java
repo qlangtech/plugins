@@ -22,7 +22,10 @@ import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.SourceColMetaGetter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtensible;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -83,5 +86,20 @@ public abstract class KingBaseCompatibleMode implements Describable<KingBaseComp
     public final CreateTableSqlBuilder<ColWrapper> createSQLDDLBuilder(
             DataxWriter rdbmsWriter, SourceColMetaGetter sourceColMetaGetter, TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         return autoCreateTable.createSQLDDLBuilder(rdbmsWriter, sourceColMetaGetter, tableMapper, transformers);
+    }
+
+    /**
+     * KingBase 兼容模式 descriptor 基类
+     */
+    public abstract static class BasicDesc extends Descriptor<KingBaseCompatibleMode> implements DescriptorUseableShortComment, IEndTypeGetter {
+
+        public BasicDesc() {
+            super();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return getEndType().name();
+        }
     }
 }

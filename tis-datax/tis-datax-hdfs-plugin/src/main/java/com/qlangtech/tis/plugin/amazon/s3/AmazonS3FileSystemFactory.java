@@ -16,10 +16,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.ClassloaderUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.s3a.Constants;
+import org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,31 @@ import java.time.Duration;
 import static com.qlangtech.tis.plugin.amazon.s3.S3FileSystem.SCHEMA_S3;
 
 /**
+ * 如果使用minio一定要将服务端的时钟设置正确，MinIO 兼容 AWS S3 的 V4 签名算法（Signature Version 4）。该算法为了防重放攻击，强制要求客户端时间与服务器时间的时间差必须在 ±15 分钟以内。
+ * 不然就会报如下错误：
+ * <pre>
+ *     Caused by: com.amazonaws.services.s3.model.AmazonS3Exception: Forbidden (Service: Amazon S3; Status Code: 403;
+ *     Error Code: 403 Forbidden; Request ID: 18CC7C2030B7B16B; S3 Extended Request ID: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8),
+ *     S3 Extended Request ID: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.handleErrorResponse(AmazonHttpClient.java:1640)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.executeOneRequest(AmazonHttpClient.java:1304)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.executeHelper(AmazonHttpClient.java:1058)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.doExecute(AmazonHttpClient.java:743)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.executeWithTimer(AmazonHttpClient.java:717)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.execute(AmazonHttpClient.java:699)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutor.access$500(AmazonHttpClient.java:667)
+ * 		at com.amazonaws.http.AmazonHttpClient$RequestExecutionBuilderImpl.execute(AmazonHttpClient.java:649)
+ * 		at com.amazonaws.http.AmazonHttpClient.execute(AmazonHttpClient.java:513)
+ * 		at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:4368)
+ * 		at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:4315)
+ * 		at com.amazonaws.services.s3.AmazonS3Client.getObjectMetadata(AmazonS3Client.java:1271)
+ * 		at org.apache.hadoop.fs.s3a.S3AFileSystem.lambda$getObjectMetadata$4(S3AFileSystem.java:1235)
+ * 		at org.apache.hadoop.fs.s3a.Invoker.retryUntranslated(Invoker.java:322)
+ * 		at org.apache.hadoop.fs.s3a.Invoker.retryUntranslated(Invoker.java:285)
+ * 		at org.apache.hadoop.fs.s3a.S3AFileSystem.getObjectMetadata(S3AFileSystem.java:1232)
+ * 		at org.apache.hadoop.fs.s3a.S3AFileSystem.s3GetFileStatus(S3AFileSystem.java:2169)
+ * 		... 263 more
+ * </pre>
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/3/7
@@ -64,7 +91,7 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean pathStyleAccess;
 
-    @FormField(ordinal = 7, type = FormFieldType.DURATION_OF_SECOND, advance = true, validate = {})
+    @FormField(ordinal = 7, type = FormFieldType.DURATION_OF_SECOND, advance = true, validate = {Validator.require, Validator.integer})
     public Duration connectionTimeoutSeconds;
 
 //    public String accessKey;
@@ -93,7 +120,8 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                 /**
                  * 显式注册 LocalFileSystem，防止在 TIS 插件 ClassLoader 隔离环境下
                  * S3AFileSystem 创建本地临时文件时找不到 "file" scheme 的实现
-                 *  S3AFileSystem 需要本地临时文件：当 Paimon 通过 HadoopFileIO 写入 S3/MinIO 时，S3AFileSystem 内部使用 DiskBlockFactory 先在本地磁盘创建临时文件缓冲数据，然后再上传。创建临时文件时调用了 FileSystem.getLocal(conf)，这需要查找 "file"
+                 *  S3AFileSystem 需要本地临时文件：当 Paimon 通过 HadoopFileIO 写入 S3/MinIO 时，S3AFileSystem 内部使用 DiskBlockFactory 先在本地磁盘创建临时文件缓冲数据，然后再上传。
+                 *  创建临时文件时调用了 FileSystem.getLocal(conf)，这需要查找 "file"
                  *   scheme 对应的 LocalFileSystem 实现。
                  */
                 conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
@@ -158,6 +186,9 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                     }
                 });
 
+                // 设置 AWS SDK ClientConfiguration 超时 "fs.s3a.aws.credentials.provider"
+                conf.set(Constants.AWS_CREDENTIALS_PROVIDER, SimpleAWSCredentialsProvider.NAME);
+
                 // 设置连接和 Socket 超时
                 if (connectionTimeoutSeconds != null && !connectionTimeoutSeconds.isZero() && !connectionTimeoutSeconds.isNegative()) {
                     int timeoutMillis = (int) connectionTimeoutSeconds.toMillis();
@@ -176,9 +207,8 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
                     conf.setInt(Constants.MAX_ERROR_RETRIES, 1);
                     // "fs.s3a.retry.limit"
                     conf.setInt(Constants.RETRY_LIMIT, 0);
-
-                    // 设置 AWS SDK ClientConfiguration 超时 "fs.s3a.aws.credentials.provider"
-                    conf.set(Constants.AWS_CREDENTIALS_PROVIDER, "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider");
+                } else {
+                    throw new IllegalStateException("property connectionTimeoutSeconds must be contain");
                 }
 
                 conf.reloadConfiguration();
@@ -288,6 +318,15 @@ public class AmazonS3FileSystemFactory extends FileSystemFactory implements ITIS
 //            return StringUtils.isEmpty(hdfsAddress) || StringUtils.startsWith(hdfsAddress, CommonConfigurationKeysPublic.FS_DEFAULT_NAME_DEFAULT);
 //        }
 
+        public boolean validateConnectionTimeoutSeconds(
+                IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int timeout = Integer.parseInt(value);
+            if (timeout < 1) {
+                msgHandler.addFieldError(context, fieldName, "须为非负数");
+                return false;
+            }
+            return true;
+        }
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {

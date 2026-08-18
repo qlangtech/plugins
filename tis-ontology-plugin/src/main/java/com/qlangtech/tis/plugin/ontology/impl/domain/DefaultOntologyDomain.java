@@ -44,7 +44,8 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/28
  */
-public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved , IdentityDesc<OntologyDomain.OntologyDomainPojo> {
+public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved , IdentityDesc<OntologyDomain.OntologyDomainPojo>
+{
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {

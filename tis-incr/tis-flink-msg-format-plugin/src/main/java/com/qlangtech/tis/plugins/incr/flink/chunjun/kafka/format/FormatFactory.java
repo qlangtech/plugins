@@ -66,7 +66,7 @@ import static org.apache.flink.formats.common.TimeFormats.ISO8601_TIMESTAMP_FORM
 
 /**
  * 内容传输格式
- * https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/table/formats/overview/
+ * <a href="https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/table/formats/overview/">...</a>
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-04-15 12:24

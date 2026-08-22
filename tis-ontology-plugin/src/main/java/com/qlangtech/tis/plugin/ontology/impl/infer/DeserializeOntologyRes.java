@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.ontology.TargetProperty;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,9 +189,9 @@ public class DeserializeOntologyRes {
                     IPluginContext.setPluginContext(pluginContext);
                     pluginContext.getContext().setContext(context);
                     ontologyRes.executeInfer(batch, pluginContext, ctx
-                            , Pair.of(OntologyResourceInferenceConfig.glossary, step2Prompt.glossaryPrompt)
-                            , Pair.of(OntologyResourceInferenceConfig.sharedPropertyConfig, step2Prompt.sharedPropertyPrompt)
-                            , Pair.of(OntologyResourceInferenceConfig.valueType, step2Prompt.valueTypePrompt));
+                            , Triple.of(OntologyResourceInferenceConfig.glossary, step2Prompt.glossaryPrompt, true)
+                            , Triple.of(OntologyResourceInferenceConfig.sharedPropertyConfig, step2Prompt.sharedPropertyPrompt, step2Prompt.enableSharedPropertyInfer)
+                            , Triple.of(OntologyResourceInferenceConfig.valueType, step2Prompt.valueTypePrompt, step2Prompt.enableValueTypeInfer));
                     falid = false;
                 } finally {
                     ontologyRes.runningFutures.remove(InferBatch.NorLinkTypeBatch);
@@ -226,7 +227,7 @@ public class DeserializeOntologyRes {
                     IPluginContext.setPluginContext(pluginContext);
                     pluginContext.getContext().setContext(context);
                     ontologyRes.executeInfer(batch, pluginContext, ctx
-                            , Pair.of(OntologyResourceInferenceConfig.linkerType, step3Prompt.linkTypePrompt));
+                            , Triple.of(OntologyResourceInferenceConfig.linkerType, step3Prompt.linkTypePrompt, true));
                     falid = false;
                 } finally {
                     ontologyRes.runningFutures.remove(InferBatch.LinkTypeBatch);
@@ -439,6 +440,9 @@ public class DeserializeOntologyRes {
 
 
     private TISJsonSchema buildOutputJsonSchema(OntologyResourceInferenceConfig... inferenceCfgs) {
+        if (inferenceCfgs.length < 1) {
+            throw new IllegalArgumentException("param inferenceCfgs.length must bigger than 0");
+        }
         TISJsonSchema.Builder builder = TISJsonSchema.Builder.create("ontology_inference_result", Optional.empty());
         for (OntologyResourceInferenceConfig cfg : Objects.requireNonNull(inferenceCfgs, "inferenceCfgs can not be null")) {
             builder.addProperty(cfg.getInferenceType(), TISJsonSchema.FieldType.Array, cfg.getDescription())
@@ -484,7 +488,8 @@ public class DeserializeOntologyRes {
     /**
      * 开始推理生成对应本体资源
      */
-    public void executeInfer(InferBatch inferBatch, IPluginContext pluginContext, Context ctx, Pair<OntologyResourceInferenceConfig, String>... inferenceCfgs) {
+    public void executeInfer(InferBatch inferBatch, IPluginContext pluginContext, Context ctx
+            , Triple<OntologyResourceInferenceConfig, String, Boolean>... inferenceCfgs) {
         final String systemPrompt = this.buildSystemPrompt(inferenceCfgs);
         final String userPrompt = tablesPayload.toJSONString();
         logger.info("start " + inferBatch + " inference");
@@ -626,7 +631,8 @@ public class DeserializeOntologyRes {
                 IAgentContext.createNull(),
                 new UserPrompt("Infer ontology relations", userPrompt),
                 Collections.singletonList(systemPrompt),
-                buildOutputJsonSchema(Arrays.stream(inferenceCfgs).map(Pair::getKey).toArray(OntologyResourceInferenceConfig[]::new)), optParams);
+                buildOutputJsonSchema(Arrays.stream(inferenceCfgs).filter((cfg) -> cfg.getRight())
+                        .map(Triple::getLeft).toArray(OntologyResourceInferenceConfig[]::new)), optParams);
 
         //  System.out.println(parser.buffer);
         logger.info(inferBatch + " inference complete,llm response:{},hasError:{}", response.isSuccess(), hasError.get());
@@ -640,7 +646,7 @@ public class DeserializeOntologyRes {
         }
     }
 
-    String buildSystemPrompt(Pair<OntologyResourceInferenceConfig, String>... inferenceCfgs) {
+    String buildSystemPrompt(Triple<OntologyResourceInferenceConfig, String, Boolean>... inferenceCfgs) {
 
         StringBuilder promptBuilder = new StringBuilder();
         promptBuilder.append(
@@ -650,16 +656,23 @@ public class DeserializeOntologyRes {
                         根据用户提供的表结构列表（JSON格式），请分析并推断以下本体对象：
                         """);
         int serNum = 1;
-        for (Pair<OntologyResourceInferenceConfig, String> pair : inferenceCfgs) {
-            if (StringUtils.isEmpty(pair.getValue())) {
+        for (Triple<OntologyResourceInferenceConfig, String, Boolean> pair : inferenceCfgs) {
+            if (!pair.getRight()) {
+                // 直接跳过
+                continue;
+            }
+            if (StringUtils.isEmpty(pair.getMiddle())) {
                 throw new IllegalStateException("pair.getValue() can not be empty");
             }
-            OntologyResourceInferenceConfig cfg = pair.getKey();
+            OntologyResourceInferenceConfig cfg = pair.getLeft();
             promptBuilder.append("## ").append(serNum++).append(". ").append(cfg.getDescription()).append("\n");
-            promptBuilder.append(pair.getValue());
+            promptBuilder.append(pair.getMiddle());
             promptBuilder.append("\n\n");
         }
 
+        if (serNum < 2) {
+            throw new IllegalStateException("serNum must bigger than 1");
+        }
 
         promptBuilder.append(
                 """ 

@@ -24,12 +24,18 @@ import static com.qlangtech.tis.plugin.ontology.impl.infer.InferOntologyFromLLMS
 public class InferOntologyFromLLMStep2Prompt extends OneStepOfMultiSteps {
 
     @FormField(type = FormFieldType.TEXTAREA, ordinal = 1, validate = {Validator.require})
-    public String valueTypePrompt;
-
-    @FormField(type = FormFieldType.TEXTAREA, ordinal = 2, validate = {Validator.require})
     public String glossaryPrompt;
 
+    @FormField(type = FormFieldType.ENUM, ordinal = 2, validate = {Validator.require})
+    public Boolean enableValueTypeInfer;
+
     @FormField(type = FormFieldType.TEXTAREA, ordinal = 3, validate = {Validator.require})
+    public String valueTypePrompt;
+
+    @FormField(type = FormFieldType.ENUM, ordinal = 4, validate = {Validator.require})
+    public Boolean enableSharedPropertyInfer;
+
+    @FormField(type = FormFieldType.TEXTAREA, ordinal = 5, validate = {Validator.require})
     public String sharedPropertyPrompt;
 
     @Override
@@ -37,11 +43,7 @@ public class InferOntologyFromLLMStep2Prompt extends OneStepOfMultiSteps {
         InferOntologyFromLLMStep1 step1 = (InferOntologyFromLLMStep1) preSavedStepPlugins[Step.Step1.getStepIndex()];
         OntologyPluginMeta ometa = getOntologyPluginMeta(pluginContext, Optional.of(ctx));
 
-        DeserializeOntologyRes.getOntologyResInfer(ometa.getDomain(),pluginContext,ctx,this,step1);
-
-
-
-
+        DeserializeOntologyRes.getOntologyResInfer(ometa.getDomain(), pluginContext, ctx, this, step1);
 
 
     }

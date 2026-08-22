@@ -7,6 +7,10 @@
     "style": "codemirror",
     "mode": "text/markdown"
   },
+  "enableValueTypeInfer": {
+    "label": "启用ValueType推理",
+    "dftVal": false
+  },
   "glossaryPrompt": {
     "label": "Glossary（同义词）提示词",
     "help": "用于LLM推理使用生成Glossary提示词，可按照需要修改",
@@ -22,5 +26,9 @@
     "dftVal": "com.qlangtech.tis.plugin.ontology.impl.infer.OntologyResourceInferenceConfig.sharedPropertyConfig.getPrompt()",
     "style": "codemirror",
     "mode": "text/markdown"
+  },
+  "enableSharedPropertyInfer": {
+    "label": "启用Shared Property推理",
+    "dftVal": false
   }
 }

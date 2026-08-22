@@ -1,11 +1,24 @@
 package com.qlangtech.tis.plugin.ontology.chatbi;
 
 import com.alibaba.fastjson.JSON;
+import com.qlangtech.tis.manage.common.TisUTF8;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -18,7 +31,9 @@ import java.util.stream.Collectors;
  */
 public class FalconChatBITestExample {
 
-    private static final String DEFAULT_DEV_JSON_PATH = "/opt/misc/Falcon/dev_data/dev.json";
+    public static final String FALCON_DIR_ROOT = "/opt/misc/Falcon";
+
+    private static final String DEFAULT_DEV_JSON_PATH = FALCON_DIR_ROOT + "/dev_data/dev.json";
 
     private final List<FalconTestCase> allTestCases;
     private final Map<String, List<FalconTestCase>> testCasesByDbId;
@@ -170,21 +185,128 @@ public class FalconChatBITestExample {
         // 打印统计信息
         example.printStatistics();
 
-        // 获取某个 db_id 的测试案例
-        String testDbId = "14";
-        List<FalconTestCase> testCases = example.getTestCasesByDbId(testDbId);
-        System.out.println("\n获取 db_id=" + testDbId + " 的测试案例数量: " + testCases.size());
 
-        // 打印某个 db_id 的所有测试案例
-        if (!testCases.isEmpty()) {
-            example.printTestCasesByDbId(testDbId);
-        }
+        example.getTestCaseCountsByDbId().forEach((dbId, count) -> {
+                    File examList = new File(FalconChatBITestExample.FALCON_DIR_ROOT, "test_exam/" + dbId + "/test_exam.md");
 
-        // 根据 question_id 查找
-        Optional<FalconTestCase> testCase = example.getTestCaseByQuestionId(0);
-        testCase.ifPresent(tc -> {
-            System.out.println("\n=== 查找 question_id=0 的测试案例 ===");
-            System.out.println(tc);
-        });
+                    try {
+                        FileUtils.touch(examList);
+                        System.out.println("  db_id=" + dbId + ": " + count + " 个测试案例");
+                        List<FalconTestCase> testCases = example.getTestCasesByDbId(dbId);
+                        int ii = 0;
+                        for (FalconTestCase c : testCases) {
+                            System.out.println(++ii + ":" + c.getQuestion());
+                        }
+                        int index = 0;
+                        try (PrintStream writer = new PrintStream(examList, TisUTF8.get())) {
+                            writer.println("<!--write by: /Users/mozhenghua/j2ee_solution/project/plugins/tis-ontology-plugin/src/test/java/com/qlangtech/tis/plugin/ontology/chatbi/FalconChatBITestExample.java-->");
+                            writer.println();
+                            for (FalconTestCase c : testCases) {
+                                writer.println("## " + (++index) + ". Q：" + c.getQuestion());
+                                writer.println();
+                                writer.println("### QuestionId:" + c.getQuestionId());
+                                writer.println();
+                                writer.println("### A.SQL");
+                                writer.println();
+                                writer.println("```sql");
+                                try (BufferedReader reader = new BufferedReader(new StringReader(String.join(";\n", c.getSql())))) {
+                                    String line = null;
+                                    while (StringUtils.isNotEmpty(line = reader.readLine())) {
+                                        writer.println(line);
+                                    }
+                                }
+                                writer.println();
+                                writer.println("```");
+                                writer.println();
+
+                                writer.println("### A.Result");
+                                writer.println();
+                                List<Map<String, List<String>>> answers = c.getAnswer();
+                                if (answers == null || answers.isEmpty()) {
+                                    writer.println("*(无结果数据)*");
+                                } else {
+                                    for (Map<String, List<String>> answerGroup : answers) {
+                                        if (answerGroup == null || answerGroup.isEmpty()) {
+                                            continue;
+                                        }
+
+                                        // 收集所有列名并保持顺序
+                                        Set<String> columns = new LinkedHashSet<>(answerGroup.keySet());
+
+                                        // 确定行数（取所有列值列表的最大长度）
+                                        int rowCount = 0;
+                                        for (List<String> values : answerGroup.values()) {
+                                            if (values != null) {
+                                                rowCount = Math.max(rowCount, values.size());
+                                            }
+                                        }
+
+                                        if (rowCount == 0) {
+                                            continue;
+                                        }
+
+                                        // 打印表头
+                                        writer.print("| ");
+                                        for (String col : columns) {
+                                            writer.print(col.replace("|", "\\|") + " | ");
+                                        }
+                                        writer.println();
+
+                                        // 打印分隔符
+                                        writer.print("|");
+                                        for (String col : columns) {
+                                            writer.print(" --- |");
+                                        }
+                                        writer.println();
+
+                                        // 按行打印数据
+                                        for (int i = 0; i < rowCount; i++) {
+                                            writer.print("| ");
+                                            for (String col : columns) {
+                                                List<String> values = answerGroup.get(col);
+                                                String cell = "";
+                                                if (values != null && i < values.size()) {
+                                                    cell = values.get(i);
+                                                    if (cell == null) {
+                                                        cell = "";
+                                                    }
+                                                }
+                                                // 对 markdown 特殊字符做简单转义
+                                                writer.print(cell.replace("|", "\\|").replace("\n", " ") + " | ");
+                                            }
+                                            writer.println();
+                                        }
+                                        writer.println();
+                                    }
+                                }
+                                writer.println();
+                            }
+
+
+                        }
+                        System.out.println();
+                    } catch (IOException e) {
+                        throw new RuntimeException("file:" + examList.getAbsolutePath(), e);
+                    }
+                }
+        );
+
+
+//        // 获取某个 db_id 的测试案例
+//        String testDbId = "14";
+//        List<FalconTestCase> testCases = example.getTestCasesByDbId(testDbId);
+//        System.out.println("\n获取 db_id=" + testDbId + " 的测试案例数量: " + testCases.size());
+//
+//        // 打印某个 db_id 的所有测试案例
+//        if (!testCases.isEmpty()) {
+//            example.printTestCasesByDbId(testDbId);
+//        }
+//
+//        // 根据 question_id 查找
+//        Optional<FalconTestCase> testCase = example.getTestCaseByQuestionId(0);
+//        testCase.ifPresent(tc -> {
+//            System.out.println("\n=== 查找 question_id=0 的测试案例 ===");
+//            System.out.println(tc);
+//        });
     }
 }

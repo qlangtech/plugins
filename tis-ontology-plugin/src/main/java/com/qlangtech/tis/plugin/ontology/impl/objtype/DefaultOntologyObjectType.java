@@ -42,6 +42,7 @@ import javax.ws.rs.NotSupportedException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -152,7 +153,8 @@ public class DefaultOntologyObjectType extends OntologyObjectType implements IPl
                 return;
             }
         }
-        throw new IllegalStateException("can not find property:" + targetProperty + " in objectType:" + this.getName());
+        throw new IllegalStateException("can not find property:" + targetProperty + " in objectType:" + this.getName()
+                + ",cols:" + propsStep.getCols().stream().map(OntologyProperty::getName).collect(Collectors.joining(",")));
     }
 
     @Override

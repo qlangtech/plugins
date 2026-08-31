@@ -228,16 +228,17 @@ public class OntologyResourceInferenceConfig {
                 有三种 target 类型：
                 - GlossaryTargetOT: 业务实体名 → 某个 ObjectType。
                   判断依据：表名对应业务实体（如 customer/orders/products）。
-                  示例：term="客户"，synonyms=["用户","User","buyer","购买方"]，target.targetType="GlossaryTargetOT"，target.objectType="customer"
+                  示例：term="Customer"，synonyms=["用户","User","buyer","购买方"]，target.targetType="GlossaryTargetOT"，target.objectType="customer"
                 - GlossaryTargetProperty: 业务字段名 → 某个 ObjectType 的某列。
                   判断依据：业务上有明确语义的列（如 amount/status/created_at）。
-                  示例：term="订单金额"，synonyms=["金额","总额","订单总额"]，target.targetType="GlossaryTargetProperty"，target.objectType="orders"，target.propertyName="amount"
+                  示例：term="OrderAmount"，synonyms=["金额","总额","订单总额"]，target.targetType="GlossaryTargetProperty"，target.objectType="orders"，target.propertyName="amount"
                 - GlossaryTargetMetricExpr: 业务指标 → 自定义 SQL 表达式。
                   判断依据：常见业务指标（如总销售额、活跃用户数、客单价）可由聚合 SQL 表达。
-                  示例：term="总销售额"，synonyms=["销售总额","GMV"]，target.targetType="GlossaryTargetMetricExpr"，target.sql="SUM(orders.amount)"
+                  示例：term="SalseGMV"，synonyms=["销售总额","GMV"]，target.targetType="GlossaryTargetMetricExpr"，target.sql="SUM(orders.amount)"
                 
                 同义词请尽量覆盖：中文同义词、英文同义词、口语化表达、行业术语。
-                优先从列注释/表名中提取业务名词，避免编造。                     
+                优先从列注释/表名中提取业务名词，避免编造。
+                `注意`：以上term必须符合正则式"[A-Z\\\\da-z_]+"规范                     
                 """);
     }
 }

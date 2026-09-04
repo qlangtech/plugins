@@ -150,11 +150,9 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
 //        return DataXJobInfo.getDataXExecutorDir();
 //    }
 
-
-    public static final String DEFAULT_CLASSPATH = "./lib/*:./" + IDataXTaskRelevant.KEY_TIS_DATAX_EXECUTOR + ".jar:./conf/";
-
+    @Override
     public String getClasspath() {
-        return DEFAULT_CLASSPATH;
+        return DataXJobSubmit.createExecutorClasspath();
     }
 
 }

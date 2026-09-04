@@ -25,7 +25,6 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXName;
-import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -43,7 +42,6 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -107,7 +105,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         LocalDataXJobSubmit localJobSubmit = new LocalDataXJobSubmit();
 
-        localJobSubmit.setClasspath(DataxPrePostConsumer.DEFAULT_CLASSPATH);
+        localJobSubmit.setClasspath(DataXJobSubmit.createExecutorClasspath());
         QueryCriteria queryCriteria = new QueryCriteria();
         queryCriteria.setPageSize(10);
         queryCriteria.setNextPakge(true);
@@ -127,7 +125,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         LocalDataXJobSubmit jobSubmit = (LocalDataXJobSubmit) dataXJobSubmit.get();
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypoint.class.getName());
-        jobSubmit.setWorkingDirectory(new File("."));
+      //  jobSubmit.setWorkingDirectory(new File("."));
         jobSubmit.setClasspath("target/classes:target/test-classes");
 
 //        AtomicReference<ITISRpcService> ref = new AtomicReference<>();
@@ -155,7 +153,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
         tableDumpStatus.setAllRows(LocalDataXJobMainEntrypoint.testAllRows);
 
         preSuccessTask.setDumpPhase(preDumpStatus);
-        EasyMock.expect(taskContext.loadPhaseStatusFromLatest()).andReturn(preSuccessTask).times(3);
+       // EasyMock.expect(taskContext.loadPhaseStatusFromLatest()).andReturn(preSuccessTask).times(3);
 
         ITISCoordinator zkClient = EasyMock.createMock("TisZkClient", ITISCoordinator.class);
 

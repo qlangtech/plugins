@@ -23,7 +23,6 @@ import com.alibaba.datax.common.element.QueryCriteria;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.build.task.IBuildHistory;
-import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -32,18 +31,14 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataXJobUtils;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.DataxExecutor;
-import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteDumpTaskTrigger;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.datax.DataXPipelinePreviewProcessorExecutor.PreviewLaunchParam;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.web.start.TisAppLaunch;
-import com.qlangtech.tis.web.start.TisSubModule;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -51,7 +46,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,8 +60,9 @@ import java.util.concurrent.TimeUnit;
 @Public
 public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEnvironmentParamsSetter {
 
+
     private String mainClassName = DataxExecutor.class.getName();
-   // private File workingDirectory = new File(".");
+    // private File workingDirectory = new File(".");
     private String classpath;
     private ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler = new ExtraJavaSystemPramsSuppiler(true);
 
@@ -196,29 +191,32 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
     private String getJAVAClasspath() {
         if (StringUtils.isEmpty(this.classpath)) {
-            if (TisAppLaunch.isTestMock()) {
-                this.setClasspath(DataxPrePostConsumer.DEFAULT_CLASSPATH);
-            } else {
-                File tisHomeDir = Config.getTisHome();
-                File assebleDir = new File(tisHomeDir, TisSubModule.TIS_ASSEMBLE.moduleName);
-                File localExecutorLibDir = new File(Config.getLibDir(), "plugins/" + IFlinkCluster.PLUGIN_TIS_DATAX_LOCAL_EXECOTOR + "/WEB-INF/lib");
-                File webStartDir = new File(tisHomeDir, TisSubModule.WEB_START.moduleName);
-
-                if (!localExecutorLibDir.exists()) {
-                    throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());
-                }
-                if (!assebleDir.exists()) {
-                    throw new IllegalStateException("target asseble dir is not exist:" + assebleDir.getAbsolutePath());
-                }
-                if (!webStartDir.exists()) {
-                    throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getAbsolutePath());
-                }
-                this.classpath = assebleDir.getPath() + "/lib/*:" + localExecutorLibDir.getPath()
-                        + "/*:" + webStartDir.getPath() + "/conf:" + new File(webStartDir, "/lib/*").getPath();
-            }
+            this.setClasspath(createExecutorClasspath());
+//            if (TisAppLaunch.isTestMock()) {
+//                this.setClasspath(DEFAULT_CLASSPATH);
+//            } else {
+//                File tisHomeDir = Config.getTisHome();
+//                File assebleDir = new File(tisHomeDir, TisSubModule.TIS_ASSEMBLE.moduleName);
+//                File localExecutorLibDir = new File(Config.getLibDir(), "plugins/" + IFlinkCluster.PLUGIN_TIS_DATAX_LOCAL_EXECOTOR + "/WEB-INF/lib");
+//                File webStartDir = new File(tisHomeDir, TisSubModule.WEB_START.moduleName);
+//
+//                if (!localExecutorLibDir.exists()) {
+//                    throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());
+//                }
+//                if (!assebleDir.exists()) {
+//                    throw new IllegalStateException("target asseble dir is not exist:" + assebleDir.getAbsolutePath());
+//                }
+//                if (!webStartDir.exists()) {
+//                    throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getAbsolutePath());
+//                }
+//                this.classpath = assebleDir.getPath() + "/lib/*:" + localExecutorLibDir.getPath()
+//                        + "/*:" + webStartDir.getPath() + "/conf:" + new File(webStartDir, "/lib/*").getPath();
+//            }
         }
         return this.classpath;
     }
+
+
 
 
     @Override

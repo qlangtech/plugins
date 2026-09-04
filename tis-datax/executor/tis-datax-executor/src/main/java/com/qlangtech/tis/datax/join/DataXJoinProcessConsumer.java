@@ -54,7 +54,7 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
         JSONObject sqlTskJson = ISqlTask.json(msg.getSqlTask());
 
         command.add(KEY_ID, sqlTskJson.getString(KEY_ID));
-       // command.add(KEY_SQL_SCRIPT, sqlTskJson.getString(KEY_SQL_SCRIPT));
+        // command.add(KEY_SQL_SCRIPT, sqlTskJson.getString(KEY_SQL_SCRIPT));
         command.add(KEY_EXECUTE_TYPE, sqlTskJson.getString(KEY_EXECUTE_TYPE));
         command.add(KEY_EXPORT_NAME, sqlTskJson.getString(KEY_EXPORT_NAME));
 //        command.add(KEY_DEPENDENCIES, Objects.requireNonNull(sqlTskJson.getString(KEY_DEPENDENCIES)
@@ -150,7 +150,7 @@ public class DataXJoinProcessConsumer extends DataXJobSingleProcessorExecutor<Wo
 
     @Override
     protected String getClasspath() {
-        return DataxPrePostConsumer.DEFAULT_CLASSPATH;
+        return DataXJobSubmit.createExecutorClasspath(); //LocalDataXJobSubmit.DEFAULT_CLASSPATH;
     }
 
 //    @Override

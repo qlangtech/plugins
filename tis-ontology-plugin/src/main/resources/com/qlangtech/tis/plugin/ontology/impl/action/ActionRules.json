@@ -1,0 +1,14 @@
+{
+  "ruleType": {
+    "label": "规则类型",
+    "help": "选择 Action 的执行规则类型：\n\n对象操作：\n- CREATE_OBJECT: 创建新对象\n- MODIFY_OBJECT: 修改现有对象\n- CREATE_OR_MODIFY_OBJECT: 创建或修改对象\n- DELETE_OBJECT: 删除对象\n\n链接操作：\n- CREATE_LINK: 创建多对多链接\n- DELETE_LINK: 删除多对多链接\n\n高级操作：\n- FUNCTION_BACKED: 通过函数实现复杂逻辑\n- NOTIFICATION: 发送通知给用户\n- WEBHOOK: 调用外部 API（编辑后执行）\n- WRITEBACK_WEBHOOK: 调用外部 API（编辑前执行）\n- SCHEDULE: 触发数据构建\n- APPLY_SCENARIO: 合并场景编辑"
+  },
+  "ruleConfig": {
+    "label": "规则配置",
+    "help": "规则的详细配置（JSON 对象格式）。配置内容根据规则类型而不同。\n\n对象规则示例（MODIFY_OBJECT）：\n{\n  \"objectTypeId\": \"Ticket\",\n  \"targetObjectSource\": {\n    \"type\": \"FROM_PARAMETER\",\n    \"parameterRef\": \"ticket\"\n  },\n  \"propertyMappings\": [\n    {\n      \"propertyId\": \"priority\",\n      \"valueSource\": {\n        \"type\": \"FROM_PARAMETER\",\n        \"parameterRef\": \"newPriority\"\n      }\n    },\n    {\n      \"propertyId\": \"updatedAt\",\n      \"valueSource\": {\n        \"type\": \"CURRENT_TIME\"\n      }\n    }\n  ]\n}\n\n通知规则示例（NOTIFICATION）：\n{\n  \"recipientSources\": [\n    {\n      \"type\": \"FROM_PARAMETER\",\n      \"parameterRef\": \"assignee\"\n    }\n  ],\n  \"subject\": \"工单状态更新\",\n  \"contentTemplate\": \"工单 {{parameter[ticket].title}} 的优先级已更改为 {{parameter[priority]}}\"\n}"
+  },
+  "submissionCriteria": {
+    "label": "提交条件",
+    "help": "定义 Action 何时可以提交（JSON 对象格式，可选）。用于限制 Action 的执行条件。\n\n示例：\n{\n  \"propertyConditions\": [\n    {\n      \"propertyId\": \"status\",\n      \"operator\": \"EQUALS\",\n      \"value\": \"Open\"\n    },\n    {\n      \"propertyId\": \"priority\",\n      \"operator\": \"IN\",\n      \"value\": [\"P0\", \"P1\"]\n    }\n  ]\n}\n\n支持的操作符：\n- EQUALS: 等于\n- NOT_EQUALS: 不等于\n- IN: 在列表中\n- NOT_IN: 不在列表中\n- GREATER_THAN: 大于\n- LESS_THAN: 小于\n- IS_NULL: 为空\n- IS_NOT_NULL: 不为空"
+  }
+}

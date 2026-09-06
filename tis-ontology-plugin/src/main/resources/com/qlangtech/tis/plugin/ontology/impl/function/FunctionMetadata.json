@@ -1,0 +1,22 @@
+{
+  "name": {
+    "label": "Function 名称",
+    "help": "Function 的唯一标识符，用于 API 调用。必须以字母开头，只能包含字母、数字和下划线"
+  },
+  "displayName": {
+    "label": "显示名称",
+    "help": "在用户界面显示的 Function 名称"
+  },
+  "description": {
+    "label": "描述",
+    "help": "详细描述此 Function 的用途和功能"
+  },
+  "language": {
+    "label": "编程语言",
+    "help": "Function 实现使用的编程语言。当前仅支持 Groovy"
+  },
+  "functionType": {
+    "label": "函数类型",
+    "help": "选择函数类型：\n\n- QUERY: 只读查询函数，用于查询和计算，不修改数据\n- ONTOLOGY_EDIT: 写入函数，可以修改本体数据（创建、更新、删除对象）"
+  }
+}

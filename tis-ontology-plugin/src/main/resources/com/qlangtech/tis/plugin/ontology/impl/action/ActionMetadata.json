@@ -1,0 +1,18 @@
+{
+  "name": {
+    "label": "Action 名称",
+    "help": "Action 的唯一标识符，用于 API 调用。必须以字母开头，只能包含字母、数字、下划线和连字符"
+  },
+  "displayName": {
+    "label": "显示名称",
+    "help": "在用户界面显示的 Action 名称"
+  },
+  "description": {
+    "label": "描述",
+    "help": "详细描述此 Action 的用途和功能"
+  },
+  "targetObjectType": {
+    "label": "目标对象类型",
+    "help": "此 Action 操作的目标对象类型，从本体域中的 ObjectType 列表选择"
+  }
+}

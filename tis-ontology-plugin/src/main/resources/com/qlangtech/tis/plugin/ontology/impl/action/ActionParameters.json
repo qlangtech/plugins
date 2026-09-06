@@ -1,0 +1,6 @@
+{
+  "parameters": {
+    "label": "参数配置",
+    "help": "定义 Action 的输入参数（JSON 数组格式）。Parameters 是 ActionType 级别的全局参数池，可以被多个 Rules 引用。\n\n每个参数对象需要包含：\n- parameterId: 参数唯一标识\n- displayName: 显示名称\n- dataType: 数据类型（STRING, INTEGER, BOOLEAN, OBJECT_REFERENCE 等）\n- required: 是否必填\n- widgetType: UI 控件类型（TEXT_INPUT, DROPDOWN, OBJECT_SELECTOR 等）\n- validation: 验证规则（可选）\n\n示例：\n[\n  {\n    \"parameterId\": \"ticket\",\n    \"displayName\": \"工单\",\n    \"dataType\": \"OBJECT_REFERENCE\",\n    \"objectTypeId\": \"Ticket\",\n    \"required\": true,\n    \"widgetType\": \"OBJECT_SELECTOR\"\n  },\n  {\n    \"parameterId\": \"newPriority\",\n    \"displayName\": \"新优先级\",\n    \"dataType\": \"STRING\",\n    \"required\": true,\n    \"widgetType\": \"DROPDOWN\",\n    \"validation\": {\n      \"enum\": [\"P0\", \"P1\", \"P2\"]\n    }\n  }\n]"
+  }
+}

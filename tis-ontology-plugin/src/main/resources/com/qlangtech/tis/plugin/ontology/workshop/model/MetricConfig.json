@@ -1,0 +1,42 @@
+{
+  "label": {
+    "label": "标签",
+    "help": "指标显示的标签文本"
+  },
+  "description": {
+    "label": "描述",
+    "help": "指标的详细描述"
+  },
+  "valueType": {
+    "label": "值类型",
+    "help": "指标值的数据类型：字符串或数值"
+  },
+  "valueVariable": {
+    "label": "值变量",
+    "help": "提供指标值的变量 ID"
+  },
+  "numericFormatting": {
+    "label": "数值格式化",
+    "help": "数值类型指标的格式化配置"
+  },
+  "conditionalFormatting": {
+    "label": "条件格式化",
+    "help": "根据值条件应用不同的显示样式"
+  },
+  "showSecondaryMetric": {
+    "label": "显示副指标",
+    "help": "是否显示副指标（如同比、环比）"
+  },
+  "secondaryMetric": {
+    "label": "副指标",
+    "help": "副指标的配置"
+  },
+  "showVisualization": {
+    "label": "显示可视化",
+    "help": "是否显示时间序列可视化图表"
+  },
+  "visualization": {
+    "label": "可视化配置",
+    "help": "时间序列可视化的详细配置"
+  }
+}

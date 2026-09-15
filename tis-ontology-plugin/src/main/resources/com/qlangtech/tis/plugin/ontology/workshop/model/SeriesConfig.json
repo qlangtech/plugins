@@ -1,0 +1,43 @@
+{
+  "name": {
+    "label": "系列名称",
+    "help": "图例中显示的默认名称",
+    "placeholder": "如：告警数量"
+  },
+  "variable": {
+    "label": "数据变量",
+    "help": "提供本系列数据的变量名"
+  },
+  "aggregation": {
+    "label": "聚合方式",
+    "help": "本系列的绘制值如何从对象集计算得出，默认计数"
+  },
+  "property": {
+    "label": "度量属性",
+    "help": "参与聚合的属性名。聚合方式为「计数」时不需要填写",
+    "placeholder": "如：# 延误小时数"
+  },
+  "segmentBy": {
+    "label": "分段属性",
+    "help": "可选。按该属性把每个值再拆开，例如 X 轴为「告警类型」时按「机型」分段",
+    "placeholder": "留空则不分段"
+  },
+  "displayOverride": {
+    "label": "图例名覆盖",
+    "help": "可选。覆盖本系列在图例中的显示名；分段图表中可覆盖单个分段的名称",
+    "placeholder": "留空则用系列名称"
+  },
+  "color": {
+    "label": "配色",
+    "help": "本系列的显示颜色，支持 CSS 颜色值",
+    "placeholder": "如：#1890ff"
+  },
+  "nullDisplay": {
+    "label": "空值显示方式",
+    "help": "折线图中遇到空值时的画法：留空缺口 / 忽略（连接前后有效值）/ 视作 0。仅折线图生效"
+  },
+  "segmentOverride": {
+    "label": "分段显示方式",
+    "help": "柱状图中分段值的排布：堆叠 / 百分比 / 分组并列。仅柱状图生效"
+  }
+}

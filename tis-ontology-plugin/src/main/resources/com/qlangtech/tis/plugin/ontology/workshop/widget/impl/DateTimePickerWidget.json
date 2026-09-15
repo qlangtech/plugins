@@ -1,0 +1,26 @@
+{
+  "showTime": {
+    "help": "是否显示时分秒选择",
+    "dftVal": false
+  },
+  "mode": {
+    "help": "日期选择模式：单日选择或范围选择",
+    "dftVal": "date"
+  },
+  "pickerMode": {
+    "help": "选择器粒度",
+    "dftVal": "date"
+  },
+  "variableKind": {
+    "help": "输出变量格式：ISO 日期串或时间戳(毫秒)",
+    "dftVal": "iso"
+  },
+  "placeholder": {
+    "help": "选择框占位提示文本",
+    "placeholder": "请选择日期"
+  },
+  "dateValueVar": {
+    "help": "选中日期绑定：选择当前模块中的日期/时间戳变量，组件以其取值作为初始值，并在用户选择后写回该变量",
+    "placeholder": "请选择日期型变量"
+  }
+}

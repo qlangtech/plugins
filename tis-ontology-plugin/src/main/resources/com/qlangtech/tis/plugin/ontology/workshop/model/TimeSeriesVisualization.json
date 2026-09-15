@@ -1,0 +1,18 @@
+{
+  "position": {
+    "label": "显示位置",
+    "help": "可视化图表与主指标的位置关系（并排或堆叠）"
+  },
+  "timeSeriesSet": {
+    "label": "时间序列集",
+    "help": "提供时间序列数据的变量 ID"
+  },
+  "timeRange": {
+    "label": "时间范围",
+    "help": "图表显示的时间范围配置"
+  },
+  "showBaseline": {
+    "label": "显示基线",
+    "help": "是否显示基线值"
+  }
+}

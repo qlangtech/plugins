@@ -1,0 +1,33 @@
+{
+  "text":          { "help": "标题显示文本", "placeholder": "输入标题内容" },
+  "textVariable":  { "help": "选择字符串类型变量动态设置标题文字（可选，覆盖 text 值）", "placeholder": "请选择变量（可选）" },
+  "icon":          { "help": "标题旁的图标名（ng-zorro 图标），如 'font-size' / 'user'", "placeholder": "输入图标名" },
+  "level":         { "help": "标题级别（h1-h4）", "dftVal": "H2" },
+  "alignment":     { "help": "文本对齐方式", "dftVal": "left" },
+  "color": {
+    "help": "选择文本颜色",
+    "dftVal": "inherit",
+    "enum": [
+      { "label": "继承",    "val": "inherit", "hex": "#000000" },
+      { "label": "品牌色",  "val": "primary",  "hex": "#1890ff" },
+      { "label": "红色",    "val": "red",      "hex": "#f5222d" },
+      { "label": "火山橙",  "val": "volcano",  "hex": "#fa541c" },
+      { "label": "橙色",    "val": "orange",   "hex": "#fa8c16" },
+      { "label": "金色",    "val": "gold",     "hex": "#faad14" },
+      { "label": "黄色",    "val": "yellow",   "hex": "#fadb14" },
+      { "label": "黄绿",    "val": "lime",     "hex": "#a0d911" },
+      { "label": "绿色",    "val": "green",    "hex": "#52c41a" },
+      { "label": "青色",    "val": "cyan",     "hex": "#13c2c2" },
+      { "label": "蓝色",    "val": "blue",     "hex": "#1890ff" },
+      { "label": "靛蓝",    "val": "geekblue", "hex": "#2f54eb" },
+      { "label": "紫色",    "val": "purple",   "hex": "#722ed1" },
+      { "label": "品红",    "val": "magenta",  "hex": "#eb2f96" },
+      { "label": "灰色",    "val": "grey",     "hex": "#bfbfbf" },
+      { "label": "深灰",    "val": "darkGrey", "hex": "#595959" },
+      { "label": "黑色",    "val": "black",    "hex": "#262626" },
+      { "label": "白色",    "val": "white",    "hex": "#ffffff" },
+      { "label": "成功绿",  "val": "success",  "hex": "#52c41a" },
+      { "label": "错误红",  "val": "error",    "hex": "#ff4d4f" }
+    ]
+  }
+}

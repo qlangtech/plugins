@@ -1,0 +1,46 @@
+{
+  "name": {
+    "label": "浮层名称",
+    "help": "浮层的唯一标识符"
+  },
+  "type": {
+    "label": "浮层类型",
+    "help": "浮层的展现形式（抽屉或模态框）"
+  },
+  "typeConfig": {
+    "label": "类型配置",
+    "help": "根据浮层类型选择对应的配置"
+  },
+  "showHeader": {
+    "label": "显示头部",
+    "help": "浮层是否显示头部区域"
+  },
+  "title": {
+    "label": "标题",
+    "help": "浮层头部的标题文本"
+  },
+  "icon": {
+    "label": "图标",
+    "help": "浮层标题旁边的图标"
+  },
+  "variableBasedVisibility": {
+    "label": "基于变量的可见性",
+    "help": "根据变量值控制浮层的显示隐藏"
+  },
+  "closeOnBackdropClick": {
+    "label": "点击背景关闭",
+    "help": "点击浮层外部背景时是否关闭浮层"
+  },
+  "addBackgroundBehindOverlay": {
+    "label": "添加背景遮罩",
+    "help": "是否在浮层后面添加半透明遮罩"
+  },
+  "sortOrder": {
+    "label": "排序顺序",
+    "help": "浮层在列表中的显示顺序"
+  },
+  "sections": {
+    "label": "区块列表",
+    "help": "浮层包含的所有区块"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "objectSetVar": {
+    "help": "下拉候选来源：选择当前模块中的对象集合变量",
+    "placeholder": "请选择对象集变量"
+  },
+  "selectedObjectVar": {
+    "help": "选中项写回：下拉选中一个对象后写入该变量，供下游组件消费",
+    "placeholder": "请选择接收选中项的变量"
+  }
+}

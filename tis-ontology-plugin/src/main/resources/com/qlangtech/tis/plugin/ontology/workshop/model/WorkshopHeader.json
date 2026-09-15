@@ -1,0 +1,46 @@
+{
+  "visible": {
+    "label": "显示头部",
+    "help": "是否显示页面头部"
+  },
+  "title": {
+    "label": "标题",
+    "help": "页面头部显示的标题文本"
+  },
+  "titleColor": {
+    "label": "标题颜色",
+    "help": "标题文本的颜色，支持 CSS 颜色值"
+  },
+  "orientation": {
+    "label": "方向",
+    "help": "头部布局方向：水平或垂直"
+  },
+  "height": {
+    "label": "高度（像素）",
+    "help": "水平方向时的头部高度"
+  },
+  "width": {
+    "label": "宽度（像素）",
+    "help": "垂直方向时的头部宽度"
+  },
+  "collapsible": {
+    "label": "可折叠",
+    "help": "头部是否可以折叠"
+  },
+  "collapsedByDefault": {
+    "label": "默认折叠",
+    "help": "页面加载时头部是否默认折叠"
+  },
+  "collapsedImage": {
+    "label": "折叠图标",
+    "help": "折叠状态下显示的图标 URL"
+  },
+  "backgroundColor": {
+    "label": "背景颜色",
+    "help": "头部背景颜色，支持 CSS 颜色值"
+  },
+  "favoriteEnabled": {
+    "label": "启用收藏",
+    "help": "是否显示收藏按钮"
+  }
+}

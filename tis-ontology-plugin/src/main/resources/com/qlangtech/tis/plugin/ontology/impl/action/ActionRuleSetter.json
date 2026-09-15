@@ -1,0 +1,44 @@
+{
+  "objectType": {
+    "label": "对象操作",
+    "help": "配置对象创建、修改、删除等操作规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_OBJECT\");",
+    "dftVal": "off"
+  },
+  "linkType": {
+    "label": "链接操作",
+    "help": "配置对象之间链接关系的创建和删除规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_LINK\");",
+    "dftVal": "off"
+  },
+  "functionType": {
+    "label": "函数操作",
+    "help": "通过自定义函数执行复杂业务逻辑",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_FUNCTION\");",
+    "dftVal": "off"
+  },
+  "interfaceType": {
+    "label": "接口操作",
+    "help": "配置实现特定接口的对象的创建、修改、删除及链接操作",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_INTERFACE\");",
+    "dftVal": "off"
+  },
+  "sideEffectType": {
+    "label": "副作用操作",
+    "help": "配置通知发送、Webhook 调用等外部影响操作",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"SIDE_EFFECT\");",
+    "dftVal": "off"
+  },
+  "scheduleType": {
+    "label": "调度操作",
+    "help": "触发 Ontology 数据的重新构建或刷新",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilterByRuleType(desc,\"SCHEDULE\");",
+    "dftVal": "off"
+  },
+  "applyScenarioType": {
+    "label": "场景合并",
+    "help": "将场景中的编辑合并到主 Ontology",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilterByRuleType(desc,\"APPLY_SCENARIO\");",
+    "dftVal": "off"
+  }
+}

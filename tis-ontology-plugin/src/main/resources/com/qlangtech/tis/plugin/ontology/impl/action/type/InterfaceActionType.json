@@ -1,0 +1,7 @@
+{
+  "interfaceRule": {
+    "label": "接口规则",
+    "help": "配置实现特定接口的对象的创建、修改、删除及链接操作规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule.descFilter(desc,\"ONTOLOGY_INTERFACE\");"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": {
+    "label": "模块名称",
+    "help": "Workshop 模块的唯一标识符，用于 URL 路由和文件存储"
+  },
+  "description": {
+    "label": "描述",
+    "help": "模块的详细描述信息"
+  },
+  "ontologyDomainId": {
+    "label": "本体域",
+    "help": "关联的 Ontology Domain ID"
+  },
+  "stateSavingEnabled": {
+    "label": "启用状态保存",
+    "help": "是否启用用户状态保存功能（变量值、滚动位置等）"
+  },
+  "autoRefreshConfig": {
+    "label": "自动刷新配置",
+    "help": "配置模块是否自动刷新及刷新间隔"
+  },
+  "routingConfig": {
+    "label": "路由配置",
+    "help": "配置模块的 URL 路由规则"
+  }
+}

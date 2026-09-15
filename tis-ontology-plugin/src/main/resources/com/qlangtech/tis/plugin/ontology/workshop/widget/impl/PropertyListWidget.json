@@ -1,0 +1,6 @@
+{
+  "objectVar":     { "help": "展示对象来源：选择当前模块中的对象集合变量，取其当前对象逐属性展示", "placeholder": "请选择对象集变量" },
+  "title":         { "help": "属性组标题，如 '基本信息' / '高级配置'", "placeholder": "输入属性组标题" },
+  "columnsCount":  { "help": "nz-descriptions 的列数，1-3 列", "dftVal": 1 },
+  "properties":    { "help": "配置要展示的属性列表：每行设置属性名(prop)、显示标签(label)、格式(format)等。点击下方 [+添加] 新增属性。" }
+}

@@ -1,0 +1,23 @@
+{
+  "useGrouping": {
+    "label": "千分位分组",
+    "help": "是否按千分位分组显示（如 1,234,567）"
+  },
+  "minFractionDigits": {
+    "label": "最少小数位",
+    "help": "展示时至少保留的小数位数"
+  },
+  "maxFractionDigits": {
+    "label": "最多小数位",
+    "help": "展示时最多保留的小数位数"
+  },
+  "notation": {
+    "label": "记数法",
+    "help": "数值的显示记数法（标准、紧凑、科学计数、工程计数）"
+  },
+  "unit": {
+    "label": "单位",
+    "help": "数值的单位后缀（如：元、%、次）",
+    "placeholder": "留空则不显示单位"
+  }
+}

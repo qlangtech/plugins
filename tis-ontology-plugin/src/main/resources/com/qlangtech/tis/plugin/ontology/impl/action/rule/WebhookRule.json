@@ -1,0 +1,26 @@
+{
+  "webhookUrl": {
+    "label": "Webhook URL",
+    "placeholder": "https://api.example.com/webhook",
+    "help": "外部 API 的完整 URL 地址"
+  },
+  "httpMethod": {
+    "label": "HTTP 方法",
+    "dftVal": "POST"
+  },
+  "headers": {
+    "label": "请求头"
+  },
+  "bodyTemplate": {
+    "label": "请求体模板"
+  },
+  "timeoutSeconds": {
+    "label": "超时时间（秒）",
+    "placeholder": "30",
+    "help": "HTTP 请求超时时间",
+    "dftVal": "30"
+  },
+  "retryOnFailure": {
+    "label": "失败重试"
+  }
+}

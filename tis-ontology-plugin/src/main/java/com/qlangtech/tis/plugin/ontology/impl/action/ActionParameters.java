@@ -88,7 +88,7 @@ public class ActionParameters extends OneStepOfMultiSteps {
 
         @Override
         public Step getStep() {
-            return Step.Step2;
+            return Step.Step3;
         }
 
         @Override

@@ -73,7 +73,7 @@ public class ActionRules extends OneStepOfMultiSteps {
 
         @Override
         public Step getStep() {
-            return Step.Step3;
+            return Step.Step4;
         }
 
         @Override

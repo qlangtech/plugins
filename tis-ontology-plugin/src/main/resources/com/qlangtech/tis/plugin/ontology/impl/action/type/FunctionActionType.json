@@ -1,0 +1,7 @@
+{
+  "functionRule": {
+    "label": "函数规则",
+    "help": "配置通过自定义函数执行复杂业务逻辑的规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule.descFilter(desc,\"ONTOLOGY_FUNCTION\");"
+  }
+}

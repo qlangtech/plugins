@@ -1,0 +1,6 @@
+{
+  "useless": {
+    "label": "变量 ID",
+    "help": "占位字段，仅为满足 IdentityName「有且仅有一个 identity 字段」的框架约束；真正的变量标识在第一步 MetadataOfVariable.id"
+  }
+}

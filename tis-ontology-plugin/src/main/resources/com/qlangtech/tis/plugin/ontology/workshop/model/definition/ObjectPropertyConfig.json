@@ -1,0 +1,12 @@
+{
+  "objectVariableId": {
+    "label": "源 Object 变量 ID",
+    "placeholder": "输入源变量 ID",
+    "help": "需要提取属性的对象变量"
+  },
+  "propertyName": {
+    "label": "属性名称",
+    "placeholder": "输入属性名称",
+    "help": "从对象中提取的属性字段名"
+  }
+}

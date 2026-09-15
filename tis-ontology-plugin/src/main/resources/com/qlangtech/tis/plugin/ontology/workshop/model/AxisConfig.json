@@ -1,0 +1,27 @@
+{
+  "showTitle": {
+    "label": "显示标题",
+    "help": "是否显示坐标轴标题。开启后可用「标题覆写」自定义文本；留空则取该轴上所绘的聚合方式或属性名"
+  },
+  "titleOverride": {
+    "label": "标题覆写",
+    "help": "自定义坐标轴标题文本；留空则使用自动生成的标题",
+    "placeholder": "留空则自动生成"
+  },
+  "enableNumericalFormatting": {
+    "label": "启用数值格式化",
+    "help": "是否对轴上显示的值启用格式化（千分位分组、小数位数、记数法等）"
+  },
+  "numericFormatting": {
+    "label": "格式化细则",
+    "help": "数值分组、最少/最多小数位、记数法与单位后缀；仅「启用数值格式化」开启时生效"
+  },
+  "showGridlines": {
+    "label": "显示网格线",
+    "help": "是否在图表上绘制该坐标轴对应的网格线"
+  },
+  "showColorMarkers": {
+    "label": "显示颜色标记",
+    "help": "是否在坐标轴上显示各系列的配色标记"
+  }
+}

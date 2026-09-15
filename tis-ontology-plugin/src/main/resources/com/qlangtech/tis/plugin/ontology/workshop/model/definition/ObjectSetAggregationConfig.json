@@ -1,0 +1,16 @@
+{
+  "objectSetVariableId": {
+    "label": "源 Object Set 变量 ID",
+    "placeholder": "输入源变量 ID",
+    "help": "需要进行聚合计算的对象集合变量"
+  },
+  "propertyType": {
+    "label": "属性类型",
+    "placeholder": "输入属性名称",
+    "help": "聚合计算所针对的属性字段名"
+  },
+  "aggregationType": {
+    "label": "聚合方式",
+    "help": "聚合计算方式：计数、求和、平均值、最小值、最大值、近似唯一值"
+  }
+}

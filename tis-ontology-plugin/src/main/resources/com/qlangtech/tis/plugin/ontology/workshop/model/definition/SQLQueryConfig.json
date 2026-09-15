@@ -1,0 +1,11 @@
+{
+  "sqlTemplate": {
+    "label": "SQL 模板",
+    "placeholder": "输入 SQL 查询模板",
+    "help": "Ontology SQL 查询模板，使用 :paramName 引用变量，parameters 列表中的 parameter 对应此处的占位符名称"
+  },
+  "parameters": {
+    "label": "查询参数",
+    "help": "SQL 参数列表，每个参数绑定一个源变量，构成变量依赖关系"
+  }
+}

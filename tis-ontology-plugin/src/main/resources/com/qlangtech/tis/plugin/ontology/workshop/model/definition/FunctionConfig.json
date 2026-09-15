@@ -1,0 +1,11 @@
+{
+  "functionId": {
+    "label": "函数 ID",
+    "placeholder": "输入 Function 标识",
+    "help": "后端 Function 执行引擎中注册的函数标识"
+  },
+  "inputs": {
+    "label": "输入参数",
+    "help": "函数输入参数列表，每个参数绑定一个源变量，构成变量依赖关系"
+  }
+}

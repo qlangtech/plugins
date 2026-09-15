@@ -1,0 +1,15 @@
+{
+  "enabled": {
+    "label": "启用自动刷新",
+    "help": "是否启用自动刷新功能"
+  },
+  "intervalSeconds": {
+    "label": "刷新间隔",
+    "help": "自动刷新的时间间隔",
+    "dftVal": 60
+  },
+  "allowUserControl": {
+    "label": "允许用户控制",
+    "help": "是否允许用户在前端控制自动刷新的开关"
+  }
+}

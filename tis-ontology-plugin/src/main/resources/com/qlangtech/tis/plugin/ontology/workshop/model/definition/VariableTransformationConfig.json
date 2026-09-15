@@ -1,0 +1,16 @@
+{
+  "sourceVariableId": {
+    "label": "源变量 ID",
+    "placeholder": "输入源变量 ID",
+    "help": "需要进行变换的源变量"
+  },
+  "transformationType": {
+    "label": "变换类型",
+    "help": "变量变换方式：大写、小写、拼接、截取、转数字、转字符串、转布尔"
+  },
+  "parameters": {
+    "label": "变换参数",
+    "placeholder": "JSON 格式的变换参数",
+    "help": "变换操作的额外参数，如拼接后缀、截取起始位置等"
+  }
+}

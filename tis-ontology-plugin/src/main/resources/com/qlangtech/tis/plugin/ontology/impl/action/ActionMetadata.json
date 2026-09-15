@@ -1,6 +1,6 @@
 {
   "name": {
-    "label": "Action 名称",
+    "label": "名称",
     "help": "Action 的唯一标识符，用于 API 调用。必须以字母开头，只能包含字母、数字、下划线和连字符"
   },
   "displayName": {

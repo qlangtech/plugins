@@ -1,0 +1,7 @@
+{
+  "objectSetVar":    { "help": "选择提供明细数据的对象集变量", "placeholder": "请选择对象集变量" },
+  "rowProperty":     { "help": "选择作为行维度的属性（如地区、部门）", "placeholder": "请选择行维度属性" },
+  "columnProperty":  { "help": "选择作为列维度的属性（如季度、产品线）", "placeholder": "请选择列维度属性" },
+  "measureProperty": { "help": "选择作为度量的数值属性（如销售额、数量）", "placeholder": "请选择度量属性" },
+  "aggregation":     { "help": "度量值的聚合方式", "dftVal": "sum" }
+}

@@ -1,0 +1,23 @@
+{
+  "recipientParam": {
+    "label": "收件人参数名",
+    "placeholder": "recipient",
+    "help": "指定哪个参数包含收件人信息",
+    "dftVal": "recipient"
+  },
+  "titleTemplate": {
+    "label": "通知标题模板",
+    "placeholder": "数据质量问题: ${issueName}"
+  },
+  "messageTemplate": {
+    "label": "通知消息模板"
+  },
+  "notificationType": {
+    "label": "通知类型",
+    "dftVal": "email"
+  },
+  "priority": {
+    "label": "优先级",
+    "dftVal": "normal"
+  }
+}

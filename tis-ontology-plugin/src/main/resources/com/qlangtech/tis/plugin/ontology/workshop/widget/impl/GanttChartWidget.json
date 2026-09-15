@@ -1,0 +1,18 @@
+{
+  "objectSetVar": {
+    "help": "选择提供甘特图数据的对象集变量",
+    "placeholder": "请选择对象集变量"
+  },
+  "labelProp": {
+    "help": "选择对象中作为任务名称的字符串属性",
+    "placeholder": "请选择标签属性"
+  },
+  "startProp": {
+    "help": "选择对象中作为开始时间的日期属性",
+    "placeholder": "请选择开始时间属性"
+  },
+  "endProp": {
+    "help": "选择对象中作为结束时间的日期属性",
+    "placeholder": "请选择结束时间属性"
+  }
+}

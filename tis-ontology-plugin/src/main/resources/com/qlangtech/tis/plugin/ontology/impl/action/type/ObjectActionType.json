@@ -1,0 +1,10 @@
+{
+  "objectRule": {
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule.descFilter(desc,\"ONTOLOGY_OBJECT\");"
+  },
+  "objectTypeReference": {
+    "label": "对象类型",
+    "help": "指向的本体对象类型",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference.getObjectTypeOpts():uncache_true"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "linkRule": {
+    "label": "链接规则",
+    "help": "配置对象之间链接关系的创建和删除规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule.descFilter(desc,\"ONTOLOGY_LINK\");"
+  }
+}

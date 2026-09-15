@@ -23,13 +23,16 @@ import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 默认的 Ontology Action Type 实现
- *
+ * <p>
  * 定义对象的操作类型，包括：
  * - 写操作（创建、修改、删除对象/链接）
  * - 副作用操作（通知、Webhook）
@@ -65,17 +68,56 @@ public class DefaultOntologyAction extends OntologyAction {
     }
 
     /**
-     * 获取第二步（Parameters）
+     * 获取第二步（Action Types）
      */
-    private ActionParameters getParameters() {
-        return (ActionParameters) getMultiStepsSavedItems()[1];
+    private ActionRuleSetter getRuleSetter() {
+        return (ActionRuleSetter) getMultiStepsSavedItems()[1];
     }
 
     /**
-     * 获取第三步（Rules）
+     * 获取所有配置的 ActionType 列表（委托给 ActionRuleSetter）
+     */
+    public List<ActionType> getActionTypes() {
+        ActionRuleSetter ruleSetter = getRuleSetter();
+        if (ruleSetter == null) {
+            return List.of();
+        }
+        return ruleSetter.getActionTypes();
+    }
+
+    /**
+     * 获取指定类型的 ActionType 列表
+     */
+    public <T extends ActionType> List<T> getActionTypes(Class<T> type) {
+        return getActionTypes().stream()
+                .filter(type::isInstance)
+                .map(type::cast)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取所有启用的规则
+     */
+    public List<com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule> getAllRules() {
+        return getActionTypes().stream()
+                .map(ActionType::getRule)
+                .filter(java.util.Objects::nonNull)
+                .filter(OntologyActionRule::isEnabled)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取第三步（Parameters）
+     */
+    private ActionParameters getParameters() {
+        return (ActionParameters) getMultiStepsSavedItems()[2];
+    }
+
+    /**
+     * 获取第四步（Rules - 旧版）
      */
     private ActionRules getRules() {
-        return (ActionRules) getMultiStepsSavedItems()[2];
+        return (ActionRules) getMultiStepsSavedItems()[3];
     }
 
     @Override
@@ -91,13 +133,6 @@ public class DefaultOntologyAction extends OntologyAction {
     @Override
     public String getDescription() {
         return getMetadata().description;
-    }
-
-    /**
-     * 获取目标对象类型
-     */
-    public String getTargetObjectType() {
-        return getMetadata().targetObjectType;
     }
 
     /**
@@ -131,12 +166,12 @@ public class DefaultOntologyAction extends OntologyAction {
     @Override
     public java.util.List<com.qlangtech.tis.plugin.datax.transformer.UDFDesc> getLiteria() {
         java.util.List<com.qlangtech.tis.plugin.datax.transformer.UDFDesc> literia =
-            com.google.common.collect.Lists.newArrayList();
+                com.google.common.collect.Lists.newArrayList();
 
         literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Name", getName()));
         literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Display Name", getDisplayName()));
-        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Target Object Type", getTargetObjectType()));
-        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Rule Type", getRuleType()));
+        //literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Target Object Type", getTargetObjectType()));
+        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Action Types", String.valueOf(getActionTypes().size())));
 
         return literia;
     }
@@ -153,9 +188,10 @@ public class DefaultOntologyAction extends OntologyAction {
         @Override
         public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {
             return List.of(
-                new ActionMetadata.Desc(),
-                new ActionParameters.Desc(),
-                new ActionRules.Desc()
+                    new ActionMetadata.Desc(),
+                    new ActionRuleSetter.Desc(),
+                    new ActionParameters.Desc(),
+                    new ActionRules.Desc()
             );
         }
 

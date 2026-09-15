@@ -1,0 +1,14 @@
+{
+  "ridParameterName": {
+    "label": "RID 参数名",
+    "placeholder": "rid",
+    "help": "指定哪个参数包含要删除的对象 RID",
+    "dftVal": "rid"
+  },
+  "cascadeDelete": {
+    "label": "级联删除"
+  },
+  "confirmationRequired": {
+    "label": "需要确认"
+  }
+}

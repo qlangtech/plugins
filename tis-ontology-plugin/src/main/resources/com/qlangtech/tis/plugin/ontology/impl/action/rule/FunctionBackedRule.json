@@ -1,0 +1,18 @@
+{
+  "functionId": {
+    "label": "函数 ID",
+    "placeholder": "calculateDataQualityScore",
+    "help": "要调用的 Ontology Function 标识符"
+  },
+  "parameterMappings": {
+    "label": "参数映射"
+  },
+  "async": {
+    "label": "异步执行"
+  },
+  "timeoutSeconds": {
+    "label": "超时时间（秒）",
+    "placeholder": "60",
+    "dftVal": "60"
+  }
+}

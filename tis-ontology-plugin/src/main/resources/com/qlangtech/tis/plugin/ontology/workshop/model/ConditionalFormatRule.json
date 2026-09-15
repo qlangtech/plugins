@@ -1,0 +1,18 @@
+{
+  "condition": {
+    "label": "条件表达式",
+    "help": "触发格式化的条件，例如：value <= 0"
+  },
+  "color": {
+    "label": "文本颜色",
+    "help": "满足条件时的文本颜色，支持 CSS 颜色值"
+  },
+  "backgroundColor": {
+    "label": "背景颜色",
+    "help": "满足条件时的背景颜色，支持 CSS 颜色值"
+  },
+  "icon": {
+    "label": "图标",
+    "help": "满足条件时显示的图标"
+  }
+}

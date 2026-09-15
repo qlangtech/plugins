@@ -21,20 +21,12 @@ package com.qlangtech.tis.plugin.ontology.impl.action;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.Ontology;
-import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
-import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Action Type Step 1: 元数据配置
@@ -55,8 +47,8 @@ public class ActionMetadata extends OneStepOfMultiSteps {
     @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String description;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String targetObjectType;
+//    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String targetObjectType;
 
     @Override
     public void processPreSaved(IPluginContext pluginContext, Context currentCtx,
@@ -81,7 +73,7 @@ public class ActionMetadata extends OneStepOfMultiSteps {
 
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
-            return Optional.of(new ActionParameters.Desc());
+            return Optional.of(new ActionRuleSetter.Desc());
         }
 
         @Override
@@ -89,97 +81,97 @@ public class ActionMetadata extends OneStepOfMultiSteps {
             return false;
         }
 
-        /**
-         * 验证 name 字段
-         */
-        public boolean validateName(IFieldErrorHandler msgHandler, Context context,
-                                   String fieldName, String value) {
-            if (StringUtils.isEmpty(value)) {
-                msgHandler.addFieldError(context, fieldName, "Action 名称不能为空");
-                return false;
-            }
+//        /**
+//         * 验证 name 字段
+//         */
+//        public boolean validateName(IFieldErrorHandler msgHandler, Context context,
+//                                   String fieldName, String value) {
+//            if (StringUtils.isEmpty(value)) {
+//                msgHandler.addFieldError(context, fieldName, "Action 名称不能为空");
+//                return false;
+//            }
+//
+//            // 验证命名规范：只允许字母、数字、下划线、连字符
+//            if (!value.matches("^[a-zA-Z][a-zA-Z0-9_-]*$")) {
+//                msgHandler.addFieldError(context, fieldName,
+//                    "Action 名称必须以字母开头，只能包含字母、数字、下划线和连字符");
+//                return false;
+//            }
+//
+//            return true;
+//        }
 
-            // 验证命名规范：只允许字母、数字、下划线、连字符
-            if (!value.matches("^[a-zA-Z][a-zA-Z0-9_-]*$")) {
-                msgHandler.addFieldError(context, fieldName,
-                    "Action 名称必须以字母开头，只能包含字母、数字、下划线和连字符");
-                return false;
-            }
+//        /**
+//         * 验证 displayName 字段
+//         */
+//        public boolean validateDisplayName(IFieldErrorHandler msgHandler, Context context,
+//                                          String fieldName, String value) {
+//            if (StringUtils.isEmpty(value)) {
+//                msgHandler.addFieldError(context, fieldName, "显示名称不能为空");
+//                return false;
+//            }
+//            return true;
+//        }
 
-            return true;
-        }
+//        /**
+//         * 验证 description 字段
+//         */
+//        public boolean validateDescription(IFieldErrorHandler msgHandler, Context context,
+//                                          String fieldName, String value) {
+//            if (StringUtils.isEmpty(value)) {
+//                msgHandler.addFieldError(context, fieldName, "描述不能为空");
+//                return false;
+//            }
+//            return true;
+//        }
 
-        /**
-         * 验证 displayName 字段
-         */
-        public boolean validateDisplayName(IFieldErrorHandler msgHandler, Context context,
-                                          String fieldName, String value) {
-            if (StringUtils.isEmpty(value)) {
-                msgHandler.addFieldError(context, fieldName, "显示名称不能为空");
-                return false;
-            }
-            return true;
-        }
-
-        /**
-         * 验证 description 字段
-         */
-        public boolean validateDescription(IFieldErrorHandler msgHandler, Context context,
-                                          String fieldName, String value) {
-            if (StringUtils.isEmpty(value)) {
-                msgHandler.addFieldError(context, fieldName, "描述不能为空");
-                return false;
-            }
-            return true;
-        }
-
-        /**
-         * 获取 targetObjectType 的可选项
-         * 从当前本体域加载所有 ObjectType
-         */
-        public List<Option> getTargetObjectTypeOptions() {
-            try {
-                // 从上下文获取本体域名称
-                com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta meta =
-                    com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta.createPluginMeta(
-                        com.qlangtech.tis.util.UploadPluginMeta.parse(Ontology.KEY_ONTOLOGY)
-                    );
-                if (meta == null) {
-                    return List.of();
-                }
-
-                String ontologyDomain = meta.getDomain();
-                if (StringUtils.isEmpty(ontologyDomain)) {
-                    return List.of();
-                }
-
-                // 加载该域下的所有 ObjectType
-                List<OntologyObjectType> objectTypes =
-                    Ontology.OntologyEnum.ObjectType.loadAll(
-                        com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta.create(
-                            Ontology.OntologyEnum.ObjectType, ontologyDomain)
-                    );
-
-                return objectTypes.stream()
-                    .map(objType -> new Option(objType.identityValue(), objType.getName()))
-                    .collect(Collectors.toList());
-
-            } catch (Exception e) {
-                // 如果加载失败，返回空列表
-                return List.of();
-            }
-        }
-
-        /**
-         * 验证 targetObjectType 字段
-         */
-        public boolean validateTargetObjectType(IFieldErrorHandler msgHandler, Context context,
-                                               String fieldName, String value) {
-            if (StringUtils.isEmpty(value)) {
-                msgHandler.addFieldError(context, fieldName, "目标对象类型不能为空");
-                return false;
-            }
-            return true;
-        }
+//        /**
+//         * 获取 targetObjectType 的可选项
+//         * 从当前本体域加载所有 ObjectType
+//         */
+//        public List<Option> getTargetObjectTypeOptions() {
+//            try {
+//                // 从上下文获取本体域名称
+//                com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta meta =
+//                    com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta.createPluginMeta(
+//                        com.qlangtech.tis.util.UploadPluginMeta.parse(Ontology.KEY_ONTOLOGY)
+//                    );
+//                if (meta == null) {
+//                    return List.of();
+//                }
+//
+//                String ontologyDomain = meta.getDomain();
+//                if (StringUtils.isEmpty(ontologyDomain)) {
+//                    return List.of();
+//                }
+//
+//                // 加载该域下的所有 ObjectType
+//                List<OntologyObjectType> objectTypes =
+//                    Ontology.OntologyEnum.ObjectType.loadAll(
+//                        com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta.create(
+//                            Ontology.OntologyEnum.ObjectType, ontologyDomain)
+//                    );
+//
+//                return objectTypes.stream()
+//                    .map(objType -> new Option(objType.identityValue(), objType.getName()))
+//                    .collect(Collectors.toList());
+//
+//            } catch (Exception e) {
+//                // 如果加载失败，返回空列表
+//                return List.of();
+//            }
+//        }
+//
+//        /**
+//         * 验证 targetObjectType 字段
+//         */
+//        public boolean validateTargetObjectType(IFieldErrorHandler msgHandler, Context context,
+//                                               String fieldName, String value) {
+//            if (StringUtils.isEmpty(value)) {
+//                msgHandler.addFieldError(context, fieldName, "目标对象类型不能为空");
+//                return false;
+//            }
+//            return true;
+//        }
     }
 }

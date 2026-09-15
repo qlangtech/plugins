@@ -1,0 +1,12 @@
+{
+  "parameter": {
+    "label": "参数名",
+    "placeholder": "输入参数名称",
+    "help": "Function 参数名，对应函数签名中的参数名称"
+  },
+  "variableId": {
+    "label": "变量 ID",
+    "placeholder": "输入变量 ID",
+    "help": "提供参数值的源变量 ID，引用同一 Module 中其他 WorkshopVariable 的 id"
+  }
+}

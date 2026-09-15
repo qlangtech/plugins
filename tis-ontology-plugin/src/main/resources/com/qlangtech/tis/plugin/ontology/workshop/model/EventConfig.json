@@ -1,0 +1,14 @@
+{
+  "eventType": {
+    "label": "事件类型",
+    "help": "事件触发的操作类型（导航、设置变量、触发动作、打开/关闭浮层）"
+  },
+  "targetVariable": {
+    "label": "目标变量",
+    "help": "事件操作的目标变量 ID"
+  },
+  "actionId": {
+    "label": "动作标识",
+    "help": "Ontology Action 的标识符"
+  }
+}

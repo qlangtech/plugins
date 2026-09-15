@@ -1,0 +1,7 @@
+{
+  "sideEffectRule": {
+    "label": "副作用规则",
+    "help": "配置通知发送、Webhook 调用等外部影响操作的规则",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule.descFilter(desc,\"SIDE_EFFECT\");"
+  }
+}

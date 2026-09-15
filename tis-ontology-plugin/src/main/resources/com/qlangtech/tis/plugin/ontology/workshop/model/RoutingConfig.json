@@ -1,0 +1,10 @@
+{
+  "enabled": {
+    "label": "启用路由",
+    "help": "是否启用自定义 URL 路由"
+  },
+  "urlPattern": {
+    "label": "URL 模式",
+    "help": "自定义的 URL 路由规则，例如：/workshop/:moduleId"
+  }
+}

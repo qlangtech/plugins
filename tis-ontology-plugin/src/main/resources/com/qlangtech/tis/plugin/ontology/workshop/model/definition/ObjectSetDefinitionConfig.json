@@ -1,0 +1,12 @@
+{
+  "objectType": {
+    "label": "对象类型",
+    "placeholder": "输入 Ontology 对象类型",
+    "help": "Ontology 中定义的对象类型名称"
+  },
+  "filters": {
+    "label": "过滤条件",
+    "placeholder": "JSON 格式的过滤条件列表",
+    "help": "过滤条件，格式：[{\"property\":\"字段名\",\"operator\":\"操作符\",\"value\":\"值\"}]"
+  }
+}

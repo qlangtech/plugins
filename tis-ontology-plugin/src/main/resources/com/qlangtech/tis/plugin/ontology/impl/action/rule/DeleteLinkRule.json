@@ -1,0 +1,22 @@
+{
+  "linkTypeName": {
+    "label": "链接类型名称",
+    "placeholder": "contains",
+    "help": "指定要删除的链接类型"
+  },
+  "sourceObjectRidParam": {
+    "label": "源对象 RID 参数名",
+    "placeholder": "sourceRid",
+    "help": "指定哪个参数包含源对象的 RID",
+    "dftVal": "sourceRid"
+  },
+  "targetObjectRidParam": {
+    "label": "目标对象 RID 参数名",
+    "placeholder": "targetRid",
+    "help": "指定哪个参数包含目标对象的 RID",
+    "dftVal": "targetRid"
+  },
+  "deleteBidirectional": {
+    "label": "删除双向链接"
+  }
+}

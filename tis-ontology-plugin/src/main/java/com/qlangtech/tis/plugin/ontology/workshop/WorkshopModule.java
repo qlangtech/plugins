@@ -3,7 +3,6 @@ package com.qlangtech.tis.plugin.ontology.workshop;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
@@ -13,12 +12,10 @@ import com.qlangtech.tis.manage.common.IAjaxResult;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityDesc;
 import com.qlangtech.tis.plugin.IdentityName;
-import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.manipulate.ManipulatePluginCacheRegister;
-import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyDomainManipulate;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AutoRefreshConfig;
@@ -28,13 +25,12 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopVariableStore;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -423,7 +419,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             JSONObject moduleJson = toResultJSON(module);
 
             // Load pages from independent storage (pages is transient)
-            List<WorkshopPage> pages = listAllPages(ontologyDomainId);
+            List<WorkshopPage> pages = WorkshopPageStore.create(ontologyDomainId).listAll();
             if (!pages.isEmpty()) {
                 JSONArray pagesJson = new JSONArray();
                 for (WorkshopPage p : pages) {
@@ -446,7 +442,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             if (!variables.isEmpty()) {
                 JSONArray variablesJson = new JSONArray();
                 for (WorkshopVariable v : variables) {
-                    JSONObject vj = WorkshopVariable.DefaultDescriptor.toVariableJSON(v);
+                    JSONObject vj = WorkshopVariable.toVariableJSON(v);
                     vj.put("moduleId", module.getId());
                     variablesJson.add(vj);
                 }
@@ -534,72 +530,13 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
 
         // ==================================================================
         //  WorkshopPage 独立存储
-        //  存储路径: TIS.pluginCfgRoot/ontology/{domain}/workshop_pages/{pageId}.xml
+        //
+        //  读写全部委托给 WorkshopPageStore（存储路径
+        //  TIS.pluginCfgRoot/ontology/{domain}/workshop_pages/{pageId}.xml）。
+        //  此处原先自建 PluginStore 的写法有一个缓存碰撞缺陷：pageId 只编进文件路径
+        //  而没编进 Key.keyVal，导致同 domain 下所有页面共用一个缓存 store、
+        //  listAll() 会把同一个页面重复返回 N 次。详见 WorkshopPageStore 类注释。
         // ==================================================================
-
-        /**
-         * 获取 WorkshopPage 的独立 PluginStore
-         */
-        private IPluginStore<WorkshopPage> getPagePluginStore(String domain, String pageId) {
-            KeyedPluginStore.Key<WorkshopPage> key = new KeyedPluginStore.Key<WorkshopPage>(
-                    OntologyDomain.ONTOLOGY_DOMAIN.getIdentity(),
-                    domain + "/workshop_pages",
-                    WorkshopPage.class) {
-                @Override
-                public String getSerializeFileRelativePath() {
-                    return this.getSubDirPath() + File.separator + pageId;
-                }
-            };
-            return TIS.getPluginStore(key);
-        }
-
-        /**
-         * 获取 WorkshopPage 存储目录
-         */
-        private File getPageStoreDir(String domain) {
-            KeyedPluginStore.Key<WorkshopPage> key = new KeyedPluginStore.Key<WorkshopPage>(
-                    OntologyDomain.ONTOLOGY_DOMAIN.getIdentity(),
-                    domain + "/workshop_pages",
-                    WorkshopPage.class);
-            return new File(TIS.pluginCfgRoot, key.getSubDirPath());
-        }
-
-        /**
-         * 加载单个 Page
-         */
-        @SuppressWarnings("all")
-        private WorkshopPage loadPage(String domain, String pageId) {
-            if (StringUtils.isEmpty(pageId)) {
-                return null;
-            }
-            IPluginStore<WorkshopPage> store = getPagePluginStore(domain, pageId);
-            return store.getPlugin();
-        }
-
-        /**
-         * 列出 domain 下的所有 Page
-         */
-        private List<WorkshopPage> listAllPages(String domain) {
-            File pagesDir = getPageStoreDir(domain);
-            if (!pagesDir.exists()) {
-                return Collections.emptyList();
-            }
-            List<WorkshopPage> pages = new ArrayList<>();
-            for (File f : FileUtils.listFiles(pagesDir, new String[]{"xml"}, false)) {
-                String pageId = StringUtils.removeEnd(f.getName(), ".xml");
-                WorkshopPage page = loadPage(domain, pageId);
-                if (page != null) {
-                    pages.add(page);
-                }
-            }
-            // 按 sortOrder 排序
-            pages.sort((a, b) -> {
-                int ao = a.sortOrder != null ? a.sortOrder : 0;
-                int bo = b.sortOrder != null ? b.sortOrder : 0;
-                return Integer.compare(ao, bo);
-            });
-            return pages;
-        }
 
         /**
          * page-get: 查询单个 Page
@@ -614,7 +551,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 throw new IllegalStateException("param 'ontologyDomainId' and 'pageId' can not be empty");
             }
 
-            WorkshopPage page = loadPage(ontologyDomainId, pageId);
+            WorkshopPage page = WorkshopPageStore.create(ontologyDomainId).load(pageId);
             if (page == null) {
                 pluginContext.addErrorMessage(context, "Page not found: " + pageId);
                 return;
@@ -638,7 +575,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 throw new IllegalStateException("param 'ontologyDomainId' can not be empty");
             }
 
-            List<WorkshopPage> pages = listAllPages(ontologyDomainId);
+            List<WorkshopPage> pages = createModuleService().listPages(ontologyDomainId);
 
             JSONArray pagesJson = new JSONArray();
             for (WorkshopPage p : pages) {
@@ -665,7 +602,8 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 throw new IllegalStateException("param 'ontologyDomainId' and 'pageId' can not be empty");
             }
 
-            WorkshopPage page = loadPage(ontologyDomainId, pageId);
+            WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId);
+            WorkshopPage page = pageStore.load(pageId);
             if (page == null) {
                 pluginContext.addErrorMessage(context, "Page not found: " + pageId);
                 return;
@@ -681,9 +619,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 page.displayName = displayName;
             }
 
-            IPluginStore<WorkshopPage> store = getPagePluginStore(ontologyDomainId, pageId);
-            store.setPlugins(pluginContext, Optional.ofNullable(context),
-                    Collections.singletonList(new Descriptor.ParseDescribable<>(page)), true);
+            pageStore.save(pluginContext, Optional.ofNullable(context), page, true);
 
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);

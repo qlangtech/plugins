@@ -1,0 +1,14 @@
+{
+  "interfaceId": {
+    "label": "接口名称",
+    "help": "对外暴露的接口名，供其他模块引用本模块时传入参数。",
+    "placeholder": "例如：filterByRegion"
+  },
+  "inputs": {
+    "label": "输入参数映射",
+    "help": "每行把一个外部接口参数映射到本模块内的变量。点击下方 [+添加] 新增映射行。",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.workshop.model.config.InterfaceInputCreatorFactory",
+    "enum": "java.util.Collections.emptyList()",
+    "viewtype": "tuplelist"
+  }
+}

@@ -151,7 +151,10 @@ public class TestVariableTypeDefinitions {
       ObjectSetDefinitionConfig.DefaultDescriptor.class,
       FunctionConfig.DefaultDescriptor.class);
 
+    // 外部写入是过滤器值唯一的现实来源：刷选区间只可能来自运行时交互，
+    // 构建期无论配 Static 还是 Transformation 都算不出它（见 ExternalInputConfig 类注释）
     assertDefinitions(VariableType.OBJECT_SET_FILTER,
+      ExternalInputConfig.DefaultDescriptor.class,
       StaticConfig.DefaultDescriptor.class,
       VariableTransformationConfig.DefaultDescriptor.class);
 
@@ -281,10 +284,11 @@ public class TestVariableTypeDefinitions {
   // 辅助
   // ===================================================================
 
-  /** 7 个定义方式的 descriptor 实例。构造仅走反射，无 TIS 依赖，单测里可直接 new */
+  /** 8 个定义方式的 descriptor 实例。构造仅走反射，无 TIS 依赖，单测里可直接 new */
   private static List<VariableDefinitionConfig.BasicDescriptor> allDescriptors() {
     return List.of(//
-      new StaticConfig.DefaultDescriptor() //
+      new ExternalInputConfig.DefaultDescriptor() //
+      , new StaticConfig.DefaultDescriptor() //
       , new ObjectPropertyConfig.DefaultDescriptor() //
       , new ObjectSetAggregationConfig.DefaultDescriptor() //
       , new ObjectSetDefinitionConfig.DefaultDescriptor() //

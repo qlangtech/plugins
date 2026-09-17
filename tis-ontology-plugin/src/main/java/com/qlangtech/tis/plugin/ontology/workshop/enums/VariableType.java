@@ -1,9 +1,11 @@
 package com.qlangtech.tis.plugin.ontology.workshop.enums;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.plugin.ontology.workshop.model.definition.VariableDefinitionConfig;
 
 /**
  * Workshop Variable 类型枚举
+ * @see VariableDefinitionConfig#TYPE_DEFINITIONS
  */
 public enum VariableType implements DescriptorUseableShortComment {
   // 标量类型

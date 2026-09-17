@@ -4,11 +4,12 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ChartLayer;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
-import com.qlangtech.tis.plugin.workshop.widget.WorkshopWidget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,9 @@ public class ChartXYWidget extends WorkshopWidget {
     /**
      * 图层列表 —— 一个图层 = 一份数据输入 + 一种画法，多层叠在同一坐标系。
      */
-    @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    // @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    @SubForm(ordinal = 10, desClazz = ChartLayer.class //
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public List<ChartLayer> layers = new ArrayList<>();
 
     /**

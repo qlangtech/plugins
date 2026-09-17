@@ -1,0 +1,14 @@
+{
+  "targetPage": {
+    "label": "目标页面",
+    "help": "变量值变化后跳转到本 Workshop 的哪个页面。",
+    "placeholder": "请选择目标页面"
+  },
+  "params": {
+    "label": "路由参数映射",
+    "help": "每行把一个 URL 参数映射到本模块内的变量，跳转时带上当前值。点击下方 [+添加] 新增映射行。",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.workshop.model.config.RoutingParamCreatorFactory",
+    "enum": "java.util.Collections.emptyList()",
+    "viewtype": "tuplelist"
+  }
+}

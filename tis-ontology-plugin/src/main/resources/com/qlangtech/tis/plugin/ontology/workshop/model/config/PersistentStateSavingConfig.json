@@ -1,0 +1,7 @@
+{
+  "storageKey": {
+    "label": "存储键名",
+    "help": "变量值在外部存储中的键名，跨会话按该键读写。",
+    "placeholder": "例如：workshop.region.filter"
+  }
+}

@@ -1,65 +1,27 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.config;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 
 /**
- * Workshop Variable 接口配置
- * 定义变量与外部接口的交互方式
+ * Workshop Variable 接口配置抽象基类 —— 变量与外部接口的交互方式。
+ *
+ * <p>「是否配置」由<b>子类类型</b>承担，而非实例字段：{@link MappingInterfaceConfig}
+ * 表示开启，{@link NoneInterfaceConfig} 表示不启用。这样 {@code interfaceId} 与
+ * {@code inputs} 不可能出现在「关闭」的实例上，自相矛盾的数据在类型层面即不可表示。
+ * 同一取舍见 {@code workshop.model.definition.VariableDefinitionConfig} 的类注释。
+ *
+ * <p>本类<b>刻意不声明任何 {@code @FormField} 字段</b>：字段全在「开启」子类里。
+ * 原因是 ordinal 在同一次 {@code PropertyType.buildPropertyTypes} 里排序，
+ * 基类与子类各声明一份会撞号（重复 ordinal 的排序不确定）。
+ * 也因此本类不需要自己的 {@code .json}。
+ *
+ * @author 百岁 (baisui@qlangtech.com)
+ * @date 2026/9/16
  */
-public class VariableInterfaceConfig implements Serializable {
+public abstract class VariableInterfaceConfig implements Describable<VariableInterfaceConfig> {
 
-  private static final long serialVersionUID = 1L;
-
-  /** 接口 ID */
-  private String interfaceId;
-
-  /** 输入参数映射 */
-  private List<InterfaceInput> inputs = new ArrayList<>();
-
-  public String getInterfaceId() {
-    return interfaceId;
-  }
-
-  public void setInterfaceId(String interfaceId) {
-    this.interfaceId = interfaceId;
-  }
-
-  public List<InterfaceInput> getInputs() {
-    return inputs;
-  }
-
-  public void setInputs(List<InterfaceInput> inputs) {
-    this.inputs = inputs;
-  }
-
-  /**
-   * 接口输入参数
-   */
-  public static class InterfaceInput implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    /** 参数名 */
-    private String parameter;
-
-    /** 引用的变量 ID */
-    private String variableId;
-
-    public String getParameter() {
-      return parameter;
+    protected abstract static class BasicDescriptor extends Descriptor<VariableInterfaceConfig> {
+        // 公共描述符逻辑
     }
-
-    public void setParameter(String parameter) {
-      this.parameter = parameter;
-    }
-
-    public String getVariableId() {
-      return variableId;
-    }
-
-    public void setVariableId(String variableId) {
-      this.variableId = variableId;
-    }
-  }
 }

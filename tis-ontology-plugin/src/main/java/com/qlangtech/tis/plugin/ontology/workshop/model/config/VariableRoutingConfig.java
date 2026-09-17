@@ -1,36 +1,22 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.config;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 
 /**
- * Workshop Variable 路由配置
- * 定义变量值变化后的页面跳转行为
+ * Workshop Variable 路由配置抽象基类 —— 变量值变化后的页面跳转行为。
+ *
+ * <p>「是否配置」由<b>子类类型</b>承担：{@link PageRoutingConfig} 表示开启，
+ * {@link NoneRoutingConfig} 表示不启用。理由同 {@link VariableInterfaceConfig}。
+ *
+ * <p>本类不声明 {@code @FormField} 字段，故不需要自己的 {@code .json}。
+ *
+ * @author 百岁 (baisui@qlangtech.com)
+ * @date 2026/9/16
  */
-public class VariableRoutingConfig implements Serializable {
+public abstract class VariableRoutingConfig implements Describable<VariableRoutingConfig> {
 
-  private static final long serialVersionUID = 1L;
-
-  /** 目标页面名称 */
-  private String targetPage;
-
-  /** 路由参数 */
-  private Map<String, String> params = new HashMap<>();
-
-  public String getTargetPage() {
-    return targetPage;
-  }
-
-  public void setTargetPage(String targetPage) {
-    this.targetPage = targetPage;
-  }
-
-  public Map<String, String> getParams() {
-    return params;
-  }
-
-  public void setParams(Map<String, String> params) {
-    this.params = params;
-  }
+    protected abstract static class BasicDescriptor extends Descriptor<VariableRoutingConfig> {
+        // 公共描述符逻辑
+    }
 }

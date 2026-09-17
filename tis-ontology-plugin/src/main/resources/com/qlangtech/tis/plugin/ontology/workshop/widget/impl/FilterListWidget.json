@@ -1,4 +1,14 @@
 {
+  "objectSetVar": {
+    "help": "选择本列表过滤的对象集变量：单选/多选控件的候选项按该对象集的属性枚举约束在运行时推导，写出的谓词也会带上它的对象类型。",
+    "placeholder": "请选择对象集变量"
+  },
+  "filters": {
+    "help": "配置过滤项：每行设置目标属性(property)、页面显示名(label)、控件形态(component)，算子(operator)留空则按控件形态推导。点击下方 [+添加] 新增过滤项。",
+    "elementCreator": "com.qlangtech.tis.plugin.ontology.workshop.widget.FilterItemElementCreatorFactory",
+    "enum": "java.util.Collections.emptyList()",
+    "viewtype": "tuplelist"
+  },
   "filterOutputVar": {
     "help": "过滤结果写回：组合出的过滤条件写入该「对象集合过滤器」变量，供下游组件作为过滤源",
     "placeholder": "请选择对象集合过滤器变量"

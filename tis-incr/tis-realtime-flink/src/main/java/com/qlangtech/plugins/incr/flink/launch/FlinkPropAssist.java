@@ -144,7 +144,8 @@ public class FlinkPropAssist<T extends Describable> {
                 this.props = propsAssist.descriptor.getPluginFormPropertyTypes().accept(new PluginFormProperties.IVisitor() {
                     @Override
                     public Map<String, PropertyType> visit(RootFormProperties props) {
-                        return props.propertiesType;
+                        // 零拷贝收窄视图：propertiesType 构造期已由 filterFieldProp 过滤，只含 PropertyType 实例
+                        return PropertyType.toPropertyTypes(props.propertiesType);
                     }
                 });
             }

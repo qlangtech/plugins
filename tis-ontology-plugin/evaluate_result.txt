@@ -1,0 +1,60 @@
+1.nl:qid:294:哪些商店在开业三年后的库存周转率高于或等于同类商店平均水平？------------------------------------------------
+1.expect sql------------------------------------------------
+WITH store_opening_dates AS (
+    SELECT
+        store_id,
+        store_open_date AS open_date,
+        date(store_open_date, '+36 months') AS third_year_date
+    FROM
+        toy_stores
+),
+valid_sales AS (
+    SELECT
+        s.store_id,
+        SUM(CAST(s.units AS INTEGER)) AS total_units
+    FROM
+        toy_sales s
+        JOIN store_opening_dates sod ON s.store_id = sod.store_id
+    WHERE
+        s.date >= sod.third_year_date
+    GROUP BY
+        s.store_id
+),
+store_inventory AS (
+    SELECT
+        store_id,
+        SUM(CAST(stock_on_hand AS INTEGER)) AS total_stock
+    FROM
+        toy_inventory
+    GROUP BY
+        store_id
+),
+turnover_rates AS (
+    SELECT
+        vs.store_id,
+        (vs.total_units * 1.0) / si.total_stock AS turnover_rate,
+        st.store_city
+    FROM
+        valid_sales vs
+        JOIN store_inventory si ON vs.store_id = si.store_id
+        JOIN toy_stores st ON vs.store_id = st.store_id
+),
+city_avg_turnover AS (
+    SELECT
+        store_city,
+        AVG(turnover_rate) AS avg_rate
+    FROM
+        turnover_rates
+    GROUP BY
+        store_city
+)
+SELECT
+    tr.store_id,
+    tr.turnover_rate AS "库存周转率",
+    cat.avg_rate AS "同类平均周转率"
+FROM
+    turnover_rates tr
+    JOIN city_avg_turnover cat ON tr.store_city = cat.store_city
+    JOIN toy_stores st ON tr.store_id = st.store_id
+WHERE
+    tr.turnover_rate >= cat.avg_rate

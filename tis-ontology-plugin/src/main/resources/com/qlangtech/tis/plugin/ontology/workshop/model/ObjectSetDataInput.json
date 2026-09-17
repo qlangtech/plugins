@@ -1,0 +1,7 @@
+{
+  "dataSourceVar": {
+    "label": "数据源变量",
+    "help": "提供本图层数据的对象集变量",
+    "placeholder": "请选择对象集变量"
+  }
+}

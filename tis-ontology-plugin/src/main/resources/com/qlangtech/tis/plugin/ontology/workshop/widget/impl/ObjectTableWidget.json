@@ -1,7 +1,21 @@
 {
-  "objectSetVar": { "help": "选择提供行数据的对象集变量", "placeholder": "请选择对象集变量" },
-  "pageSize":     { "help": "每页显示条数", "dftVal": 20 },
-  "columns":            { "help": "配置表格列定义：每行设置属性名(prop)、显示标签(label)、列宽(width)等。点击下方 [+添加] 新增列。" },
-  "activeObjectVar":    { "help": "当前行写回：点击某行后把该行对象写入此变量，供下游组件消费", "placeholder": "请选择接收当前行的变量" },
-  "selectedObjectsVar": { "help": "多选集合写回：勾选集合变化后把选中行数组写入此变量，供下游组件消费", "placeholder": "请选择接收选中集合的变量" }
+  "objectSetVar": {
+    "help": "选择提供行数据的对象集变量",
+    "placeholder": "请选择对象集变量"
+  },
+  "pageSize": {
+    "help": "每页显示条数",
+    "dftVal": 20
+  },
+  "columns": {
+    "help": "配置表格列定义：每行设置属性名(prop)、显示标签(label)、列宽(width)等。点击下方 [+添加] 新增列。"
+  },
+  "activeObjectVar": {
+    "help": "当前行写回：点击某行后把该行对象写入此变量，供下游组件消费",
+    "placeholder": "请选择接收当前行的变量"
+  },
+  "selectedObjectsVar": {
+    "help": "多选集合写回：勾选集合变化后把选中行数组写入此变量，供下游组件消费",
+    "placeholder": "请选择接收选中集合的变量"
+  }
 }

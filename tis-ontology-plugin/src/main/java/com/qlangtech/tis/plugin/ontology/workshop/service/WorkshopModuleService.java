@@ -7,6 +7,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.exception.VariableNotFoundExce
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopVariableStore;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
@@ -149,6 +150,28 @@ public class WorkshopModuleService {
         WorkshopModule module = getModule(ontologyDomainId, moduleName);
         module.addPage(page);
         return updateModule(ontologyDomainId, moduleName, module, updatedBy);
+    }
+
+    // ==================================================================
+    //  Page 存储
+    //
+    //  与变量同理：页面也不走模块 XML（WorkshopPage.sections 是 transient），
+    //  由 WorkshopPageStore 独立落盘（ontology/{domain}/workshop_pages/{pageId}.xml）。
+    //  页面按 domain 归属（不带 moduleName 维度），故这里只需 domain。
+    // ==================================================================
+
+    /**
+     * 取得某个 domain 的页面存储
+     */
+    public WorkshopPageStore getPageStore(String ontologyDomainId) {
+        return WorkshopPageStore.create(ontologyDomainId);
+    }
+
+    /**
+     * 列出 domain 下的所有页面，按 sortOrder 升序
+     */
+    public List<WorkshopPage> listPages(String ontologyDomainId) {
+        return getPageStore(ontologyDomainId).listAll();
     }
 
     // ==================================================================

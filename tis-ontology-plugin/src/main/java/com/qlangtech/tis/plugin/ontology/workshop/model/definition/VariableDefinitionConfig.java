@@ -12,12 +12,12 @@ import java.util.Map;
 
 /**
  * Workshop Variable 定义配置抽象基类
- * 定义变量值的计算方式，7 种具体子类对应不同的计算策略
+ * 定义变量值的计算方式，8 种具体子类对应不同的计算策略
  *
  * <h3>类型身份由类本身承担</h3>
  * 本体系<b>不再</b>有与之平行的 {@code VariableDefinitionType} 枚举（已删除）。
  * 原先 {@code WorkshopVariable} 上有一个 {@code definitionType} 字段与该枚举配合，
- * 但它是重复的分类体系：枚举的 7 个常量与这里 7 个子类一一对应，中文标签也和各子类
+ * 但它是重复的分类体系：枚举的 7 个常量与当时的 7 个子类一一对应，中文标签也和各子类
  * {@code DefaultDescriptor.shortComment()} 逐字重复，并且作为一个独立的 SELECTABLE
  * 表单项与 {@code definitionConfig} 自身渲染出的 impl 选择器构成了同一个控件的两份。
  * 更糟的是它允许出现自相矛盾的状态（例如 {@code ObjectSetDefinitionConfig} 实例的
@@ -38,8 +38,19 @@ import java.util.Map;
  * </ul>
  *
  * <h3>新增一种定义方式的改动面</h3>
- * 只需三步：新增子类、其 {@code DefaultDescriptor}、对应 {@code .json} 资源。
- * 漏改会导致编译失败（{@link #isBackendComputed()} 是抽象方法），而不是运行时才暴露。
+ * <b>类本身</b>只需两步：新增子类、其 {@code DefaultDescriptor}；再有 {@code .json} 资源
+ * 也仅是当子类里有 {@code @FormField} 时才需要——json 是给字段写 label/help 的，
+ * 零字段的子类无处可写，参见 {@link ExternalInputConfig} 与同仓库的 {@code ActionButtonWidget}。
+ * 漏改这三者会导致编译失败（{@link #isBackendComputed()} 是抽象方法），而不是运行时才暴露。
+ *
+ * <p><b>但整体改动面不止于此</b>，还有两处不在此文件的登记动作，且都<b>没有</b>编译期保护：
+ * <ol>
+ *   <li>把 descriptor 登记进 {@link #TYPE_DEFINITIONS}（见下节末段）</li>
+ *   <li>前端 tis-console 的 {@code variable.service.ts} 为新的 kind 加
+ *       {@code computeValueInternal} 分支——漏了会让<b>整个模块加载失败</b>
+ *       （该方法 {@code default} 抛异常，而初始化会急切计算全部非 lazy 变量），
+ *       以及 {@code variable.model.ts} 的 kind 联合类型</li>
+ * </ol>
  *
  * <h3>与变量类型的兼容性（{@link #TYPE_DEFINITIONS}）</h3>
  * 变量类型（{@link VariableType}）与定义方式是<b>多对多</b>的：只有一部分定义方式能产出
@@ -53,13 +64,14 @@ import java.util.Map;
  *
  * <p>该约束表达为 {@link #TYPE_DEFINITIONS} 这张映射表，消费方是
  * {@link #supports(VariableType, Descriptor)}（{@code WorkshopVariable} 落盘前校验）
- * 与 {@link #filter(VariableType, List)}（表单侧 {@code subDescEnumFilter} 过滤候选 impl）。
+ * 与 {@link #applicableDefinitions(VariableType, List)}（表单侧 {@code subDescEnumFilter}
+ * 过滤候选 impl，由每个变量类型子类的 descriptor 注入）。
  *
  * <p><b>这不是被删掉的 {@code definitionType} 字段的回归</b>，两者形态根本不同：
  * <ul>
- *   <li>旧的 {@code definitionType} 是 <b>1:1 平行分类</b>（7 个枚举常量 ↔ 7 个子类，
+ *   <li>旧的 {@code definitionType} 是 <b>1:1 平行分类</b>（7 个枚举常量 ↔ 当时的 7 个子类，
  *       标签逐字重复），且作为<b>实例字段</b>落盘，允许出现自相矛盾的值</li>
- *   <li>{@link #TYPE_DEFINITIONS} 是 <b>12×7 的多对多能力声明</b>——这一维旧字段根本
+ *   <li>{@link #TYPE_DEFINITIONS} 是 <b>12×8 的多对多能力声明</b>——这一维旧字段根本
  *       表达不了；它也不落在实例上（实例仍只有 {@code definitionConfig} 一个字段，
  *       没有冗余类型），只存在于描述符侧的静态映射表里</li>
  * </ul>
@@ -158,7 +170,9 @@ public abstract class VariableDefinitionConfig implements Describable<VariableDe
       , FunctionConfig.DefaultDescriptor.class));
 
     defs.put(VariableType.OBJECT_SET_FILTER, List.of(//
-      StaticConfig.DefaultDescriptor.class //
+      // 值的唯一现实来源：图表刷选 / 过滤组件的运行时写入（见 ExternalInputConfig）
+      ExternalInputConfig.DefaultDescriptor.class //
+      , StaticConfig.DefaultDescriptor.class //
       , VariableTransformationConfig.DefaultDescriptor.class));
 
     defs.put(VariableType.TIME_SERIES_SET, List.of(//
@@ -212,9 +226,13 @@ public abstract class VariableDefinitionConfig implements Describable<VariableDe
   /**
    * 按变量类型过滤候选定义方式，供表单侧 {@code subDescEnumFilter} 钩子直接调用。
    *
-   * <p>钩子接线见 {@code DefinitionOfVariable.json} 的 {@code subDescEnumFilter}，
-   * 作用点是 {@code PropertyType.applicableDescriptors(boolean)}
+   * <p>钩子接线见 {@code WorkshopVariable.BasicDescriptor} 的构造器 —— 每个变量类型子类把
+   * 自己的 {@link VariableType} 常量烙进 {@code definitionConfig} 字段的
+   * {@code subDescEnumFilter}；作用点是 {@code PropertyType.applicableDescriptors(boolean)}
    * （在表单元数据构建期对本字段的全部候选 impl 应用一段 Groovy 函数）。
+   *
+   * <p>注意 Groovy 脚本那一侧请走 {@link #applicableDefinitions(VariableType, List)}：
+   * 框架下发的是 {@code List<? extends Descriptor>}，本方法的 {@code D} 型参收不了。
    *
    * @param type       当前已选的变量类型；<b>{@code null} 时原样返回全部候选</b>，
    *                   与 {@link #supports(VariableType, Descriptor)} 的放行口径一致
@@ -228,6 +246,39 @@ public abstract class VariableDefinitionConfig implements Describable<VariableDe
     List<Class<? extends BasicDescriptor>> supported = definitionsOf(type);
     List<D> filtered = new ArrayList<>(candidates.size());
     for (D candidate : candidates) {
+      if (supported.contains(candidate.getClass())) {
+        filtered.add(candidate);
+      }
+    }
+    return filtered;
+  }
+
+  /**
+   * 按变量类型过滤候选定义方式，供<strong>变量类型子类</strong>注入的
+   * {@code subDescEnumFilter} Groovy 脚本调用。
+   *
+   * <p>与 {@link #filter(VariableType, List)} 的<em>语义完全相同</em>，差别只在签名：
+   * {@code filter} 的元素类型是 {@code D extends BasicDescriptor}，而 Groovy 脚本从框架拿到的
+   * 是 {@code List<? extends Descriptor>}（{@code Descriptor} 上并无 {@code BasicDescriptor}
+   * 约束），且 {@code filter} 的返回类型要保住元素的静态类型。
+   * 两者<strong>不能</strong>写成同名重载 —— 擦除后都是 {@code (VariableType, List)}，会冲突。
+   *
+   * <p>接线方是 {@code WorkshopVariable.BasicDescriptor} 的构造器：每个变量类型子类把自己的
+   * {@link VariableType} 常量烙进脚本，于是「类型 → 可用定义方式」的收敛从
+   * <strong>跨步骤的运行时上下文</strong>变成<strong>单类内的静态事实</strong>。
+   *
+   * @param type       子类代表的变量类型；为 {@code null} 时原样返回全部候选
+   * @param candidates 本字段的全部候选 descriptor（由框架下发）
+   * @see #supports(VariableType, Descriptor)
+   */
+  public static List<? extends Descriptor> applicableDefinitions(
+          VariableType type, List<? extends Descriptor> candidates) {
+    if (type == null || candidates == null) {
+      return candidates;
+    }
+    List<Class<? extends BasicDescriptor>> supported = definitionsOf(type);
+    List<Descriptor> filtered = new ArrayList<>(candidates.size());
+    for (Descriptor candidate : candidates) {
       if (supported.contains(candidate.getClass())) {
         filtered.add(candidate);
       }

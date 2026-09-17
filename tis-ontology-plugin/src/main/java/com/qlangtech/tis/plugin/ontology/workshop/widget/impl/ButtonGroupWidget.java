@@ -1,8 +1,8 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
-import com.qlangtech.tis.plugin.workshop.widget.WorkshopWidget;
 
 /**
  * P0 Widget：按钮组（Button Group）

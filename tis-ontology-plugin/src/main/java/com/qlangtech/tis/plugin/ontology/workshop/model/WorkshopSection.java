@@ -7,11 +7,11 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.SectionLayout;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibility;
 import com.qlangtech.tis.plugin.ontology.workshop.model.section.DropHandling;
 import com.qlangtech.tis.plugin.ontology.workshop.model.section.SectionLayoutConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.section.SectionStyleConfig;
-import com.qlangtech.tis.plugin.workshop.model.ConditionalVisibility;
-import com.qlangtech.tis.plugin.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 
 import java.io.Serializable;
 import java.util.ArrayList;

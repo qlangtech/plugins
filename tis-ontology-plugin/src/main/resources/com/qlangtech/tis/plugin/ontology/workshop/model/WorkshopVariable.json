@@ -1,6 +1,42 @@
 {
-  "useless": {
+  "id": {
     "label": "变量 ID",
-    "help": "占位字段，仅为满足 IdentityName「有且仅有一个 identity 字段」的框架约束；真正的变量标识在第一步 MetadataOfVariable.id"
+    "help": "变量的唯一标识，新建时自动生成，决定变量配置文件的名字",
+    "readonly": true,
+    "advance": true,
+    "dftVal": "com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable.dftValOfId():uncache_true"
+  },
+  "name": {
+    "label": "变量名称",
+    "help": "变量的唯一标识符，大小写不敏感，模块内不可重复"
+  },
+  "definitionConfig": {
+    "label": "定义方式",
+    "help": "变量值的计算方式；可选范围由变量类型决定（见下）"
+  },
+  "recomputeBehavior": {
+    "label": "重算行为",
+    "help": "变量何时重新计算值",
+    "dftVal": "AUTOMATIC"
+  },
+  "lazyLoading": {
+    "label": "懒加载",
+    "help": "是否延迟加载变量值，直到实际使用时才计算",
+    "dftVal": false
+  },
+  "interfaceConfig": {
+    "label": "界面配置",
+    "help": "变量与外部接口的交互配置；选择「off」表示不对外暴露接口",
+    "dftVal": "off"
+  },
+  "routingConfig": {
+    "label": "路由配置",
+    "help": "变量值变化后跳转到本 Workshop 的某个页面；选择「off」表示不跳转",
+    "dftVal": "off"
+  },
+  "stateSavingConfig": {
+    "label": "状态保存配置",
+    "help": "变量值的持久化配置；选择「off」表示只保留在当前会话",
+    "dftVal": "off"
   }
 }

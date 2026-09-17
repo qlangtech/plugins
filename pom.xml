@@ -181,7 +181,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <releaseProfiles></releaseProfiles>
         <arguments></arguments>
-        <argLine>-Xms768M -Xmx768M -Djava.awt.headless=true -XX:+HeapDumpOnOutOfMemoryError -XX:+TieredCompilation
+        <!-- JDK17 下扫 TIS 扩展需在 java.base/java.lang 上开启 add-opens：不开启时
+             DescriptorExtensionList 的懒加载会抛 InaccessibleObjectException
+             (ClassLoaderReflectionToolkit.<clinit> 反射 ClassLoader.findClass)，
+             依赖 descriptor 扫描的单测只能整条 Assume 跳过、静默失去覆盖。 -->
+        <argLine>--add-opens java.base/java.lang=ALL-UNNAMED
+            -Xms768M -Xmx768M -Djava.awt.headless=true -XX:+HeapDumpOnOutOfMemoryError -XX:+TieredCompilation
             -XX:TieredStopAtLevel=1
         </argLine>
 

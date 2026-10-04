@@ -5,7 +5,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.ontology.workshop.model.EventConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.event.EventConfig;
 
 import java.io.Serializable;
 import java.util.ArrayList;

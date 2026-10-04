@@ -2,5 +2,12 @@
   "objectVar": {
     "help": "详情展示对象来源：选择当前模块中的对象集合变量，取其当前对象逐属性展示",
     "placeholder": "请选择对象集变量"
+  },
+  "columnCount": {
+    "help": "描述列表的列数，1-3 列",
+    "dftVal": 2
+  },
+  "properties": {
+    "help": "要展示的属性列表：每行设置属性名(prop)、显示标签(label)、格式化方式(format)等。点击下方 [+添加] 新增属性。"
   }
 }

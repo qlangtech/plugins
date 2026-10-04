@@ -3,7 +3,9 @@ package com.qlangtech.tis.plugin.ontology.workshop;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IManipulateStatus;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
@@ -16,8 +18,10 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.manipulate.ManipulatePluginCacheRegister;
+import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyDomainManipulate;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.storegetter.BaiscAssistStoreGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AutoRefreshConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.RoutingConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
@@ -25,12 +29,12 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
-import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
-import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopVariableStore;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +43,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.ontology.OntologyDomain.getOntologyDomainDir;
 
 /**
  * Workshop Module 聚合根实体
@@ -68,28 +74,12 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
 
     @FormField(ordinal = 5)
     public RoutingConfig routingConfig;
-    /**
-     * <pre>
-     *     "pages": {
-     *     "label": "页面列表",
-     *     "help": "模块包含的所有页面"
-     *   },
-     *   "overlays": {
-     *     "label": "浮层列表",
-     *     "help": "模块包含的所有浮层（抽屉、模态框）"
-     *   },
-     *   "variables": {
-     *     "label": "变量列表",
-     *     "help": "模块级别的全局变量定义"
-     *   },
-     *   "header": {
-     *     "label": "页面头部",
-     *     "help": "模块的页面头部配置"
-     *   }
-     *
-     * </pre>
-     */
     // 聚合子实体（使用强类型 List）
+    //
+    // 这三个集合与 header 都是 transient、且 @FormField 被注释掉：子实体不走模块表单，
+    // 而是各自独立落盘（pages → WorkshopPageStore、variables → WorkshopVariableStore、
+    // header → WorkshopHeaderStore），读取时由 load()/loadAll() 回填。
+    // WorkshopModule.json 里因此也没有这几个 key —— 它们不在表单上出现。
     // @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE)
     public transient List<WorkshopPage> pages = new ArrayList<>();
 
@@ -99,7 +89,14 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
     // @FormField(ordinal = 12, type = FormFieldType.MULTI_SELECTABLE)
     public transient List<WorkshopVariable> variables = new ArrayList<>();
 
-    // @FormField(ordinal = 13)
+    /**
+     * 模块级页头配置（标题 / 方向 / 折叠等）。
+     * <p>
+     * 与 module 是 1:1，由 { WorkshopHeaderStore} 独立落盘
+     * （{@code ontology/{domain}/workshop_headers/{moduleName}.xml}），
+     * 不随模块 XML 走，理由见 { WorkshopHeaderStore} 类注释。
+     * 前端配置入口在 Workshop 编辑器的 Layout 面板（对标 Palantir 的 Header 面板）。
+     */
     public transient WorkshopHeader header;
 
     // 非表单字段（不需要 @FormField）
@@ -109,16 +106,90 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
     private String updatedBy;
     private LocalDateTime updatedAt;
 
-//    // 构造函数
-//    public WorkshopModule() {
+    public static File getWorkshopDir(String ontologyName, String workshop) {
+        if (StringUtils.isEmpty(ontologyName)) {
+            throw new IllegalArgumentException("param ontologyName can not be empty");
+        }
+        if (StringUtils.isEmpty(workshop)) {
+            throw new IllegalArgumentException("param workshop can not be empty");
+        }
+        return new File(getOntologyDomainDir(ontologyName), OntologyDomain.KEY_WORKSHOP + File.separator + workshop);
+    }
+
+    public List<WorkshopPage> loadAllPage() {
+        return Lists.newArrayList();
+    }
+
+    public static abstract class BasicWorkshopStoreGetter<T extends Describable<?>> extends BaiscAssistStoreGetter<T> {
+
+
+
+        @Override
+        public File getAssistRootDir(String ontologyName, Optional<String> submodule) {
+            return getWorkshopDir(ontologyName, submodule.orElseThrow());
+        }
+
+        @Override
+        public File getAssistRootDir(String ontologyName) {
+            // return super.getAssistRootDir(ontologyName);
+            throw new UnsupportedOperationException("ontologyName:" + ontologyName);
+        }
+
+//        /**
+//         * 与父类实现逐行一致，唯一的差别是 Key 的 pluginClass 取自 {@link #getPluginType()}
+//         * 而不是硬编码的 {@code ONTOLOGY.extensionPoint}。
+//         * <p>
+//         * 之所以整段就地覆盖而不是调用 super：Key 是父类在方法体内匿名构造的，
+//         * 外部没有替换其 pluginClass 的机会，只能自己再构造一遍。
+//         * 父类若改动落盘约定，这里需要同步跟进。
+//         */
+//        @SuppressWarnings("all")
+//        @Override
+//        public IPluginStore<T> getPluginStore(OntologyPluginMeta pluginMeta, Optional<String> submodule) {
+//            if (pluginMeta.isUpdate() || pluginMeta.shallPersistence()) {
+//                String ontologyName = pluginMeta.getDomain();
+//                final String pluginIdVal = pluginMeta.getPluginIdVal();
+//                if (StringUtils.isEmpty(ontologyName)) {
+//                    throw new IllegalArgumentException("param ontologyName can not be empty");
+//                }
+//                if (StringUtils.isEmpty(pluginIdVal)) {
+//                    throw new IllegalArgumentException("param pluginIdVal can not be empty");
+//                }
+//                KeyedPluginStore.Key key = new KeyedPluginStore.Key(Ontology.ONTOLOGY.getIdentity(), ontologyName
+//                        , getPluginType()) {
+//                    @Override
+//                    public File getStoreFile() {
+//                        File workshopDir = getAssistRootDir(ontologyName, submodule);
+//                        return new File(workshopDir, Descriptor.getPluginFileName(getFileName()));
+//                    }
 //
-//    }
+//                    public String getSerializeFileRelativePath() {
+//                        return this.getSubDirPath() + File.separator + getFileName();
+//                    }
+//
+//                    @Override
+//                    protected String getFileName() {
+//                        return pluginIdVal;
+//                    }
+//
+//                    @Override
+//                    public int hashCode() {
+//                        return getStoreFile().hashCode();
+//                    }
+//                };
+//                return TIS.getPluginStore(key).unsaveCast();
+//            }
+//            return (IPluginStore<T>) IPluginStore.noSaveStore(pluginMeta.getDelegate());
+//        }
+    }
+
 
     public static WorkshopModule load(String ontologyDomain, String modeuleName) {
         ManipulatePluginCacheRegister.TemplateManipulateStore<OntologyDomainManipulate> manipulateStore
                 = getManipulateStore(ontologyDomain, false);
         WorkshopModule module = manipulateStore.getManipuldate(IdentityName.create(modeuleName), WorkshopModule.class);
         loadVariables(ontologyDomain, modeuleName, module);
+        loadHeader(ontologyDomain, modeuleName, module);
         return module;
     }
 
@@ -128,6 +199,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
         List<WorkshopModule> modules = manipulateStore.getManipuldaties(WorkshopModule.class);
         for (WorkshopModule module : modules) {
             loadVariables(ontologyDomain, module.name, module);
+            loadHeader(ontologyDomain, module.name, module);
         }
         return modules;
         //  return manipulateStore.getManipuldate(IdentityName.create(modeuleName), WorkshopModule.class);
@@ -144,7 +216,25 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
         if (module == null || StringUtils.isEmpty(moduleName)) {
             return;
         }
-        module.variables = WorkshopVariableStore.create(ontologyDomain, moduleName).listAll();
+        //  module.variables = WorkshopVariableStore.create(ontologyDomain, moduleName).listAll();
+    }
+
+    /**
+     * 从独立存储回填 {@link #header}。
+     * <p>
+     * header 与 variables 同理是 transient 字段，模块 XML 里没有它，不回填的话
+     * doGet 下发的 JSON 里就没有 header，前端 {@code module-container.component.html}
+     * 的 {@code *ngIf="module.header?.vals?.visible"} 恒为 false —— 整个
+     * {@code <app-workshop-header>} 不渲染。
+     * <p>
+     * 尚未配置过时回落到默认 header（{@code visible = true}）而不是 null：
+     * 前端要靠它渲染出顶部工具栏，编辑器也要靠它才有可编辑的对象。
+     */
+    private static void loadHeader(String ontologyDomain, String moduleName, WorkshopModule module) {
+        if (module == null || StringUtils.isEmpty(moduleName)) {
+            return;
+        }
+        module.header = WorkshopHeader.loadOrDefault(ontologyDomain, moduleName);
     }
 
     @Override
@@ -223,18 +313,32 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
         this.updatedAt = LocalDateTime.now();
     }
 
-    public WorkshopPage findPageById(String pageId) {
+    /**
+     * page-get / page-update 的寻址参数名。
+     * <p>
+     * 曾叫 {@code pageId}，传的是自动生成的 UUID；page 的 id 被删除、name 成为标识后，
+     * 继续叫 id 会让人以为里面装的是 UUID，故改名。
+     */
+    public static final String PARAM_PAGE_NAME = "pageName";
+
+    /**
+     * 按 name 查页面 —— page 的 name 就是它的标识（曾叫 id，是自动生成的 UUID）。
+     * 比较前先归一化，与 {@link WorkshopVariable#normalizeName} 的口径一致。
+     */
+    public WorkshopPage findPageByName(String pageName) {
         if (pages == null) return null;
+        String normalized = WorkshopVariable.normalizeName(pageName);
         return pages.stream()
-                .filter(p -> p.getId().equals(pageId))
+                .filter(p -> WorkshopVariable.normalizeName(p.name).equals(normalized))
                 .findFirst()
                 .orElse(null);
     }
 
     public WorkshopVariable findVariableByName(String variableName) {
         if (variables == null) return null;
+        String normalized = WorkshopVariable.normalizeName(variableName);
         return variables.stream()
-                .filter(v -> v.getName().equalsIgnoreCase(variableName))
+                .filter(v -> WorkshopVariable.normalizeName(v.getName()).equals(normalized))
                 .findFirst()
                 .orElse(null);
     }
@@ -358,6 +462,12 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                     case "page-update":
                         doPageUpdate(msgHandler, pluginContext, context);
                         break;
+                    case "header-get":
+                        doHeaderGet(msgHandler, pluginContext, context);
+                        break;
+                    case "header-update":
+                        doHeaderUpdate(msgHandler, pluginContext, context);
+                        break;
                     default:
                         pluginContext.addErrorMessage(context, "Unsupported workshop module operation type: " + type);
                 }
@@ -366,7 +476,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             }
         }
 
-        public  static final WorkshopModuleService workshopModuleSvc = new WorkshopModuleService();
+        public static final WorkshopModuleService workshopModuleSvc = new WorkshopModuleService();
 
         /**
          * 子类通过此方法提供 WorkshopModuleService 实例（可覆盖以注入 Mock 或定制实现）
@@ -419,12 +529,11 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             JSONObject moduleJson = toResultJSON(module);
 
             // Load pages from independent storage (pages is transient)
-            List<WorkshopPage> pages = WorkshopPageStore.create(ontologyDomainId).listAll();
+            List<WorkshopPage> pages = module.listAllPage();
             if (!pages.isEmpty()) {
                 JSONArray pagesJson = new JSONArray();
                 for (WorkshopPage p : pages) {
                     JSONObject pj = new JSONObject();
-                    pj.put("id", p.id);
                     pj.put("name", p.name);
                     pj.put("displayName", p.displayName);
                     pj.put("template", p.template != null ? p.template.name().toLowerCase() : "blank");
@@ -433,6 +542,14 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                     pagesJson.add(pj);
                 }
                 moduleJson.put("pages", pagesJson);
+            }
+
+            // header 同样来自独立存储（header 是 transient），但它与 pages 不一样、
+            // 是单个对象而非数组，直接下发对象即可。
+            // 不回填时前端 module-container 的 *ngIf="module.header?.visible" 恒为 false，
+            // <app-workshop-header> 整块不渲染。
+            if (module.header != null) {
+                moduleJson.put("header", headerToJSON(module.header, moduleName));
             }
 
             // 变量同样来自独立存储（variables 是 transient），且下发 {impl, vals} 形态
@@ -545,15 +662,15 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                                IPluginContext pluginContext,
                                Context context) {
             String ontologyDomainId = msgHandler.getString("ontologyDomainId");
-            String pageId = msgHandler.getString("pageId");
+            String pageName = msgHandler.getString(PARAM_PAGE_NAME);
 
-            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(pageId)) {
-                throw new IllegalStateException("param 'ontologyDomainId' and 'pageId' can not be empty");
+            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(pageName)) {
+                throw new IllegalStateException("param 'ontologyDomainId' and '" + PARAM_PAGE_NAME + "' can not be empty");
             }
-
-            WorkshopPage page = WorkshopPageStore.create(ontologyDomainId).load(pageId);
+            String moduleName = null;
+            WorkshopPage page = WorkshopPage.loadPage(ontologyDomainId, moduleName, pageName);
             if (page == null) {
-                pluginContext.addErrorMessage(context, "Page not found: " + pageId);
+                pluginContext.addErrorMessage(context, "Page not found: " + pageName);
                 return;
             }
 
@@ -596,30 +713,28 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                                   IPluginContext pluginContext,
                                   Context context) {
             String ontologyDomainId = msgHandler.getString("ontologyDomainId");
-            String pageId = msgHandler.getString("pageId");
+            String pageName = msgHandler.getString(PARAM_PAGE_NAME);
 
-            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(pageId)) {
-                throw new IllegalStateException("param 'ontologyDomainId' and 'pageId' can not be empty");
+            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(pageName)) {
+                throw new IllegalStateException("param 'ontologyDomainId' and '" + PARAM_PAGE_NAME + "' can not be empty");
             }
-
-            WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId);
-            WorkshopPage page = pageStore.load(pageId);
+            String modeuleName = null;
+          //  WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId);
+            WorkshopPage page = WorkshopPage.loadPage(ontologyDomainId,modeuleName,pageName);
             if (page == null) {
-                pluginContext.addErrorMessage(context, "Page not found: " + pageId);
+                pluginContext.addErrorMessage(context, "Page not found: " + pageName);
                 return;
             }
 
-            // Apply patch fields
-            String name = msgHandler.getString("name");
+            // 只允许改 displayName。name 是页面标识（落盘文件名 + 模块内一切引用键），
+            // 改名会让 SwitchToPageConfig.pageName / WidgetTabConfig.targetPage 等引用全部悬空，
+            // 因此**不接受**请求体里的 name —— 曾经这里有一句 `page.name = name`，已移除。
             String displayName = msgHandler.getString("displayName");
-            if (StringUtils.isNotEmpty(name)) {
-                page.name = name;
-            }
             if (displayName != null) {
                 page.displayName = displayName;
             }
 
-            pageStore.save(pluginContext, Optional.ofNullable(context), page, true);
+         //   pageStore.save(pluginContext, Optional.ofNullable(context), page, true);
 
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);
@@ -627,9 +742,87 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             pluginContext.setBizResult(context, result);
         }
 
+        // ==================================================================
+        //  WorkshopHeader（模块页头）
+        //
+        //  与 module 是 1:1，由 WorkshopHeaderStore 独立落盘
+        //  （ontology/{domain}/workshop_headers/{moduleName}.xml）。
+        //  前端配置入口在 Workshop 编辑器的 Layout 面板。
+        // ==================================================================
+
+        /**
+         * header-get: 查询模块的页头配置（尚未配置过返回默认值，visible = true）
+         */
+        private void doHeaderGet(IControlMsgHandler msgHandler,
+                                 IPluginContext pluginContext,
+                                 Context context) throws Exception {
+            String ontologyDomainId = msgHandler.getString("ontologyDomainId");
+            String moduleName = msgHandler.getString("name");
+
+            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(moduleName)) {
+                throw new IllegalStateException("param 'ontologyDomainId' and 'name' can not be empty");
+            }
+
+            WorkshopHeader header = createModuleService().getHeader(ontologyDomainId, moduleName);
+
+            JSONObject result = new JSONObject();
+            result.put(IAjaxResult.KEY_SUCCESS, true);
+            result.put("header", headerToJSON(header, moduleName));
+            pluginContext.setBizResult(context, result);
+        }
+
+        /**
+         * header-update: 覆盖式更新页头配置。
+         *
+         * <p>提交的是<b>整份</b> header 实例（{@code {impl, vals}} 形态），而不是字段 patch。
+         * 这不是偏好问题：{@code orientation} / {@code collapseConfig} 是聚合属性字段，
+         * 切换方向意味着换一个<b>子类</b>（丢掉 {@code HeightOrientation.height}、
+         * 带上 {@code VerticalOrientation.width}），逐字段 patch 表达不了「换子类」这件事。
+         *
+         * <p>解析交给 {@code AttrValMap.parseDescribableMap()}，校验与嵌套子表单一并复用
+         * 框架实现（同 {@code WorkshopVariableOperation#parseVariable}）。改造前这里是手写的
+         * 11 个字段映射 + {@code String(v)} 参数拼接，那套方式天生承载不了嵌套结构。
+         *
+         * <p>{@code id} 以 URL 参数为准，避免表单里的值被改动后写到别的模块文件上。
+         */
+        private void doHeaderUpdate(IControlMsgHandler msgHandler,
+                                    IPluginContext pluginContext,
+                                    Context context) throws Exception {
+            String ontologyDomainId = msgHandler.getString("ontologyDomainId");
+            String moduleName = msgHandler.getString("name");
+
+            if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(moduleName)) {
+                throw new IllegalStateException("param 'ontologyDomainId' and 'name' can not be empty");
+            }
+
+            String headerJson = msgHandler.getString(WorkshopHeader.PARAM_HEADER);
+            if (StringUtils.isEmpty(headerJson)) {
+                throw new IllegalStateException("param '" + WorkshopHeader.PARAM_HEADER + "' can not be empty");
+            }
+            AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(),
+                    JSONObject.parseObject(headerJson));
+            WorkshopHeader header = (WorkshopHeader) attrValMap.createDescribable(msgHandler, context).getInstance();
+            header.id = moduleName;
+
+            WorkshopModuleService svc = createModuleService();
+            WorkshopHeader saved = svc.saveHeader(pluginContext, Optional.of(context),
+                    ontologyDomainId, moduleName, header);
+
+            JSONObject result = new JSONObject();
+            result.put(IAjaxResult.KEY_SUCCESS, true);
+            result.put("header", headerToJSON(saved, moduleName));
+            pluginContext.setBizResult(context, result);
+        }
+
+        private static JSONObject headerToJSON(WorkshopHeader header, String moduleName) throws Exception {
+            JSONObject json = WorkshopHeader.toJSON(header);
+            json.put("moduleId", moduleName);
+            return json;
+        }
+
         private static JSONObject pageToJSON(WorkshopPage page) {
             JSONObject pj = new JSONObject();
-            pj.put("id", page.id);
+            // 不再下发 id：page 的标识就是 name，下发两个名字会让前端继续按 id 寻址
             pj.put("name", page.name);
             pj.put("displayName", page.displayName);
             pj.put("template", page.template != null ? page.template.name().toLowerCase() : "blank");
@@ -664,5 +857,9 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
             }
             return json;
         }
+    }
+
+    private List<WorkshopPage> listAllPage() {
+        return Lists.newArrayList();
     }
 }

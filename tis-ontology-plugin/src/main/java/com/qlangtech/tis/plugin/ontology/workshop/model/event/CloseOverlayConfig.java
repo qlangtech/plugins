@@ -1,0 +1,54 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.qlangtech.tis.plugin.ontology.workshop.model.event;
+
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
+
+/** 关闭一个浮层（前端 {@code LayoutService.hideOverlay}）。 */
+public class CloseOverlayConfig extends EventConfig {
+
+    private static final long serialVersionUID = 1L;
+
+    public static final String KEY_OVERLAY_NAME = "overlayName";
+
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, validate = {Validator.require})
+    public String overlayName;
+
+    @TISExtension
+    public static class DefaultDescriptor extends BasicDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            this.registerSelectOptions(KEY_OVERLAY_NAME, WidgetOptionHelper::getWorkshopOverlayOptions);
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Close_Overlay";
+        }
+
+        @Override
+        public String shortComment() {
+            return "关闭浮层";
+        }
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "displayConfig": {
+    "label": "显示配置",
+    "help": "Widget 的尺寸策略、展示优化与条件可见性"
+  }
+}

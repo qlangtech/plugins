@@ -4,11 +4,13 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.io.Serializable;
+import java.util.Collections;
 
 /**
  * 图表系列配置（Chart Series）
@@ -30,14 +32,14 @@ import java.io.Serializable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/15
  */
-public class SeriesConfig implements Describable<SeriesConfig>, Serializable {
+public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IPluginStore.MultiDescribleElement {
 
     private static final long serialVersionUID = 1L;
-
+    private static final String KEY_VARIABLE = "variable";
     /**
      * 系列名称（图例中显示的默认名称）。
      */
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
 
     /**
@@ -88,6 +90,11 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable {
      */
     @FormField(ordinal = 8, type = FormFieldType.ENUM, advance = true)
     public SegmentOverride segmentOverride = SegmentOverride.GROUPED;
+
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
 
     /**
      * 聚合方式。
@@ -157,6 +164,13 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable {
         @Override
         public String getDisplayName() {
             return "Series Config";
+        }
+
+        public DefaultDescriptor() {
+            super();
+            this.registerSelectOptions(KEY_VARIABLE, () -> {
+                return Collections.emptyList();
+            });
         }
     }
 }

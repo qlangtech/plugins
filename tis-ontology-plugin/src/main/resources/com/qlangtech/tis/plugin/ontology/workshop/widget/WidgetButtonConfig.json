@@ -1,0 +1,10 @@
+{
+  "text":           { "label": "按钮文案", "help": "按钮上显示的文字，同时作为这一行的唯一标识", "placeholder": "如：执行动作" },
+  "type":           { "label": "按钮形态", "help": "Ant Design 按钮类型", "dftVal": "default_" },
+  "danger":         { "label": "危险按钮", "help": "开启后按钮为红色，用于删除/重置等不可逆操作", "dftVal": false },
+  "size":           { "label": "按钮尺寸", "dftVal": "default_" },
+  "leftIcon":       { "label": "左侧图标", "help": "Ant Design 图标名，显示在文案左侧（如 plus、delete）" },
+  "rightIcon":      { "label": "右侧图标", "help": "Ant Design 图标名，显示在文案右侧（如 down、right）" },
+  "conditionalVisibility": { "label": "条件可见性", "help": "随某个变量真假改变按钮的呈现；不配置则恒显示" },
+  "onClick":        { "label": "点击行为", "help": "按钮被点击后执行什么：触发事件 / 执行本体动作 / 跳转链接 / 导出数据" }
+}

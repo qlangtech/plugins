@@ -1,14 +1,7 @@
 {
-  "id": {
-    "label": "变量 ID",
-    "help": "变量的唯一标识，新建时自动生成，决定变量配置文件的名字",
-    "readonly": true,
-    "advance": true,
-    "dftVal": "com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable.dftValOfId():uncache_true"
-  },
   "name": {
     "label": "变量名称",
-    "help": "变量的唯一标识符，大小写不敏感，模块内不可重复"
+    "help": "变量的唯一标识符。大小写不敏感（落盘时统一转小写），模块内不可重复。创建后不可修改 —— 它同时是变量配置文件的名字，也是 widget 等反向引用变量时用的键"
   },
   "definitionConfig": {
     "label": "定义方式",

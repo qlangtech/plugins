@@ -5,7 +5,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.FilterItemConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class FilterListWidget extends WorkshopWidget {
+public class FilterListWidget extends FullDisplayWidget {
 
     public static final String KEY_OBJECT_SET_VAR = "objectSetVar";
     public static final String KEY_FILTERS = "filters";

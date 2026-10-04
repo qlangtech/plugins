@@ -1,0 +1,5 @@
+{
+  "objectSetVar": { "label": "导出数据源", "help": "要导出的对象集变量", "placeholder": "请选择对象集变量" },
+  "format":       { "label": "文件格式", "dftVal": "csv" },
+  "fileName":     { "label": "文件名", "help": "不含扩展名；留空时按变量名 + 时间戳生成", "placeholder": "如：股票持仓" }
+}

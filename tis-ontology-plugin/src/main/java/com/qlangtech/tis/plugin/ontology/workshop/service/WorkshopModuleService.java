@@ -2,13 +2,11 @@ package com.qlangtech.tis.plugin.ontology.workshop.service;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
-import com.qlangtech.tis.plugin.ontology.workshop.exception.VariableAlreadyExistsException;
 import com.qlangtech.tis.plugin.ontology.workshop.exception.VariableNotFoundException;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
-import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
-import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopVariableStore;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Workshop Module 业务逻辑服务
@@ -160,18 +157,19 @@ public class WorkshopModuleService {
     //  页面按 domain 归属（不带 moduleName 维度），故这里只需 domain。
     // ==================================================================
 
-    /**
-     * 取得某个 domain 的页面存储
-     */
-    public WorkshopPageStore getPageStore(String ontologyDomainId) {
-        return WorkshopPageStore.create(ontologyDomainId);
-    }
+//    /**
+//     * 取得某个 domain 的页面存储
+//     */
+//    public WorkshopPageStore getPageStore(String ontologyDomainId) {
+//        return WorkshopPageStore.create(ontologyDomainId);
+//    }
 
     /**
      * 列出 domain 下的所有页面，按 sortOrder 升序
      */
     public List<WorkshopPage> listPages(String ontologyDomainId) {
-        return getPageStore(ontologyDomainId).listAll();
+        //  return getPageStore(ontologyDomainId).listAll();
+        return null;
     }
 
     // ==================================================================
@@ -184,33 +182,43 @@ public class WorkshopModuleService {
     //  updateModule() 本就是未实现的 UnsupportedOperationException。
     // ==================================================================
 
-    /**
-     * 取得某个模块的变量存储
-     */
-    public WorkshopVariableStore getVariableStore(String ontologyDomainId, String moduleName) {
-        return WorkshopVariableStore.create(ontologyDomainId, moduleName);
-    }
+//    /**
+//     * 取得某个模块的变量存储
+//     */
+//    public WorkshopVariableStore getVariableStore(String ontologyDomainId, String moduleName) {
+//        return WorkshopVariableStore.create(ontologyDomainId, moduleName);
+//    }
+
+//    private static UploadPluginMeta pluginMeta(String ontologyDomainId, String moduleName) {
+//        UploadPluginMeta pluginMeta = UploadPluginMeta.create(WorkshopVariable.workshopVariable);
+//        pluginMeta.putExtraParams(OntologyDomain.NAME_ONTOLOGY_DOMAIN, ontologyDomainId);
+//        pluginMeta.putExtraParams(OntologyDomain.KEY_WORKSHOP, moduleName);
+//        pluginMeta.putExtraParams(OntologyValueType.KEY_START_PERSISTENCE, Boolean.TRUE.toString());
+//        // pluginMeta.putExtraParams(IdentityName.PLUGIN_IDENTITY_NAME, variable.getName());
+//        return pluginMeta;
+//    }
 
     /**
      * 列出模块下的所有变量
      */
-    public List<WorkshopVariable> listVariables(String ontologyDomainId, String moduleName) {
-        return getVariableStore(ontologyDomainId, moduleName).listAll();
+    public List<WorkshopVariable> listVariables(String ontologyDomainId, String workshop) {
+        return WorkshopVariable.loadAll(ontologyDomainId, (workshop));
     }
 
     /**
      * 查询单个变量，不存在抛 {@link VariableNotFoundException}
      */
     public WorkshopVariable getVariable(String ontologyDomainId, String moduleName, String variableId) {
-        if (StringUtils.isEmpty(variableId)) {
-            throw new IllegalArgumentException("param variableId can not be empty");
-        }
-        WorkshopVariable variable = getVariableStore(ontologyDomainId, moduleName).load(variableId);
-        if (variable == null) {
-            throw new VariableNotFoundException("Variable not found: " + variableId
-                    + " in module '" + moduleName + "'");
-        }
-        return variable;
+//        if (StringUtils.isEmpty(variableId)) {
+//            throw new IllegalArgumentException("param variableId can not be empty");
+//        }
+//        WorkshopVariable variable = getVariableStore(ontologyDomainId, moduleName).load(variableId);
+//        if (variable == null) {
+//            throw new VariableNotFoundException("Variable not found: " + variableId
+//                    + " in module '" + moduleName + "'");
+//        }
+//        return variable;
+        return null;
     }
 
     /**
@@ -218,44 +226,48 @@ public class WorkshopModuleService {
      */
     public WorkshopVariable addVariable(IPluginContext pluginContext, Optional<Context> context,
                                         String ontologyDomainId, String moduleName, WorkshopVariable variable) {
-        Objects.requireNonNull(variable, "param variable can not be null");
-        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
-
-        if (StringUtils.isEmpty(variable.getId())) {
-            variable.setId(UUID.randomUUID().toString());
-        }
-        if (store.findByName(variable.getName()) != null) {
-            throw new VariableAlreadyExistsException(
-                    String.format("Variable '%s' already exists in module '%s'", variable.getName(), moduleName));
-        }
-
-        store.save(pluginContext, context, variable, false);
-        logger.info("Workshop Variable '{}' created in module '{}'", variable.getName(), moduleName);
-        return variable;
+//        Objects.requireNonNull(variable, "param variable can not be null");
+//        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
+//
+//        if (StringUtils.isEmpty(variable.getId())) {
+//            variable.setId(UUID.randomUUID().toString());
+//        }
+//        if (store.findByName(variable.getName()) != null) {
+//            throw new VariableAlreadyExistsException(
+//                    String.format("Variable '%s' already exists in module '%s'", variable.getName(), moduleName));
+//        }
+//
+//        store.save(pluginContext, context, variable, false);
+//        logger.info("Workshop Variable '{}' created in module '{}'", variable.getName(), moduleName);
+//        return variable;
+        return null;
     }
 
     /**
-     * 更新变量。唯一性校验会排除变量自身，否则改名以外的任何保存都会被自己挡住。
+     * 更新变量。
+     *
+     * <p>name 即标识，更新请求按 name 寻址，因此不存在「改名」这个操作 ——
+     * 无需再像 id 时代那样在唯一性校验里排除变量自身。
      */
     public WorkshopVariable updateVariable(IPluginContext pluginContext, Optional<Context> context,
                                            String ontologyDomainId, String moduleName, WorkshopVariable variable) {
         Objects.requireNonNull(variable, "param variable can not be null");
-        if (StringUtils.isEmpty(variable.getId())) {
-            throw new IllegalStateException("variable id can not be empty");
+        if (StringUtils.isEmpty(variable.getName())) {
+            throw new IllegalStateException("variable name can not be empty");
         }
-        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
-        if (store.load(variable.getId()) == null) {
-            throw new VariableNotFoundException("Variable not found: " + variable.getId()
-                    + " in module '" + moduleName + "'");
-        }
-
-        WorkshopVariable sameName = store.findByName(variable.getName());
-        if (sameName != null && !variable.getId().equals(sameName.getId())) {
-            throw new VariableAlreadyExistsException(
-                    String.format("Variable '%s' already exists in module '%s'", variable.getName(), moduleName));
-        }
-
-        store.save(pluginContext, context, variable, true);
+//        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
+//        if (store.load(variable.getId()) == null) {
+//            throw new VariableNotFoundException("Variable not found: " + variable.getId()
+//                    + " in module '" + moduleName + "'");
+//        }
+//
+//        WorkshopVariable sameName = store.findByName(variable.getName());
+//        if (sameName != null && !variable.getId().equals(sameName.getId())) {
+//            throw new VariableAlreadyExistsException(
+//                    String.format("Variable '%s' already exists in module '%s'", variable.getName(), moduleName));
+//        }
+//
+//        store.save(pluginContext, context, variable, true);
         logger.info("Workshop Variable '{}' updated in module '{}'", variable.getName(), moduleName);
         return variable;
     }
@@ -264,16 +276,52 @@ public class WorkshopModuleService {
      * 删除变量
      */
     public void deleteVariable(IPluginContext pluginContext, Optional<Context> context,
-                               String ontologyDomainId, String moduleName, String variableId) {
-        if (StringUtils.isEmpty(variableId)) {
-            throw new IllegalArgumentException("param variableId can not be empty");
+                               String ontologyDomainId, String moduleName, String variableName) {
+        if (StringUtils.isEmpty(variableName)) {
+            throw new IllegalArgumentException("param variableName can not be empty");
         }
-        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
-        if (!store.delete(pluginContext, context, variableId)) {
-            throw new VariableNotFoundException("Variable not found: " + variableId
-                    + " in module '" + moduleName + "'");
-        }
-        logger.info("Workshop Variable '{}' deleted from module '{}'", variableId, moduleName);
+//        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
+//        if (!store.delete(pluginContext, context, variableId)) {
+//            throw new VariableNotFoundException("Variable not found: " + variableId
+//                    + " in module '" + moduleName + "'");
+//        }
+//        logger.info("Workshop Variable '{}' deleted from module '{}'", variableId, moduleName);
+    }
+
+    // ==================================================================
+    //  Header 存储
+    //
+    //  header 同样不走模块 XML（WorkshopModule.header 是 transient），由
+    //  WorkshopHeaderStore 独立落盘（ontology/{domain}/workshop_headers/{moduleName}.xml）。
+    //  与页面/变量的区别在于 header 与 module 是 1:1，故既无 list 也无 delete。
+    // ==================================================================
+
+//    /**
+//     * 取得某个 domain 下的 header 存储
+//     */
+//    public WorkshopHeaderStore getHeaderStore(String ontologyDomainId) {
+//        return WorkshopHeaderStore.create(ontologyDomainId);
+//    }
+
+    /**
+     * 读取模块的 header，尚未配置过返回默认值（visible = true）
+     */
+    public WorkshopHeader getHeader(String ontologyDomainId, String moduleName) {
+        // return getHeaderStore(ontologyDomainId).loadOrDefault(moduleName);
+        return null;
+    }
+
+    /**
+     * 覆盖保存模块的 header（1:1 存储，始终是 update 语义）
+     */
+    public WorkshopHeader saveHeader(IPluginContext pluginContext, Optional<Context> context,
+                                     String ontologyDomainId, String moduleName, WorkshopHeader header) {
+        Objects.requireNonNull(header, "param header can not be null");
+        // id 恒等于 moduleName，以 URL 参数为准，避免表单里的 id 被改动后写到别的文件上
+        header.id = moduleName;
+        // getHeaderStore(ontologyDomainId).save(pluginContext, context, moduleName, header, true);
+        logger.info("Workshop Header of module '{}' updated", moduleName);
+        return header;
     }
 
     /**

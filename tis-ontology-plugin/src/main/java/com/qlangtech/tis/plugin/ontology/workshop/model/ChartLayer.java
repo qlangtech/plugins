@@ -4,7 +4,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -47,7 +47,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/15
  */
-public class ChartLayer implements Describable<ChartLayer>, Serializable, IdentityName {
+public class ChartLayer implements Describable<ChartLayer>, Serializable, IPluginStore.MultiDescribleElement {
 
     private static final long serialVersionUID = 1L;
 
@@ -116,7 +116,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, Identi
     /**
      * 系列列表 —— 本图层内按维度/度量做的次级区分。
      */
-    @FormField(ordinal = 7, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 7, desClazz = SeriesConfig.class, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, validate = {Validator.require})
     public List<SeriesConfig> series = new ArrayList<>();
 
     public static final String KEY_SELECTION_AS_FILTER_VAR = "selectionAsFilterVar";
@@ -146,6 +146,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, Identi
     public String identityValue() {
         return this.title;
     }
+
 
     /**
      * 图层画法。

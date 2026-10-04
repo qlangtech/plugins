@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.io.Serializable;
@@ -49,10 +50,25 @@ import java.io.Serializable;
  * {@code setupConfig.impl} 即得类型，无需额外字段。
  *
  * <h3>字段序位</h3>
- * 基类占用 {@code 0}~{@code 5} 区间与 {@code 99}；各子类字段从 {@code 10} 起编排，避免 ordinal 撞车
- * —— TIS 的表单排序是对 {@code formField.ordinal()} 做稳定排序，而字段集合来自 HashMap，
- * 相同 ordinal 的相对顺序不确定。{@code 2}、{@code 3} 原为变量绑定字段所占用，两字段已删除
- * （见下），序位留空无害，不必重排。
+ * 基类占用 {@code 0}、{@code 1}（{@code 4} 让给了显示配置，见下）；各子类字段从 {@code 10} 起编排，
+ * 避免 ordinal 撞车 —— TIS 的表单排序是对 {@code formField.ordinal()} 做稳定排序，
+ * 而字段集合来自 HashMap，相同 ordinal 的相对顺序不确定。{@code 2}、{@code 3} 原为变量绑定字段
+ * 所占用，两字段已删除（见下），序位留空无害，不必重排。
+ *
+ * <h3>显示配置为何不在基类</h3>
+ * 本类原先声明 {@code WidgetDisplayConfig displayConfig}（宽度 / 高度 / 条件可见性 / 展示优化），
+ * 于是<b>每个</b> Widget 的表单都渲染这四项。但对单行表单控件（日期选择器、输入框、复选框…
+ * 见 {@link CompactDisplayWidget}）而言，「高度」与「展示优化」没有语义 —— 用户填了不会有任何
+ * 效果，只会困惑。
+ * <p>
+ * 因此把显示配置下移到两条抽象分支，各自声明<b>同名的</b> {@code displayConfig} 字段：
+ * <ul>
+ *   <li>{@link CompactDisplayWidget} → {@link CompactDisplayConfig}（宽度 + 条件可见性）</li>
+ *   <li>{@link FullDisplayWidget} → {@link WidgetDisplayConfig}（完整四项）</li>
+ * </ul>
+ * 具体 Widget 必须继承<b>两者之一</b>。⚠️ 直接继承本类虽能编译通过，但会<b>静默丢失</b>
+ * 显示配置（表单上少一整块，且无任何报错）—— 这条已由
+ * {@code TestWidgetVariableContract#everyWidgetInheritsADisplayWidgetBase} 兜住。
  *
  * <h3>变量绑定字段为何不在基类</h3>
  * 基类原先声明 {@code List<String> inputVariables} / {@code outputVariables}，作为
@@ -69,23 +85,30 @@ import java.io.Serializable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/13
  */
-public abstract class WorkshopWidget implements IWorkshopWidget, Serializable {
+public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, IdentityName {
 
     private static final long serialVersionUID = 1L;
 
-    private String id;
-
-    /** 模块内唯一的组件名（供 Section 编排与调试引用） */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 0, advance = false, validate = {Validator.require})
+    /**
+     * 模块内唯一的组件名（供 Section 编排与调试引用），同时也是本类的 identity 字段。
+     *
+     * <p>{@link IdentityName} 不是可选的装饰：框架的 {@code Descriptor.getPropertyTypes()}
+     * 对 identity 字段数量做<b>双向</b>校验 —— 实现了本接口就必须有且仅有 1 个
+     * {@code identity = true} 字段，不实现则必须一个也没有，数量不对直接抛
+     * {@code IllegalStateException}，而编译期毫无提示。
+     * <p>
+     * widget 目前走 {@code WorkshopWidgetHeteroEnum} 的 {@code noSaveStore}，
+     * 没有服务端落盘路径，所以 {@link #identityValue()} 现在没有落盘消费者；
+     * 让 name 承担 identity 是为将来的独立存储预留语义，并让 widget 与
+     * page / variable 的标识口径一致。
+     */
+    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 0, identity = true, advance = false,
+            validate = {Validator.require, Validator.identity})
     public String name;
 
     /** Widget 标题（画布与配置面板通用，面向用户展示） */
     @FormField(type = FormFieldType.INPUTTEXT, ordinal = 1, advance = false, validate = {Validator.require})
     public String title;
-
-    /** 实例级显示配置（尺寸 / 优化策略 / 条件可见性） */
-    @FormField(ordinal = 4)
-    public WidgetDisplayConfig displayConfig;
 
     /** 同一 Section 内的显示顺序 */
    // @FormField(type = FormFieldType.INT_NUMBER, ordinal = 5)
@@ -99,15 +122,8 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable {
 
 
 
-    public WorkshopWidget() {
-     //   this.id = UUID.randomUUID().toString();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+    @Override
+    public String identityValue() {
+        return this.name;
     }
 }

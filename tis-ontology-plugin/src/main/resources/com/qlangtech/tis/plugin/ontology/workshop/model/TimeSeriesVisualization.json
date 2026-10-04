@@ -5,7 +5,8 @@
   },
   "timeSeriesSet": {
     "label": "时间序列集",
-    "help": "提供时间序列数据的变量 ID"
+    "help": "提供时间序列数据的变量",
+    "placeholder": "请选择时间序列集合变量"
   },
   "timeRange": {
     "label": "时间范围",

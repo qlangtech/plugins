@@ -13,7 +13,8 @@
   },
   "valueVariable": {
     "label": "值变量",
-    "help": "提供指标值的变量 ID"
+    "help": "提供指标值的变量（选项随「值类型」的两档：字符串 / 数值）",
+    "placeholder": "请选择变量"
   },
   "numericFormatting": {
     "label": "数值格式化",
@@ -22,14 +23,6 @@
   "conditionalFormatting": {
     "label": "条件格式化",
     "help": "根据值条件应用不同的显示样式"
-  },
-  "showSecondaryMetric": {
-    "label": "显示副指标",
-    "help": "是否显示副指标（如同比、环比）"
-  },
-  "secondaryMetric": {
-    "label": "副指标",
-    "help": "副指标的配置"
   },
   "showVisualization": {
     "label": "显示可视化",

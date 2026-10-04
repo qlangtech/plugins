@@ -1,0 +1,7 @@
+{
+  "displayConfig": {
+    "label": "显示配置",
+    "help": "Widget 的宽度策略与条件可见性",
+    "dftVal": "Compact Widget Display Config"
+  }
+}

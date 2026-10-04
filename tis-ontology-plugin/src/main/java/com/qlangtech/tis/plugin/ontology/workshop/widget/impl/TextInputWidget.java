@@ -3,7 +3,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 /**
@@ -14,7 +14,7 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class TextInputWidget extends WorkshopWidget {
+public class TextInputWidget extends CompactDisplayWidget {
 
     public static final String KEY_INITIAL_VALUE_VAR = "initialValueVar";
     public static final String KEY_VALUE_VAR = "valueVar";

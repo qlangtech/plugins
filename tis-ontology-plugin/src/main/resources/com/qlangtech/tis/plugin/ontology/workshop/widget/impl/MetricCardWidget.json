@@ -1,6 +1,11 @@
 {
-  "valueVar": {
-    "help": "指标卡展示的数值：选择当前模块中的数值型变量",
-    "placeholder": "请选择数值变量"
+  "metric": {
+    "help": "指标卡的完整配置：标题(label)、取值变量(valueVariable)、数值格式、条件着色与迷你趋势图。点击下方 [+添加] 配置。"
+  },
+  "secondaryMetric": {
+    "help": "副指标（如同比、环比）。与主指标结构相同，独立配置；需同时打开「显示副指标」。"
+  },
+  "showSecondaryMetric": {
+    "help": "是否显示副指标。关闭时副指标即使配好了也不渲染。"
   }
 }

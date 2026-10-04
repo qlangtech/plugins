@@ -13,7 +13,7 @@ public class TabsLayoutConfig extends SectionLayoutConfig {
     @FormField(ordinal = 0, type = FormFieldType.ENUM)
     public Boolean showTabBar = true;
 
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 1, type = FormFieldType.ENUM)
     public TabsLayoutConfig.TabPosition tabPosition = TabsLayoutConfig.TabPosition.TOP;
 
     @TISExtension
@@ -30,7 +30,7 @@ public class TabsLayoutConfig extends SectionLayoutConfig {
         }
     }
 
-    enum TabPosition implements DescriptorUseableShortComment {
+    public enum TabPosition implements DescriptorUseableShortComment {
         TOP("顶部"),
         LEFT("左侧"),
         RIGHT("右侧"),

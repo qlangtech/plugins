@@ -1,0 +1,22 @@
+{
+  "showTime": {
+    "help": "是否显示时分秒选择",
+    "dftVal": false
+  },
+  "variableKind": {
+    "help": "输出变量格式：ISO 日期串或时间戳(毫秒)",
+    "dftVal": "iso",
+    "enum": [
+      { "label": "ISO 日期串",    "val": "iso" },
+      { "label": "时间戳(毫秒)", "val": "timestamp" }
+    ]
+  },
+  "startVar": {
+    "help": "范围起始值绑定：用户选定区间后写入该变量",
+    "placeholder": "请选择起始日期变量"
+  },
+  "endVar": {
+    "help": "范围结束值绑定：与起始值成对写入",
+    "placeholder": "请选择结束日期变量"
+  }
+}

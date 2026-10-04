@@ -34,7 +34,6 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellUtil;
-import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -139,9 +138,9 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
         public DftDescriptor() {
             super();
             this.valueChangePipe(KEY_FTP_SERVER_LINK, FIELD_BUCKET)
-                    .render(new BiFunction<UploadPluginMeta, IParamGetter, List<? extends Option>>() {
+                    .render(new BiFunction<UploadPluginMeta, IParamGetter, List<? extends IdentityName>>() {
                         @Override
-                        public List<? extends Option> apply(UploadPluginMeta pluginMeta, IParamGetter param) {
+                        public List<? extends IdentityName> apply(UploadPluginMeta pluginMeta, IParamGetter param) {
 
                             AliyunOSSTDFSLinker linker = new AliyunOSSTDFSLinker();
                             linker.linker = param.getString(KEY_FTP_SERVER_LINK);

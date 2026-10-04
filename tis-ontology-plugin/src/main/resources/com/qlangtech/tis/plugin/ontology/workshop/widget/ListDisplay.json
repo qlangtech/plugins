@@ -1,0 +1,7 @@
+{
+  "propertyStyle": {
+    "label": "属性排布方式",
+    "help": "属性名与属性值如何排布",
+    "dftVal": "inline"
+  }
+}

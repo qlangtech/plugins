@@ -1,0 +1,22 @@
+{
+  "text": {
+    "help": "按钮上显示的文案，同时作为该行动作的唯一标识",
+    "placeholder": "如：查看详情"
+  },
+  "buttonType": {
+    "help": "按钮形态",
+    "dftVal": "primary"
+  },
+  "actionId": {
+    "help": "点击后触发的本体动作标识",
+    "placeholder": "请选择本体动作"
+  },
+  "icon": {
+    "help": "按钮图标（Ant Design 图标名），如 EyeOutlined"
+  },
+  "confirmBeforeExecute": {
+    "help": "执行前是否需要二次确认",
+    "dftVal": false,
+    "label": "执行确认"
+  }
+}

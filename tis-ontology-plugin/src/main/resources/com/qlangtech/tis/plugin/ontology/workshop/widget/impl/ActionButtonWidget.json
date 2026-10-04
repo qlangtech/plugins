@@ -1,0 +1,13 @@
+{
+  "action": {
+    "help": "按钮的文案、形态、图标与触发的本体动作。点击下方 [+添加] 配置。"
+  },
+  "selectedObjectsVar": {
+    "help": "执行动作时作为入参的对象来源：选择当前模块中的对象集合变量",
+    "placeholder": "请选择对象集变量"
+  },
+  "requiresSelection": {
+    "help": "开启后，未选中任何对象时按钮置灰不可点击",
+    "dftVal": false
+  }
+}

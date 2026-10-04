@@ -1,0 +1,12 @@
+{
+  "width": {
+    "dftVal": "Auto",
+    "label": "宽度",
+    "help": "宽度策略：自适应内容 / 固定像素 / 按比例分配剩余空间"
+  },
+  "conditionalVisibility": {
+    "dftVal": "Conditional Visibility",
+    "label": "条件可见性",
+    "help": "引用一个变量，按变量值的真假控制该 Widget 的显示隐藏"
+  }
+}

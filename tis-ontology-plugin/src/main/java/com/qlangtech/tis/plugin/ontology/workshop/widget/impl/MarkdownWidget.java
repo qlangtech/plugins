@@ -21,7 +21,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 /**
@@ -30,7 +30,7 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
-public class MarkdownWidget extends WorkshopWidget {
+public class MarkdownWidget extends FullDisplayWidget {
 
     /** Markdown 文本内容（支持 {{varName}} 模板变量替换） */
     @FormField(type = FormFieldType.TEXTAREA, ordinal = 13, advance = false, validate = {Validator.require})

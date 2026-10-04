@@ -21,7 +21,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 /**
@@ -33,7 +33,7 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
-public class HeaderTextWidget extends WorkshopWidget {
+public class HeaderTextWidget extends CompactDisplayWidget {
 
     public static final String KEY_TEXT_VARIABLE = "textVariable";
 

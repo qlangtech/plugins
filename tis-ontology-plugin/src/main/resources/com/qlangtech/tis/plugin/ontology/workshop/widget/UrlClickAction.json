@@ -1,0 +1,4 @@
+{
+  "url":          { "label": "链接地址", "help": "点击后打开的 URL", "placeholder": "https://" },
+  "openInNewTab": { "label": "新标签页打开", "help": "关闭则在当前窗口跳转", "dftVal": true }
+}

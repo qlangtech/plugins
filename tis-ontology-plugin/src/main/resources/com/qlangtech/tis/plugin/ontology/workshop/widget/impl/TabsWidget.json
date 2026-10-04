@@ -1,0 +1,13 @@
+{
+  "tabType": {
+    "help": "标签页的视觉形态",
+    "dftVal": "line"
+  },
+  "location": {
+    "help": "标签栏所处的位置：模块头部用于切换 Page，区块内用于触发事件",
+    "dftVal": "section"
+  },
+  "tabs": {
+    "help": "各个标签页：每行配置标题(title)、跳转目标页(targetPage)与选中时触发的事件(onSelect)。点击下方 [+添加] 新增标签页。"
+  }
+}

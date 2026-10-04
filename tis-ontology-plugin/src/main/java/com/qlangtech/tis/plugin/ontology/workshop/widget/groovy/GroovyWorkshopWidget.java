@@ -23,7 +23,7 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
 
 /**
  * Groovy 脚本驱动的 Widget：用户通过 .groovy 脚本动态定义 Widget 行为与字段。
@@ -34,7 +34,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/10
  */
-public class GroovyWorkshopWidget extends WorkshopWidget {
+public class GroovyWorkshopWidget extends FullDisplayWidget {
 
     /**
      * 相对 classpath 的 .groovy 脚本文件路径（identity 主键）

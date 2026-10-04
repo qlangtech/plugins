@@ -1,7 +1,7 @@
 {
   "name": {
-    "label": "页面名称",
-    "help": "页面的唯一标识符"
+    "label": "页面标识",
+    "help": "页面的唯一标识符。大小写不敏感，模块内不可重复。创建后不可修改 —— 跳页事件、Tab 目标页、页面路由引用的都是它"
   },
   "displayName": {
     "label": "显示名称",
@@ -9,7 +9,18 @@
   },
   "template": {
     "label": "页面模板",
-    "help": "选择预定义的页面布局模板"
+    "help": "决定本页的直接子 Section 如何排布（分几栏），并决定新建页面时预置哪些 Section",
+    "dftVal": "BLANK",
+    "enum": [
+      { "label": "空白页",     "val": "BLANK" },
+      { "label": "详情布局",   "val": "DETAILS" },
+      { "label": "网格布局",   "val": "GRID" },
+      { "label": "收件箱布局", "val": "INBOX" },
+      { "label": "概览布局",   "val": "OVERVIEW" },
+      { "label": "设置布局",   "val": "SETTINGS" },
+      { "label": "两栏布局",   "val": "TWO_COLUMN" },
+      { "label": "三栏布局",   "val": "THREE_COLUMN" }
+    ]
   },
   "sortOrder": {
     "label": "排序顺序",

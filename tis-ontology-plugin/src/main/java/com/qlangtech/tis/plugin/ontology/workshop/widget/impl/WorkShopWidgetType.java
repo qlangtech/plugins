@@ -40,13 +40,15 @@ public enum WorkShopWidgetType {
     MARKDOWN("file-markdown", WorkShopWidgetCategory.CORE_DISPLAY, "markdown"),
 
     // ==================================================================
-    //  Filtering Widgets（5 个）
+    //  Filtering Widgets（6 个）
     // ==================================================================
     FILTER_LIST("filter", WorkShopWidgetCategory.FILTERING, "filter-list"),
     OBJECT_DROPDOWN("down-square", WorkShopWidgetCategory.FILTERING, "object-dropdown"),
     TEXT_INPUT("form", WorkShopWidgetCategory.FILTERING, "text-input"),
     DATE_TIME_PICKER("calendar", WorkShopWidgetCategory.FILTERING, "date-time-picker"),
     CHECKBOX("check-square", WorkShopWidgetCategory.FILTERING, "checkbox"),
+    /** 范围日期选择；单值归 {@link #DATE_TIME_PICKER}，两者职责互斥 */
+    DATE_INPUT("calendar", WorkShopWidgetCategory.FILTERING, "date-input"),
 
     // ==================================================================
     //  Event-triggering & Navigational Widgets（3 个）

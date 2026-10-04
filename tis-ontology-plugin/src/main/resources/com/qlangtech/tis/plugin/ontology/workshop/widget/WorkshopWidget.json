@@ -1,7 +1,5 @@
 {
-  "name":           { "label": "组件名称", "help": "模块内唯一的组件名，供区块编排与调试引用" },
+  "name":           { "label": "组件名称", "help": "Widget 的唯一标识符，模块内不可重复，供区块编排、调试引用与将来的独立落盘使用（落盘文件名即它）。创建后不可修改" },
   "title":          { "label": "标题", "help": "Widget 标题（画布与配置面板通用）", "placeholder": "输入 Widget 标题" },
-  "displayConfig":  { "label": "显示配置", "help": "Widget 的尺寸策略、展示优化与条件可见性" },
-  "sortOrder":      { "label": "排序顺序", "help": "Widget 在同一区块内的显示顺序" },
-  "cssClass":       { "label": "自定义 CSS class", "help": "附加到 Widget 根容器的 CSS 类名（高级）" }
+  "sortOrder":      { "label": "排序顺序", "help": "Widget 在同一区块内的显示顺序" }
 }

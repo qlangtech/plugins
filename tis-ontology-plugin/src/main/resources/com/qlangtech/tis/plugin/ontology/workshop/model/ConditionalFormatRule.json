@@ -1,4 +1,9 @@
 {
+  "name": {
+    "label": "规则名",
+    "help": "这一行的标识，仅用于在列表中区分各条规则",
+    "placeholder": "如：亏损标红"
+  },
   "condition": {
     "label": "条件表达式",
     "help": "触发格式化的条件，例如：value <= 0"

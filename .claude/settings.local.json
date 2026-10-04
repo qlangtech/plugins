@@ -3,7 +3,13 @@
     "allow": [
       "Bash(find /opt/misc/flink-cdc/flink-cdc-connect/flink-cdc-source-connectors/flink-connector-kingbase-cdc -name *.java -type f)",
       "Bash(find /Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-kafka-plugin -name *.java -type f)",
-      "Bash(git -C /Users/mozhenghua/j2ee_solution/project/plugins diff HEAD -- tis-datax/tis-datax-kafka-plugin/src/main/java/com/qlangtech/tis/plugins/datax/kafka/writer/DataXKafkaWriter.java)"
+      "Bash(git -C /Users/mozhenghua/j2ee_solution/project/plugins diff HEAD -- tis-datax/tis-datax-kafka-plugin/src/main/java/com/qlangtech/tis/plugins/datax/kafka/writer/DataXKafkaWriter.java)",
+      "Bash(timeout 900 mvn -o -q -pl tis-ontology-plugin test-compile -DskipTests)",
+      "Bash(mvn -o -q -pl tis-ontology-plugin test-compile -DskipTests)",
+      "Bash(mvn -o -q -pl tis-ontology-plugin test -Dtest=WorkshopVariableTest -DfailIfNoTests=false -DargLine=\"--add-opens java.base/java.lang=ALL-UNNAMED\")",
+      "Bash(mvn -o -q -pl tis-ontology-plugin help:effective-pom)",
+      "Bash(mvn -o -pl tis-ontology-plugin help:effective-pom -Doutput=/tmp/eff.xml)",
+      "Read(//tmp/**)"
     ]
   }
 }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -13,6 +14,8 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.OntologyDomain;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.RecomputeBehavior;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
@@ -24,15 +27,19 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableStateSavi
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.VariableDefinitionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
 import com.qlangtech.tis.util.DescribableJSON;
+import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.Selectable;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper.KEY_WORKSHOP_MODULE_NAME;
 
 /**
  * Workshop Variable 实体 —— Workshop 的模块级变量定义，也是整个 Workshop 的数据流引擎。
@@ -81,14 +88,21 @@ import java.util.stream.Collectors;
  * </ol>
  *
  * <h3>持久化</h3>
- * {@code WorkshopModule.variables} 是 {@code transient} 字段（子实体与聚合根分开落盘），
- * XStream 序列化插件配置时会跳过它，所以变量不随模块 XML 落盘，而是与 pages 平行地存放在
- * 各自的独立文件里：{@code ontology/{domain}/workshop_variables/{moduleName}/{id}.xml}
- * （见 {@link com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopVariableStore}）。
+ * {@code WorkshopModule.variables} 是 {@code transient} 字段，XStream 序列化插件配置时会跳过它，
+ * 所以变量不随模块 XML 落盘，而是每个变量一个独立文件：
+ * <pre>{@code ontology/{domain}/workshop/{moduleName}/{name}.xml}</pre>
+ * 目录由 {@code WorkshopModule.getWorkshopDir} 决定，文件名即 {@link #name}
+ * （经 {@link #normalizeName} 归一化）。链路是
+ * {@code WorkshopVariable.workshopVariable}（HeteroEnum）→ {@code BasicWorkshopStoreGetter}
+ * → {@code KeyedPluginStore}，其中 {@code identityValue()} 就是文件名。
+ * <p>
+ * 注意 {@code ...workshop.store.WorkshopVariableStore} 整文件已被注释，不是活链路；
+ * 活链路是上面的 HeteroEnum。
+ * <p>
  * 文件里记录的是<b>具体子类</b>的类名，因此重命名或移动子类会让旧文件被静默跳过。
  *
  * <h3>变量自己的 HTTP 路由</h3>
- * CRUD 由 {@link com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc}
+ * CRUD 由 //{ com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc}
  * 承担。基类抽象之后不再有以 {@code WorkshopVariable} 为 {@code clazz} 的 descriptor
  * （{@code Descriptor.getId()} 返回的正是 {@code clazz} 的 FQCN），因此端点不能挂在本类的
  * descriptor 上，改为独立的一个描述符类，前端用它的 FQCN 作 {@code impl} 参数寻址。
@@ -99,19 +113,76 @@ import java.util.stream.Collectors;
 public abstract class WorkshopVariable implements Describable<WorkshopVariable>, Serializable, IdentityName,
         IPluginStore.ManipuldateProcessor {
 
+    private static final WorkshopVariableStoreGetter storeGetter = new WorkshopVariableStoreGetter();
+
+    public static List<WorkshopVariable> loadAll(String ontologyDomainId, String workshop) {
+
+        return storeGetter.loadAll(ontologyDomainId, Optional.of(workshop));
+    }
+
+    public static <T extends WorkshopVariable> T loadDetail(String variableName) {
+
+        IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();
+//        if (pluginContext == null) {
+//            throw new IllegalStateException();
+//        }
+        // try {
+
+        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
+        String domain = meta.getDomain();
+        String workshop = meta.getDelegate().getExtraParam(KEY_WORKSHOP_MODULE_NAME);
+        if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(workshop)) {
+            throw new IllegalStateException("param domain or moduleName can not be null");
+        }
+
+        return (T) storeGetter.load(domain, Optional.of(workshop), variableName);
+    }
+
+
+    @TISExtension
+    public static final HeteroEnum<WorkshopVariable> workshopVariable //
+            = new HeteroEnum<WorkshopVariable>(//
+            WorkshopVariable.class, //
+            "workshop_variable", "workshop variablies", Selectable.Multi, false) {
+        @Override
+        public Optional<IPluginStore<WorkshopVariable>> pluginStore( //
+                                                                     IPluginContext pluginContext, UploadPluginMeta pluginMeta, List<Descriptor.ParseDescribable<?>> dlist) {
+
+
+            for (Descriptor.ParseDescribable<?> d : dlist) {
+                if (d.getInstance() instanceof IdentityName idInstant) {
+                    OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginMeta);
+                    meta.setPluginIdVal(idInstant.identityValue());
+                }
+            }
+            return Optional.of(this.getPluginStore(pluginContext, pluginMeta));
+        }
+
+        @Override
+        public IPluginStore<WorkshopVariable> getPluginStore(IPluginContext pluginContext, UploadPluginMeta pluginMeta) {
+            //return IPluginStore.noSaveStore(pluginMeta);
+            return Objects.requireNonNull(storeGetter.getPluginStore(
+                            new OntologyPluginMeta(pluginMeta).setPersistence(), Optional.of(pluginMeta.getExtraParam(OntologyDomain.KEY_WORKSHOP)))
+                    , "pluginStore can not be null");
+        }
+    };
+
     /**
      * 变量 CRUD 的参数名，均为显式传入 —— 变量的 Descriptor 不是
      * {@code OntologyDomainManipulate.BasicDesc} 的子类，没有可从插件元数据推断 domain 的上下文。
      */
     public static final String PARAM_ONTOLOGY_DOMAIN_ID = "ontologyDomainId";
-    public static final String PARAM_MODULE_NAME = "moduleName";
-    public static final String PARAM_VARIABLE_ID = "variableId";
+    public static final String PARAM_MODULE_NAME = OntologyDomain.KEY_WORKSHOP;
+    /**
+     * 变量的寻址参数：传的是变量的 <b>name</b> 而非曾经的 UUID id。
+     * 叫 id 会与「存的是 UUID」这一读法冲突，故改名。
+     */
+    public static final String PARAM_VARIABLE_NAME = "variableName";
     /**
      * 变量实例本体，{@code {impl, vals}} 结构的 JSON 字符串（即前端 {@code Item.project()} 的输出）
      */
     public static final String PARAM_VARIABLE = "variable";
 
-    public static final String KEY_ID = "id";
     public static final String KEY_NAME = "name";
     public static final String KEY_DEFINITION_CONFIG = "definitionConfig";
     /**
@@ -122,29 +193,37 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
     public static final String KEY_VARIABLE_TYPE = "variableType";
 
     /**
-     * 唯一标识，决定变量的落盘文件名
-     * （{@code ontology/{domain}/workshop_variables/{moduleName}/{id}.xml}）。
+     * 模块内唯一引用名（大小写不敏感），widget 通过它反向引用变量。
      *
-     * <p>构造时生成 UUID，新建后由前端回传、或由后端从 URL 参数覆盖（见
-     * {@code WorkshopVariableOperationDesc#doUpdate}）。
-     * {@code ordinal = -1} 使其不参与表单排序（前端不渲染可编辑控件）。
-     *
-     * <p>这是 {@link IdentityName} 要求的<em>唯一</em>一个 {@code identity = true} 字段 ——
+     * <p>这同时是 {@link IdentityName} 要求的<em>唯一</em>一个 {@code identity = true} 字段 ——
      * 框架的 {@code Descriptor.getPropertyTypes()} 会校验数量，多一个少一个都直接抛异常。
+     *
+     * <p>它决定变量的落盘文件名
+     * （{@code ontology/{domain}/workshop/{moduleName}/{name}.xml}），
+     * 因此<b>一经落盘即不可修改</b>。这条约束是结构性成立的、不靠额外校验：
+     * 更新请求按 name 寻址（{@link #PARAM_VARIABLE_NAME}），所以请求里的 name 必然是
+     * 磁盘上那个 name，"改名"无从表达 —— 对一个已存在的名字做 create 会被唯一性校验拒绝，
+     * 对一个不存在的名字做 update 则找不到目标。
+     *
+     * <p>落盘前统一做 {@link #normalizeName(String)} 归一化，以免在 macOS / Windows 这类
+     * 大小写不敏感的文件系统上出现 {@code Foo.xml} 与 {@code foo.xml} 互相覆盖。
+     *
+     * <p>唯一性由 {@code WorkshopModuleService} 在落盘前校验。
      */
-    @FormField(ordinal = -1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String id;
-
-    public static String dftValOfId() {
-        return UUID.randomUUID().toString();
-    }
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT,
+            validate = {Validator.require, Validator.identity})
+    public String name;
 
     /**
-     * 模块内唯一引用名（大小写不敏感），widget 通过它反向引用变量。
-     * 唯一性由 {@code WorkshopModuleService} 在落盘前校验。
+     * name 的归一化：去空白 + 转小写。
+     *
+     * <p>归一化必须落在<b>写入路径</b>（{@link #persistVariable}）而不是查询路径，
+     * 否则内存里的 name、Map 的键、磁盘文件名三者会出现大小写不一致的三种形态。
+     * 调用方在比较 name 之前也应先归一化。
      */
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+    public static String normalizeName(String name) {
+        return name == null ? null : name.trim().toLowerCase();
+    }
 
     /**
      * 值怎么算，见 {@link VariableDefinitionConfig}。
@@ -204,18 +283,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
 
     @Override
     public String identityValue() {
-        return getId();
-    }
-
-    /**
-     * 唯一标识，决定变量的落盘文件名
-     */
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+        return this.name;
     }
 
     /**
@@ -271,8 +339,8 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      * 没有可从元数据推断 domain 的上下文。是新建还是更新由 {@code pluginMeta.isUpdate()}
      * （即 extraParam {@code update_true}）决定，两者最终都路由到 {@link #persistVariable}，
      * 与变量自己的自定义端点共用同一份业务规则（模块内变量名唯一等），避免两份实现漂移。
-     *
-     * @see com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc
+     * <p>
+     * //@see com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc
      */
     @Override
     public void manipuldateProcess(IPluginContext pluginContext, UploadPluginMeta pluginMeta,
@@ -296,6 +364,9 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
     public static void persistVariable(IPluginContext pluginContext, Optional<Context> context,
                                        String ontologyDomainId, String moduleName,
                                        WorkshopVariable variable, boolean update) {
+        // name 即落盘文件名，必须在写下之前归一化：内存值、Map 键、磁盘文件名三者
+        // 只能有一种大小写形态，否则会出现「列表里看得到、按名字却查不到」的鬼影变量
+        variable.name = normalizeName(variable.name);
         validateDefinition(variable);
         WorkshopModuleService service = WorkshopModule.DefaultDescriptor.workshopModuleSvc;
         if (update) {
@@ -351,6 +422,14 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         return outer.substring(outer.lastIndexOf('.') + 1);
     }
 
+    public static class WorkshopVariableStoreGetter extends WorkshopModule.BasicWorkshopStoreGetter<WorkshopVariable> {
+
+        @Override
+        protected Class<WorkshopVariable> getPluginType() {
+            return WorkshopVariable.class;
+        }
+    }
+
     // ==================================================================
     //  描述符基类
     // ==================================================================
@@ -395,6 +474,27 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
                     "为'" + variableType.shortComment() + "'类型选择定义方式");
             this.fieldExtraDescs.put(KEY_DEFINITION_CONFIG, new PluginExtraProps.Props(props));
         }
+
+//        protected IPluginStore<WorkshopVariable> getPluginStore(UploadPluginMeta pluginMeta) {
+//
+//        }
+
+//        @Override
+//        public void httpProcess(IControlMsgHandler paramGetter, IPluginContext pluginContext, Context context) throws Exception {
+//            pluginContext.getJSONPostContent();
+//
+//            List<UploadPluginMeta> plugins = pluginContext.getPluginMeta();
+//
+//            for (UploadPluginMeta meta : plugins) {
+//                IPluginStore pluginStore = this.getPluginStore(meta);
+//                pluginStore.setPlugins(pluginContext, Optional.of(context), );
+//                return;
+//            }
+//
+//            //  getPluginStore().setPlugins();
+//
+//            //  super.httpProcess(paramGetter, pluginContext, context);
+//        }
 
         public VariableType getVariableType() {
             return this.variableType;

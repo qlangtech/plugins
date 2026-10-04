@@ -14,13 +14,13 @@ import java.io.Serializable;
  */
 public class SectionStyleConfig implements Describable<SectionStyleConfig>, Serializable {
 
-    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 0, type = FormFieldType.ENUM)
     public SectionStyleConfig.HeaderFormat headerFormat = SectionStyleConfig.HeaderFormat.NONE;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
     public String backgroundColor;
 
-    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 2, type = FormFieldType.ENUM)
     public SectionStyleConfig.BorderStyle borderStyle = SectionStyleConfig.BorderStyle.NONE;
 
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER)

@@ -2,7 +2,8 @@
   "objectType": {
     "label": "对象类型",
     "placeholder": "输入 Ontology 对象类型",
-    "help": "Ontology 中定义的对象类型名称"
+    "help": "Ontology 中定义的对象类型名称",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference.getObjectTypeOpts():uncache_true"
   },
   "filters": {
     "label": "过滤条件",

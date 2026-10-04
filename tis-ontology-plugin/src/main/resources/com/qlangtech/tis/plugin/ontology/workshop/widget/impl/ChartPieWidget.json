@@ -2,5 +2,17 @@
   "dataSourceVar": {
     "help": "饼图的明细数据来源：选择当前模块中的对象集合变量",
     "placeholder": "请选择对象集变量"
+  },
+  "chartType": {
+    "help": "饼图形态：饼图 / 环形图",
+    "dftVal": "pie"
+  },
+  "labelProperty": {
+    "help": "扇区标签取对象上的哪个属性（选项随「数据来源」联动）",
+    "placeholder": "请选择标签属性"
+  },
+  "valueProperty": {
+    "help": "扇区数值取对象上的哪个属性（选项随「数据来源」联动）",
+    "placeholder": "请选择数值属性"
   }
 }

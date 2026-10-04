@@ -3,8 +3,23 @@
     "help": "卡片列表数据来源：选择当前模块中的对象集合变量",
     "placeholder": "请选择对象集变量"
   },
+  "titleProperty": {
+    "help": "卡片标题取对象上的哪个属性（选项随「对象集变量」联动）",
+    "placeholder": "请选择标题属性"
+  },
+  "cardFields": {
+    "help": "配置卡片正文展示的字段：每行设置属性名(prop)、显示标签(label)、格式化方式等。点击下方 [+添加] 新增字段。"
+  },
+  "display": {
+    "label": "展示形态",
+    "help": "列表：每个对象一行，属性在其后铺开；网格：每个对象一张卡片，可设置每行卡片数量",
+    "dftVal": "Grid"
+  },
   "activeObjectVar": {
     "help": "当前选中项写回：点击卡片后写入该变量，供下游组件消费",
     "placeholder": "请选择接收当前选中项的变量"
+  },
+  "cardActions": {
+    "help": "卡片行内动作按钮：每行配置按钮文案(text)、形态(buttonType)与触发的动作标识(actionId)。点击下方 [+添加] 新增按钮。"
   }
 }

@@ -3,10 +3,6 @@
     "help": "是否显示时分秒选择",
     "dftVal": false
   },
-  "mode": {
-    "help": "日期选择模式：单日选择或范围选择",
-    "dftVal": "date"
-  },
   "pickerMode": {
     "help": "选择器粒度",
     "dftVal": "date"

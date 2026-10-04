@@ -4,8 +4,11 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetColumnConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.List;
@@ -17,17 +20,28 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
-public class ObjectTableWidget extends WorkshopWidget {
+public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColumnHost {
 
     public static final String KEY_OBJECT_SET_VAR = "objectSetVar";
     public static final String KEY_ACTIVE_OBJECT_VAR = "activeObjectVar";
     public static final String KEY_SELECTED_OBJECTS_VAR = "selectedObjectsVar";
+    public static final String KEY_COLUMS_VAR = "columns";
 
     /**
      * 对象集输入变量（options 动态供给）
      */
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 20, advance = false, validate = {Validator.require})
     public String objectSetVar;
+
+    public ObjectSetVariable getObjectSetVariable() {
+        return WorkshopVariable.loadDetail(objectSetVar);
+    }
+
+    /**
+     * 列定义列表（由 SubForm 子表单结构化管理）
+     */
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class, ordinal = 22, advance = false, validate = {Validator.require})
+    public List<WidgetColumnConfig> columns;
 
     /**
      * 每页显示条数
@@ -36,18 +50,26 @@ public class ObjectTableWidget extends WorkshopWidget {
     public Integer pageSize;
 
     /**
-     * 列定义列表（由 SubForm 子表单结构化管理）
+     * 当前行写回：点击某行后把该行对象写入此变量，供下游组件消费
      */
-    @FormField(type = FormFieldType.MULTI_SELECTABLE, ordinal = 22, advance = false, validate = {Validator.require})
-    public List<WidgetColumnConfig> columns;
-
-    /** 当前行写回：点击某行后把该行对象写入此变量，供下游组件消费 */
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 23, advance = false)
     public String activeObjectVar;
 
-    /** 多选集合写回：勾选集合变化后把选中行数组写入此变量，供下游组件消费 */
+    /**
+     * 多选集合写回：勾选集合变化后把选中行数组写入此变量，供下游组件消费
+     */
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 24, advance = false)
     public String selectedObjectsVar;
+
+    @Override
+    public String getBoundObjectSetVar() {
+        return this.objectSetVar;
+    }
+
+    @Override
+    public List<WidgetColumnConfig> getColumnConfigs() {
+        return this.columns;
+    }
 
     @TISExtension
     public static class DescriptorImpl extends BaseWidgetDescriptor<IWorkshopWidget> {
@@ -57,6 +79,11 @@ public class ObjectTableWidget extends WorkshopWidget {
             this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
             this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
             this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+
+            // === 级联管道：objectSetVar 变化时，按该对象集变量的属性自动生成候选列 ===
+            this.valueChangePipe(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR).render((pluginMeta, param) ->
+                    WidgetColumnConfig.createFrom(
+                            WidgetOptionHelper.getObjectPropertyMetas(param.getString(KEY_OBJECT_SET_VAR))));
         }
 
         @Override

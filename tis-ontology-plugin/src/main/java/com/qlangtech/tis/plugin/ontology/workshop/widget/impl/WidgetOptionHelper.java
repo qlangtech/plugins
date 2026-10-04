@@ -4,16 +4,20 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
+import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopSection;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.ObjectSetDefinitionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.VariableDefinitionConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
+import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang.StringUtils;
@@ -166,10 +170,11 @@ public class WidgetOptionHelper {
         if (StringUtils.isEmpty(domain)) {
             return Collections.emptyList();
         }
+        String modeuleName = null;
         try {
             List<IdentityName> options = new ArrayList<>();
             // 直接走 store：本方法是静态工具，为一次渲染新建一个 service 实例没有意义
-            for (WorkshopPage page : WorkshopPageStore.create(domain).listAll()) {
+            for (WorkshopPage page : WorkshopModule.load(domain,modeuleName).loadAllPage()) {
                 String label = StringUtils.isEmpty(page.displayName) ? page.name : page.displayName;
                 options.add(new Option(label, page.name));
             }
@@ -250,6 +255,110 @@ public class WidgetOptionHelper {
     }
 
     /**
+     * 当前 Workshop Module 里的<b>全部浮层</b> —— 供事件配置（{@code open-overlay} /
+     * {@code close-overlay}）的 {@code overlayName} 下拉使用。
+     *
+     * <p>与页面一样，选项的 {@code value} 用名字而非自动生成的 UUID。
+     *
+     * @return 浮层选项列表；无法解析上下文时为空列表
+     */
+    public static List<IdentityName> getWorkshopOverlayOptions() {
+        WorkshopModule module = loadCurrentModuleQuietly();
+        if (module == null || module.overlays == null) {
+            return Collections.emptyList();
+        }
+        List<IdentityName> options = new ArrayList<>();
+        for (WorkshopOverlay overlay : module.overlays) {
+            options.add(new Option(StringUtils.isEmpty(overlay.title) ? overlay.name : overlay.title, overlay.name));
+        }
+        return options;
+    }
+
+    /**
+     * 当前 Workshop Module 里<b>全部页面下的全部区块</b> —— 供事件配置
+     * （{@code expand-section} / {@code collapse-section} / {@code toggle-section}）的
+     * {@code sectionName} 下拉使用。
+     *
+     * <p>区块隶属于页面（{@code WorkshopPage.sections}），故这里要把所有页面摊平。
+     * 选项的 {@code value} 用 {@code section.name}。
+     *
+     * @return 区块选项列表；无法解析上下文时为空列表
+     */
+    public static List<IdentityName> getWorkshopSectionOptions() {
+        WorkshopModule module = loadCurrentModuleQuietly();
+        if (module == null || module.pages == null) {
+            return Collections.emptyList();
+        }
+        List<IdentityName> options = new ArrayList<>();
+        for (WorkshopPage page : module.pages) {
+            if (page.sections == null) {
+                continue;
+            }
+            for (WorkshopSection section : page.sections) {
+                options.add(IdentityName.create(section.name));
+            }
+        }
+        return options;
+    }
+
+    /**
+     * 渲染期的「安静」版模块加载 —— 取不到上下文/加载失败一律返回 null，不抛异常。
+     *
+     * <p>与 {@link #loadCurrentModuleVariables()} 相对：那个是「用户点开配置表单」路径，上下文
+     * 缺失说明前端接线错了，抛异常是合理的；本方法服务的是<b>选项求值</b>，抛异常会让整张表单
+     * 一打开就报错，而缺一个下拉候选只是降级。
+     */
+    private static WorkshopModule loadCurrentModuleQuietly() {
+        try {
+            String domain = getCurrentOntologyDomainId();
+            String moduleName = getCurrentWorkshopModuleName();
+            if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(moduleName)) {
+                return null;
+            }
+            return WorkshopModule.load(domain, moduleName);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    // ===============================================================
+    //  Public API — 本体 Action 选项
+    // ===============================================================
+
+    /**
+     * 当前本体域中已定义的<b>全部 Action</b> —— 供所有「触发本体动作」字段的选项：
+     * {@code WidgetActionConfig.actionId}、{@code ActionButtonWidget} 的按钮动作、
+     * {@code OntologyActionClickAction.actionId}。
+     *
+     * <p>与变量下拉不同，Action 不属于 Workshop Module 而属于<b>本体域</b>，故只需 domain
+     * 上下文（{@link #getCurrentOntologyDomainId()}），不需要 module 名。
+     *
+     * <p>选项的 {@code value} 用 {@code action.getName()} 而非其它标识：与变量/页面一致，
+     * 模块内引用一律用<b>名字</b>。{@code label} 用 {@code getDisplayName()}，
+     * 为空时回落到 {@code getName()}。
+     *
+     * <p>取不到上下文或加载失败一律返回空列表，不抛异常 —— 渲染期抛异常会让整张表单打不开，
+     * 与 {@link #getObjectPropertyOptions(String, OntologyPluginMeta)} 的兜底口径一致。
+     */
+    public static List<IdentityName> getOntologyActionOptions() {
+        String domain = getCurrentOntologyDomainId();
+        if (StringUtils.isEmpty(domain)) {
+            return Collections.emptyList();
+        }
+        try {
+            List<IdentityName> options = new ArrayList<>();
+            for (OntologyAction action : Ontology.loadAllActions(domain)) {
+                String name = action.getName();
+                String label = StringUtils.isEmpty(action.getDisplayName()) ? name : action.getDisplayName();
+                options.add(new Option(label, name));
+            }
+            return options;
+        } catch (Throwable t) {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
      * 根据选中的 objectSetVar 变量名，解析其 ObjectSetDefinitionConfig 所引用的
      * OntologyObjectType 属性列表，供 labelProp / startProp / endProp / rowProperty
      * 等级联字段使用。
@@ -298,8 +407,44 @@ public class WidgetOptionHelper {
 
         } catch (Exception e) {
             // 任何加载异常静默返回空列表
+            //
+            // 注意：这里的宽 catch 会让 FunctionConfig 型（以及任何取不到 schema 的）变量静默降级为空候选，
+            // 与 getObjectPropertyMetas 对同类变量抛 IllegalStateException 的口径不一致。
+            // 于是 ObjectListWidget 上同一个变量、同一个 descriptor 里，titleProperty 静默为空而
+            // cardFields 直接报错。本次不动这里的行为（改动面会扩散到 Pivot/Gantt/ChartPie 等调用方），
+            // 只在此说明；彻底的「选择性重抛」留作后续项。
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 取对象集合变量的完整属性定义（{@link OntologyProperty}，含 {@code parseOntologyType()}），
+     * 供 {@code WidgetColumnConfig.createFrom} 推导列配置使用。
+     *
+     * <p>与 {@link #getObjectPropertyOptions(String, OntologyPluginMeta)} 的分工：那个返回的是
+     * 下拉用的 {@code OptionWithEndType}（只需要名字与类型标签），本方法返回的是完整属性元数据
+     * ——列配置还需要 description 与类型枚举。也正因此<b>没有</b>把前者重构为调用本方法：
+     * 前者为渲染期降级而宽 catch，会把这里要对用户暴露的错误吞掉。
+     *
+     * @param objectSetVarName 用户选中的对象集合变量名，可能为 null / 空
+     * @return 属性列表；变量名为空或变量已不存在时返回空列表（软失败，表单仍能打开）
+     * @throws IllegalStateException 变量存在但不是对象集合变量，或对象集由 FunctionConfig 定义
+     *                               （取不到 schema，见 {@code ObjectSetVariable.getColsMeta()}）
+     */
+    public static List<OntologyProperty> getObjectPropertyMetas(String objectSetVarName) {
+        if (StringUtils.isEmpty(objectSetVarName)) {
+            return Collections.emptyList();
+        }
+        WorkshopVariable variable = WorkshopVariable.loadDetail(objectSetVarName);
+        if (variable == null) {
+            return Collections.emptyList();
+        }
+        if (!(variable instanceof ObjectSetVariable objSetVar)) {
+            throw new IllegalStateException("变量 '" + objectSetVarName + "' 的类型为 "
+                    + variable.getClass().getSimpleName() + "，不是对象集合变量，无法推导列定义");
+        }
+        // FunctionConfig 的情形由 getColsMeta 抛出可执行的 IllegalStateException
+        return objSetVar.getColsMeta();
     }
 
     // ===============================================================
@@ -321,8 +466,11 @@ public class WidgetOptionHelper {
         if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(moduleName)) {
             throw new IllegalStateException("param domain or moduleName can not be null");
         }
-        WorkshopModule module = WorkshopModule.load(domain, moduleName);
-        return module != null ? module.variables : null;
+
+      return   WorkshopVariable.loadAll(domain,moduleName);
+
+//        WorkshopModule module = WorkshopModule.load(domain, moduleName);
+//        return module != null ? module.variables : null;
 //        } catch (Exception e) {
 //            return null;
 //        }

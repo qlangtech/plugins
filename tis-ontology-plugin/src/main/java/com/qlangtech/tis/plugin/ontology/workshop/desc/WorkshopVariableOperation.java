@@ -75,18 +75,18 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
             String type = msgHandler.getString("type");
             try {
                 switch (type) {
-                    case "create":
-                        doCreate(msgHandler, pluginContext, context);
-                        break;
+//                    case "create":
+//                        doCreate(msgHandler, pluginContext, context);
+//                        break;
                     case "get":
                         doGet(msgHandler, pluginContext, context);
                         break;
                     case "list":
                         doList(msgHandler, pluginContext, context);
                         break;
-                    case "update":
-                        doUpdate(msgHandler, pluginContext, context);
-                        break;
+//                    case "update":
+//                        doUpdate(msgHandler, pluginContext, context);
+//                        break;
                     case "delete":
                         doDelete(msgHandler, pluginContext, context);
                         break;
@@ -103,23 +103,23 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
         //  具体操作
         // ==================================================================
 
-        private void doCreate(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
-            String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
-            String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
-            WorkshopVariable variable = parseVariable(msgHandler, context);
-
-            WorkshopVariable.persistVariable(pluginContext, Optional.of(context),
-                    ontologyDomainId, moduleName, variable, false);
-
-            pluginContext.setBizResult(context, singleResult(variable));
-        }
+//        private void doCreate(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
+//            String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
+//            String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
+//            WorkshopVariable variable = parseVariable(msgHandler, context);
+//
+//            WorkshopVariable.persistVariable(pluginContext, Optional.of(context),
+//                    ontologyDomainId, moduleName, variable, false);
+//
+//            pluginContext.setBizResult(context, singleResult(variable));
+//        }
 
         private void doGet(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
             String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
             String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
-            String variableId = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_ID);
+            String variableName = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_NAME);
 
-            WorkshopVariable variable = createVariableService().getVariable(ontologyDomainId, moduleName, variableId);
+            WorkshopVariable variable = createVariableService().getVariable(ontologyDomainId, moduleName, variableName);
             pluginContext.setBizResult(context, singleResult(variable));
         }
 
@@ -143,11 +143,12 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
         private void doUpdate(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
             String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
             String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
-            String variableId = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_ID);
+            String variableName = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_NAME);
 
             WorkshopVariable variable = parseVariable(msgHandler, context);
-            // 以 URL 参数为准，避免表单里的 id 被改动后写到别的文件上
-            variable.setId(variableId);
+            // 以 URL 参数为准，避免表单里的 name 被改动后写到别的文件上。
+            // name 同时是落盘文件名，所以这一句实际上就是「禁止改名」的执行点。
+            variable.name = variableName;
 
             WorkshopVariable.persistVariable(pluginContext, Optional.of(context),
                     ontologyDomainId, moduleName, variable, true);
@@ -158,10 +159,10 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
         private void doDelete(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
             String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
             String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
-            String variableId = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_ID);
+            String variableName = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_NAME);
 
             createVariableService().deleteVariable(pluginContext, Optional.of(context),
-                    ontologyDomainId, moduleName, variableId);
+                    ontologyDomainId, moduleName, variableName);
 
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);

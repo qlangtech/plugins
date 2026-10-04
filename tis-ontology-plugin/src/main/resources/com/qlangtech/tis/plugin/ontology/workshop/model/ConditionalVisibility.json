@@ -1,10 +1,11 @@
 {
   "variableId": {
     "label": "引用变量",
-    "help": "被引用的模块变量名（大小写不敏感）"
+    "help": "被引用的模块变量名（大小写不敏感）",
+    "placeholder": "请选择变量"
   },
-  "hideWhenFalse": {
-    "label": "为假时隐藏",
-    "help": "开启：变量值为假时隐藏；关闭：变量值为假时才显示"
+  "stateIfFalse": {
+    "label": "为假时呈现",
+    "help": "变量值不满足时该元素的呈现方式"
   }
 }

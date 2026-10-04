@@ -1,0 +1,5 @@
+{
+  "title":      { "label": "标签名", "help": "标签上显示的文字，同时作为这一行的唯一标识", "placeholder": "如：概览" },
+  "targetPage": { "label": "目标页面", "help": "「模块头部」模式下切换到哪个 Page", "placeholder": "请选择目标页面" },
+  "onSelect":   { "label": "选中事件", "help": "「区块内」模式下选中该标签时触发的事件" }
+}

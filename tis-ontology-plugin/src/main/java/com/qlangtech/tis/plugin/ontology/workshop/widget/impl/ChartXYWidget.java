@@ -4,15 +4,16 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ChartLayer;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.qlangtech.tis.plugin.annotation.FormFieldType.MULTI_DESCRIBLE_PLUGIN;
 
 /**
  * P0 Widget：XY 图表（Chart XY）
@@ -38,14 +39,13 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class ChartXYWidget extends WorkshopWidget {
+public class ChartXYWidget extends FullDisplayWidget {
 
     /**
      * 图层列表 —— 一个图层 = 一份数据输入 + 一种画法，多层叠在同一坐标系。
      */
     // @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
-    @SubForm(ordinal = 10, desClazz = ChartLayer.class //
-            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
+    @FormField(ordinal = 10, desClazz = ChartLayer.class, type = MULTI_DESCRIBLE_PLUGIN, validate = {Validator.require})
     public List<ChartLayer> layers = new ArrayList<>();
 
     /**

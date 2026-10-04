@@ -13,7 +13,20 @@ public class VariableBasedVisibility implements Serializable {
   /** 可见性表达式（如 "equals", "notEmpty", "greaterThan"） */
   private String expression;
 
-  /** 用于判断的变量 ID */
+  /**
+   * 用于判断的变量 —— <b>存的是变量名，不是 ID</b>。
+   *
+   * 字段名是历史遗留：{@code WorkshopVariable} 的 id 已删除、identity 字段就是 name。
+   * 之所以不把字段名一并改成 variableName —— 它同时是表单的线格式键：
+   * 本类经 {@code WorkshopOverlay.variableBasedVisibility}（{@code @FormField(ordinal = 6)}）
+   * 作为嵌套表单下发，前端 {@code overlay.model.ts} 的 {@code variableBasedVisibility.variableId}
+   * 与 {@code section.model.ts} 的 {@code ConditionalVisibility.variableId} 都按这个键读取，
+   * 改名会静默断开这条链路。要改必须两端同批。
+   *
+   * 注：本字段没有 {@code Descriptor.registerSelectOptions} 供给候选，
+   * 目前是让用户手填变量名的普通文本输入 —— 这与「变量绑定应给下拉」的约定不符，
+   * 属既有缺口，不在本次 id→name 迁移范围内。
+   */
   private String variableId;
 
   /** 比较值（可选） */

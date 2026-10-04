@@ -1,0 +1,5 @@
+{
+  "actionId":           { "label": "本体动作", "help": "要执行的动作（当前本体域中已定义的 Action）", "placeholder": "请选择本体动作" },
+  "selectedObjectsVar": { "label": "入参对象来源", "help": "该变量中的对象 rid 列表会作为动作入参", "placeholder": "请选择对象集变量" },
+  "confirmBeforeExecute": { "label": "执行前二次确认", "help": "开启后点击按钮先弹确认框", "dftVal": false }
+}

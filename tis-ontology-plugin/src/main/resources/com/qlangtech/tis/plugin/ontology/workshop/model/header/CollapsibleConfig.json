@@ -1,0 +1,10 @@
+{
+  "collapsedByDefault": {
+    "label": "默认折叠",
+    "help": "打开模块时头部是否默认处于折叠状态"
+  },
+  "collapsedImage": {
+    "label": "折叠图标",
+    "help": "折叠状态下显示的图标 URL，留空则只显示折叠按钮"
+  }
+}

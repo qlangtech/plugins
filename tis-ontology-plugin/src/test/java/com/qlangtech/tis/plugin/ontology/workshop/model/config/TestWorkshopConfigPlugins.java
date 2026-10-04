@@ -4,13 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.ElementCreatorFactory;
 import com.qlangtech.tis.plugin.ds.ViewContent;
+import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * {@code WorkshopVariable} 三个「开关型」聚合属性插件改造的回归测试。
@@ -58,14 +54,6 @@ import java.util.stream.Collectors;
  * （其扫描范围含 {@code workshop.model.config}），此处不重复。
  */
 public class TestWorkshopConfigPlugins {
-
-    /**
-     * sezpoz 在编译期为 {@code @TISExtension} 生成的扩展点索引 —— TIS 的 ExtensionFinder
-     * 实际读的就是它（{@code @TISExtension} 是 {@code RetentionPolicy.CLASS}，
-     * 运行期 {@code getAnnotation} 恒为 null，不能直接查注解）。
-     */
-    private static final String SEZPOZ_INDEX_PATH =
-            "/META-INF/annotations/com.qlangtech.tis.extension.TISExtension.txt";
 
     /** 本轮改造所在的包 */
     private static final String CONFIG_PKG = "com.qlangtech.tis.plugin.ontology.workshop.model.config.";
@@ -115,18 +103,20 @@ public class TestWorkshopConfigPlugins {
     public void everyBaseHasExactlyTwoSubclassesOneOfWhichIsOff() {
         for (Map.Entry<Class<?>, Class<?>> e : BASES.entrySet()) {
             Class<?> base = e.getKey();
-            Set<Class<?>> actual = concreteSubclassesOf(base);
+            Set<Class<?>> actual = TisPluginFormTestSupport.concreteSubclassesOf(base, CONFIG_PKG);
 
             Set<String> expected = new TreeSet<>(Arrays.asList(
-                    e.getValue().getSimpleName(), offSubclassOf(base).getSimpleName()));
+                    e.getValue().getSimpleName(),
+                    TisPluginFormTestSupport.offSubclassOf(base, CONFIG_PKG).getSimpleName()));
             Assert.assertEquals(base.getSimpleName() + " 应恰好有两个具体子类（一个开启、一个关闭），"
-                            + "实际：" + names(actual), expected, names(actual));
+                            + "实际：" + TisPluginFormTestSupport.names(actual),
+                    expected, TisPluginFormTestSupport.names(actual));
 
             // 「关闭」的判据不是类名里有 None，而是它的 displayName 就是 SWITCH_OFF ——
             // 前端选默认项比对的正是这个字符串，名字对了但 displayName 写错同样是坏的
             List<String> offs = new ArrayList<>();
             for (Class<?> sub : actual) {
-                if (Descriptor.SWITCH_OFF.equals(descriptorOf(sub).getDisplayName())) {
+                if (Descriptor.SWITCH_OFF.equals(TisPluginFormTestSupport.descriptorOf(sub).getDisplayName())) {
                     offs.add(sub.getSimpleName());
                 }
             }
@@ -147,7 +137,7 @@ public class TestWorkshopConfigPlugins {
     @Test
     public void descriptorsIdentifyTheirConcreteSubclass() {
         for (Class<?> onSubclass : BASES.values()) {
-            Descriptor<?> desc = descriptorOf(onSubclass);
+            Descriptor<?> desc = TisPluginFormTestSupport.descriptorOf(onSubclass);
             Assert.assertEquals(onSubclass.getSimpleName() + " 的 descriptor.getId() 应等于其自身 FQCN"
                             + "（两个子类撞成同一个 id 时前端无法区分开关）",
                     onSubclass.getName(), desc.getId());
@@ -167,7 +157,7 @@ public class TestWorkshopConfigPlugins {
      */
     @Test
     public void switchFieldsDefaultToOffInFormResource() {
-        JSONObject resource = formResource(
+        JSONObject resource = TisPluginFormTestSupport.formResource(
                 "com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable");
         Assert.assertNotNull("WorkshopVariable.json 应存在", resource);
 
@@ -289,95 +279,6 @@ public class TestWorkshopConfigPlugins {
     //  helpers
     // ===================================================================
 
-    /** 与 {@code None} 前缀约定对应的关闭子类 */
-    private static Class<?> offSubclassOf(Class<?> base) {
-        for (Class<?> sub : concreteSubclassesOf(base)) {
-            if (sub.getSimpleName().startsWith("None")) {
-                return sub;
-            }
-        }
-        throw new AssertionError(base.getSimpleName() + " 下没有以 None 开头的关闭子类");
-    }
-
-    /**
-     * sezpoz 索引里 {@code config} 包下的具体子类 —— 与 {@code base} 可赋值者。
-     *
-     * <p>从索引枚举而非硬编码类名清单：新增子类只要带 {@code @TISExtension}
-     * 就自动进入覆盖范围，不会因为测试忘了同步而漏检。
-     */
-    private static Set<Class<?>> concreteSubclassesOf(Class<?> base) {
-        Set<Class<?>> result = new TreeSet<>(java.util.Comparator.comparing(Class::getName));
-        for (Class<?> clazz : configPackageClasses()) {
-            if (Modifier.isAbstract(clazz.getModifiers()) || base.equals(clazz)) {
-                continue;
-            }
-            if (base.isAssignableFrom(clazz)) {
-                result.add(clazz);
-            }
-        }
-        Assert.assertFalse(base.getSimpleName() + " 在 sezpoz 索引里一个具体子类都没扫到"
-                + "（注解处理器未生效？扫描包写错了？）", result.isEmpty());
-        return result;
-    }
-
-    /** sezpoz 索引中 {@code config} 包下的类（已加载，按名字排序，保证失败信息稳定） */
-    private static List<Class<?>> configPackageClasses() {
-        List<Class<?>> result = new ArrayList<>();
-        for (String fqcn : sezpozIndexEntries()) {
-            if (!fqcn.startsWith(CONFIG_PKG)) {
-                continue;
-            }
-            Class<?> clazz = outerClassOf(fqcn);
-            if (clazz != null && result.stream().noneMatch(c -> c == clazz)) {
-                result.add(clazz);
-            }
-        }
-        Assert.assertFalse("sezpoz 索引中 " + CONFIG_PKG + " 下没有任何条目", result.isEmpty());
-        return result;
-    }
-
-    /** 索引条目所在的外部类；已是顶层类则返回自身，加载不到返回 null */
-    private static Class<?> outerClassOf(String fqcn) {
-        try {
-            Class<?> clazz = Class.forName(fqcn, false, TestWorkshopConfigPlugins.class.getClassLoader());
-            Class<?> outer = clazz.getEnclosingClass();
-            return outer != null ? outer : clazz;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    /** 类的嵌套 descriptor（约定名 {@code DefaultDescriptor} 优先，否则取第一个） */
-    private static Descriptor<?> descriptorOf(Class<?> pluginClass) {
-        Descriptor<?> fallback = null;
-        for (Class<?> nested : pluginClass.getDeclaredClasses()) {
-            if (!Descriptor.class.isAssignableFrom(nested)) {
-                continue;
-            }
-            Descriptor<?> desc = newDescriptor(nested);
-            if (desc == null) {
-                continue;
-            }
-            if ("DefaultDescriptor".equals(nested.getSimpleName())) {
-                return desc;
-            }
-            if (fallback == null) {
-                fallback = desc;
-            }
-        }
-        Assert.assertNotNull(pluginClass.getSimpleName()
-                + " 没有可实例化的嵌套 descriptor（@TISExtension 类缺失或构造抛异常？）", fallback);
-        return fallback;
-    }
-
-    private static Descriptor<?> newDescriptor(Class<?> descriptorClass) {
-        try {
-            return (Descriptor<?>) descriptorClass.getDeclaredConstructor().newInstance();
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
     /**
      * 从子类的 {@code .json} 读出该字段的 {@code elementCreator} 并反射实例化。
      *
@@ -385,7 +286,7 @@ public class TestWorkshopConfigPlugins {
      */
     private static ElementCreatorFactory<?> readElementCreator(Class<?> pluginClass, String fieldName)
             throws Exception {
-        JSONObject resource = formResource(pluginClass.getName());
+        JSONObject resource = TisPluginFormTestSupport.formResource(pluginClass.getName());
         Assert.assertNotNull(pluginClass.getSimpleName() + ".json 应存在", resource);
 
         JSONObject fieldMeta = resource.getJSONObject(fieldName);
@@ -402,39 +303,5 @@ public class TestWorkshopConfigPlugins {
                 ElementCreatorFactory.class.isAssignableFrom(creatorClass));
         // 框架走 loadClass(FQCN).newInstance()，无参构造是硬性要求
         return (ElementCreatorFactory<?>) creatorClass.getDeclaredConstructor().newInstance();
-    }
-
-    /** 表单资源路径：{@code /<FQCN 的点号换成斜杠>.json}；不存在返回 null */
-    private static JSONObject formResource(String fqcn) {
-        String path = "/" + fqcn.replace('.', '/') + ".json";
-        try (InputStream in = TestWorkshopConfigPlugins.class.getResourceAsStream(path)) {
-            if (in == null) {
-                return null;
-            }
-            return JSONObject.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new AssertionError("读取表单资源失败：" + path, e);
-        }
-    }
-
-    private static Set<String> names(Set<Class<?>> classes) {
-        return classes.stream().map(Class::getSimpleName).collect(Collectors.toCollection(TreeSet::new));
-    }
-
-    private static List<String> sezpozIndexEntries() {
-        try (InputStream in = TestWorkshopConfigPlugins.class.getResourceAsStream(SEZPOZ_INDEX_PATH)) {
-            Assert.assertNotNull("缺少 sezpoz 索引 " + SEZPOZ_INDEX_PATH + "（注解处理器未生效？）", in);
-            String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            List<String> entries = new ArrayList<>();
-            for (String line : text.split("\n")) {
-                String trimmed = line.trim();
-                if (!trimmed.isEmpty()) {
-                    entries.add(trimmed);
-                }
-            }
-            return entries;
-        } catch (IOException e) {
-            throw new AssertionError("读取 sezpoz 索引失败：" + SEZPOZ_INDEX_PATH, e);
-        }
     }
 }

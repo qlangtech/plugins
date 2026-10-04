@@ -1,7 +1,7 @@
 {
   "visible": {
     "label": "显示头部",
-    "help": "是否显示页面头部"
+    "help": "是否渲染头部。关闭后头部仍然存在，可在左侧「页面」树的 Header 节点里重新打开"
   },
   "title": {
     "label": "标题",
@@ -13,27 +13,13 @@
   },
   "orientation": {
     "label": "方向",
-    "help": "头部布局方向：水平或垂直"
+    "help": "头部的排布方向：水平顶栏、垂直侧栏。各自的高度/宽度在选中后于下方出现",
+    "dftVal": "Horizontal"
   },
-  "height": {
-    "label": "高度（像素）",
-    "help": "水平方向时的头部高度"
-  },
-  "width": {
-    "label": "宽度（像素）",
-    "help": "垂直方向时的头部宽度"
-  },
-  "collapsible": {
-    "label": "可折叠",
-    "help": "头部是否可以折叠"
-  },
-  "collapsedByDefault": {
-    "label": "默认折叠",
-    "help": "页面加载时头部是否默认折叠"
-  },
-  "collapsedImage": {
-    "label": "折叠图标",
-    "help": "折叠状态下显示的图标 URL"
+  "collapseConfig": {
+    "label": "折叠配置",
+    "help": "头部是否可折叠；选择「off」表示不可折叠",
+    "dftVal": "off"
   },
   "backgroundColor": {
     "label": "背景颜色",

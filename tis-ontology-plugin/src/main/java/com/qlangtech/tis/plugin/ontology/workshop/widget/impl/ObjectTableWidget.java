@@ -1,5 +1,7 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -10,6 +12,9 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetColumnConfig;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.AttrValMap;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Map;
@@ -40,13 +45,13 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
     /**
      * 列定义列表（由 SubForm 子表单结构化管理）
      */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class, ordinal = 22, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class, ordinal = 21, advance = false, validate = {Validator.require})
     public List<WidgetColumnConfig> columns;
 
     /**
      * 每页显示条数
      */
-    @FormField(type = FormFieldType.INT_NUMBER, ordinal = 21, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.INT_NUMBER, ordinal = 22, advance = false, validate = {Validator.require})
     public Integer pageSize;
 
     /**
@@ -89,6 +94,23 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
         @Override
         public String getDisplayName() {
             return "Object Table";
+        }
+
+        @Override
+        public void httpProcess(IControlMsgHandler paramGetter, IPluginContext pluginContext, Context context) throws Exception {
+            JSONObject postContent = pluginContext.getJSONPostContent();
+            // final List<String> relevantFieldKeys = ;
+            AttrValMap.RelevantFieldsContextAttrValMap<ObjectTableWidget> relevantFieldsContextAttrs
+                    = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent, (desc) -> {
+                return List.of(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR);
+            });
+
+            if (!relevantFieldsContextAttrs.validate().isValid()) {
+                return;
+            }
+            ObjectTableWidget widget = relevantFieldsContextAttrs.createPluginInstance();
+
+
         }
 
         @Override

@@ -264,8 +264,8 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
             // Table 视图要求至少有一列被标记为 clickable：点击该列可打开该条记录的编辑对话框。
             // 列出的键必须都是 WidgetColumnConfig 上真实存在的 @FormField。
             // width 刻意不列：它「仅 ObjectTable 使用」，对 cardFields / properties 是无意义的一列。
-            return Lists.newArrayList(new ColConfig("prop", 12).setClickable(), new ColConfig("label", 12),
-                    new ColConfig("format"), new ColConfig("align"), new ColConfig("sortable"));
+            return Lists.newArrayList(new ColConfig("prop").setClickable(), new ColConfig("label"),
+                    new ColConfig("format", 12), new ColConfig("align", 12), new ColConfig("sortable", 12));
         }
     }
 }

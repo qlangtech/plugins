@@ -5,7 +5,15 @@
   },
   "layout": {
     "label": "布局类型",
-    "help": "区块的布局方式：列布局、行布局、标签页、流式、工具栏、循环"
+    "help": "区块的布局方式：列布局、行布局、标签页、流式、工具栏、循环",
+    "enum": [
+      { "label": "列布局", "val": "COLUMNS" },
+      { "label": "行布局", "val": "ROWS" },
+      { "label": "标签页布局", "val": "TABS" },
+      { "label": "流式布局", "val": "FLOW" },
+      { "label": "工具栏布局", "val": "TOOLBAR" },
+      { "label": "循环布局", "val": "LOOP" }
+    ]
   },
   "layoutConfig": {
     "label": "布局配置",

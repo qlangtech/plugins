@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.page;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 
 /**
@@ -39,30 +40,30 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
  *       两个空 Section（截图 {@code configure_new_page.png}）。并排由本模板的栅格产生，
  *       不是靠嵌套一个容器 Section 实现的：两个 Section 是<b>同级的直接子节点</b>。
  *       注意它是"两块并排的空 Section"，不是"空画布"：字面读作"空白页"容易误解。
- *       <p>
+ * <p>
  *       实现口径：左 30% / 右自适应（比例实测自截图，分隔线落在内容区 29.8% 处），
  *       建页铺两个名为「分区 1」「分区 2」的 rows Section。</li>
  *   <li>{@link #DETAILS}：详情布局。以<b>单个对象</b>为中心 —— 顶部对象属性，中部图表，
  *       底部关联对象列表与操作按钮。一般由 INBOX / GRID 经 Layout event 或 Overlay 跳进来。
- *       <p>
+ * <p>
  *       实现口径：左固定 260px 导航栏 + 右自适应内容区。用固定 px 而非百分比，
  *       是因为导航栏本就不该随窗口缩放。</li>
  *   <li>{@link #GRID}：网格布局。只读监控看板 —— 指标卡 + 图表/表格铺成网格，基本无写入交互。
  *       对应 Foundry 的 Grid 与 Design Hub 的 Metrics Dashboard。
- *       <p>
+ * <p>
  *       实现口径：列数不写死（{@code auto-fit minmax(280px,1fr)}，按可用宽度自动排），
  *       首个子项通栏当筛选条。</li>
  *   <li>{@link #INBOX}：收件箱布局。左列表 + 右详情/操作的分诊工作台，对应 Foundry 的 Inbox
  *       与 Design Hub 的 Alert Inbox。左侧当队列，右侧做处置，通常配 Overlay 钻取。
- *       <p>
+ * <p>
  *       实现口径：左 340px 列表栏 + 右自适应。列表栏比 DETAILS 的导航栏宽一档 ——
  *       它要放得下标题与摘要。</li>
  *   <li>{@link #OVERVIEW}：概览布局。指标卡与图表铺成整体的态势页，对应 Foundry 的 Overview。
- *       <p>
+ * <p>
  *       实现口径：<b>不是</b>自适应网格，而是固定等宽两栏 + 首个子项通栏。
  *       与 {@link #TWO_COLUMN} 的唯一区别就是那条通栏 —— 两者若都写成纯两栏会分不出来。</li>
  *   <li>{@link #SETTINGS}：设置布局。表单字段铺陈的配置页，对应 Foundry 的 Settings。
- *       <p>
+ * <p>
  *       实现口径：首个子项通栏（标题）+ 下方左标签 / 右表单，比例 1:2（表单区更宽）。
  *       与 {@link #DETAILS} 的区别在于：DETAILS 没有通栏、左侧是固定宽导航，
  *       SETTINGS 有通栏、下方是按比例分的两栏。</li>
@@ -160,7 +161,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
  *       因此<b>切换模板只换栅格、不重铺 Section</b>（见 tis-console 的
  *       {@code WorkshopPageComponent.onTemplatePick}）—— 重铺会把用户已经放好的 widget 全部抹掉，
  *       而模板是随时可切的开关，代价完全不成比例。
- *       <p>
+ * <p>
  *       另需注意：{@code WorkshopModule.pageToJSON} 对 null 的 template 兜了 {@code "blank"}，
  *       但那只是下发时的兜底，内存里的对象仍可能是 null；前端 {@code pageLayoutClass()}
  *       也照此再兜一次。</li>
@@ -178,24 +179,31 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
  *
  * @see WorkshopPage
  */
-public enum PageTemplate implements DescriptorUseableShortComment {
-    BLANK("空白页"),
-    DETAILS("详情布局"),
-    GRID("网格布局"),
-    INBOX("收件箱布局"),
-    OVERVIEW("概览布局"),
-    SETTINGS("设置布局"),
-    TWO_COLUMN("两栏布局"),
-    THREE_COLUMN("三栏布局");
+public enum PageTemplate implements DescriptorUseableShortComment, IEndTypeGetter {
+    BLANK("空白页", EndType.LayoutBlank),
+    DETAILS("详情布局", EndType.LayoutDetails),
+    GRID("网格布局", EndType.LayoutGrid),
+    INBOX("收件箱布局", EndType.LayoutInbox),
+    OVERVIEW("概览布局", EndType.LayoutOverview),
+    SETTINGS("设置布局", EndType.LayoutSettings),
+    TWO_COLUMN("两栏布局", EndType.LayoutTwoColumn),
+    THREE_COLUMN("三栏布局", EndType.LayoutThreeColumn);
 
     private final String comment;
+    private final EndType endType;
 
-    PageTemplate(String comment) {
+    PageTemplate(String comment, EndType endType) {
         this.comment = comment;
+        this.endType = endType;
     }
 
     @Override
     public String shortComment() {
         return comment;
+    }
+
+    @Override
+    public EndType getEndType() {
+        return endType;
     }
 }

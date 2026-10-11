@@ -123,7 +123,6 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
     public static abstract class BasicWorkshopStoreGetter<T extends Describable<?>> extends BaiscAssistStoreGetter<T> {
 
 
-
         @Override
         public File getAssistRootDir(String ontologyName, Optional<String> submodule) {
             return getWorkshopDir(ontologyName, submodule.orElseThrow());
@@ -213,10 +212,12 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
      * WidgetOptionHelper 的变量下拉也拿不到数据。
      */
     private static void loadVariables(String ontologyDomain, String moduleName, WorkshopModule module) {
-        if (module == null || StringUtils.isEmpty(moduleName)) {
-            return;
-        }
+//        if (module == null || StringUtils.isEmpty(moduleName)) {
+//            return;
+//        }
         //  module.variables = WorkshopVariableStore.create(ontologyDomain, moduleName).listAll();
+
+        module.variables = WorkshopVariable.loadAll(ontologyDomain, moduleName);
     }
 
     /**
@@ -719,8 +720,8 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 throw new IllegalStateException("param 'ontologyDomainId' and '" + PARAM_PAGE_NAME + "' can not be empty");
             }
             String modeuleName = null;
-          //  WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId);
-            WorkshopPage page = WorkshopPage.loadPage(ontologyDomainId,modeuleName,pageName);
+            //  WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId);
+            WorkshopPage page = WorkshopPage.loadPage(ontologyDomainId, modeuleName, pageName);
             if (page == null) {
                 pluginContext.addErrorMessage(context, "Page not found: " + pageName);
                 return;
@@ -734,7 +735,7 @@ public class WorkshopModule extends OntologyDomainManipulate implements IManipul
                 page.displayName = displayName;
             }
 
-         //   pageStore.save(pluginContext, Optional.ofNullable(context), page, true);
+            //   pageStore.save(pluginContext, Optional.ofNullable(context), page, true);
 
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);

@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ds.mysql;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.ibatis.BasicCriteria;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -128,6 +129,21 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @Override
     public final Optional<String> getEscapeChar() {
         return BasicDataSourceFactory.MYSQL_ESCAPE_COL_CHAR;
+    }
+
+    /**
+     * MySQL 分页语法：`LIMIT offset,count`。
+     *
+     * criteria 的页码是 1 起的，getSkip() = pageSize * (page - 1)，故第一页为 `limit 0,N`。
+     * 格式与 tis-common-dao 里已有的 DB_MYSQL_PAGINATION_FORMAT 一致（那条按**系统库**类型选择
+     * 方言，这里必须按**目标数据源**类型来，所以不能直接复用 TISBaseCriteria）。
+     *
+     * 注：criteria 未设置 page/pageSize 时 GetSkip() 会 NPE —— 这是 BasicCriteria 的既有契约
+     * （getSkip 为 final 且不做空值兜底），故此处不重复兜底，以免把「忘了分页」静默降级成全表扫描。
+     */
+    @Override
+    public void appendSqlLimit(StringBuilder sql, BasicCriteria criteria) {
+        sql.append(" limit ").append(criteria.getSkip()).append(",").append(criteria.getPageSize());
     }
 
     @Override

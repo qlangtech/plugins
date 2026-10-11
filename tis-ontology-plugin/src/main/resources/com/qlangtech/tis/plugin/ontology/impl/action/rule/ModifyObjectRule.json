@@ -1,0 +1,11 @@
+{
+  "propertyMappings": {
+    "label": "属性映射",
+    "help": "要改写的对象属性和它们的新取值来源。"
+  },
+  "ridParameterName": {
+    "label": "RID 参数名",
+    "help": "指定哪个 Action 参数携带目标对象的 RID",
+    "placeholder": "rid"
+  }
+}

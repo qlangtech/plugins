@@ -1,0 +1,12 @@
+{
+  "columnCount": {
+    "label": "列数",
+    "help": "并排显示的子分区数量。窄屏下会自动下调（手机强制单列）",
+    "dftVal": 2
+  },
+  "columnWidths": {
+    "label": "列宽",
+    "placeholder": "如 1fr 2fr 1fr",
+    "help": "各列宽度，CSS grid 的 fr 写法。留空表示等宽"
+  }
+}

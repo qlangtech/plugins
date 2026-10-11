@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action;
 
 import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
+import com.qlangtech.tis.extension.OneStepOfMultiSteps.Step;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
@@ -41,8 +42,9 @@ import java.util.stream.Collectors;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/6
  * @see ActionMetadata
+ * @see ActionRuleSetter
  * @see ActionParameters
- * @see ActionRules
+ * @see ActionSubmissionCriteria
  */
 public class DefaultOntologyAction extends OntologyAction {
 
@@ -114,10 +116,10 @@ public class DefaultOntologyAction extends OntologyAction {
     }
 
     /**
-     * 获取第四步（Rules - 旧版）
+     * 获取第四步（提交条件）
      */
-    private ActionRules getRules() {
-        return (ActionRules) getMultiStepsSavedItems()[3];
+    private ActionSubmissionCriteria getSubmissionCriteriaStep() {
+        return (ActionSubmissionCriteria) getMultiStepsSavedItems()[Step.Step4.getStepIndex()];
     }
 
     @Override
@@ -136,31 +138,17 @@ public class DefaultOntologyAction extends OntologyAction {
     }
 
     /**
-     * 获取参数配置（JSON）
+     * 获取参数池（已结构化的参数定义列表）
      */
-    public String getParametersConfig() {
-        return getParameters().parameters;
+    public List<ActionParameterConfig> getParameterConfigs() {
+        return getParameters().getParameters();
     }
 
     /**
-     * 获取规则类型
+     * 获取提交条件（多条之间为「且」关系；空列表表示不限制提交）
      */
-    public String getRuleType() {
-        return getRules().ruleType;
-    }
-
-    /**
-     * 获取规则配置（JSON）
-     */
-    public String getRuleConfig() {
-        return getRules().ruleConfig;
-    }
-
-    /**
-     * 获取提交条件（JSON，可选）
-     */
-    public String getSubmissionCriteria() {
-        return getRules().submissionCriteria;
+    public List<SubmissionCriterion> getSubmissionCriteria() {
+        return getSubmissionCriteriaStep().getCriteria();
     }
 
     @Override
@@ -191,7 +179,7 @@ public class DefaultOntologyAction extends OntologyAction {
                     new ActionMetadata.Desc(),
                     new ActionRuleSetter.Desc(),
                     new ActionParameters.Desc(),
-                    new ActionRules.Desc()
+                    new ActionSubmissionCriteria.Desc()
             );
         }
 

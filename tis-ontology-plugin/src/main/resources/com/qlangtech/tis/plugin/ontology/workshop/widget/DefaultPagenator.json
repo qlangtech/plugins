@@ -1,0 +1,12 @@
+{
+  "pageSize": {
+    "label": "每页显示条数",
+    "help": "每页显示条数",
+    "dftVal": 20
+  },
+  "showPageNumber": {
+    "label": "显示总数与页码",
+    "help": "开启后分页条显示总记录数与可跳转页码；关闭后只能上一页/下一页（适合 ElasticSearch 这类不支持深翻页的数据源）",
+    "dftVal": true
+  }
+}

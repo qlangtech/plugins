@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,8 +37,14 @@ import java.util.UUID;
  */
 public class CreateObjectRule extends OntologyActionRule {
 
-    @FormField(ordinal = 0, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String propertyMappings;
+    /**
+     * 对象属性 ← 取值来源的映射行。
+     *
+     * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
+     */
+    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
+    public List<PropertyMappingConfig> propertyMappings;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
     public Boolean generateRid = true;
@@ -57,11 +64,8 @@ public class CreateObjectRule extends OntologyActionRule {
         long startTime = System.currentTimeMillis();
 
         try {
-            // 1. 解析属性映射配置
-            Map<String, String> mappings = parsePropertyMappings(propertyMappings);
-
-            // 2. 构建对象属性值
-            Map<String, Object> objectProperties = buildObjectProperties(mappings, context.getParameters());
+            // 1. 构建对象属性值
+            Map<String, Object> objectProperties = buildMappedValues(propertyMappings, context.getParameters());
 
             // 3. 生成或获取对象 RID
             String objectRid = generateRid ? generateObjectRid() : context.getParameter("rid", String.class);
@@ -90,46 +94,6 @@ public class CreateObjectRule extends OntologyActionRule {
         } catch (Exception e) {
             return RuleExecutionResult.failure(e);
         }
-    }
-
-    /**
-     * 解析属性映射配置
-     * 格式: propertyName1=paramName1\npropertyName2=paramName2
-     */
-    private Map<String, String> parsePropertyMappings(String mappings) {
-        Map<String, String> result = new java.util.HashMap<>();
-        if (mappings == null || mappings.trim().isEmpty()) {
-            return result;
-        }
-
-        for (String line : mappings.split("\n")) {
-            line = line.trim();
-            if (line.isEmpty() || line.startsWith("#")) {
-                continue;
-            }
-            String[] parts = line.split("=", 2);
-            if (parts.length == 2) {
-                result.put(parts[0].trim(), parts[1].trim());
-            }
-        }
-        return result;
-    }
-
-    /**
-     * 根据映射构建对象属性值
-     */
-    private Map<String, Object> buildObjectProperties(Map<String, String> mappings,
-                                                     Map<String, Object> parameters) {
-        Map<String, Object> properties = new java.util.HashMap<>();
-        for (Map.Entry<String, String> entry : mappings.entrySet()) {
-            String propertyName = entry.getKey();
-            String paramName = entry.getValue();
-            Object paramValue = parameters.get(paramName);
-            if (paramValue != null) {
-                properties.put(propertyName, paramValue);
-            }
-        }
-        return properties;
     }
 
     /**

@@ -7,9 +7,9 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
- * Columns 布局配置
+ * 列布局：子分区并排，每列一个子分区。
  */
-public class ColumnsLayoutConfig extends SectionLayoutConfig {
+public class ColumnsLayout extends SectionLayout {
 
     @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer columnCount = 2;
@@ -22,7 +22,7 @@ public class ColumnsLayoutConfig extends SectionLayoutConfig {
             implements DescriptorUseableShortComment {
         @Override
         public String shortComment() {
-            return "列布局配置";
+            return "列布局";
         }
 
         @Override

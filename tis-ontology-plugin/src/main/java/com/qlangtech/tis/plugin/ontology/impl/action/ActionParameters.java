@@ -19,62 +19,58 @@
 package com.qlangtech.tis.plugin.ontology.impl.action;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * Action Type Step 2: 参数配置
+ * Action Type Step 3: 参数配置
+ * <p>
+ * 定义 Action 的输入参数（全局参数池）。Parameters 是 ActionType 级别的全局变量，可以被多个 Rules 引用。
  *
- * 定义 Action 的输入参数（全局参数池）
- * Parameters 是 ActionType 级别的全局变量，可以被多个 Rules 引用
- *
- * JSON 格式示例：
- * <pre>
- * [
- *   {
- *     "parameterId": "ticket",
- *     "displayName": "工单",
- *     "dataType": "OBJECT_REFERENCE",
- *     "objectTypeId": "Ticket",
- *     "required": true,
- *     "widgetType": "OBJECT_SELECTOR"
- *   },
- *   {
- *     "parameterId": "newPriority",
- *     "displayName": "新优先级",
- *     "dataType": "STRING",
- *     "required": true,
- *     "widgetType": "DROPDOWN",
- *     "validation": {
- *       "enum": ["P0", "P1", "P2"]
- *     }
- *   }
- * ]
- * </pre>
+ * <p>参数池由 {@link ActionParameterConfig} 结构化成子表单行，不再让用户手写 JSON 数组字符串。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/6
+ * @see ActionParameterConfig
  */
 public class ActionParameters extends OneStepOfMultiSteps {
 
-    @FormField(ordinal = 0, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String parameters;
+    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = ActionParameterConfig.class, validate = {Validator.require})
+    public List<ActionParameterConfig> parameters;
+
+    /**
+     * 供下游（例如提交条件的候选池）安全遍历，不必自己判空。
+     */
+    public List<ActionParameterConfig> getParameters() {
+        return this.parameters == null ? Collections.emptyList() : this.parameters;
+    }
 
     @Override
     public void processPreSaved(IPluginContext pluginContext, Context currentCtx,
-                               OneStepOfMultiSteps[] preSavedStepPlugins) {
+                                OneStepOfMultiSteps[] preSavedStepPlugins) {
         // 保存当前步骤数据到上下文
         currentCtx.put(ActionParameters.class.getName(), this);
+
+        // 本步骤保存时会顺带构建下一步（提交条件）的描述符，而那一刻上下文里只有本步骤，
+        // 第 2 步（ActionRuleSetter）只是躺在 preSavedStepPlugins 数组里。
+        // 提交条件的字段候选需要第 2 步选定的目标对象类型，所以这里把它也发布到上下文。
+        // 与 ObjectTypePropertiesRelevant#processPreSaved 直接取 preSavedStepPlugins[Step2.getStepIndex()]
+        // 是同一手法，区别只是这里放进上下文（下一步的描述符构建发生在本步骤返回之前）。
+        final int step2Index = Step.Step2.getStepIndex();
+        if (preSavedStepPlugins.length > step2Index && preSavedStepPlugins[step2Index] != null) {
+            OneStepOfMultiSteps step2 = preSavedStepPlugins[step2Index];
+            currentCtx.put(step2.getClass().getName(), step2);
+        }
+
         super.processPreSaved(pluginContext, currentCtx, preSavedStepPlugins);
     }
 
@@ -93,90 +89,12 @@ public class ActionParameters extends OneStepOfMultiSteps {
 
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
-            return Optional.of(new ActionRules.Desc());
+            return Optional.of(new ActionSubmissionCriteria.Desc());
         }
 
         @Override
         public boolean isFinalStep() {
             return false;
-        }
-
-        /**
-         * 验证 parameters 字段
-         * 确保是有效的 JSON 数组格式
-         */
-        public boolean validateParameters(IFieldErrorHandler msgHandler, Context context,
-                                         String fieldName, String value) {
-            if (StringUtils.isEmpty(value)) {
-                msgHandler.addFieldError(context, fieldName, "参数配置不能为空");
-                return false;
-            }
-
-            // 验证 JSON 格式
-            try {
-                JSONArray array = JSON.parseArray(value);
-                if (array == null || array.isEmpty()) {
-                    msgHandler.addFieldError(context, fieldName, "参数配置必须是非空的 JSON 数组");
-                    return false;
-                }
-
-                // 验证每个参数对象的必需字段
-                for (int i = 0; i < array.size(); i++) {
-                    com.alibaba.fastjson.JSONObject param = array.getJSONObject(i);
-
-                    if (!param.containsKey("parameterId") || StringUtils.isEmpty(param.getString("parameterId"))) {
-                        msgHandler.addFieldError(context, fieldName,
-                            "参数 #" + (i + 1) + " 缺少必需字段 'parameterId'");
-                        return false;
-                    }
-
-                    if (!param.containsKey("displayName") || StringUtils.isEmpty(param.getString("displayName"))) {
-                        msgHandler.addFieldError(context, fieldName,
-                            "参数 #" + (i + 1) + " 缺少必需字段 'displayName'");
-                        return false;
-                    }
-
-                    if (!param.containsKey("dataType") || StringUtils.isEmpty(param.getString("dataType"))) {
-                        msgHandler.addFieldError(context, fieldName,
-                            "参数 #" + (i + 1) + " 缺少必需字段 'dataType'");
-                        return false;
-                    }
-
-                    // 验证 dataType 的有效性
-                    String dataType = param.getString("dataType");
-                    if (!isValidDataType(dataType)) {
-                        msgHandler.addFieldError(context, fieldName,
-                            "参数 #" + (i + 1) + " 的 dataType '" + dataType + "' 无效");
-                        return false;
-                    }
-                }
-
-                return true;
-
-            } catch (Exception e) {
-                msgHandler.addFieldError(context, fieldName,
-                    "参数配置 JSON 格式错误: " + e.getMessage());
-                return false;
-            }
-        }
-
-        /**
-         * 验证 dataType 是否有效
-         */
-        private boolean isValidDataType(String dataType) {
-            return dataType != null && (
-                dataType.equals("STRING") ||
-                dataType.equals("INTEGER") ||
-                dataType.equals("LONG") ||
-                dataType.equals("DOUBLE") ||
-                dataType.equals("DECIMAL") ||
-                dataType.equals("BOOLEAN") ||
-                dataType.equals("DATE") ||
-                dataType.equals("TIMESTAMP") ||
-                dataType.equals("OBJECT_REFERENCE") ||
-                dataType.equals("ARRAY") ||
-                dataType.equals("STRUCT")
-            );
         }
     }
 }

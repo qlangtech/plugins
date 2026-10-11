@@ -7,9 +7,9 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
- * Loop 布局配置
+ * 循环布局：按对象集重复渲染同一分区。
  */
-public class LoopLayoutConfig extends SectionLayoutConfig {
+public class LoopLayout extends SectionLayout {
 
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String iteratorVariable; // 变量 ID
@@ -22,7 +22,7 @@ public class LoopLayoutConfig extends SectionLayoutConfig {
             implements DescriptorUseableShortComment {
         @Override
         public String shortComment() {
-            return "循环布局配置";
+            return "循环布局";
         }
 
         @Override

@@ -23,7 +23,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,8 +39,14 @@ public class FunctionBackedRule extends OntologyActionRule {
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String functionId;
 
-    @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {})
-    public String parameterMappings;
+    /**
+     * 函数形参 ← 取值来源的映射行。可为空：函数可以没有入参。
+     *
+     * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
+     */
+    @FormField(ordinal = 1, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = PropertyMappingConfig.class, validate = {})
+    public List<PropertyMappingConfig> parameterMappings;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {})
     public Boolean async = false;
@@ -63,13 +69,10 @@ public class FunctionBackedRule extends OntologyActionRule {
         long startTime = System.currentTimeMillis();
 
         try {
-            // 1. 解析参数映射
-            Map<String, String> mappings = parseParameterMappings(parameterMappings);
+            // 1. 构建函数输入参数
+            Map<String, Object> functionInputs = buildMappedValues(parameterMappings, context.getParameters());
 
-            // 2. 构建函数输入参数
-            Map<String, Object> functionInputs = buildFunctionInputs(mappings, context.getParameters());
-
-            // 3. 调用函数（实际实现需要调用 Function 服务）
+            // 2. 调用函数（实际实现需要调用 Function 服务）
             // TODO: 集成 Function 执行服务
             Object functionResult = null;
             // if (async) {
@@ -105,46 +108,6 @@ public class FunctionBackedRule extends OntologyActionRule {
         } catch (Exception e) {
             return RuleExecutionResult.failure(e);
         }
-    }
-
-    /**
-     * 解析参数映射配置
-     * 格式: functionParam1=actionParam1\nfunctionParam2=actionParam2
-     */
-    private Map<String, String> parseParameterMappings(String mappings) {
-        Map<String, String> result = new HashMap<>();
-        if (mappings == null || mappings.trim().isEmpty()) {
-            return result;
-        }
-
-        for (String line : mappings.split("\n")) {
-            line = line.trim();
-            if (line.isEmpty() || line.startsWith("#")) {
-                continue;
-            }
-            String[] parts = line.split("=", 2);
-            if (parts.length == 2) {
-                result.put(parts[0].trim(), parts[1].trim());
-            }
-        }
-        return result;
-    }
-
-    /**
-     * 根据映射构建函数输入参数
-     */
-    private Map<String, Object> buildFunctionInputs(Map<String, String> mappings,
-                                                    Map<String, Object> actionParameters) {
-        Map<String, Object> inputs = new HashMap<>();
-        for (Map.Entry<String, String> entry : mappings.entrySet()) {
-            String functionParam = entry.getKey();
-            String actionParam = entry.getValue();
-            Object paramValue = actionParameters.get(actionParam);
-            if (paramValue != null) {
-                inputs.put(functionParam, paramValue);
-            }
-        }
-        return inputs;
     }
 
     @TISExtension

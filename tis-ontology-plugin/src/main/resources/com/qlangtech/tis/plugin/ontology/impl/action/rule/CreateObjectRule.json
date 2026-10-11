@@ -1,0 +1,9 @@
+{
+  "propertyMappings": {
+    "label": "属性映射",
+    "help": "新对象的属性从哪来。目标字段填对象属性名，取值来源可以是 Action 参数、当前时间或固定值。"
+  },
+  "generateRid": {
+    "label": "自动生成 RID"
+  }
+}

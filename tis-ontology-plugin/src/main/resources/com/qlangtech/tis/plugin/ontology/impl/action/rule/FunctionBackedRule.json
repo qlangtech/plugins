@@ -5,7 +5,8 @@
     "help": "要调用的 Ontology Function 标识符"
   },
   "parameterMappings": {
-    "label": "参数映射"
+    "label": "参数映射",
+    "help": "把 Action 参数池里的值传给函数的形参。函数没有入参时可留空。"
   },
   "async": {
     "label": "异步执行"

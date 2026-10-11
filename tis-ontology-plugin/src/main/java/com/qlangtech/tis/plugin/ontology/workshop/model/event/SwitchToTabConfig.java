@@ -26,7 +26,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * 切换到同一个 Tabs 布局内的另一个标签页。
  *
  * <p>{@code tabName} 只能是文本：标签页名隶属于某个 Section 的
- * {@code TabsLayoutConfig}，而事件配置本身不知道宿主 Section 是谁，无法据此限定候选集。
+ * {@code TabsLayout}，而事件配置本身不知道宿主 Section 是谁，无法据此限定候选集。
  * 若要改成下拉，需要把宿主上下文透传进事件表单 —— 见 {@code TabsWidget.location} 同类问题。
  */
 public class SwitchToTabConfig extends EventConfig {

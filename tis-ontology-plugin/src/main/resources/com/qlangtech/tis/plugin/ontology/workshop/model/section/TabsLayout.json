@@ -1,0 +1,12 @@
+{
+  "showTabBar": {
+    "label": "显示标签栏",
+    "help": "是否显示顶部的标签栏；隐藏后可配合按钮或事件切换标签页",
+    "dftVal": true
+  },
+  "tabPosition": {
+    "label": "标签栏位置",
+    "help": "标签栏相对内容区的位置",
+    "dftVal": "TOP"
+  }
+}

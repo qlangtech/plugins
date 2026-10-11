@@ -138,8 +138,8 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
  * 把 DETAILS 和 INBOX 都映射成"左窄右宽"之后，用户在两者之间切换将看不出任何变化。
  * 它们真正的差别在<b>建好之后页面里有哪些 Section、怎么分层</b>，这正是上表第三列的由来。
  * <p>
- * 反过来，骨架也替代不了栅格：Section 自己的 {@code layout: 'columns'} 只能等宽
- * （{@code repeat(N, 1fr)}，N 取自 {@code layoutConfig.columnCount}），表达不了
+ * 反过来，骨架也替代不了栅格：Section 自己的布局 {@code ColumnsLayout} 只能等宽
+ * （{@code repeat(N, 1fr)}，N 取自 {@code ColumnsLayout.columnCount}），表达不了
  * "左窄 + 右宽"这种不等宽排布。所以宽度关系只能由页面栅格表达，骨架负责的是
  * "分成几块、谁在谁里面"。
  * <p>
@@ -151,7 +151,8 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
  * <ol>
  *   <li><b>别和 {@code SectionLayout} 搞混 —— 两者是不同层级的容器属性。</b>
  *       本枚举排的是<b>一个页面的直接子 Section</b>；{@code SectionLayout}
- *       （columns / rows / tabs / flow / toolbar / loop）排的是<b>某个 Section 自己的 childSections</b>。
+ *       （其六个子类 ColumnsLayout / RowsLayout / TabsLayout / FlowLayout /
+ *       ToolbarLayout / LoopLayout）排的是<b>某个 Section 自己的 childSections</b>。
  *       类比 CSS：本枚举之于页面如同 {@code grid-template-columns} 之于 grid 容器，两者的作用域
  *       是"容器 → 它的直接子元素"，各管各的、互不约束 —— 一个两栏页面里塞 3 个 Section，
  *       第三个自然换行；Section 里嵌 Section 用什么排布，也与本枚举无关。</li>

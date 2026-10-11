@@ -31,7 +31,7 @@ public class ActionButtonWidget extends CompactDisplayWidget {
     public WidgetActionConfig action;
 
     /** 执行 Action 时作为入参的对象来源：写入该变量的对象集合（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 2, advance = false)
     public String selectedObjectsVar;
 
     /** 未选中任何对象时是否禁用按钮 */

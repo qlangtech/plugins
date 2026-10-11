@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.CreateObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
@@ -45,6 +46,11 @@ public class ObjectActionType extends ActionType {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String objectTypeReference;
 
+    /**
+     * @see CreateObjectRule
+     * @see com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule
+     * @see com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule
+     */
     @FormField(ordinal = 1, validate = {Validator.require})
     public OntologyActionRule objectRule;
 

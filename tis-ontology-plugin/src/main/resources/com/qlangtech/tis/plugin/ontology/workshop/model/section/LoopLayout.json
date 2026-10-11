@@ -1,0 +1,10 @@
+{
+  "iteratorVariable": {
+    "label": "迭代变量",
+    "help": "要遍历的对象集变量，每个元素渲染一次子分区"
+  },
+  "itemVariable": {
+    "label": "当前项变量",
+    "help": "在子分区内代表当前迭代元素的变量名，供其中的 widget 引用"
+  }
+}

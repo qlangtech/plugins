@@ -23,6 +23,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Ontology Action Rule 插件接口
@@ -77,6 +78,37 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
      */
     public boolean validate() {
         return true;
+    }
+
+    /**
+     * 把结构化的映射行解析成「目标字段 → 取值」。
+     *
+     * <p>原先 {@link CreateObjectRule}、{@link ModifyObjectRule}、{@link FunctionBackedRule}
+     * 各有一份逐字重复的 parse + build 两段实现，这里收敛成一处。
+     *
+     * @param mappings   映射行，可为 null（函数可以无入参）
+     * @param parameters Action 参数池的运行时取值
+     * @return 目标字段到取值的映射；{@code FROM_PARAMETER} 指向的参数不存在时该行被跳过
+     */
+    protected Map<String, Object> buildMappedValues(List<PropertyMappingConfig> mappings,
+                                                    Map<String, Object> parameters) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        if (mappings == null) {
+            return result;
+        }
+        for (PropertyMappingConfig m : mappings) {
+            switch (m.source) {
+                case FROM_PARAMETER -> {
+                    Object paramValue = parameters.get(m.parameterRef);
+                    if (paramValue != null) {
+                        result.put(m.target, paramValue);
+                    }
+                }
+                case CURRENT_TIME -> result.put(m.target, System.currentTimeMillis());
+                case LITERAL -> result.put(m.target, m.literalValue);
+            }
+        }
+        return result;
     }
 
     /**

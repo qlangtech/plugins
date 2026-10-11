@@ -23,8 +23,9 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Webhook 规则
@@ -42,8 +43,12 @@ public class WebhookRule extends OntologyActionRule {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String httpMethod = "POST";
 
-    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {})
-    public String headers;
+    /**
+     * 请求头键值行；值里可以写 {@code ${paramName}}。
+     */
+    @FormField(ordinal = 2, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = HttpHeaderConfig.class, validate = {})
+    public List<HttpHeaderConfig> headers;
 
     @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
     public String bodyTemplate;
@@ -69,8 +74,10 @@ public class WebhookRule extends OntologyActionRule {
         long startTime = System.currentTimeMillis();
 
         try {
-            // 1. 解析请求头
-            Map<String, String> headerMap = parseHeaders(headers);
+            // 1. 请求头（同名后者覆盖前者）
+            Map<String, String> headerMap = headers == null ? Map.of()
+                    : headers.stream().collect(Collectors.toMap(
+                    (h) -> h.name, (h) -> h.value == null ? "" : h.value, (a, b) -> b));
 
             // 2. 解析请求体模板
             String requestBody = replaceTemplate(bodyTemplate, context);
@@ -107,29 +114,6 @@ public class WebhookRule extends OntologyActionRule {
         } catch (Exception e) {
             return RuleExecutionResult.failure(e);
         }
-    }
-
-    /**
-     * 解析请求头配置
-     * 格式: Header-Name: Header-Value\nAnother-Header: Another-Value
-     */
-    private Map<String, String> parseHeaders(String headersStr) {
-        Map<String, String> result = new HashMap<>();
-        if (headersStr == null || headersStr.trim().isEmpty()) {
-            return result;
-        }
-
-        for (String line : headersStr.split("\n")) {
-            line = line.trim();
-            if (line.isEmpty() || line.startsWith("#")) {
-                continue;
-            }
-            String[] parts = line.split(":", 2);
-            if (parts.length == 2) {
-                result.put(parts[0].trim(), parts[1].trim());
-            }
-        }
-        return result;
     }
 
     /**

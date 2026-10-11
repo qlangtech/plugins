@@ -1,0 +1,23 @@
+{
+  "name": {
+    "label": "区块名称",
+    "help": "区块的唯一标识符"
+  },
+  "layout": {
+    "label": "布局类型",
+    "help": "区块的布局方式：列布局、行布局、标签页、流式、工具栏、循环"
+  },
+  "styleConfig": {
+    "label": "样式配置",
+    "help": "区块的视觉样式配置"
+  },
+  "conditionalVisibility": {
+    "label": "条件可见性",
+    "help": "根据变量值控制区块的显示隐藏"
+  },
+
+  "sortOrder": {
+    "label": "排序顺序",
+    "help": "区块在页面中的显示顺序"
+  }
+}

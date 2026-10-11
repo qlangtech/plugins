@@ -1,0 +1,28 @@
+{
+  "label": {
+    "label": "条件名称",
+    "help": "本行条件在列表中的唯一标识，必须逐行不同（例如「金额下限」「状态必须为开启」）。改名会同步移动该行，不会丢数据。",
+    "placeholder": "金额下限"
+  },
+  "subjectKind": {
+    "label": "字段来源",
+    "dftVal": "OBJECT_PROPERTY",
+    "enum": [
+      { "label": "目标对象属性", "val": "OBJECT_PROPERTY" },
+      { "label": "Action 参数", "val": "PARAMETER" }
+    ]
+  },
+  "subjectRef": {
+    "label": "字段",
+    "help": "候选包含目标对象类型的属性与 Action 参数池两组",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.action.SubmissionCriterion.availableSubjects():uncache_true"
+  },
+  "operator": {
+    "label": "操作符",
+    "dftVal": "EQUALS"
+  },
+  "value": {
+    "label": "比较值",
+    "help": "操作符为「为空 / 不为空」时留空；「在列表中」填逗号分隔的多个值"
+  }
+}

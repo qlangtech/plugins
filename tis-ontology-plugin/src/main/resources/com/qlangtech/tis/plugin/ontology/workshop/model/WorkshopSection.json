@@ -1,46 +1,11 @@
 {
-  "name": {
-    "label": "区块名称",
-    "help": "区块的唯一标识符"
-  },
-  "layout": {
-    "label": "布局类型",
-    "help": "区块的布局方式：列布局、行布局、标签页、流式、工具栏、循环",
-    "enum": [
-      { "label": "列布局", "val": "COLUMNS" },
-      { "label": "行布局", "val": "ROWS" },
-      { "label": "标签页布局", "val": "TABS" },
-      { "label": "流式布局", "val": "FLOW" },
-      { "label": "工具栏布局", "val": "TOOLBAR" },
-      { "label": "循环布局", "val": "LOOP" }
-    ]
-  },
-  "layoutConfig": {
-    "label": "布局配置",
-    "help": "根据所选布局类型的详细配置"
-  },
-  "styleConfig": {
-    "label": "样式配置",
-    "help": "区块的视觉样式配置"
-  },
-  "conditionalVisibility": {
-    "label": "条件可见性",
-    "help": "根据变量值控制区块的显示隐藏"
+  "childSections": {
+    "label": "子分区列表",
+    "help": "嵌套的子分区（有界一层，子分区不再有孙级）"
   },
   "dropHandling": {
     "label": "拖放处理",
-    "help": "配置区块的拖放交互行为"
-  },
-  "sortOrder": {
-    "label": "排序顺序",
-    "help": "区块在页面中的显示顺序"
-  },
-  "widgets": {
-    "label": "组件列表",
-    "help": "区块包含的所有 Widget 组件"
-  },
-  "childSections": {
-    "label": "子区块列表",
-    "help": "嵌套的子区块（支持多层嵌套）"
+    "help": "配置区块的拖放交互行为",
+    "dftVal": "off"
   }
 }

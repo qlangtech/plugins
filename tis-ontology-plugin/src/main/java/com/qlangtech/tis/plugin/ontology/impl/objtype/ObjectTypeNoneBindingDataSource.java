@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.objtype;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -44,6 +45,16 @@ public class ObjectTypeNoneBindingDataSource extends ObjectTypeBinding {
     @Override
     public DataSourceFactory getDataSource() {
         throw new UnsupportedOperationException("getDataSource() is not support in " + ObjectTypeNoneBindingDataSource.class.getSimpleName());
+    }
+
+    @Override
+    public List<RowMap> executeQuery(DataSourceQueryCriteria criteria) {
+       throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long countQuery(DataSourceQueryCriteria criteria) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

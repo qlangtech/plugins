@@ -1,0 +1,11 @@
+{
+  "name": {
+    "label": "请求头名称",
+    "placeholder": "Authorization"
+  },
+  "value": {
+    "label": "请求头值",
+    "help": "值里可以写 ${参数名}，发送时会替换成实际参数值",
+    "placeholder": "Bearer ${token}"
+  }
+}

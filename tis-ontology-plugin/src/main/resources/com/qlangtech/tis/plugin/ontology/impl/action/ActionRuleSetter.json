@@ -17,12 +17,6 @@
     "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_FUNCTION\");",
     "dftVal": "off"
   },
-  "interfaceType": {
-    "label": "接口操作",
-    "help": "配置实现特定接口的对象的创建、修改、删除及链接操作",
-    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType.descFilter(desc,\"ONTOLOGY_INTERFACE\");",
-    "dftVal": "off"
-  },
   "sideEffectType": {
     "label": "副作用操作",
     "help": "配置通知发送、Webhook 调用等外部影响操作",

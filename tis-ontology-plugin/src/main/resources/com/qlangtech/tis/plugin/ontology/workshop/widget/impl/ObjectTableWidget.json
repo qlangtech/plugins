@@ -3,9 +3,9 @@
     "help": "选择提供行数据的对象集变量",
     "placeholder": "请选择对象集变量"
   },
-  "pageSize": {
-    "help": "每页显示条数",
-    "dftVal": 20
+  "pagenator": {
+    "help": "分页策略：off 不开启分页（只显示第一页）；Default 开启服务端分页",
+    "dftVal": "off"
   },
   "columns": {
     "help": "配置表格列定义：每行设置属性名(prop)、显示标签(label)、列宽(width)等。点击下方 [+添加] 新增列。"

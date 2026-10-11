@@ -18,8 +18,6 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.event;
 
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -28,6 +26,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import java.io.Serializable;
 
 /**
+ * /opt/misc/palantir-study/foundry/workshop/detail/01-core-concepts/concepts-events.md
  * Workshop 事件的多态基类 —— 每个子类对应前端 {@code WorkshopEvent} 联合类型里的一种事件。
  *
  * <h3>类名即协议：FQCN → 短 key 的推导</h3>
@@ -41,7 +40,7 @@ import java.io.Serializable;
  *   <tr><td>{@link SwitchToPageConfig}</td><td>{@code switch-to-page}</td></tr>
  *   <tr><td>{@link RefreshDataInModuleConfig}</td><td>{@code refresh-data-in-module}</td></tr>
  * </table>
- *
+ * <p>
  * 因此<b>不要</b>给子类名加 {@code Event} 后缀 —— {@code OpenOverlayEventConfig} 会推导出
  * {@code open-overlay-event}，与前端对不上。前端适配器正是靠这一点做到机械转换：
  * {@code { type: resolveDefinitionKind(cfg), ...cfg }}，无需逐个事件手写映射表。
@@ -58,8 +57,6 @@ import java.io.Serializable;
  */
 public abstract class EventConfig implements Describable<EventConfig>, Serializable, IPluginStore.MultiDescribleElement {
 
-    private static final long serialVersionUID = 1L;
-
     /**
      * 事件名称 —— 子表单行的唯一标识。
      *
@@ -70,7 +67,7 @@ public abstract class EventConfig implements Describable<EventConfig>, Serializa
      * 事件本身没有天然的「名字」（{@code switch-to-page} 的载荷是 pageName，
      * 而不是标识），故统一由使用者起一个便于在列表中辨认的短名。
      */
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.identity})
     public String name;
 
     @Override
@@ -95,10 +92,15 @@ public abstract class EventConfig implements Describable<EventConfig>, Serializa
     }
 
     /**
-     * 各子类 descriptor 的共同基类 —— 泛型参数固定为多态基类，见
-     * {@link com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetClickAction.BasicDescriptor}
-     * 的同类写法。
+     * 各子类 descriptor 的共同基类 —— 泛型参数固定为多态基类 {@link EventConfig}。
+     *
+     * <p>之所以继承 {@code MultiDescribleElementDescriptor} 而非普通的 {@code Descriptor}：本类作为
+     * {@code MULTI_DESCRIBLE_PLUGIN} 字段（{@code EventClickAction.events}、{@code DropHandlingDefault.onDropEvents}）
+     * 的 {@code desClazz} 元素，其 descriptor 必须提供 {@code viewStyle}/{@code colsConfig}/{@code maxHeight}
+     * 等列表展现代价（见 {@code IPluginStore.MultiDescribleElementDescriptor#getExtractProps}），
+     * 否则前端 {@code MultiChildViewDescriptor} 读不到这些提取属性、列表渲染降级。缺省即开放集合
+     * （{@code isEnumableSet()=false}）+ List 视图。
      */
-    public abstract static class BasicDescriptor extends Descriptor<EventConfig> implements DescriptorUseableShortComment {
+    public abstract static class BasicDescriptor extends IPluginStore.MultiDescribleElementDescriptor<EventConfig> {
     }
 }

@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.doris;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
+import com.qlangtech.tis.ibatis.BasicCriteria;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
@@ -115,6 +116,18 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     @Override
     public Optional<String> getEscapeChar() {
         return Optional.of("`");
+    }
+
+    /**
+     * Doris 兼容 MySQL 协议，分页语法与 MySQL 一致：`LIMIT offset,count`。
+     *
+     * criteria 的页码是 1 起的，getSkip() = pageSize * (page - 1)，故第一页为 `limit 0,N`。
+     * 格式参照 tis-common-dao 里已有的 DB_MYSQL_PAGINATION_FORMAT（那条按系统库类型选择方言，
+     * 这里必须按目标数据源类型来，所以不能直接复用 TISBaseCriteria）。
+     */
+    @Override
+    public void appendSqlLimit(StringBuilder sql, BasicCriteria criteria) {
+        sql.append(" limit ").append(criteria.getSkip()).append(",").append(criteria.getPageSize());
     }
 
     @Override

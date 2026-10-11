@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.event.EventConfig;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -17,14 +18,19 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Widget 配置表单的<b>结构</b>回归测试。
@@ -48,7 +54,29 @@ import java.util.TreeSet;
  *       {@code { type: resolveDefinitionKind(cfg), ...cfg }}」的前提；子类名一旦改动
  *       （比如给 {@code OpenOverlayConfig} 补上 {@code Event} 后缀 → {@code open-overlay-event}），
  *       前端 {@code switch} 会落进 {@code default} 分支，事件被静默丢弃。</li>
+ *   <li>{@link #everyWidgetConfigInterfaceMirrorsBackendFormFields()} —— 前端
+ *       {@code src/workshop/models/widgets/*.config.ts} 里的每个 Widget config 接口，
+ *       其字段名集合必须与后端整条继承链上的 {@code @FormField} 集合<b>双向相等</b>。
+ *       这是 21 个 Widget 组件统一改读「归一化后的 config」之后才可能存在的静态防线：
+ *       在那之前组件直接读实体（{@code this.widget?.xxx}），而 {@code WorkshopWidget} 带
+ *       {@code [key: string]: any} 索引签名，<b>读一个后端不存在的字段既不报编译错、
+ *       也不报运行错，只会恒 {@code undefined}</b>。本轮实测这种错位有 9 处
+ *       （object-list 的 {@code displayProperties} 与 {@code prop.key}、
+ *       button-group 的 {@code visibility.variableName} 等），全都是静默 no-op。</li>
  * </ol>
+ *
+ * <h3>刻意不覆盖的边界</h3>
+ * 最后一条只钉 <b>Widget 级 {@code @FormField} 的字段名</b>。以下两类<b>不在</b>覆盖内，
+ * 需要人工核对：
+ * <ul>
+ *   <li><b>嵌套结构块的字段名</b>（{@code MetricConfig} / {@code WidgetColumnConfig} /
+ *       {@code ChartLayer} / {@code AxisConfig} / {@code ObjectListDisplay} …）——
+ *       它们不在 widget 继承链上，{@code allFormFields()} 天然收不到；</li>
+ *   <li><b>字段默认值</b>——镜像测试只比名字。Java 初值为 {@code true} 的字段
+ *       （{@code ChartXYWidget.showLegend} / {@code NumericFormatting.useGrouping} /
+ *       {@code ContinuousAxisConfig.autoMinBound} / {@code UrlClickAction.openInNewTab} …）
+ *       若在前端归一化器里被写成 {@code ?? false}，会静默翻转，本测试看不出来。</li>
+ * </ul>
  */
 public class TestWidgetFieldStructure {
 
@@ -242,6 +270,190 @@ public class TestWidgetFieldStructure {
           new LinkedHashSet<>(ancestors), cycles);
       }
     }
+  }
+
+  // ==================================================================
+  //  前端镜像对齐
+  // ==================================================================
+
+  /**
+   * 前端 config 接口的公共基类名。
+   *
+   * <p>{@code export interface XxxWidget extends BaseWidgetConfig} 意味着后端还有
+   * {@link #BASE_INTERFACE_FIELDS} 这三个字段（它们声明在 {@code WorkshopWidget} /
+   * {@code CompactDisplayWidget|FullDisplayWidget} 上，不在子接口体内，故解析不到，
+   * 要靠 {@code extends} 这个信号补齐）。
+   */
+  private static final String FRONTEND_BASE_INTERFACE = "BaseWidgetConfig";
+
+  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("name", "title", "displayConfig");
+
+  /**
+   * 前端工程相对本模块根目录的候选位置。
+   *
+   * <p>按 CLAUDE.md 的工程边界，前端是<b>仓库外的兄弟目录</b>（{@code project/tis-console}），
+   * 故不能用「相对 git 根」那种定位方式。Surefire 的工作目录是模块 basedir
+   * （{@code plugins/tis-ontology-plugin}），故首选 {@code ../../tis-console}；
+   * 另两条兜住「从 {@code plugins/} 或从更上层跑测试」的情形。
+   * 都找不到时 {@link Assume#assumeTrue} 跳过 —— 兄弟仓缺席不该让 CI 变红。
+   */
+  private static final String[] FRONTEND_DIR_CANDIDATES =
+    {"../../tis-console", "../tis-console", "../../../tis-console"};
+
+  /** {@code export interface Xxx extends Yyy {} —— header 收住 `interface` 与 `{` 之间的部分 */
+  private static final Pattern INTERFACE_HEADER =
+    Pattern.compile("export\\s+interface\\s+(?<name>\\w+)(?<header>[^{]*)\\{");
+
+  /** 接口体内的一行字段声明；行内匹配，故 `^` 就是行首 */
+  private static final Pattern INTERFACE_FIELD = Pattern.compile("^\\s*(\\w+)\\??\\s*:");
+
+  /**
+   * 每个 Widget config 接口的字段名，必须与后端整条继承链上的 {@code @FormField} 双向对齐。
+   *
+   * <p>断言四步：① 解析到的接口数 ≥ 21（护栏，防扫描范围悄悄失效）；② 每个后端 Widget
+   * 都有同名接口；③ 后端有、前端没镜像的字段；④ 前端有、后端从未声明的字段。
+   * ③ 的后果是前端读它恒 {@code undefined}；④ 则是「幻影字段」——本轮修的 9 处就是它。
+   */
+  @Test
+  public void everyWidgetConfigInterfaceMirrorsBackendFormFields() throws IOException {
+    Path configDir = locateWidgetConfigDir();
+    Assume.assumeTrue("未找到前端 widget config 目录（候选见 stdout），跳过镜像对齐检查", configDir != null);
+
+    Map<String, Set<String>> frontend = parseWidgetConfigInterfaces(configDir);
+    Assert.assertTrue("从 " + configDir + " 只解析到 " + frontend.size()
+        + " 个 config 接口，应 >= 21 —— 扫描范围失效（接口改成 export type 了？目录挪了？）",
+      frontend.size() >= 21);
+
+    Set<Class<?>> widgets = widgetImpls();
+    Assert.assertFalse("未从 sezpoz 索引枚举到任何 Widget 实现 —— 索引读取或包名前缀已失效",
+      widgets.isEmpty());
+
+    List<String> problems = new ArrayList<>();
+    for (Class<?> widget : widgets) {
+      String name = widget.getSimpleName();
+      Set<String> actual = frontend.get(name);
+      if (actual == null) {
+        problems.add(name + " 在后端存在，前端 " + configDir.getFileName()
+          + " 下却没有同名 config 接口（组件读配置的入口缺失）");
+        continue;
+      }
+
+      Set<String> backendFields = new TreeSet<>(allFormFields(widget).keySet());
+      Set<String> frontendFields = new TreeSet<>(actual);
+
+      Set<String> backendOnly = new TreeSet<>(backendFields);
+      backendOnly.removeAll(frontendFields);
+      Set<String> frontendOnly = new TreeSet<>(frontendFields);
+      frontendOnly.removeAll(backendFields);
+
+      if (!backendOnly.isEmpty()) {
+        problems.add(name + " 后端声明了但前端 config 未镜像的 @FormField：" + backendOnly
+          + "（前端读它们恒 undefined）");
+      }
+      if (!frontendOnly.isEmpty()) {
+        problems.add(name + " 前端 config 里后端从未声明的字段：" + frontendOnly
+          + "（幻影字段，恒 undefined —— 正是本轮修的 9 处那种）");
+      }
+    }
+
+    Assert.assertTrue("前后端 Widget 字段名未对齐：\n" + String.join("\n", problems),
+      problems.isEmpty());
+  }
+
+  /** 定位前端 {@code src/workshop/models/widgets} 目录；找不到返回 {@code null}（由调用方 Assume 跳过） */
+  private static Path locateWidgetConfigDir() {
+    List<Path> roots = new ArrayList<>();
+    String override = System.getProperty("tis.console.dir");
+    if (override != null && !override.trim().isEmpty()) {
+      roots.add(Paths.get(override.trim()));
+    }
+    for (String candidate : FRONTEND_DIR_CANDIDATES) {
+      roots.add(Paths.get(candidate));
+    }
+
+    List<String> tried = new ArrayList<>();
+    for (Path root : roots) {
+      Path dir = root.resolve("src/workshop/models/widgets");
+      tried.add(dir.toAbsolutePath().normalize().toString());
+      if (Files.isDirectory(dir)) {
+        return dir;
+      }
+    }
+    System.out.println("[TestWidgetFieldStructure] 未找到前端 widget config 目录，已尝试："
+      + String.join(", ", tried));
+    return null;
+  }
+
+  /**
+   * 解析 {@code *.config.ts} 里全部 {@code export interface} 的字段名。
+   *
+   * <p>按<b>接口名</b>建索引而不是按文件名 —— 文件名规则（kebab 短 key + {@code .config.ts}）
+   * 是约定，接口名才是与后端类名对齐的那个键。特意 glob 全部 {@code *.config.ts} 而不只取
+   * 21 个：同一目录下还有 {@code ChartLayer} / {@code ObjectListGridDisplay} 这类嵌套结构块，
+   * 它们不参与本断言（后端没有同名 widget 类），但一起解析进来能让护栏计数更有意义。
+   */
+  private static Map<String, Set<String>> parseWidgetConfigInterfaces(Path dir) throws IOException {
+    Map<String, Set<String>> result = new LinkedHashMap<>();
+
+    List<Path> files = new ArrayList<>();
+    try (Stream<Path> stream = Files.list(dir)) {
+      stream.filter(p -> p.getFileName().toString().endsWith(".config.ts"))
+        .sorted()
+        .forEach(files::add);
+    }
+
+    for (Path file : files) {
+      String text = stripComments(new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
+      Matcher m = INTERFACE_HEADER.matcher(text);
+      while (m.find()) {
+        int bodyStart = m.end() - 1;
+        int bodyEnd = matchingBrace(text, bodyStart);
+        if (bodyEnd < 0) {
+          throw new AssertionError("接口 " + m.group("name") + " 的花括号不配对：" + file);
+        }
+
+        Set<String> fields = new LinkedHashSet<>();
+        for (String line : text.substring(bodyStart + 1, bodyEnd).split("\n")) {
+          Matcher fm = INTERFACE_FIELD.matcher(line);
+          if (fm.find()) {
+            fields.add(fm.group(1));
+          }
+        }
+        if (m.group("header").contains("extends " + FRONTEND_BASE_INTERFACE)) {
+          fields.addAll(BASE_INTERFACE_FIELDS);
+        }
+        result.put(m.group("name"), fields);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * 去掉注释再解析。
+   *
+   * <p>本文件的接口体内几乎每行上方都有一段 JSDoc，不剥掉的话既可能误配字段正则
+   * （注释里写了 {@code foo: bar} 这种），也会让 {@code extends} 判断抓到注释里的字样。
+   */
+  private static String stripComments(String text) {
+    return text.replaceAll("(?s)/\\*.*?\\*/", "")
+      .replaceAll("(?m)//[^\n]*", "");
+  }
+
+  /** 从 {@code openIndex}（必须指向 {@code '{'}）起找配对的 {@code '}'}，返回其下标；不配对返回 -1 */
+  private static int matchingBrace(String text, int openIndex) {
+    int depth = 0;
+    for (int i = openIndex; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (c == '{') {
+        depth++;
+      } else if (c == '}') {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
   }
 
   // ==================================================================

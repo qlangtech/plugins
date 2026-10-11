@@ -1,0 +1,25 @@
+{
+  "target": {
+    "label": "目标字段",
+    "help": "要被赋值的字段名。对象规则里是对象属性名，函数规则里是函数形参名。",
+    "placeholder": "priority"
+  },
+  "source": {
+    "label": "取值来源",
+    "dftVal": "FROM_PARAMETER",
+    "enum": [
+      { "label": "Action 参数", "val": "FROM_PARAMETER" },
+      { "label": "当前时间", "val": "CURRENT_TIME" },
+      { "label": "固定值", "val": "LITERAL" }
+    ]
+  },
+  "parameterRef": {
+    "label": "参数名",
+    "help": "仅「取值来源」选择「Action 参数」时需要填写；参数名由「参数池」步骤定义",
+    "placeholder": "newPriority"
+  },
+  "literalValue": {
+    "label": "固定值",
+    "help": "仅「取值来源」选择「固定值」时需要填写"
+  }
+}

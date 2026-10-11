@@ -5,71 +5,38 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.enums.SectionLayout;
 import com.qlangtech.tis.plugin.ontology.workshop.model.section.DropHandling;
-import com.qlangtech.tis.plugin.ontology.workshop.model.section.SectionLayoutConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.model.section.SectionStyleConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Workshop Section 实体
+ * Workshop Section 实体（可含子分区的<b>容器</b>），共享字段见基类 {@link AbstractWorkshopSection}。
  * <p>
- * 本类<b>不</b>实现 {@code IdentityName}、也<b>不</b>给 {@link #name} 加 identity 语义 ——
- * section 既没有独立 store 也不落盘（它是页面前端状态的一部分），没有需要 identity 的消费者。
- * 框架对 identity 字段数量做双向校验（实现了 IdentityName 就必须恰好 1 个，不实现就必须 0 个），
- * 所以「不实现」与「不加」必须成对出现。
+ * {@link #childSections} 由原来的 {@code List<WorkshopSection>} 自引用收敛为有界一层
+ * {@code List<SectionChild>} —— {@link SectionChild} 不含 {@code childSections}，从而断掉
+ * {@code WorkshopSection → childSections → WorkshopSection → …} 的自引用，规避
+ * {@code DescriptorsJSON.getDescriptorsJSON()} 无环检测/无深度上限导致的 StackOverflowError，
+ * 并按 {@code MULTI_DESCRIBLE_PLUGIN} 契约做成表单字段（可在配置面板添加子分区）。
+ * <p>
+ * 类上不再声明「不实现 IdentityName」：identity 因共享基类 {@link AbstractWorkshopSection} 而上收
+ * （{@code name} 标 {@code identity=true}）。section 不落盘、无 store 消费者，identity 只在框架双向校验
+ * 与表单里作行键存在，无副作用。
  * <p>
  * 原先还有一个私有的 {@code id}（构造器生成 UUID、无 {@code @FormField}、非 identity），
  * 全工程零调用点，已删除。注意<b>前端</b>的 section 模型另有自己的 id 且是活的
  * （{@code section.parentId}、CDK drop list id、树节点 key 都在用），与本类无关。
  */
-public final class WorkshopSection implements Describable<WorkshopSection>, Serializable {
+public final class WorkshopSection extends AbstractWorkshopSection implements Describable<WorkshopSection> {
 
     private static final long serialVersionUID = 1L;
-
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String name;
-
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public SectionLayout layout;
-
-    @FormField(ordinal = 2)
-    public SectionLayoutConfig layoutConfig;
-
-    @FormField(ordinal = 3)
-    public SectionStyleConfig styleConfig;
-
-    /** 条件可见性，与 Widget 的 {@code WidgetDisplayConfig.conditionalVisibility} 共用同一类型 */
     @FormField(ordinal = 4)
-    public ConditionalVisibility conditionalVisibility;
-
-    @FormField(ordinal = 5)
     public DropHandling dropHandling;
-
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER)
-    public Integer sortOrder = 0;
-
     /**
-     * 区块内的 Widget 列表。元素类型是 tis-plugin 的 Widget 基类 —— 具体是哪种 Widget
-     * 由元素自身的 Java 类型承担（实例 JSON 上表现为扁平 {@code impl} 键）。
+     * 子分区列表。有界一层：{@link SectionChild} 无 {@code childSections}，故不再有孙级。
      */
-    // @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE)
-    public transient List<WorkshopWidget> widgets = new ArrayList<>();
-
-    // @FormField(ordinal = 11, type = FormFieldType.MULTI_SELECTABLE)
-    public transient List<WorkshopSection> childSections = new ArrayList<>();
-
-    public void addWidget(WorkshopWidget widget) {
-        if (widgets == null) {
-            widgets = new ArrayList<>();
-        }
-        widgets.add(widget);
-    }
+    @FormField(ordinal = 6, desClazz = SectionChild.class, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN)
+    public List<SectionChild> childSections = new ArrayList<>();
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<WorkshopSection> {
@@ -79,4 +46,3 @@ public final class WorkshopSection implements Describable<WorkshopSection>, Seri
         }
     }
 }
-

@@ -26,11 +26,14 @@ public class ObjectSetDefinitionConfig extends VariableDefinitionConfig {
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA)
     public String filters; // JSON array: [{ "property": "string", "operator": "string", "value": "any" }]
 
-
-    public List<OntologyProperty> getColsMeta() {
+    public OntologyObjectType loadObjectTypeDetail() {
         OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
         OntologyObjectType objectType = OntologyObjectType.loadObjectTypeDetail(pluginMeta.getDomain(), this.objectType);
-        return objectType.getCols();
+        return objectType;
+    }
+
+    public List<OntologyProperty> getColsMeta() {
+        return loadObjectTypeDetail().getCols();
     }
 
     /**

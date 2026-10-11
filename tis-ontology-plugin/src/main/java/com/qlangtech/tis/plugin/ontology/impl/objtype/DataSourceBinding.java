@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.objtype;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -31,9 +32,11 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -66,6 +69,74 @@ public class DataSourceBinding extends ObjectTypeBinding {
         return DataSourceFactory.load(this.dbName);
     }
 
+    @Override
+    public List<RowMap> executeQuery(DataSourceQueryCriteria criteria) {
+        List<RowMap> rows = Lists.newArrayList();
+        StringBuilder sql = new StringBuilder("select ");
+        DataSourceFactory ds = getDataSource();
+        sql.append(criteria.getTargetCols().stream().map(ds::getEscapedEntity).collect(Collectors.joining(",")));
+        sql.append(" from ").append(escapedTableName(ds));
+
+        // 排序（列排序）必须加在分页**之前**：分页是对排好序的结果切页，顺序反了就成了
+        // 「先随便切一页再排这一页」，页内看着有序、页与页之间是乱的。
+        // 未指定排序列时 appendOrderBy 什么都不追加 —— 语句与本改动之前逐字一致。
+        criteria.appendOrderBy(sql, ds);
+        ds.appendSqlLimit(sql, criteria);
+        ds.visitFirstConnection((conn) -> {
+            try {
+                conn.query(sql.toString(), (rs) -> {
+                    // 按结果集自带的列元数据取值：用 getColumnLabel（而非 getColumnName）以便与
+                    // select 列表里的别名/大小写一致，口径同 MySqlDataSourceDumper.buildColumnMetaData
+                    // ResultSetMetaData metaData = rs.getMetaData();
+                    //final int colCount = metaData.getColumnCount();
+                    RowMap row = new RowMap();
+                    for (String col : criteria.getTargetCols()) {
+                        // 取原始类型（Integer/BigDecimal/Timestamp…）而不是 getString，
+                        // 需要字符串时由 RowMap.getColumn(key) 或调用方自行转换
+                        row.put(col, rs.getObject(col));
+                    }
+                    rows.add(row);
+                    // 兜底分页已在 sql 里由 appendSqlLimit 完成，这里读到尽头即可
+                    return true;
+                });
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return rows;
+    }
+
+
+
+    @Override
+    public long countQuery(DataSourceQueryCriteria criteria) {
+        DataSourceFactory ds = getDataSource();
+        // 两种子句都不能带：ORDER BY 与总数无关；LIMIT（appendSqlLimit）更是会把「总数」变成
+        // 「第一页的行数」—— 那样数出来的末页永远是第 1 页，翻页就此锁死。
+        StringBuilder sql = new StringBuilder("select count(1) from ").append(escapedTableName(ds));
+        final long[] total = new long[1];
+        ds.visitFirstConnection((conn) -> {
+            try {
+                // query 的 callback 返回 false 即中断遍历；方法本身返回 boolean（是否有行），
+                // 故用单元素数组把标量带出来。
+                conn.query(sql.toString(), (rs) -> {
+                    total[0] = rs.getLong(1);
+                    return false;
+                });
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return total[0];
+    }
+
+    /**
+     * count 与 select 两处共用的表名片段：抽出来只为让「两张语句查的是同一张表」这件事只有一个出处，
+     * 免得改物理表名的回退逻辑时漏掉一处、变成 select 与 count 各查一张表。
+     */
+    private String escapedTableName(DataSourceFactory ds) {
+        return ds.getEscapedEntity(this.physicalTableName);
+    }
 
     @Override
     public List<ColumnMetaData> resolveTabCols() {

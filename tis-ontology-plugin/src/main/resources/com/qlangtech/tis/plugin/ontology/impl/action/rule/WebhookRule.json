@@ -9,10 +9,12 @@
     "dftVal": "POST"
   },
   "headers": {
-    "label": "请求头"
+    "label": "请求头",
+    "help": "要随请求发送的 HTTP 头。值里可以写 ${参数名}。"
   },
   "bodyTemplate": {
-    "label": "请求体模板"
+    "label": "请求体模板",
+    "help": "请求体原文，其中 ${参数名} 会被替换成实际参数值"
   },
   "timeoutSeconds": {
     "label": "超时时间（秒）",

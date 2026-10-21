@@ -1,7 +1,7 @@
 {
-  "layout": {
-    "help": "按钮的排列方向",
-    "dftVal": "horizontal"
+  "buttonType": {
+    "help": "按钮组的呈现形态：内联平铺 / 折叠为下拉菜单 / 主按钮+菜单两段式。排列方向(layout)仅在内联平铺下可配",
+    "dftVal": "inline"
   },
   "buttons": {
     "help": "按钮组的各个按钮：每行配置文案(text)、形态(type)与点击行为(onClick)，还可设置条件可见性。点击下方 [+添加] 新增按钮。"

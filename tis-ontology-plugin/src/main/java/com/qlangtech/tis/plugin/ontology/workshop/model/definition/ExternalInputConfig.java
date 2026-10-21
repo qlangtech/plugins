@@ -28,7 +28,7 @@ import com.qlangtech.tis.extension.TISExtension;
  *
  * <p>同理也**没有配套的 .json 资源**：json 是给字段写 label / help / 候选值用的，
  * 类里没有 {@code @FormField} 就没有可描述的东西。同一仓库中
- * {@code ActionButtonWidget} / {@code TabsWidget} 等零字段类同样没有 json。
+ * {@code TabsWidget} 等零字段类同样没有 json。
  *
  * <h3>与前端计算的约定</h3>
  * {@link #isBackendComputed()} 返回 {@code false}，但语义上比「前端计算」更强一层：

@@ -1,0 +1,7 @@
+{
+  "parameterRef": {
+    "label": "参数名",
+    "help": "参数名由「参数池」步骤定义",
+    "placeholder": "newPriority"
+  }
+}

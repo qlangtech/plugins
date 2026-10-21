@@ -65,11 +65,10 @@ public enum WorkShopWidgetType {
     DATE_INPUT(EndType.Calendar, WorkShopWidgetCategory.FILTERING, "date-input"),
 
     // ==================================================================
-    //  Event-triggering & Navigational Widgets（3 个）
+    //  Event-triggering & Navigational Widgets（2 个）
     // ==================================================================
     BUTTON_GROUP(EndType.Block, WorkShopWidgetCategory.EVENT_NAVIGATION, "button-group"),
-    TABS(EndType.Bars, WorkShopWidgetCategory.EVENT_NAVIGATION, "tabs"),
-    ACTION_BUTTON(EndType.PlaySquare, WorkShopWidgetCategory.EVENT_NAVIGATION, "action-button");
+    TABS(EndType.Bars, WorkShopWidgetCategory.EVENT_NAVIGATION, "tabs");
 
     /**
      * 前端图标。取值是 {@link EndType}，其 {@code val} 即前端 {@code nz-icon} 认的图标名 ——

@@ -21,9 +21,13 @@ package com.qlangtech.tis.plugin.ontology.impl.action.type;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 
@@ -86,6 +90,30 @@ public abstract class ActionType implements Describable<ActionType> {
         return true;
     }
 
+    public List<Pair<Option, ActionParameterConfig>> getEnumableCandidateSet(ActionParameters actParams) {
+        throw new UnsupportedOperationException(this.getClass().getName());
+    }
+
+    /**
+     * 执行用户提交的运行时表单。未实现的动作类别在调用时显式报错，
+     * 与相邻的 {@link #getEnumableCandidateSet(ActionParameters)} 同风格。
+     */
+    public void executeActionRule(Describable<?> plugin) {
+        throw new UnsupportedOperationException(this.getClass().getName());
+    }
+
+    /**
+     * 执行运行时表单，额外携带「删除已确认」标记。
+     *
+     * <p>该标记来自 Workshop 模态框的危险按钮，属于「用户在界面上确认过」的证明，
+     * 无法放进运行时表单（表单字段由参数池推导，不含它）。默认忽略该标记，
+     * 只有对象删除规则需要它，见
+     * {@code ObjectActionType#executeActionRule(Describable, boolean)}。
+     */
+    public void executeActionRule(Describable<?> plugin, boolean deleteConfirmed) {
+        executeActionRule(plugin);
+    }
+
     /**
      * ActionType 基础 Descriptor
      */
@@ -96,6 +124,11 @@ public abstract class ActionType implements Describable<ActionType> {
          * 获取该 ActionType 所属的规则类别
          */
         public abstract RuleGroup getRuleGroup();
+
+        @Override
+        public final String getDisplayName() {
+            return getRuleGroup().getDisplayName();
+        }
 
         /**
          * 获取该 ActionType 的过滤标识

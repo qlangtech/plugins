@@ -1,0 +1,15 @@
+{
+  "required": {
+    "label": "是否必填",
+    "dftVal": true
+  },
+  "widgetType": {
+    "label": "控件类型",
+    "help": "该参数在表单上用哪种控件收集，选定后继续填写该控件专属的参数。",
+    "dftVal": "Input_Text"
+  },
+  "help": {
+    "label": "帮助说明",
+    "help": "该参数在最终表单里展示的引导文案，留空则不显示。"
+  }
+}

@@ -24,7 +24,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 函数支持规则
@@ -64,50 +63,10 @@ public class FunctionBackedRule extends OntologyActionRule {
         return "function_backed";
     }
 
+
     @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 构建函数输入参数
-            Map<String, Object> functionInputs = buildMappedValues(parameterMappings, context.getParameters());
-
-            // 2. 调用函数（实际实现需要调用 Function 服务）
-            // TODO: 集成 Function 执行服务
-            Object functionResult = null;
-            // if (async) {
-            //     // 异步执行
-            //     functionResult = functionService.executeAsync(
-            //         functionId,
-            //         functionInputs,
-            //         timeoutSeconds * 1000
-            //     );
-            // } else {
-            //     // 同步执行
-            //     functionResult = functionService.executeSync(
-            //         functionId,
-            //         functionInputs,
-            //         timeoutSeconds * 1000
-            //     );
-            // }
-
-            // 4. 将函数结果存入上下文
-            context.setContextData("functionResult", functionResult);
-            context.setContextData("functionId", functionId);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .putResultData("functionId", functionId)
-                .putResultData("async", async)
-                .putResultData("functionResult", functionResult)
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

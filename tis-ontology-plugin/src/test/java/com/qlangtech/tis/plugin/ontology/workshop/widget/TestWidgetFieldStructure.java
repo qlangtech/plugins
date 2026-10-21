@@ -41,7 +41,7 @@ import java.util.stream.Stream;
  *
  * <ol>
  *   <li>{@link #noWidgetIsAnEmptyShell()} —— Widget 至少要有自己的配置字段。
- *       曾经的失败模式：{@code ActionButtonWidget} / {@code ButtonGroupWidget} /
+ *       曾经的失败模式：{@code ButtonGroupWidget} /
  *       {@code TabsWidget} 一个 {@code @FormField} 都没有，前端组件写好了却无从配置。</li>
  *   <li>{@link #everyMultiDescriblePluginFieldElementImplementsContract()} ——
  *       {@code MULTI_DESCRIBLE_PLUGIN} 的 {@code desClazz} 必须实现

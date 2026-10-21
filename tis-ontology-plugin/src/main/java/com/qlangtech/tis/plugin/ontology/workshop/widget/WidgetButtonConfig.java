@@ -17,25 +17,28 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibility;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.button.group.CustomButtonColor;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * {@link com.qlangtech.tis.plugin.ontology.workshop.widget.impl.ButtonGroupWidget} 里的一颗按钮。
  *
  * <p>字段集合与前端 {@code button-group.component.ts} 的模板逐字对应
- * （{@code btn.type} / {@code btn.danger} / {@code btn.size} / {@code btn.leftIcon} /
- * {@code btn.rightIcon} / {@code btn.text} / {@code btn.conditionalVisibility} /
- * {@code btn.onClick}），前端无需做字段重命名。
+ * （{@code btn.type} / {@code btn.color} / {@code btn.size} /
+ * {@code btn.leftIcon} / {@code btn.rightIcon} / {@code btn.text} /
+ * {@code btn.conditionalVisibility} / {@code btn.onClick}），前端无需做字段重命名。
  *
  * <p>与 {@link WidgetColumnConfig} / {@link WidgetActionConfig} 同属
  * {@code MultiDescribleElement} 一族 —— 由 {@code MULTI_DESCRIBLE_PLUGIN} + {@code desClazz}
@@ -53,44 +56,66 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
 
     private static final long serialVersionUID = 1L;
 
-    /** 按钮文案，同时作为子表单行的唯一标识 */
+    /**
+     * 按钮文案，同时作为子表单行的唯一标识
+     */
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String text;
 
-    /** 按钮形态 */
+    /**
+     * 按钮形态
+     */
     @FormField(ordinal = 1, type = FormFieldType.ENUM)
     public ButtonType type = ButtonType.default_;
 
-    /** 危险按钮（红色），用于删除/重置这类不可逆操作 */
-    @FormField(ordinal = 2, type = FormFieldType.ENUM)
-    public Boolean danger = false;
+    /**
+     * 按钮颜色（Palantir 的「Button color」）；改为 {@link ButtonColor} 多态承载 ——
+     * {@code customColor} 载荷并入 {@link CustomButtonColor}，其余子类零字段
+     */
+    @FormField(ordinal = 2)
+    public ButtonColor color;
 
-    /** 按钮尺寸 */
+    /**
+     * 按钮尺寸
+     */
     @FormField(ordinal = 3, type = FormFieldType.ENUM)
     public ButtonSize size = ButtonSize.default_;
 
-    /** 图标（Ant Design 图标名），文案左侧 */
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
-    public String leftIcon;
+    /**
+     * 图标（Ant Design 图标名），文案左侧
+     */
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, advance = true)
+    public IEndTypeGetter.EndType leftIcon;
 
-    /** 图标（Ant Design 图标名），文案右侧 */
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, advance = true)
-    public String rightIcon;
+    /**
+     * 图标（Ant Design 图标名），文案右侧
+     */
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true)
+    public IEndTypeGetter.EndType rightIcon;
 
-    /** 条件可见性：随某个变量真假改变按钮的呈现（不配则恒显示） */
+    /**
+     * 条件可见性：随某个变量真假改变按钮的呈现（不配则恒显示）
+     */
     @FormField(ordinal = 6, advance = false)
     public ConditionalVisibility conditionalVisibility;
 
-    /** 点击行为（四型多态，见 {@link WidgetClickAction}） */
+    /**
+     * 点击行为（四型多态，见 {@link WidgetClickAction}）
+     */
     @FormField(ordinal = 7, advance = false)
     public WidgetClickAction onClick;
+
+    @FormField(ordinal = 8, advance = false)
+    public Integer order;
 
     @Override
     public String identityValue() {
         return this.text;
     }
 
-    /** 按钮形态；取值固定，硬编码于此（CLAUDE.md 原则二：固定取值用 ENUM） */
+    /**
+     * 按钮形态；取值固定，硬编码于此（CLAUDE.md 原则二：固定取值用 ENUM）
+     */
     public enum ButtonType implements DescriptorUseableShortComment {
         primary("主按钮：页面主操作"),
         default_("次按钮：默认样式"),
@@ -110,7 +135,9 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
         }
     }
 
-    /** 按钮尺寸；取值固定，硬编码于此 */
+    /**
+     * 按钮尺寸；取值固定，硬编码于此
+     */
     public enum ButtonSize implements DescriptorUseableShortComment {
         large("大"), default_("中"), small("小");
 
@@ -127,10 +154,30 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     }
 
     @TISExtension
-    public static class DftDescriptor extends Descriptor<WidgetButtonConfig> {
+    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<WidgetButtonConfig> {
         @Override
         public String getDisplayName() {
             return "Button";
+        }
+
+        @Override
+        protected RowDragDropCfg isEnableRowDragDrop() {
+            return new RowDragDropCfg(true, "order");
+        }
+
+        @Override
+        public ViewStyle viewStyle() {
+            return ViewStyle.Table;
+        }
+
+        @Override
+        public List<ColConfig> colsConfig() {
+            return Lists.newArrayList(new ColConfig("text", 14).setClickable(), new ColConfig("type", 10));
+        }
+
+        @Override
+        public String shortComment() {
+            return "按钮";
         }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "defaultValue": {
+    "label": "默认值",
+    "help": "新增参数时预填的文本；留空表示不预填。"
+  },
+  "placeholder": {
+    "label": "占位提示",
+    "help": "输入框为空时显示的灰色提示文字。",
+    "placeholder": "请输入名称"
+  },
+  "validators": {
+    "label": "校验规则",
+    "help": "提交前对文本内容做的格式校验，可多选。"
+  }
+}

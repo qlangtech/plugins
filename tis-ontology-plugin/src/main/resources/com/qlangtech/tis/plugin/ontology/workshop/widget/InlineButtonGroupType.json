@@ -1,0 +1,7 @@
+{
+  "layout": {
+    "label": "排列方向",
+    "help": "按钮的排列方向",
+    "dftVal": "horizontal"
+  }
+}

@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
@@ -53,7 +52,7 @@ public class ScheduleActionType extends ActionType {
         return null;
     }
 
-    @TISExtension
+    // @TISExtension
     public static class DefaultDescriptor extends BaseActionTypeDescriptor {
 
         @Override
@@ -65,10 +64,10 @@ public class ScheduleActionType extends ActionType {
         public String getRuleTypeFilter() {
             return "SCHEDULE";
         }
-
-        @Override
-        public String getDisplayName() {
-            return "Schedule";
-        }
+//
+//        @Override
+//        public String getDisplayName() {
+//            return "Schedule";
+//        }
     }
 }

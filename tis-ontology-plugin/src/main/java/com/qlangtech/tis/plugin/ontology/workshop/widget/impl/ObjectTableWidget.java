@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.koubei.web.tag.pager.Pager;
 import com.koubei.web.tag.pager.PaginationResult;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -126,7 +127,9 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            // 数据源只能是「可查询的」对象集变量（ObjectSet Definition）；
+            // 「外部写入」定义的对象集是选中行载体，填到这里会在取数时抛 illegal type。
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
             this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
             this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
 
@@ -165,6 +168,12 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
                     List<WidgetColumnConfig> cols = widget.getColumnConfigs();
                     ObjectTypeBinding.DataSourceQueryCriteria criteria = new ObjectTypeBinding.DataSourceQueryCriteria();
                     cols.forEach((col) -> criteria.addTargetCol(col.prop));
+                    // 主键可能没有被配置成展示列，但下游（Button Group → OntologyAction）需要它。
+                    // targetCols 是 Set，已经配置了该列时重复添加无副作用。
+                    final String identityProp = objSetVar.getIdentityPropName();
+                    if (StringUtils.isNotEmpty(identityProp)) {
+                        criteria.addTargetCol(identityProp);
+                    }
 
                     // 分页策略：off 只取第一页、且不必查总数（前端没有分页条，总数无处可显）。
                     Pagenator pagenator = widget.pagenator!= null?widget.pagenator: new NoPagenator();
@@ -184,8 +193,13 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
                     criteria.setPageSize(pageSize);
                     // 列排序是**整表**语义：交给 SQL 排完整个对象集再切页，而不是把一页拉到前端排
                     applyOrderBy(paramGetter, criteria);
-                    paramGetter.setBizResult(context,
-                            new PaginationResult(pager, objSetVar.executeQuery(criteria)));
+                    List<RowMap> rows = objSetVar.executeQuery(criteria);
+                    if (StringUtils.isNotEmpty(identityProp)) {
+                        for (RowMap row : rows) {
+                            row.put(ObjectTypeBinding.KEY_ROW_IDENTITY, row.get(identityProp));
+                        }
+                    }
+                    paramGetter.setBizResult(context, new PaginationResult(pager, rows));
                     return;
                 }
                 default:

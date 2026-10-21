@@ -1,0 +1,21 @@
+{
+  "defaultValue": {
+    "label": "默认值",
+    "help": "新增参数时预填的文本；留空表示不预填。"
+  },
+  "placeholder": {
+    "label": "占位提示",
+    "help": "文本域为空时显示的灰色提示文字。",
+    "placeholder": "请输入说明"
+  },
+  "rows": {
+    "label": "显示行数",
+    "help": "文本域初始可见的行数；留空由前端按默认高度渲染。",
+    "dftVal": 3
+  },
+  "contentMode": {
+    "label": "内容模式",
+    "help": "文本内容高亮显示模式",
+    "dftVal": "Xml"
+  }
+}

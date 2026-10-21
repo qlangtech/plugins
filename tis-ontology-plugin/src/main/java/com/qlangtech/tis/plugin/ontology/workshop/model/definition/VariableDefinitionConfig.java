@@ -40,7 +40,7 @@ import java.util.Map;
  * <h3>新增一种定义方式的改动面</h3>
  * <b>类本身</b>只需两步：新增子类、其 {@code DefaultDescriptor}；再有 {@code .json} 资源
  * 也仅是当子类里有 {@code @FormField} 时才需要——json 是给字段写 label/help 的，
- * 零字段的子类无处可写，参见 {@link ExternalInputConfig} 与同仓库的 {@code ActionButtonWidget}。
+ * 零字段的子类无处可写，参见 {@link ExternalInputConfig}。
  * 漏改这三者会导致编译失败（{@link #isBackendComputed()} 是抽象方法），而不是运行时才暴露。
  *
  * <p><b>但整体改动面不止于此</b>，还有两处不在此文件的登记动作，且都<b>没有</b>编译期保护：
@@ -167,7 +167,9 @@ public abstract class VariableDefinitionConfig implements Describable<VariableDe
     defs.put(VariableType.OBJECT_SET, List.of(//
       // 官方明说 object set 不能由 SQL query 产出
       ObjectSetDefinitionConfig.DefaultDescriptor.class //
-      , FunctionConfig.DefaultDescriptor.class));
+      , FunctionConfig.DefaultDescriptor.class //
+      // 外部写入：对象表格行点击等交互写进来的「选中对象」载体（值不在构建期计算）
+      , ExternalInputConfig.DefaultDescriptor.class));
 
     defs.put(VariableType.OBJECT_SET_FILTER, List.of(//
       // 值的唯一现实来源：图表刷选 / 过滤组件的运行时写入（见 ExternalInputConfig）

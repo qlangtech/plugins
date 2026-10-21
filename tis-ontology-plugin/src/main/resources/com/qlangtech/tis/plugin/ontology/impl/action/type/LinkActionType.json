@@ -1,4 +1,9 @@
 {
+  "linkTypeReference": {
+    "label": "链接类型",
+    "help": "选择本体中已定义的链接类型（OntologyLinker），创建/删除都按它声明的 RelationshipType 执行",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.action.type.LinkActionType.getLinkTypeOpts():uncache_true"
+  },
   "linkRule": {
     "label": "链接规则",
     "help": "配置对象之间链接关系的创建和删除规则",

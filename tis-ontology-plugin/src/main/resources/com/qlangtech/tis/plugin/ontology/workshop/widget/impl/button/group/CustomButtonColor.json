@@ -1,0 +1,7 @@
+{
+  "customColor": {
+    "label": "自定义色值",
+    "help": "十六进制色值（如 #f5222d）；支持 #RGB / #RGBA / #RRGGBB / #RRGGBBAA",
+    "placeholder": "#f5222d"
+  }
+}

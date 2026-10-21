@@ -60,6 +60,12 @@ public class OntologyActionClickAction extends WidgetClickAction {
     @FormField(ordinal = 2, type = FormFieldType.ENUM)
     public Boolean confirmBeforeExecute = false;
 
+    /**
+     * 未选中任何对象时是否禁用按钮
+     */
+    @FormField(ordinal = 3, type = FormFieldType.ENUM)
+    public Boolean requiresSelection = false;
+
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor {
 

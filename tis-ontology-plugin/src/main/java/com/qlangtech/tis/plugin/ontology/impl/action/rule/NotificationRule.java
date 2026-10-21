@@ -23,6 +23,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.Map;
+
 /**
  * 发送通知规则
  *
@@ -58,68 +60,46 @@ public class NotificationRule extends OntologyActionRule {
         return "notification";
     }
 
-    @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 获取收件人
-            String recipient = context.getParameter(recipientParam, String.class);
-            if (recipient == null) {
-                return RuleExecutionResult.failure("未找到参数: " + recipientParam);
-            }
-
-            // 2. 解析模板，替换参数
-            String title = replaceTemplate(titleTemplate, context);
-            String message = replaceTemplate(messageTemplate, context);
-
-            // 3. 发送通知（实际实现需要调用通知服务）
-            // TODO: 集成通知服务
-            // notificationService.sendNotification(
-            //     notificationType,
-            //     recipient,
-            //     title,
-            //     message,
-            //     priority
-            // );
-
-            // 4. 将通知信息存入上下文
-            context.setContextData("notificationSent", true);
-            context.setContextData("notificationRecipient", recipient);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .putResultData("recipient", recipient)
-                .putResultData("title", title)
-                .putResultData("notificationType", notificationType)
-                .putResultData("priority", priority)
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
-    }
+//    @Override
+//    public void execute(Describable<?> plugin) {
+//        Map<String, Object> parameters = getParameterValues(plugin);
+//
+//        // 1. 获取收件人
+//        String recipient = getStringParameter(parameters, recipientParam);
+//        if (recipient == null) {
+//            throw new IllegalArgumentException("未找到参数: " + recipientParam);
+//        }
+//
+//        // 2. 解析模板，替换参数
+//        String title = replaceTemplate(titleTemplate, parameters);
+//        String message = replaceTemplate(messageTemplate, parameters);
+//
+//        // 3. 发送通知（实际实现需要调用通知服务）
+//        // TODO: 集成通知服务
+//        // notificationService.sendNotification(notificationType, recipient, title, message, priority);
+//    }
 
     /**
      * 替换模板中的参数占位符
      * 格式: ${paramName}
      */
-    private String replaceTemplate(String template, RuleExecutionContext context) {
+    private String replaceTemplate(String template, Map<String, Object> parameters) {
         if (template == null) {
             return "";
         }
 
         String result = template;
-        for (String paramName : context.getParameters().keySet()) {
-            Object paramValue = context.getParameter(paramName);
-            if (paramValue != null) {
-                result = result.replace("${" + paramName + "}", paramValue.toString());
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            if (entry.getValue() != null) {
+                result = result.replace("${" + entry.getKey() + "}", entry.getValue().toString());
             }
         }
         return result;
+    }
+
+    @Override
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

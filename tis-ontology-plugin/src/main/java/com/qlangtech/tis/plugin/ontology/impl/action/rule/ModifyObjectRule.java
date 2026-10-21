@@ -24,11 +24,10 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 修改对象规则
- *
+ * <p>
  * 修改现有对象的属性值
  *
  * @author 百岁 (baisui@qlangtech.com)
@@ -41,8 +40,8 @@ public class ModifyObjectRule extends OntologyActionRule {
      *
      * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
      */
-    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
-            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
+//    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+//            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
     public List<PropertyMappingConfig> propertyMappings;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -58,42 +57,10 @@ public class ModifyObjectRule extends OntologyActionRule {
         return "modify_object";
     }
 
+
     @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 获取目标对象 RID
-            String objectRid = context.getParameter(ridParameterName, String.class);
-            if (objectRid == null) {
-                return RuleExecutionResult.failure("未找到参数: " + ridParameterName);
-            }
-
-            // 2. 构建要更新的属性值
-            Map<String, Object> updatedProperties = buildMappedValues(propertyMappings, context.getParameters());
-
-            // 4. 修改对象（实际实现需要调用 Ontology 服务）
-            // TODO: 集成 Ontology 对象修改服务
-            // ontologyObjectService.modifyObject(context.getOntologyDomain(),
-            //     context.getTargetObjectType(), objectRid, updatedProperties);
-
-            // 5. 将修改的对象 RID 存入上下文
-            context.setContextData("modifiedObjectRid", objectRid);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .addAffectedObjectRid(objectRid)
-                .putResultData("objectRid", objectRid)
-                .putResultData("objectType", context.getTargetObjectType())
-                .putResultData("updatedProperties", updatedProperties.keySet())
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

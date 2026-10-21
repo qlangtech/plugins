@@ -223,8 +223,8 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
         }
 
         @Override
-        public boolean isEnumableSet() {
-            return true;
+        public EnumableSetCfg getEnumableSetCfg() {
+            return new EnumableSetCfg(true);
         }
 
         /**

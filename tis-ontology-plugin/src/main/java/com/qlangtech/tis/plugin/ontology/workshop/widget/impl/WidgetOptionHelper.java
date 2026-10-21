@@ -219,6 +219,27 @@ public class WidgetOptionHelper {
         return getVariableOptions(VariableType.OBJECT_SET);
     }
 
+    /**
+     * 可作为<b>查询数据源</b>的对象集合变量：只列「对象集合定义」这一种定义方式。
+     *
+     * <p>OBJECT_SET 类型现在也接受 {@code ExternalInputConfig}（由行点击等交互写入的选中行
+     * 载体），它没有可执行的查询语义；若把它填进 {@code objectSetVar}，取数时会在
+     * {@code ObjectSetVariable#resolveDataSourceBinding} 抛 illegal type。此方法把这类变量
+     * 从「数据源」下拉里排除，同时保留在 {@code activeObjectVar} / {@code selectedObjectsVar}
+     * 的候选里（那些字段正是要写外部值）。
+     */
+    public static List<IdentityName> getObjectSetSourceVariableOptions() {
+        List<WorkshopVariable> variables = loadCurrentModuleVariables();
+        if (variables == null) {
+            return Collections.emptyList();
+        }
+        return variables.stream()
+                .filter(v -> v.getVariableType() == VariableType.OBJECT_SET)
+                .filter(v -> v.getDefinitionConfig() instanceof ObjectSetDefinitionConfig)
+                .map(v -> IdentityName.create(v.getName()))
+                .collect(Collectors.toList());
+    }
+
     /** 字符串：HeaderTextWidget.textVariable、TextInputWidget 的两个绑定、MarkdownWidget.contentVar */
     public static List<IdentityName> getStringVariableOptions() {
         return getVariableOptions(VariableType.STRING);
@@ -327,8 +348,7 @@ public class WidgetOptionHelper {
 
     /**
      * 当前本体域中已定义的<b>全部 Action</b> —— 供所有「触发本体动作」字段的选项：
-     * {@code WidgetActionConfig.actionId}、{@code ActionButtonWidget} 的按钮动作、
-     * {@code OntologyActionClickAction.actionId}。
+     * {@code WidgetActionConfig.actionId}、{@code OntologyActionClickAction.actionId}。
      *
      * <p>与变量下拉不同，Action 不属于 Workshop Module 而属于<b>本体域</b>，故只需 domain
      * 上下文（{@link #getCurrentOntologyDomainId()}），不需要 module 名。

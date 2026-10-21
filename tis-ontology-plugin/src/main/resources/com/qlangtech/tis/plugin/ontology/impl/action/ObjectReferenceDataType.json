@@ -1,0 +1,8 @@
+{
+  "objectTypeId": {
+    "label": "对象类型 ID",
+    "help": "引用的 Ontology 对象类型标识",
+    "placeholder": "Ticket",
+    "enum": "com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference.getObjectTypeOpts():uncache_true"
+  }
+}

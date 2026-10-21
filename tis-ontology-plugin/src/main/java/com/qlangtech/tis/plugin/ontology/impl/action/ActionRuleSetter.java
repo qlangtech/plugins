@@ -22,16 +22,12 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.collections.CollectionUtils;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Action Type Step 2: 规则设置
@@ -43,36 +39,8 @@ import java.util.stream.Stream;
  */
 public class ActionRuleSetter extends OneStepOfMultiSteps {
 
-    @FormField(ordinal = 0, validate = {})
-    public ActionType objectType;
-
-    @FormField(ordinal = 1, validate = {})
-    public ActionType linkType;
-
-    @FormField(ordinal = 2, validate = {})
-    public ActionType functionType;
-
-//    @FormField(ordinal = 3, validate = {})
-//    public ActionType interfaceType;
-
-    @FormField(ordinal = 4, validate = {})
-    public ActionType sideEffectType;
-
-    @FormField(ordinal = 5, validate = {})
-    public ActionType scheduleType;
-
-    @FormField(ordinal = 6, validate = {})
-    public ActionType applyScenarioType;
-
-    /**
-     * 获取所有已配置且启用的 ActionType 列表
-     */
-    public List<ActionType> getActionTypes() {
-        return Stream.of(
-                objectType, linkType, functionType,
-                sideEffectType, scheduleType, applyScenarioType
-        ).filter(Objects::nonNull).filter((t) -> t.getRuleGroup() != RuleGroup.OFF).toList();
-    }
+    @FormField(ordinal = 0, validate = {Validator.require})
+    public ActionType actionType;
 
     @Override
     public void processPreSaved(IPluginContext pluginContext, Context currentCtx,
@@ -97,23 +65,23 @@ public class ActionRuleSetter extends OneStepOfMultiSteps {
 
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
-            // 指向下一步：ActionParameters
-            return Optional.of(new ActionParameters.Desc());
+            // 第二步完成后不再有下一步，直接结束向导
+            return Optional.empty();
         }
 
         @Override
         public boolean isFinalStep() {
-            return false;
+            return true;
         }
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            ActionRuleSetter ruleSetter = postFormVals.newInstance();
-            if (CollectionUtils.isEmpty(ruleSetter.getActionTypes())) {
-                msgHandler.addErrorMessage(context, "至少选启用一项以上");
-                return false;
-            }
+//            ActionRuleSetter ruleSetter = postFormVals.newInstance();
+//            if (ruleSetter.actionType == null) {
+//                msgHandler.addErrorMessage(context, "必须选择一个 Action Type");
+//                return false;
+//            }
 
             return super.validateAll(msgHandler, context, postFormVals);
         }

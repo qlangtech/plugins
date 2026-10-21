@@ -9,25 +9,16 @@
     "help": "在 Action 表单上展示给用户的字段名",
     "placeholder": "新优先级"
   },
+  "order": {
+    "label": "显示顺序",
+    "help": "该参数在最终 Action 表单中的排列顺序，数值越小越靠前"
+  },
   "dataType": {
     "label": "数据类型",
-    "enum": "com.qlangtech.tis.plugin.ontology.OntologyType.availableTypes()",
-    "help": "该参数值的本体类型"
+    "help": "选择基本类型（STRING/INTEGER 等）或对象引用"
   },
-  "objectTypeId": {
-    "label": "对象类型",
-    "help": "仅当「数据类型」选择 OBJECT_REFERENCE 时需要填写"
-  },
-  "required": {
-    "label": "是否必填"
-  },
-  "widgetType": {
-    "label": "控件类型",
-    "dftVal": "TEXT_INPUT",
-    "enum": [
-      { "label": "文本输入", "val": "TEXT_INPUT" },
-      { "label": "下拉选择", "val": "DROPDOWN" },
-      { "label": "对象选择器", "val": "OBJECT_SELECTOR" }
-    ]
+  "hidden": {
+    "label": "表单中隐藏",
+    "help": "开启后该参数不出现在最终用户的 Action 表单上，用于 Current object 这类由系统填入的参数"
   }
 }

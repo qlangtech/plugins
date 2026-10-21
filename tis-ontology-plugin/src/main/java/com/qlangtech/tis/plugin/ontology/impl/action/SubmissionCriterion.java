@@ -29,12 +29,6 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.Ontology;
-import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
-import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
-import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
-import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
@@ -134,7 +128,7 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
         List<OptionWithEndType> result = Lists.newArrayList();
 
         // ① Action 参数池
-        ActionParameters params = OneStepOfMultiSteps.getPreviousStepInstance(ActionParameters.class, false);
+        ActionParameters params = null; // ActionParameters OneStepOfMultiSteps.getPreviousStepInstance(ActionParameters.class, false);
         if (params != null) {
             for (ActionParameterConfig p : params.getParameters()) {
                 result.add(new OptionWithEndType(p.displayName, p.parameterId,
@@ -146,23 +140,24 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
         // ② 目标对象类型的属性 —— 取自第 2 步 ObjectActionType.objectTypeReference
         try {
             ActionRuleSetter setter = OneStepOfMultiSteps.getPreviousStepInstance(ActionRuleSetter.class, false);
-            String objTypeName = setter == null ? null : setter.getActionTypes().stream()
-                    .filter(ObjectActionType.class::isInstance)
-                    .map(ObjectActionType.class::cast)
-                    .map((t) -> t.objectTypeReference)
-                    .filter(StringUtils::isNotEmpty)
-                    .findFirst().orElse(null);
-            if (StringUtils.isNotEmpty(objTypeName)) {
-                OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(
-                        IPluginContext.getThreadLocalInstance().getContext());
-                OntologyObjectType objType = Ontology.loadObjectTypeDetail(meta.getDomain(), objTypeName);
-                if (objType != null) {
-                    for (OptionWithEndType col : objType.getColOpts()) {
-                        result.add(col.setComment(
-                                new Option.OptionComment(Option.OptionCommentColor.Geekblue, "对象属性")));
-                    }
-                }
-            }
+
+//            String objTypeName = setter == null ? null : setter.getActionTypes().stream()
+//                    .filter(ObjectActionType.class::isInstance)
+//                    .map(ObjectActionType.class::cast)
+//                    .map((t) -> t.objectTypeReference)
+//                    .filter(StringUtils::isNotEmpty)
+//                    .findFirst().orElse(null);
+//            if (StringUtils.isNotEmpty(objTypeName)) {
+//                OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(
+//                        IPluginContext.getThreadLocalInstance().getContext());
+//                OntologyObjectType objType = Ontology.loadObjectTypeDetail(meta.getDomain(), objTypeName);
+//                if (objType != null) {
+//                    for (OptionWithEndType col : objType.getColOpts()) {
+//                        result.add(col.setComment(
+//                                new Option.OptionComment(Option.OptionCommentColor.Geekblue, "对象属性")));
+//                    }
+//                }
+//            }
         } catch (Exception e) {
             // 渲染期降级：本体域/对象类型取不到时只丢这一组候选，不能让整张表单打不开。
             // 与 LinkReference#getObjectTypeOpts 的宽 catch 是同一取舍。

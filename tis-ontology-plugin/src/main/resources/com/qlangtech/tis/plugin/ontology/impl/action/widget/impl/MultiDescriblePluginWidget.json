@@ -1,0 +1,16 @@
+{
+  "elementClass": {
+    "label": "子插件类型",
+    "help": "每行子插件实现的是哪个 Describable 子类，填全限定类名。",
+    "placeholder": "com.qlangtech.tis.plugin.ontology.impl.action.PrimitiveDataType"
+  },
+  "atLeastOne": {
+    "label": "至少一行",
+    "dftVal": "true",
+    "help": "关闭后允许提交空列表。"
+  },
+  "maxCount": {
+    "label": "最大行数",
+    "help": "允许添加的最大行数；留空表示不限制。"
+  }
+}

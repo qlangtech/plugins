@@ -25,7 +25,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
  * 删除对象规则
- *
+ * <p>
  * 删除指定的对象实例
  *
  * @author 百岁 (baisui@qlangtech.com)
@@ -36,7 +36,7 @@ public class DeleteObjectRule extends OntologyActionRule {
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String ridParameterName = "rid";
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
+    // @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
     public Boolean cascadeDelete = false;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {})
@@ -52,58 +52,10 @@ public class DeleteObjectRule extends OntologyActionRule {
         return "delete_object";
     }
 
+
     @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 获取目标对象 RID
-            String objectRid = context.getParameter(ridParameterName, String.class);
-            if (objectRid == null) {
-                return RuleExecutionResult.failure("未找到参数: " + ridParameterName);
-            }
-
-            // 2. 检查是否需要二次确认
-            if (confirmationRequired) {
-                Boolean confirmed = context.getParameter("deleteConfirmed", Boolean.class);
-                if (confirmed == null || !confirmed) {
-                    return RuleExecutionResult.failure("删除操作需要用户确认");
-                }
-            }
-
-            // 3. 删除对象（实际实现需要调用 Ontology 服务）
-            // TODO: 集成 Ontology 对象删除服务
-            // if (cascadeDelete) {
-            //     ontologyObjectService.deleteObjectWithCascade(
-            //         context.getOntologyDomain(),
-            //         context.getTargetObjectType(),
-            //         objectRid
-            //     );
-            // } else {
-            //     ontologyObjectService.deleteObject(
-            //         context.getOntologyDomain(),
-            //         context.getTargetObjectType(),
-            //         objectRid
-            //     );
-            // }
-
-            // 4. 将删除的对象 RID 存入上下文
-            context.setContextData("deletedObjectRid", objectRid);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .addAffectedObjectRid(objectRid)
-                .putResultData("objectRid", objectRid)
-                .putResultData("objectType", context.getTargetObjectType())
-                .putResultData("cascadeDelete", cascadeDelete)
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

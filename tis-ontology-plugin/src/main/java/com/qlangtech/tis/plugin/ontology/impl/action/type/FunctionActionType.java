@@ -67,9 +67,9 @@ public class FunctionActionType extends ActionType {
             return RuleGroup.ONTOLOGY_FUNCTION;
         }
 
-        @Override
-        public String getDisplayName() {
-            return "Function";
-        }
+//        @Override
+//        public String getDisplayName() {
+//            return "Function";
+//        }
     }
 }

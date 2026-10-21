@@ -1,10 +1,10 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.ButtonGroupType;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetButtonConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
@@ -28,27 +28,15 @@ public class ButtonGroupWidget extends CompactDisplayWidget {
 
     public static final String KEY_BUTTONS = "buttons";
 
-    @FormField(type = FormFieldType.ENUM, ordinal = 10, advance = false)
-    public GroupLayout layout = GroupLayout.horizontal;
+    /** 按钮组的呈现形态：内联平铺 / 折叠为下拉菜单 / 主按钮 + 菜单两段式（Palantir 的「Button type」）。
+     *  改为 {@link ButtonGroupType} 多态承载 —— 仅内联平铺子类带 {@code layout} 载荷，另两个子类零字段。
+     *  {@link Validator#require} 与 {@code dftVal=inline} 同 {@code ObjectTableWidget.pagenator} 口径：始终有值，防旧数据缺字段落 null。 */
+    @FormField(ordinal = 9, advance = false, validate = {Validator.require})
+    public ButtonGroupType buttonType;
 
     @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetButtonConfig.class,
-            ordinal = 11, advance = false, validate = {Validator.require})
+            ordinal = 10, advance = false, validate = {Validator.require})
     public List<WidgetButtonConfig> buttons;
-
-    /** 按钮排列方向 */
-    public enum GroupLayout implements DescriptorUseableShortComment {
-        horizontal("水平排列"), vertical("垂直排列");
-        public final String label;
-
-        GroupLayout(String label) {
-            this.label = label;
-        }
-
-        @Override
-        public String shortComment() {
-            return this.label;
-        }
-    }
 
     @TISExtension
     public static class DescriptorImpl extends BaseWidgetDescriptor<IWorkshopWidget> {

@@ -1,0 +1,11 @@
+{
+  "defaultValue": {
+    "label": "默认日期",
+    "help": "新增参数时预填的日期；留空表示不预填。"
+  },
+  "displayFormat": {
+    "label": "展示格式",
+    "help": "日期在界面上的显示格式，如 yyyy-MM-dd；留空走控件默认格式。",
+    "placeholder": "yyyy-MM-dd"
+  }
+}

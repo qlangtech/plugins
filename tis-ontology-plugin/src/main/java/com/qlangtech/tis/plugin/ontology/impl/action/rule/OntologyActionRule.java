@@ -22,6 +22,9 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,13 +66,13 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
         return true;
     }
 
-    /**
-     * 执行规则
-     *
-     * @param context 执行上下文
-     * @return 执行结果
-     */
-    public abstract RuleExecutionResult execute(RuleExecutionContext context) throws Exception;
+//    /**
+//     * 执行规则
+//     *
+//     * @param context 执行上下文
+//     * @return 执行结果
+//     */
+//    public abstract RuleExecutionResult execute(RuleExecutionContext context) throws Exception;
 
     /**
      * 验证规则配置是否有效
@@ -86,9 +89,12 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
      * <p>原先 {@link CreateObjectRule}、{@link ModifyObjectRule}、{@link FunctionBackedRule}
      * 各有一份逐字重复的 parse + build 两段实现，这里收敛成一处。
      *
+     * <p>2026/10/12 重构：改用 {@link ValueSourceConfig#resolveValue} 多态方法，
+     * 消除 switch-case 分支。
+     *
      * @param mappings   映射行，可为 null（函数可以无入参）
      * @param parameters Action 参数池的运行时取值
-     * @return 目标字段到取值的映射；{@code FROM_PARAMETER} 指向的参数不存在时该行被跳过
+     * @return 目标字段到取值的映射；解析结果为 null 时该行被跳过（如参数不存在）
      */
     protected Map<String, Object> buildMappedValues(List<PropertyMappingConfig> mappings,
                                                     Map<String, Object> parameters) {
@@ -97,19 +103,62 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
             return result;
         }
         for (PropertyMappingConfig m : mappings) {
-            switch (m.source) {
-                case FROM_PARAMETER -> {
-                    Object paramValue = parameters.get(m.parameterRef);
-                    if (paramValue != null) {
-                        result.put(m.target, paramValue);
-                    }
+            if (m.source != null) {
+                Object value = m.source.resolveValue(parameters);
+                if (value != null) {
+                    result.put(m.target, value);
                 }
-                case CURRENT_TIME -> result.put(m.target, System.currentTimeMillis());
-                case LITERAL -> result.put(m.target, m.literalValue);
             }
         }
         return result;
     }
+
+    /**
+     * 把用户提交的表单实例的 public 实例字段读成「参数名 → 值」。
+     *
+     * <p>生成的运行时表单（{@code ActionFormPreview}）字段名就是 Action 参数名
+     * （见 {@link com.qlangtech.tis.plugin.ontology.impl.action.ActionFormDescriptorBuilder}），
+     * 因此这里按字段名平铺成参数 Map，映射行解析、模板替换等可沿用参数池时代的逻辑。
+     */
+    protected static Map<String, Object> getParameterValues(Describable<?> plugin) {
+        Map<String, Object> parameters = new HashMap<>();
+        if (plugin == null) {
+            return parameters;
+        }
+        for (Field field : plugin.getClass().getFields()) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            try {
+                parameters.put(field.getName(), field.get(plugin));
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException("can not read plugin form field:" + field.getName(), e);
+            }
+        }
+        return parameters;
+    }
+
+    /**
+     * 取参数值并转成字符串；参数缺失返回 null。表单字段可能是 Integer/Long 等类型，统一按展示语义转换。
+     */
+    protected static String getStringParameter(Map<String, Object> parameters, String name) {
+        Object value = parameters.get(name);
+        return value == null ? null : String.valueOf(value);
+    }
+
+//    /**
+//     * 执行用户提交的form 表单
+//     *
+//     * @param plugin
+//     */
+//    public abstract void execute(Describable<?> plugin);
+
+    /**
+     * 访问者模式的双分发入口：具体子类回调 visitor 上对应的 visit 重载。
+     *
+     * @see RuleVisitor
+     */
+    public abstract void accept(AdapterRuleVisitor visitor);
 
     /**
      * 规则基础 Descriptor

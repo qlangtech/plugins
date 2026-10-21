@@ -70,9 +70,9 @@ public class SideEffectActionType extends ActionType {
             return RuleGroup.SIDE_EFFECT;
         }
 
-        @Override
-        public String getDisplayName() {
-            return "Side Effect";
-        }
+//        @Override
+//        public String getDisplayName() {
+//            return "Side Effect";
+//        }
     }
 }

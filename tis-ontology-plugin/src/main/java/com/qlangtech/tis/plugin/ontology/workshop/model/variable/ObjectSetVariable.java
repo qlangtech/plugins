@@ -27,6 +27,21 @@ import java.util.stream.Collectors;
  */
 public class ObjectSetVariable extends WorkshopVariable {
 
+    /**
+     * 本对象集对应对象类型的主键属性名；没有可推导的主键（函数计算 / 外部写入定义、
+     * 或对象类型显式关闭主键）时返回 null。
+     *
+     * <p>消费方（ObjectTableWidget#get_data）据此把主键值另存为
+     * {@link ObjectTypeBinding#KEY_ROW_IDENTITY}，交互侧不必猜主键列叫什么。
+     */
+    public String getIdentityPropName() {
+        if (this.definitionConfig instanceof ObjectSetDefinitionConfig objSetCfg) {
+            OntologyObjectType objectType = objSetCfg.loadObjectTypeDetail();
+            return objectType.hasDisablePK() ? null : objectType.getPk().map(OntologyProperty::getName).orElse(null);
+        }
+        return null;
+    }
+
     public List<RowMap> executeQuery(ObjectTypeBinding.DataSourceQueryCriteria criteria) {
         return resolveDataSourceBinding().executeQuery(criteria);
     }

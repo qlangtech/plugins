@@ -24,8 +24,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Webhook 规则
@@ -69,70 +67,50 @@ public class WebhookRule extends OntologyActionRule {
         return "webhook";
     }
 
+//    @Override
+//    public void execute(Describable<?> plugin) {
+//        Map<String, Object> parameters = getParameterValues(plugin);
+//
+//        // 1. 请求头（同名后者覆盖前者）
+//        Map<String, String> headerMap = headers == null ? Map.of()
+//                : headers.stream().collect(Collectors.toMap(
+//                (h) -> h.name, (h) -> h.value == null ? "" : h.value, (a, b) -> b));
+//
+//        // 2. 解析请求体模板
+//        String requestBody = replaceTemplate(bodyTemplate, parameters);
+//
+//        // 3. 调用 Webhook（实际实现需要调用 HTTP 客户端）
+//        // TODO: 集成 HTTP 客户端
+//        // HttpResponse response = httpClient.request(webhookUrl, httpMethod, headerMap, requestBody,
+//        //     timeoutSeconds * 1000);
+//        //
+//        // if (!response.isSuccess() && Boolean.TRUE.equals(retryOnFailure)) {
+//        //     // 重试逻辑
+//        //     response = httpClient.request(...);
+//        // }
+//    }
+
+//    /**
+//     * 替换模板中的参数占位符
+//     * 格式: ${paramName}
+//     */
+//    private String replaceTemplate(String template, Map<String, Object> parameters) {
+//        if (template == null) {
+//            return "";
+//        }
+//
+//        String result = template;
+//        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+//            if (entry.getValue() != null) {
+//                result = result.replace("${" + entry.getKey() + "}", entry.getValue().toString());
+//            }
+//        }
+//        return result;
+//    }
+
     @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 请求头（同名后者覆盖前者）
-            Map<String, String> headerMap = headers == null ? Map.of()
-                    : headers.stream().collect(Collectors.toMap(
-                    (h) -> h.name, (h) -> h.value == null ? "" : h.value, (a, b) -> b));
-
-            // 2. 解析请求体模板
-            String requestBody = replaceTemplate(bodyTemplate, context);
-
-            // 3. 调用 Webhook（实际实现需要调用 HTTP 客户端）
-            // TODO: 集成 HTTP 客户端
-            // HttpResponse response = httpClient.request(
-            //     webhookUrl,
-            //     httpMethod,
-            //     headerMap,
-            //     requestBody,
-            //     timeoutSeconds * 1000
-            // );
-            //
-            // if (!response.isSuccess() && retryOnFailure) {
-            //     // 重试逻辑
-            //     response = httpClient.request(...);
-            // }
-
-            // 4. 将调用结果存入上下文
-            context.setContextData("webhookCalled", true);
-            context.setContextData("webhookUrl", webhookUrl);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .putResultData("webhookUrl", webhookUrl)
-                .putResultData("httpMethod", httpMethod)
-                .putResultData("responseStatus", 200) // TODO: 实际响应状态
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
-    }
-
-    /**
-     * 替换模板中的参数占位符
-     * 格式: ${paramName}
-     */
-    private String replaceTemplate(String template, RuleExecutionContext context) {
-        if (template == null) {
-            return "";
-        }
-
-        String result = template;
-        for (String paramName : context.getParameters().keySet()) {
-            Object paramValue = context.getParameter(paramName);
-            if (paramValue != null) {
-                result = result.replace("${" + paramName + "}", paramValue.toString());
-            }
-        }
-        return result;
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

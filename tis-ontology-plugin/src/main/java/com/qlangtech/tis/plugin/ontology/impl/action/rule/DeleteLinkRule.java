@@ -25,15 +25,24 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
  * 删除链接规则
+ * <p>
+ * 删除两个对象之间的链接关系。
  *
- * 删除两个对象之间的链接关系
+ * <p><b>执行入口</b>是 {@code LinkActionType#executeActionRule}：链接实例没有独立存储，
+ * 需要按 {@code RelationshipType} 翻译成对对象表 / 连接表的 DML，规则本身不持有数据源。
+ *
+ * <p>{@link #linkTypeName} 是兼容字段：链接类型以 Action 级的 {@code linkTypeReference}
+ * 为准，只有旧 Action 未配置它时才会回退到这里。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/6
  */
 public class DeleteLinkRule extends OntologyActionRule {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    /**
+     * 兼容字段：使用 {@code LinkActionType#linkTypeReference}；仅当 Action 级链接类型为空时回退到这里。
+     */
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
     public String linkTypeName;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -42,6 +51,10 @@ public class DeleteLinkRule extends OntologyActionRule {
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String targetObjectRidParam = "targetRid";
 
+    /**
+     * 双向删除开关。TIS 没有链接实例存储，不存在「反向链接」，取值 true 会被显式拒绝
+     * （见 {@code LinkActionExecutor#rejectBidirectional}）。
+     */
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {})
     public Boolean deleteBidirectional = false;
 
@@ -55,63 +68,10 @@ public class DeleteLinkRule extends OntologyActionRule {
         return "delete_link";
     }
 
+
     @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 获取源对象 RID
-            String sourceRid = context.getParameter(sourceObjectRidParam, String.class);
-            if (sourceRid == null) {
-                return RuleExecutionResult.failure("未找到参数: " + sourceObjectRidParam);
-            }
-
-            // 2. 获取目标对象 RID
-            String targetRid = context.getParameter(targetObjectRidParam, String.class);
-            if (targetRid == null) {
-                return RuleExecutionResult.failure("未找到参数: " + targetObjectRidParam);
-            }
-
-            // 3. 删除链接（实际实现需要调用 Ontology 服务）
-            // TODO: 集成 Ontology 链接删除服务
-            // ontologyLinkService.deleteLink(
-            //     context.getOntologyDomain(),
-            //     linkTypeName,
-            //     sourceRid,
-            //     targetRid
-            // );
-
-            // 4. 如果需要删除双向链接，删除反向链接
-            // if (deleteBidirectional) {
-            //     ontologyLinkService.deleteLink(
-            //         context.getOntologyDomain(),
-            //         linkTypeName + "_reverse",
-            //         targetRid,
-            //         sourceRid
-            //     );
-            // }
-
-            // 5. 将删除的链接信息存入上下文
-            context.setContextData("deletedLinkType", linkTypeName);
-            context.setContextData("deletedLinkSource", sourceRid);
-            context.setContextData("deletedLinkTarget", targetRid);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .addAffectedObjectRid(sourceRid)
-                .addAffectedObjectRid(targetRid)
-                .putResultData("linkType", linkTypeName)
-                .putResultData("sourceRid", sourceRid)
-                .putResultData("targetRid", targetRid)
-                .putResultData("deleteBidirectional", deleteBidirectional)
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension

@@ -35,6 +35,12 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.reflect.Array;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,33 +83,151 @@ public class DataSourceBinding extends ObjectTypeBinding {
         sql.append(criteria.getTargetCols().stream().map(ds::getEscapedEntity).collect(Collectors.joining(",")));
         sql.append(" from ").append(escapedTableName(ds));
 
+        // WHERE 必须在 ORDER BY / LIMIT 之前：过滤 → 排序 → 切页
+        final List<Object> filterParams = appendWhere(sql, criteria, ds);
+
         // 排序（列排序）必须加在分页**之前**：分页是对排好序的结果切页，顺序反了就成了
         // 「先随便切一页再排这一页」，页内看着有序、页与页之间是乱的。
         // 未指定排序列时 appendOrderBy 什么都不追加 —— 语句与本改动之前逐字一致。
         criteria.appendOrderBy(sql, ds);
         ds.appendSqlLimit(sql, criteria);
-        ds.visitFirstConnection((conn) -> {
-            try {
-                conn.query(sql.toString(), (rs) -> {
-                    // 按结果集自带的列元数据取值：用 getColumnLabel（而非 getColumnName）以便与
-                    // select 列表里的别名/大小写一致，口径同 MySqlDataSourceDumper.buildColumnMetaData
-                    // ResultSetMetaData metaData = rs.getMetaData();
-                    //final int colCount = metaData.getColumnCount();
-                    RowMap row = new RowMap();
-                    for (String col : criteria.getTargetCols()) {
-                        // 取原始类型（Integer/BigDecimal/Timestamp…）而不是 getString，
-                        // 需要字符串时由 RowMap.getColumn(key) 或调用方自行转换
-                        row.put(col, rs.getObject(col));
+
+        if (filterParams.isEmpty()) {
+            // 无过滤条件：保留原来的 conn.query 路径，存量表格取数的语句与行为逐字不变
+            ds.visitFirstConnection((conn) -> {
+                try {
+                    conn.query(sql.toString(), (rs) -> {
+                        rows.add(readRow(rs, criteria));
+                        // 兜底分页已在 sql 里由 appendSqlLimit 完成，这里读到尽头即可
+                        return true;
+                    });
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } else {
+            // 有过滤条件：值一律走 PreparedStatement 绑定，不拼进 SQL
+            ds.visitFirstConnection((conn) -> {
+                try (PreparedStatement statement = conn.preparedStatement(sql.toString())) {
+                    for (int i = 0; i < filterParams.size(); i++) {
+                        statement.setObject(i + 1, filterParams.get(i));
                     }
-                    rows.add(row);
-                    // 兜底分页已在 sql 里由 appendSqlLimit 完成，这里读到尽头即可
-                    return true;
-                });
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+                    try (ResultSet rs = statement.executeQuery()) {
+                        while (rs.next()) {
+                            rows.add(readRow(rs, criteria));
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
         return rows;
+    }
+
+    /**
+     * 按 {@link DataSourceQueryCriteria#getFilters()} 渲染 WHERE 子句，并返回按占位符顺序排列的绑定值。
+     *
+     * <p>操作符与属性名的白名单已在 {@code DataSourceQueryCriteria#addFilter} 里校验过，
+     * 这里只负责映射成 SQL 片段；{@code default} 分支仍然显式抛错，避免将来新增操作符时
+     * 静默生成一条语义错误的语句。
+     */
+    private static List<Object> appendWhere(StringBuilder sql, DataSourceQueryCriteria criteria, DataSourceFactory ds) {
+        List<ObjectTypeBinding.FilterCriterion> filters = criteria.getFilters();
+        List<Object> params = new ArrayList<>();
+        if (filters.isEmpty()) {
+            return params;
+        }
+        sql.append(" WHERE ");
+        for (int i = 0; i < filters.size(); i++) {
+            if (i > 0) {
+                sql.append(" AND ");
+            }
+            ObjectTypeBinding.FilterCriterion filter = filters.get(i);
+            String escapedCol = ds.getEscapedEntity(filter.property());
+            switch (filter.operator()) {
+                case DataSourceQueryCriteria.OP_EQUALS -> {
+                    sql.append(escapedCol).append("=?");
+                    params.add(filter.value());
+                }
+                case DataSourceQueryCriteria.OP_CONTAINS -> {
+                    sql.append(escapedCol).append(" LIKE ?");
+                    params.add("%" + escapeLike(String.valueOf(filter.value())) + "%");
+                }
+                case DataSourceQueryCriteria.OP_GREATER_THAN -> {
+                    sql.append(escapedCol).append(">?");
+                    params.add(filter.value());
+                }
+                case DataSourceQueryCriteria.OP_LESS_THAN -> {
+                    sql.append(escapedCol).append("<?");
+                    params.add(filter.value());
+                }
+                case DataSourceQueryCriteria.OP_GREATER_THAN_OR_EQUAL -> {
+                    sql.append(escapedCol).append(">=?");
+                    params.add(filter.value());
+                }
+                case DataSourceQueryCriteria.OP_LESS_THAN_OR_EQUAL -> {
+                    sql.append(escapedCol).append("<=?");
+                    params.add(filter.value());
+                }
+                case DataSourceQueryCriteria.OP_IN -> {
+                    Collection<?> values = toCollection(filter.value());
+                    if (values.isEmpty()) {
+                        throw new IllegalArgumentException("filter 'in' requires a non-empty collection for property:"
+                                + filter.property());
+                    }
+                    sql.append(escapedCol).append(" IN (");
+                    int index = 0;
+                    for (Object value : values) {
+                        if (index++ > 0) {
+                            sql.append(',');
+                        }
+                        sql.append('?');
+                        params.add(value);
+                    }
+                    sql.append(')');
+                }
+                default -> throw new IllegalArgumentException("illegal filter operator:" + filter.operator());
+            }
+        }
+        return params;
+    }
+
+    /**
+     * {@code LIKE} 的通配符转义：值里的 {@code \}、{@code %}、{@code _} 都按普通字符匹配。
+     * MySQL / Doris / PostgreSQL 的 LIKE 默认转义符都是反斜杠，故不额外追加 ESCAPE 子句。
+     */
+    private static String escapeLike(String value) {
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
+
+    /**
+     * {@code in} 的取值统一成集合：JSON 数组（fastjson JSONArray）、Java 集合、数组都接受。
+     */
+    private static Collection<?> toCollection(Object value) {
+        if (value instanceof Collection<?> collection) {
+            return collection;
+        }
+        if (value != null && value.getClass().isArray()) {
+            int length = Array.getLength(value);
+            List<Object> result = new ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                result.add(Array.get(value, i));
+            }
+            return result;
+        }
+        throw new IllegalArgumentException("filter 'in' requires a collection value, but was:"
+                + (value == null ? "null" : value.getClass().getName()));
+    }
+
+    private static RowMap readRow(ResultSet rs, DataSourceQueryCriteria criteria) throws SQLException {
+        RowMap row = new RowMap();
+        for (String col : criteria.getTargetCols()) {
+            // 取原始类型（Integer/BigDecimal/Timestamp…）而不是 getString，
+            // 需要字符串时由 RowMap.getColumn(key) 或调用方自行转换
+            row.put(col, rs.getObject(col));
+        }
+        return row;
     }
 
 

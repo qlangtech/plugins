@@ -57,6 +57,7 @@ public class RelationshipTypeBackingObjectType extends LinkResources {
                 "_with_" + joinObjectType.getObjectType());
     }
 
+
     @Override
     public List<UDFDesc> getLiteria() {
         ObjectLinkerPair links = getLinks();

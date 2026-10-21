@@ -19,17 +19,13 @@
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * 创建对象规则
- *
+ * <p>
  * 根据参数值创建新的对象实例
  *
  * @author 百岁 (baisui@qlangtech.com)
@@ -42,11 +38,11 @@ public class CreateObjectRule extends OntologyActionRule {
      *
      * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
      */
-    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
-            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
+//    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+//            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
     public List<PropertyMappingConfig> propertyMappings;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
+    //    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
     public Boolean generateRid = true;
 
     @Override
@@ -59,48 +55,34 @@ public class CreateObjectRule extends OntologyActionRule {
         return "create_object";
     }
 
-    @Override
-    public RuleExecutionResult execute(RuleExecutionContext context) throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // 1. 构建对象属性值
-            Map<String, Object> objectProperties = buildMappedValues(propertyMappings, context.getParameters());
-
-            // 3. 生成或获取对象 RID
-            String objectRid = generateRid ? generateObjectRid() : context.getParameter("rid", String.class);
-            if (objectRid == null) {
-                return RuleExecutionResult.failure("未指定对象 RID 且未启用自动生成");
-            }
-
-            // 4. 创建对象（实际实现需要调用 Ontology 服务）
-            // TODO: 集成 Ontology 对象创建服务
-            // ontologyObjectService.createObject(context.getOntologyDomain(),
-            //     context.getTargetObjectType(), objectRid, objectProperties);
-
-            // 5. 将创建的对象 RID 存入上下文，供后续规则使用
-            context.setContextData("createdObjectRid", objectRid);
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            return RuleExecutionResult.builder()
-                .success(true)
-                .addAffectedObjectRid(objectRid)
-                .putResultData("objectRid", objectRid)
-                .putResultData("objectType", context.getTargetObjectType())
-                .executionTimeMs(executionTime)
-                .build();
-
-        } catch (Exception e) {
-            return RuleExecutionResult.failure(e);
-        }
-    }
+//    @Override
+//    public void execute(Describable<?> plugin) {
+//        Map<String, Object> parameters = getParameterValues(plugin);
+//
+//        // 1. 构建对象属性值
+//        Map<String, Object> objectProperties = buildMappedValues(propertyMappings, parameters);
+//
+//        // 2. 生成或获取对象 RID
+//        String objectRid = generateRid ? generateObjectRid() : getStringParameter(parameters, "rid");
+//        if (objectRid == null) {
+//            throw new IllegalArgumentException("未指定对象 RID 且未启用自动生成");
+//        }
+//
+//        // 3. 创建对象（实际实现需要调用 Ontology 服务）
+//        // TODO: 集成 Ontology 对象创建服务
+//        // ontologyObjectService.createObject(domain, targetObjectType, objectRid, objectProperties);
+//    }
 
     /**
      * 生成对象 RID
      */
     private String generateObjectRid() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    @Override
+    public void accept(AdapterRuleVisitor visitor) {
+        visitor.visit(this);
     }
 
     @TISExtension
@@ -111,6 +93,11 @@ public class CreateObjectRule extends OntologyActionRule {
             return RuleType.CREATE_OBJECT;
         }
 
-
+//        @Override
+//        public Map<String, Object> getExtractProps(boolean forAIPromote) {
+//            Map<String, Object> props = super.getExtractProps(forAIPromote);
+//            props.put("test","prop2");
+//            return props;
+//        }
     }
 }

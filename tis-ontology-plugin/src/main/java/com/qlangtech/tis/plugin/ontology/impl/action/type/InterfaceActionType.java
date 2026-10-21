@@ -78,9 +78,9 @@ public class InterfaceActionType extends ActionType {
             return RuleGroup.ONTOLOGY_INTERFACE;
         }
 
-        @Override
-        public String getDisplayName() {
-            return "Interface";
-        }
+//        @Override
+//        public String getDisplayName() {
+//            return "Interface";
+//        }
     }
 }

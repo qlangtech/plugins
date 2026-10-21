@@ -2,5 +2,15 @@
   "parameters": {
     "label": "参数池",
     "help": "定义 Action 的输入参数。参数池是 Action 级别的全局变量，可以被多个规则引用。"
+  },
+  "submitButton": {
+    "label": "自定义提交按钮",
+    "help": "Action 表单上提交按钮的文案。选「off」用框架缺省的 Submit，选「default」后填写自定义文案",
+    "dftVal": "off"
+  },
+  "successMessage": {
+    "label": "自定义成功消息",
+    "help": "Action 执行成功后的提示文案。选「off」用框架缺省提示，选「default」后填写自定义文案",
+    "dftVal": "off"
   }
 }

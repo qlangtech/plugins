@@ -66,9 +66,9 @@ public class ApplyScenarioActionType extends ActionType {
             return "APPLY_SCENARIO";
         }
 
-        @Override
-        public String getDisplayName() {
-            return "Apply Scenario";
-        }
+//        @Override
+//        public String getDisplayName() {
+//            return "Apply Scenario";
+//        }
     }
 }

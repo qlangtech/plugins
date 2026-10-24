@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -88,16 +89,52 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
         return this.label;
     }
 
-    public enum SubjectKind {
-        OBJECT_PROPERTY, PARAMETER
+    /**
+     * 左侧字段的来源。
+     * <p>
+     * 实现 {@link DescriptorUseableShortComment} 后，选项由服务端反射枚举常量生成
+     * （label = 常量名，help = {@code shortComment()}），{@code SubmissionCriterion.json}
+     * 里不再声明 {@code enum} 数组。
+     */
+    public enum SubjectKind implements DescriptorUseableShortComment {
+        OBJECT_PROPERTY("目标对象属性"), PARAMETER("Action 参数");
+
+        private final String comment;
+
+        SubjectKind(String comment) {
+            this.comment = comment;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.comment;
+        }
     }
 
     /**
      * 比较操作符。八项取自被取代的 {@code ActionRules.json} 里 submissionCriteria 的 help 文本，
-     * 一项不多一项不少，中文标签写在 {@code SubmissionCriterion.json} 的 enum 数组里。
+     * 一项不多一项不少；中文标签由 {@link DescriptorUseableShortComment#shortComment()} 下发。
      */
-    public enum ComparisonOperator {
-        EQUALS, NOT_EQUALS, IN, NOT_IN, GREATER_THAN, LESS_THAN, IS_NULL, IS_NOT_NULL;
+    public enum ComparisonOperator implements DescriptorUseableShortComment {
+        EQUALS("等于"),
+        NOT_EQUALS("不等于"),
+        IN("在列表中"),
+        NOT_IN("不在列表中"),
+        GREATER_THAN("大于"),
+        LESS_THAN("小于"),
+        IS_NULL("为空"),
+        IS_NOT_NULL("不为空");
+
+        private final String comment;
+
+        ComparisonOperator(String comment) {
+            this.comment = comment;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.comment;
+        }
 
         /**
          * 一元操作符：不需要比较值。

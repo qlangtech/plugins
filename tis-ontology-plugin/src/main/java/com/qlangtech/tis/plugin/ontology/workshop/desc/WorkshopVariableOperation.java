@@ -7,11 +7,11 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.IAjaxResult;
+import com.qlangtech.tis.plugin.ontology.workshop.WorkshopFormParser;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -192,8 +192,9 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
         /**
          * 解析前端提交的变量实例（自定义端点的 create / update）。
          * <p>
-         * {@code {impl, vals}} 正是 {@code AttrValMap.parseDescribableMap()} 期望的输入形态，
-         * 由校验/实例化/嵌套子表单（{@code definitionConfig} 的 8 个子类）一并交给框架处理。
+         * {@code {impl, vals}} 正是 {@link WorkshopFormParser} 期望的输入形态：
+         * 解析、校验（必填 / {@code Validator}）与嵌套子表单（{@code definitionConfig} 的 8 个子类）
+         * 一并交给框架，最后用校验通过的同一份表单值实例化。
          * {@code impl} 是用户选中的变量类型子类（如 {@code StringVariable}），
          * 因此 {@code vals} 里是平铺的字段，不再是多步形态的 {@code multiStepsSavedItems}。
          *
@@ -201,8 +202,8 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
          */
         private static WorkshopVariable parseVariable(IControlMsgHandler msgHandler, Context context) {
             String variableJson = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE);
-            AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), JSONObject.parseObject(variableJson));
-            return (WorkshopVariable) attrValMap.createDescribable(msgHandler, context).getInstance();
+            return WorkshopFormParser.parse(msgHandler, context,
+                    JSONObject.parseObject(variableJson), "workshop variable", WorkshopVariable.class);
         }
 
         private static JSONObject singleResult(WorkshopVariable variable) throws Exception {

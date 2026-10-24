@@ -24,9 +24,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.ButtonColor;
+import com.qlangtech.tis.plugin.ontology.workshop.util.HexColorValidator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-
-import java.util.regex.Pattern;
 
 /**
  * 自定义：十六进制色值。唯一带 {@code customColor} 载荷的子类 —— 见 {@link ButtonColor}
@@ -49,13 +48,6 @@ public class CustomButtonColor extends ButtonColor {
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
-        /**
-         * 十六进制色值格式：{@code #RGB} / {@code #RGBA} / {@code #RRGGBB} / {@code #RRGGBBAA}，大小写均可。
-         * <p>
-         * 覆盖 CSS 的四种简写 —— 三位与六位是日常写法，四位与八位带 alpha 通道（如 {@code #f5222dcc}）。
-         */
-        private static final Pattern HEX_COLOR_PATTERN =
-                Pattern.compile("^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$");
         @Override
         public String getDisplayName() {
             return "custom";
@@ -66,13 +58,7 @@ public class CustomButtonColor extends ButtonColor {
          * （见 {@code Descriptor#createValidateMap}），空值不进来（由 {@link Validator#require} 负责）。
          */
         public boolean validateCustomColor(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            // 不 trim：校验的就是最终落盘的那个串（前端直接把它拼进内联样式），带空白的一律拒掉
-            if (!HEX_COLOR_PATTERN.matcher(value).matches()) {
-                msgHandler.addFieldError(context, fieldName,
-                        "色值格式不正确，须为十六进制，如 #f5222d（支持 #RGB / #RGBA / #RRGGBB / #RRGGBBAA）");
-                return false;
-            }
-            return true;
+            return HexColorValidator.validate(msgHandler, context, fieldName, value);
         }
 
         @Override

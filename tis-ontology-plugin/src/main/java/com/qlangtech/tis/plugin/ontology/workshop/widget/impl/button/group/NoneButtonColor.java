@@ -43,7 +43,8 @@ public class NoneButtonColor extends ButtonColor {
 
         @Override
         public String shortComment() {
-            return "默认：跟随按钮形态";
+            // 该颜色类型被按钮、指标卡文字色 / 背景色复用，措辞不能只提「按钮」。
+            return "默认：不指定颜色";
         }
     }
 }

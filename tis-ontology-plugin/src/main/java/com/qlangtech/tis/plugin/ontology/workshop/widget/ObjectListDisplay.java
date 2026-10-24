@@ -25,8 +25,10 @@ import java.io.Serializable;
 /**
  * ObjectList 的展示形态（Widget display）—— 列表 / 网格二选一。
  * <p>
- * 对应官方文档的 <b>Widget display</b> 设置：默认按列表显示，也可切换为网格，
- * 切换为网格后可再指定行数/列数、卡片尺寸、卡片间距。
+ * 对应官方文档的 <b>Widget display</b> 设置：默认按列表显示，也可切换为网格。
+ * <p>
+ * 本工程目前只实现每行卡片数量（{@link GridDisplay#columns}）；文档中的行数、
+ * 卡片尺寸、卡片间距尚未实现。
  *
  * <h3>为什么是两个子类、而不是「一个 mode 枚举 + 若干可空载荷字段」</h3>
  * 后者允许出现 {@code mode=GRID} 却填了「属性对齐方式」这类<b>自相矛盾</b>的状态，

@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -81,10 +82,18 @@ public class DateInputWidget extends CompactDisplayWidget {
      * {@code timestamp}）—— 两个 Widget 写出的值会被同一批下游消费方解析，格式语义一旦
      * 分叉，下游会在<b>没有报错</b>的情况下解析错位。
      */
-    public enum VariableKind {
+    public enum VariableKind implements DescriptorUseableShortComment {
         iso("ISO 日期串"), timestamp("时间戳(毫秒)");
         public final String label;
-        VariableKind(String label) { this.label = label; }
+
+        VariableKind(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.label;
+        }
     }
 
     @TISExtension

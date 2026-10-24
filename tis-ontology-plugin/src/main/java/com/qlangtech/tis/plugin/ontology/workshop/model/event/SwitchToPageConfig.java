@@ -28,17 +28,20 @@ public class SwitchToPageConfig extends EventConfig {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String KEY_PAGE_NAME = "pageName";
+    /**
+     * 目标页面的 {@code WorkshopPage.id}（UUID）—— 页面按 id 寻址，改名不影响跳转。
+     */
+    public static final String KEY_PAGE_ID = "pageId";
 
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, validate = {Validator.require})
-    public String pageName;
+    public String pageId;
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor {
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_PAGE_NAME, WidgetOptionHelper::getWorkshopPageOptions);
+            this.registerSelectOptions(KEY_PAGE_ID, WidgetOptionHelper::getWorkshopPageOptions);
         }
 
         @Override

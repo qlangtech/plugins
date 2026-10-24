@@ -22,7 +22,8 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibility;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
 
 import java.io.Serializable;
 
@@ -60,9 +61,9 @@ public class WidgetDisplayConfig implements Describable<WidgetDisplayConfig>, Se
     @FormField(ordinal = 1)
     public SizingMode height;
 
-    /** 条件可见性：引用变量控制该 Widget 的显示隐藏 */
-    @FormField(ordinal = 2)
-    public ConditionalVisibility conditionalVisibility;
+    /** 条件可见性：引用变量控制该 Widget 的显示隐藏（off / 默认实现多态，见 {@link ConditionalVisibilityConfig}） */
+    @FormField(ordinal = 2,validate = {Validator.require})
+    public ConditionalVisibilityConfig conditionalVisibility;
 
     /** 挂载 / 渲染优化策略 */
     @FormField(ordinal = 3, type = FormFieldType.ENUM)

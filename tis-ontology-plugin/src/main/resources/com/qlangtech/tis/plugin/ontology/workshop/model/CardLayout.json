@@ -1,0 +1,12 @@
+{
+  "direction": {
+    "label": "排列方向",
+    "help": "多个指标之间的排列方向：水平并排或垂直堆叠",
+    "dftVal": "HORIZONTAL"
+  },
+  "template": {
+    "label": "标签与数值模板",
+    "help": "单个指标内标签与数值的排布方式：上下堆叠或左右并排",
+    "dftVal": "STACKED"
+  }
+}

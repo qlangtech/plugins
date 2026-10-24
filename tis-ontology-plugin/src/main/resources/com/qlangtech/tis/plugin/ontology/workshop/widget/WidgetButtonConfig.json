@@ -1,10 +1,40 @@
 {
-  "text":           { "label": "按钮文案", "help": "按钮上显示的文字，同时作为这一行的唯一标识", "placeholder": "如：执行动作" },
-  "type":           { "label": "按钮形态", "help": "Ant Design 按钮类型", "dftVal": "default_" },
-  "color":          { "label": "按钮颜色", "help": "预设意图色：主色(蓝)/成功(绿)/警告(琥珀)/危险(红)；选「自定义」后在该子类下填十六进制色值", "dftVal": "none" },
-  "size":           { "label": "按钮尺寸", "dftVal": "default_" },
-  "leftIcon":       { "label": "左侧图标", "help": "Ant Design 图标名，显示在文案左侧（如 plus、delete）" },
-  "rightIcon":      { "label": "右侧图标", "help": "Ant Design 图标名，显示在文案右侧（如 down、right）" },
-  "conditionalVisibility": { "label": "条件可见性", "help": "随某个变量真假改变按钮的呈现；不配置则恒显示" },
-  "onClick":        { "label": "点击行为", "help": "按钮被点击后执行什么：触发事件 / 执行本体动作 / 跳转链接 / 导出数据" }
+  "text": {
+    "label": "按钮文案",
+    "help": "按钮上显示的文字，同时作为这一行的唯一标识",
+    "placeholder": "如：执行动作"
+  },
+  "type": {
+    "label": "按钮形态",
+    "help": "Ant Design 按钮类型",
+    "dftVal": "default_"
+  },
+  "color": {
+    "label": "按钮颜色",
+    "help": "预设意图色：主色(蓝)/成功(绿)/警告(琥珀)/危险(红)；选「自定义」后在该子类下填十六进制色值",
+    "dftVal": "none"
+  },
+  "size": {
+    "label": "按钮尺寸",
+    "dftVal": "default_"
+  },
+  "leftIcon": {
+    "label": "左侧图标",
+    "help": "Ant Design 图标名，显示在文案左侧（如 plus、delete）",
+    "enumMode": "model_assist"
+  },
+  "rightIcon": {
+    "label": "右侧图标",
+    "help": "Ant Design 图标名，显示在文案右侧（如 down、right）",
+    "enumMode": "model_assist"
+  },
+  "conditionalVisibility": {
+    "label": "条件可见性",
+    "help": "随某个变量真假改变按钮的呈现；选 off 则恒显示",
+    "dftVal": "off"
+  },
+  "onClick": {
+    "label": "点击行为",
+    "help": "按钮被点击后执行什么：触发事件 / 执行本体动作 / 跳转链接 / 导出数据"
+  }
 }

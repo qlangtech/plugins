@@ -4,20 +4,52 @@
     "help": "这一行的标识，仅用于在列表中区分各条规则",
     "placeholder": "如：亏损标红"
   },
-  "condition": {
-    "label": "条件表达式",
-    "help": "触发格式化的条件，例如：value <= 0"
+  "matchMode": {
+    "label": "匹配方式",
+    "help": "「始终匹配」是兜底规则：不比较值，直接应用样式。规则按列表顺序匹配，首条命中生效",
+    "dftVal": "STANDARD"
+  },
+  "comparator": {
+    "label": "比较符",
+    "help": "数值与字符串均可比较；「介于」使用下界/上界，其余使用比较值",
+    "dftVal": "LESS_THAN_OR_EQUALS"
+  },
+  "operand": {
+    "label": "比较值",
+    "help": "单值比较时的操作数（数字或字符串）；「介于」请改用下界/上界",
+    "placeholder": "如：0"
+  },
+  "lowerBound": {
+    "label": "下界",
+    "help": "仅「介于 / 不介于」使用；留空或填 any 表示无下界"
+  },
+  "upperBound": {
+    "label": "上界",
+    "help": "仅「介于 / 不介于」使用；留空或填 any 表示无上界（即「1000 and any」）"
   },
   "color": {
     "label": "文本颜色",
-    "help": "满足条件时的文本颜色，支持 CSS 颜色值"
+    "help": "命中时数值的颜色；不改变请选 none",
+    "dftVal": "none"
   },
   "backgroundColor": {
     "label": "背景颜色",
-    "help": "满足条件时的背景颜色，支持 CSS 颜色值"
+    "help": "命中时数值的背景色；不改变请选 none",
+    "dftVal": "none"
+  },
+  "sparklineColor": {
+    "label": "趋势线颜色",
+    "help": "命中时迷你趋势图的颜色（需指标启用可视化）；不改变请选 none",
+    "dftVal": "none"
   },
   "icon": {
     "label": "图标",
-    "help": "满足条件时显示的图标"
+    "help": "命中时显示在数值旁的图标（Ant Design 图标，支持搜索）；留空则不显示",
+    "enumMode": "model_assist"
+  },
+  "order": {
+    "label": "顺序",
+    "help": "规则优先级，数值小的先匹配；可直接拖拽行调整",
+    "advance": true
   }
 }

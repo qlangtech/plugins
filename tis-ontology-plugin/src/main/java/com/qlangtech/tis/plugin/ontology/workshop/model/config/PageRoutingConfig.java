@@ -27,11 +27,10 @@ public class PageRoutingConfig extends VariableRoutingConfig {
     public static final String KEY_PARAMS = "params";
 
     /**
-     * 目标页面名（当前 domain 下的页面，候选项见
+     * 目标页面 id（当前 domain 下的页面，候选项见
      * {@link WidgetOptionHelper#getWorkshopPageOptions()}）。
      *
-     * <p>存的是页面 <b>name</b> 而非 id：与变量一致，模块内引用一律用名字，
-     * 页面 id 是自动生成的 UUID，只决定落盘文件名。跳转发生时按名字查页面。
+     * <p>存的是页面 <b>id</b>（UUID）：页面一律按 id 寻址，name 是可改的显示名。
      */
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String targetPage;

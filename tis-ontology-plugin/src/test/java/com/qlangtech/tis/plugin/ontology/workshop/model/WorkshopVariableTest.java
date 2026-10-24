@@ -8,6 +8,7 @@ import com.qlangtech.tis.plugin.SetPluginsResult;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyValueType;
+import com.qlangtech.tis.plugin.ontology.workshop.store.BasicWorkshopStoreGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.StaticConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.StringVariable;
@@ -34,7 +35,7 @@ import java.util.Optional;
  *       （domain / workshop / identityName / startPersistence）都会走到
  *       {@code noSaveStore} 或直接抛异常，而这类错误在编译期毫无提示</li>
  *   <li>落盘位置：{@code ontology/{domain}/workshop/{module}/{variableName}.xml}，
- *       即 {@link WorkshopModule.BasicWorkshopStoreGetter} 约定的 workshop 目录</li>
+ *       即 {@link BasicWorkshopStoreGetter} 约定的 workshop 目录</li>
  *   <li>反序列化后 instance 的字段（尤其抽象字段 {@code definitionConfig} 的具体子类）
  *       依然完整 —— XStream 对声明类型为抽象类的字段要能写回具体类</li>
  * </ol>

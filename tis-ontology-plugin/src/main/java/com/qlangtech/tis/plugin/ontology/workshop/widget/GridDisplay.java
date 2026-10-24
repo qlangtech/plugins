@@ -26,6 +26,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 /**
  * 网格形态：每个对象渲染成一张卡片，按列数排布。
  * <p>
+ * 仅实现每行卡片数量 {@link #columns}；官方文档中的卡片尺寸、卡片间距未提供配置项。
+ * <p>
  * 这是 ObjectList 的<b>默认</b>形态（见 {@link ObjectListDisplay} 的类注释）。
  *
  * @author 百岁 (baisui@qlangtech.com)

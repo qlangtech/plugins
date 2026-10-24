@@ -21,7 +21,8 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibility;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
 
 import java.io.Serializable;
 
@@ -66,8 +67,8 @@ public class CompactDisplayConfig implements Describable<CompactDisplayConfig>, 
     public SizingMode width;
 
     /** 条件可见性：引用变量控制该 Widget 的显示隐藏（与 {@link WidgetDisplayConfig#conditionalVisibility} 同） */
-    @FormField(ordinal = 2)
-    public ConditionalVisibility conditionalVisibility;
+    @FormField(ordinal = 2,validate = {Validator.require})
+    public ConditionalVisibilityConfig conditionalVisibility;
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<CompactDisplayConfig> {

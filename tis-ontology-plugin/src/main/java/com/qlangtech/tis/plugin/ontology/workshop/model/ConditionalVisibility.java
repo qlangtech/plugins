@@ -17,18 +17,19 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 
-import java.io.Serializable;
-
 /**
- * 条件可见性配置：引用一个 Workshop 变量，按变量值的真假控制宿主（Section / Widget）的显示隐藏。
+ * 条件可见性配置（默认实现）：引用一个 Workshop 变量，按变量值的真假控制宿主（Section / Widget）的显示隐藏。
+ * <p>
+ * 多态体系见父类 {@link ConditionalVisibilityConfig}：「不启用」由零字段的子类
+ * {@link ConditionalVisibilityOff} 表达；本类只在用户显式选择启用时出现，因此
+ * {@link #variableId} 与 {@link #stateIfFalse} 都带 {@code Validator.require}。
  * <p>
  * 被 <b>Widget 基类</b>
  * （{@link com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetDisplayConfig}）与
@@ -42,7 +43,7 @@ import java.io.Serializable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/13
  */
-public class ConditionalVisibility implements Describable<ConditionalVisibility>, Serializable {
+public class ConditionalVisibility extends ConditionalVisibilityConfig {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,7 +58,7 @@ public class ConditionalVisibility implements Describable<ConditionalVisibility>
      *
      * <p>选项由本类自己的 descriptor 注册（见下），宿主无需各自再注册一遍。
      */
-    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String variableId;
 
     /**
@@ -74,7 +75,7 @@ public class ConditionalVisibility implements Describable<ConditionalVisibility>
      * <p>对 Section / Widget 这类没有「禁用」形态的宿主，{@link StateIfFalse#disabled}
      * 一律按 {@link StateIfFalse#hidden} 处理。
      */
-    @FormField(ordinal = 1, type = FormFieldType.ENUM)
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public StateIfFalse stateIfFalse = StateIfFalse.hidden;
 
     /** 条件为假时的呈现方式；取值固定，硬编码于此（CLAUDE.md 原则二） */
@@ -95,7 +96,7 @@ public class ConditionalVisibility implements Describable<ConditionalVisibility>
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ConditionalVisibility> {
+    public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
 
         public DefaultDescriptor() {
             super();
@@ -105,6 +106,11 @@ public class ConditionalVisibility implements Describable<ConditionalVisibility>
         @Override
         public String getDisplayName() {
             return "Conditional Visibility";
+        }
+
+        @Override
+        public String shortComment() {
+            return "按变量真假控制显示";
         }
     }
 }

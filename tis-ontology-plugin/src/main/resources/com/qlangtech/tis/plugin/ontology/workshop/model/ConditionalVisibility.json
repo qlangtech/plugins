@@ -6,6 +6,7 @@
   },
   "stateIfFalse": {
     "label": "为假时呈现",
-    "help": "变量值不满足时该元素的呈现方式"
+    "help": "变量值不满足时该元素的呈现方式",
+    "dftVal": "hidden"
   }
 }

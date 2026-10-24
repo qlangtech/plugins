@@ -26,7 +26,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibility;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.button.group.CustomButtonColor;
 
 import java.io.Serializable;
@@ -94,10 +94,10 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     public IEndTypeGetter.EndType rightIcon;
 
     /**
-     * 条件可见性：随某个变量真假改变按钮的呈现（不配则恒显示）
+     * 条件可见性：随某个变量真假改变按钮的呈现（off 则恒显示，默认 off）
      */
-    @FormField(ordinal = 6, advance = false)
-    public ConditionalVisibility conditionalVisibility;
+    @FormField(ordinal = 6, validate = {Validator.require})
+    public ConditionalVisibilityConfig conditionalVisibility;
 
     /**
      * 点击行为（四型多态，见 {@link WidgetClickAction}）

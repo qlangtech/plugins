@@ -1,0 +1,21 @@
+{
+  "label": {
+    "label": "副指标标签",
+    "help": "副指标的说明文本（如「较上期」）；留空则只显示数值",
+    "placeholder": "如：较上期"
+  },
+  "valueType": {
+    "label": "值类型",
+    "help": "副指标值的数据类型：字符串或数值",
+    "dftVal": "NUMBER"
+  },
+  "valueVariable": {
+    "label": "值变量",
+    "help": "提供副指标值的变量（选项包含字符串 / 数值两档）",
+    "placeholder": "请选择变量"
+  },
+  "numericFormatting": {
+    "label": "数值格式化",
+    "help": "副指标为数值时的格式化配置"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "direction": {
+    "label": "排列方向",
+    "help": "多个标签之间的排列方向：水平并排或垂直堆叠",
+    "dftVal": "HORIZONTAL"
+  }
+}

@@ -153,23 +153,16 @@ public class WorkshopModuleService {
     //  Page 存储
     //
     //  与变量同理：页面也不走模块 XML（WorkshopPage.sections 是 transient），
-    //  由 WorkshopPageStore 独立落盘（ontology/{domain}/workshop_pages/{pageId}.xml）。
-    //  页面按 domain 归属（不带 moduleName 维度），故这里只需 domain。
+    //  由 WorkshopPageStore 独立落盘
+    //  （ontology/{domain}/workshop/{moduleName}/pages/{pageId}.xml）。
+    //  页面是模块的聚合子实体，因此读写都必须带 moduleName。
     // ==================================================================
 
-//    /**
-//     * 取得某个 domain 的页面存储
-//     */
-//    public WorkshopPageStore getPageStore(String ontologyDomainId) {
-//        return WorkshopPageStore.create(ontologyDomainId);
-//    }
-
     /**
-     * 列出 domain 下的所有页面，按 sortOrder 升序
+     * 列出模块下的所有页面，按 sortOrder 升序
      */
-    public List<WorkshopPage> listPages(String ontologyDomainId) {
-        //  return getPageStore(ontologyDomainId).listAll();
-        return null;
+    public List<WorkshopPage> listPages(String ontologyDomainId, String moduleName) {
+        return WorkshopPage.loadAll(ontologyDomainId, moduleName);
     }
 
     // ==================================================================

@@ -374,9 +374,11 @@ public class TestWorkshopSectionConfig {
         // 若被并进来，说明 WorkshopSection 的 ordinal 0..5 与各 *Layout 子类的 0/1
         // 落在了同一张 PropertyType 表里 —— 那是「基类不得声明 @FormField」这条规矩
         // 要防的同一类顺序漂移，只是换了个来路（合并前是 SectionLayoutConfig 的字段）。
-        Assert.assertEquals("WorkshopSection 的表单属性应恰好是它自己的七个字段"
-                        + "（六个共享字段 + childSections），不得混入 ColumnsLayout / TabsLayout 等子类的字段",
-                new TreeSet<>(Arrays.asList("name", "layout", "styleConfig",
+        // id 是 AbstractWorkshopSection 上的共享字段（identity，表单里 readonly 展示），
+        // 随基类进入本层属性表，不是某个 *Layout 子类并进来的。
+        Assert.assertEquals("WorkshopSection 的表单属性应恰好是它自己的八个字段"
+                        + "（七个共享字段 + childSections），不得混入 ColumnsLayout / TabsLayout 等子类的字段",
+                new TreeSet<>(Arrays.asList("id", "name", "layout", "styleConfig",
                         "conditionalVisibility", "dropHandling", "sortOrder", "childSections")),
                 new TreeSet<>(props.keySet()));
     }

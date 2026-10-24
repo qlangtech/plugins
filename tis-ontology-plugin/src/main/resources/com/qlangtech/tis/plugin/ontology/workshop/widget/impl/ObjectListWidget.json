@@ -21,5 +21,44 @@
   },
   "cardActions": {
     "help": "卡片行内动作按钮：每行配置按钮文案(text)、形态(buttonType)与触发的动作标识(actionId)。点击下方 [+添加] 新增按钮。"
+  },
+  "defaultSortField": {
+    "label": "默认排序字段",
+    "help": "初次展示时按哪个属性排序（选项随「对象集变量」联动）",
+    "placeholder": "请选择默认排序属性"
+  },
+  "defaultSortOrder": {
+    "label": "默认排序方向",
+    "help": "默认排序的升序 / 降序",
+    "dftVal": "asc"
+  },
+  "enableUserSorting": {
+    "label": "允许用户排序",
+    "help": "开启后，列表上方出现排序字段与方向选择器",
+    "dftVal": false
+  },
+  "hideNullProperties": {
+    "label": "隐藏空属性",
+    "help": "开启后，属性值为空（null / undefined / 空串）的字段按对象隐藏",
+    "dftVal": false
+  },
+  "enableMultiSelect": {
+    "label": "允许多选",
+    "help": "开启后，每个对象前出现勾选框；选中集合可写回变量",
+    "dftVal": false
+  },
+  "selectedObjectsVar": {
+    "label": "选中对象集合变量",
+    "help": "勾选变化后把选中的对象数组写入此变量，供下游组件消费",
+    "placeholder": "请选择接收选中集合的变量"
+  },
+  "showObjectCount": {
+    "label": "显示对象数量",
+    "help": "在标题下方显示当前对象总数",
+    "dftVal": false
+  },
+  "emptyStateMessage": {
+    "label": "空状态提示",
+    "help": "没有对象时显示的自定义文案；留空则显示「暂无数据」"
   }
 }

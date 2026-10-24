@@ -2,17 +2,7 @@
   "granularity": {
     "label": "时间粒度",
     "help": "刻度切到哪一级。时/分/秒三级仅「时间戳」属性支持，纯日期属性最多切到天",
-    "dftVal": "DAY",
-    "enum": [
-      { "label": "年",   "val": "YEAR" },
-      { "label": "季度", "val": "QUARTER" },
-      { "label": "月",   "val": "MONTH" },
-      { "label": "周",   "val": "WEEK" },
-      { "label": "天",   "val": "DAY" },
-      { "label": "小时", "val": "HOUR" },
-      { "label": "分钟", "val": "MINUTE" },
-      { "label": "秒",   "val": "SECOND" }
-    ]
+    "dftVal": "DAY"
   },
   "unitValue": {
     "label": "粒度单位数",

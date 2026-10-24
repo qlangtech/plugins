@@ -286,7 +286,7 @@ public class TestWidgetFieldStructure {
    */
   private static final String FRONTEND_BASE_INTERFACE = "BaseWidgetConfig";
 
-  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("name", "title", "displayConfig");
+  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("id", "title", "displayConfig");
 
   /**
    * 前端工程相对本模块根目录的候选位置。

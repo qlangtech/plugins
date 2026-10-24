@@ -18,7 +18,7 @@ public class VariableBasedVisibility implements Serializable {
    *
    * 字段名是历史遗留：{@code WorkshopVariable} 的 id 已删除、identity 字段就是 name。
    * 之所以不把字段名一并改成 variableName —— 它同时是表单的线格式键：
-   * 本类经 {@code WorkshopOverlay.variableBasedVisibility}（{@code @FormField(ordinal = 6)}）
+   * 本类经 {@code WorkshopOverlay.variableBasedVisibility}（{@code @FormField(ordinal = 7)}）
    * 作为嵌套表单下发，前端 {@code overlay.model.ts} 的 {@code variableBasedVisibility.variableId}
    * 与 {@code section.model.ts} 的 {@code ConditionalVisibility.variableId} 都按这个键读取，
    * 改名会静默断开这条链路。要改必须两端同批。

@@ -1,7 +1,7 @@
 {
   "targetPage": {
     "label": "目标页面",
-    "help": "变量值变化后跳转到本 Workshop 的哪个页面。",
+    "help": "变量值变化后跳转到本 Workshop 的哪个页面（内部按页面 ID 引用，页面改名不影响）。",
     "placeholder": "请选择目标页面"
   },
   "params": {

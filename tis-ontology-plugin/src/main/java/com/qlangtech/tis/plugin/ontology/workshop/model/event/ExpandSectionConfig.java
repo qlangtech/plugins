@@ -23,22 +23,25 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 
-/** 展开指定区块（前端 {@code LayoutService.setSectionExpanded(name, true)}）。 */
+/** 展开指定区块（前端 {@code LayoutService.setSectionExpanded(sectionId, true)}）。 */
 public class ExpandSectionConfig extends EventConfig {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String KEY_SECTION_NAME = "sectionName";
+    /**
+     * 目标区块的 {@code AbstractWorkshopSection.id}（UUID），不是区块名。
+     */
+    public static final String KEY_SECTION_ID = "sectionId";
 
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, validate = {Validator.require})
-    public String sectionName;
+    public String sectionId;
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor {
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_SECTION_NAME, WidgetOptionHelper::getWorkshopSectionOptions);
+            this.registerSelectOptions(KEY_SECTION_ID, WidgetOptionHelper::getWorkshopSectionOptions);
         }
 
         @Override

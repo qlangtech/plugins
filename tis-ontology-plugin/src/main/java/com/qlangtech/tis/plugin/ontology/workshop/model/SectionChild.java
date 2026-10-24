@@ -17,7 +17,7 @@ import java.util.List;
  * <p>
  * 本类作为 {@code MULTI_DESCRIBLE_PLUGIN} 的元素类，必须 {@code implements MultiDescribleElement}
  * （= {@code ManipuldateProcessor + IdentityName}）；identity 已在基类 {@link AbstractWorkshopSection}
- * 的 {@code name} 上声明，此处无需重复。中文名只用 {@code Validator.require}（不用 {@code Validator.identity}）。
+ * 的 UUID {@code id} 上声明，此处无需重复。name 只做展示 / 引用键，故不用 {@code Validator.identity}。
  */
 public class SectionChild extends AbstractWorkshopSection
         implements Describable<SectionChild>, IPluginStore.MultiDescribleElement {

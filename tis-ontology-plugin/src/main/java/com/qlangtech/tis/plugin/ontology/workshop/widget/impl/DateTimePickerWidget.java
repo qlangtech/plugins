@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -70,18 +71,39 @@ public class DateTimePickerWidget extends CompactDisplayWidget {
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 18, advance = false)
     public String dateValueVar;
 
-    /** 选择器粒度枚举 */
-    public enum PickerMode {
+    /**
+     * 选择器粒度枚举。
+     * <p>
+     * 实现 {@link DescriptorUseableShortComment} 后，{@code shortComment()} 会随反射生成的选项
+     * 以 help 下发前端（label 为常量名）。
+     */
+    public enum PickerMode implements DescriptorUseableShortComment {
         date("日"), week("周"), month("月"), year("年");
         public final String label;
-        PickerMode(String label) { this.label = label; }
+
+        PickerMode(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.label;
+        }
     }
 
-    /** 变量输出格式枚举 */
-    public enum VariableKind {
+    /** 变量输出格式枚举；常量名必须与 {@link DateInputWidget.VariableKind} 逐字一致 */
+    public enum VariableKind implements DescriptorUseableShortComment {
         iso("ISO 日期串"), timestamp("时间戳(毫秒)");
         public final String label;
-        VariableKind(String label) { this.label = label; }
+
+        VariableKind(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.label;
+        }
     }
 
     @TISExtension

@@ -42,12 +42,6 @@ import java.io.Serializable;
 public final class WorkshopHeader implements Describable<WorkshopHeader>, Serializable, IdentityName {
 
     /**
-     * {@code header-update} 端点上承载整份 header 实例的请求参数名，
-     * 值为 {@code {impl, vals}} 形态的 JSON 串（同 {@code WorkshopVariable.PARAM_VARIABLE}）。
-     */
-    public static final String PARAM_HEADER = "header";
-
-    /**
      * 唯一标识，{@code @FormField(identity = true)} 用于 {@code IPluginStore.setPlugins()}
      * 区分实例（同 {@link WorkshopPage#id}）。值恒等于所属模块的 name —— header 是 1:1 关系，
      * 没有独立命名的必要，由 {@code WorkshopHeaderStore} 按 moduleName 定位。

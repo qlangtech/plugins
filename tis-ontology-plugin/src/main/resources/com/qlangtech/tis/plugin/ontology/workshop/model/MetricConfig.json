@@ -1,19 +1,21 @@
 {
   "label": {
-    "label": "标签",
-    "help": "指标显示的标签文本"
+    "label": "指标标签",
+    "help": "指标显示的标签文本，同时作为这一行的唯一标识",
+    "placeholder": "如：今日订单数"
   },
   "description": {
     "label": "描述",
-    "help": "指标的详细描述"
+    "help": "指标的详细描述，鼠标悬停在标签旁的提示图标上时显示"
   },
   "valueType": {
     "label": "值类型",
-    "help": "指标值的数据类型：字符串或数值"
+    "help": "指标值的数据类型：字符串或数值；数值型才会应用数值格式化与数值比较",
+    "dftVal": "NUMBER"
   },
   "valueVariable": {
     "label": "值变量",
-    "help": "提供指标值的变量（选项随「值类型」的两档：字符串 / 数值）",
+    "help": "提供指标值的变量（选项包含字符串 / 数值两档）",
     "placeholder": "请选择变量"
   },
   "numericFormatting": {
@@ -22,14 +24,27 @@
   },
   "conditionalFormatting": {
     "label": "条件格式化",
-    "help": "根据值条件应用不同的显示样式"
+    "help": "按值条件套用颜色 / 图标；规则按顺序匹配，首条命中生效"
   },
   "showVisualization": {
     "label": "显示可视化",
-    "help": "是否显示时间序列可视化图表"
+    "help": "是否显示时间序列可视化图表（仅在卡片布局下支持）"
   },
   "visualization": {
     "label": "可视化配置",
     "help": "时间序列可视化的详细配置"
+  },
+  "showSecondaryMetric": {
+    "label": "显示副指标",
+    "help": "是否显示副指标（如同比 / 环比）；关闭时即使配置了也不渲染"
+  },
+  "secondaryMetric": {
+    "label": "副指标",
+    "help": "副指标的取值变量与数值格式"
+  },
+  "order": {
+    "label": "顺序",
+    "help": "指标间的显示顺序，数值小的在前；可直接拖拽行调整",
+    "advance": true
   }
 }

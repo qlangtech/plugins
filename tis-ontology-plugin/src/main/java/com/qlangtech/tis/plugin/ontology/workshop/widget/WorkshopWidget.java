@@ -17,13 +17,22 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.extension.IStoreSelfManagement;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetStore;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
+import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Workshop Widget 抽象基类 —— 既是插件扩展点的实例载体，也是布局实体的字段宿主。
@@ -85,45 +94,97 @@ import java.io.Serializable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/13
  */
-public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, IdentityName {
-
-    private static final long serialVersionUID = 1L;
-
+public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, IdentityName,
+        IPluginStore.BeforePluginSaved, IStoreSelfManagement {
+    
     /**
-     * 模块内唯一的组件名（供 Section 编排与调试引用），同时也是本类的 identity 字段。
+     * 组件 UUID（identity 字段），由前端创建 widget 时生成（{@code crypto.randomUUID()}），
+     * <b>生命周期内不可变</b>；后端把它当不透明值原样持久化。表单里以 {@code readonly} 展示。
      *
-     * <p>{@link IdentityName} 不是可选的装饰：框架的 {@code Descriptor.getPropertyTypes()}
+     * <p>与 {@code WorkshopPage.id} / {@code AbstractWorkshopSection.id} 同口径：
+     * 不提供默认值、也不在服务端兜底生成 —— id 的生成方是实体的创建者；
+     * {@link #identityValue()} 在为空时直接抛异常，避免掩盖「id 在链路上丢失」。
+     * <p>
+     * {@link IdentityName} 不是可选的装饰：框架的 {@code Descriptor.getPropertyTypes()}
      * 对 identity 字段数量做<b>双向</b>校验 —— 实现了本接口就必须有且仅有 1 个
      * {@code identity = true} 字段，不实现则必须一个也没有，数量不对直接抛
      * {@code IllegalStateException}，而编译期毫无提示。
      * <p>
-     * widget 目前走 {@code WorkshopWidgetHeteroEnum} 的 {@code noSaveStore}，
-     * 没有服务端落盘路径，所以 {@link #identityValue()} 现在没有落盘消费者；
-     * 让 name 承担 identity 是为将来的独立存储预留语义，并让 widget 与
-     * page / variable 的标识口径一致。
+     * widget 的独立落盘走 {@code IStoreSelfManagement}（见
+     * {@code WorkshopModule.persistEntities}），文件名即本字段；{@link #identityValue()}
+     * 是差集删除的键。
+     * <p>
+     * <b>刻意不加 {@link Validator#identity}</b>：它含「不能以数字开头」的限制，而 UUID
+     * 有 10/16 的概率以数字开头（同 {@code WorkshopPage.id}）。id 是前端生成的不透明值，
+     * 不是用户输入的名称；{@link Validator#require} 足够。
+     * <p>
+     * <b>存量数据兼容</b>：本字段原名 {@code name}，旧 widget XML 的元素名是 {@code <name>}。
+     * 改名后若不处理，反序列化拿不到值（id 为 null），存量 widget 会被跳过或保存失败。
+     * 兼容是在 {@link WorkshopWidgetStore} 里对 TIS 共享的 XStream 实例注册字段别名
+     * （{@code aliasField("name", WorkshopWidget.class, "id")}）实现的 ——
+     * <b>不能用 {@code @XStreamAlias}</b>：TIS 的 {@code XStream2} 没有开启注解自动处理，
+     * 该注解虽在 classpath 上却不生效（已由 {@code WorkshopLayoutStoreTest} 实测）。
+     * 别名读写双向生效，故新写出的 XML 元素名仍是 {@code <name>}（内部存储形态，
+     * 不影响表单 / 接口口径）。存量值可能是人读名称（如 {@code Widget 1}），
+     * 按「不迁移」策略原样保留。
      */
     @FormField(type = FormFieldType.INPUTTEXT, ordinal = 0, identity = true, advance = false,
-            validate = {Validator.require, Validator.identity})
-    public String name;
+            validate = {Validator.require})
+    public String id;
 
-    /** Widget 标题（画布与配置面板通用，面向用户展示） */
+    /**
+     * Widget 标题（画布与配置面板通用，面向用户展示）
+     */
     @FormField(type = FormFieldType.INPUTTEXT, ordinal = 1, advance = false, validate = {Validator.require})
     public String title;
 
-    /** 同一 Section 内的显示顺序 */
-   // @FormField(type = FormFieldType.INT_NUMBER, ordinal = 5)
+    /**
+     * 所属 Section 的主键 —— 对应 {@code AbstractWorkshopSection.id}（UUID）。
+     *
+     * <p>持久化采用「子实体独立落盘 + 子侧外键归属」：widget 是独立的插件实例，
+     * 与 section 之间不靠 XML 嵌套表达（{@code AbstractWorkshopSection.widgets} 是
+     * transient），父子关系由本字段承担。加载某个 section 的全部 widget =
+     * 按 {@code sectionId} 过滤 widget 存储；同一 section 内再用 {@link #sortOrder} 排序。
+     *
+     * <p><b>不是表单字段</b>（没有 {@code @FormField}）：归属关系由服务端在保存 widget 时
+     * 从请求参数赋值，不由用户编辑；XStream 会照常持久化普通字段。
+     * 前端模型 {@code WorkshopWidget.sectionId} 与本字段逐字对应。
+     */
+    public String sectionId;
+
+    /**
+     * 同一 Section 内的显示顺序（只在所属 section 内有意义）
+     */
+    // @FormField(type = FormFieldType.INT_NUMBER, ordinal = 5)
     public Integer sortOrder = 0;
-
-//    /**
-//     * 高级配置折叠区：自定义 CSS class（原 ontology 实体 metadata.customId 的职责并入此处）
-//     */
-//    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 99, advance = true)
-//    public String cssClass;
-
 
 
     @Override
+    public void beforeSaved(IPluginContext pluginContext, Optional<Context> context) {
+        if (StringUtils.isEmpty(this.sectionId)) {
+            throw new IllegalStateException("sectionId can not be empty");
+        }
+    }
+
+    /**
+     * 实例自管理落盘 —— 标准 {@code plugin_action} 链路与编辑器保存
+     * （{@code module-apply} 增量 / {@code module-save} 兜底快照）共用本方法。
+     *
+     * <p>归属字段 {@link #sectionId} 与 {@code sortOrder} 不是表单字段：保存链路里由
+     * {@code module-apply} / {@code module-save} 从信封字段回填，本方法只负责
+     * 「拿到实例就写下去」。
+     */
+    @Override
+    public void manipuldateProcess(IPluginContext pluginContext, UploadPluginMeta meta,
+                                   Optional<Context> context) {
+        WorkshopWidgetStore.create(
+                        AbstractWorkshopEntityStore.getOntologyDomainId(meta),
+                        AbstractWorkshopEntityStore.getModuleName(meta))
+                .save(pluginContext, context, this);
+    }
+
+    @Override
     public String identityValue() {
-        return this.name;
+        return this.id;
     }
 }

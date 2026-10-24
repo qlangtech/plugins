@@ -6,11 +6,7 @@
   },
   "subjectKind": {
     "label": "字段来源",
-    "dftVal": "OBJECT_PROPERTY",
-    "enum": [
-      { "label": "目标对象属性", "val": "OBJECT_PROPERTY" },
-      { "label": "Action 参数", "val": "PARAMETER" }
-    ]
+    "dftVal": "OBJECT_PROPERTY"
   },
   "subjectRef": {
     "label": "字段",

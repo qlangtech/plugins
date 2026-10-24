@@ -25,8 +25,9 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 /**
  * 列表形态：每个对象占一行，属性在其后铺开。
  * <p>
- * 官方文档里 List 是默认形态，但在本工程中默认给了 {@link GridDisplay}
- * —— 前端 {@code object-list.component.ts} 目前只会渲网格，默认 Grid 才不会造成视觉回退。
+ * 官方文档里 List 是默认形态，但在本工程中默认仍给了 {@link GridDisplay}
+ * —— 前端 {@code object-list.component.ts} 两种形态均已渲染，保持默认 Grid
+ * 只为避免存量 widget 的视觉回退。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/19

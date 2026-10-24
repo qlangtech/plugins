@@ -8,6 +8,7 @@ import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -20,6 +21,7 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +88,7 @@ public class TestWidgetVariableContract {
    * {@code cssClass} 对应的 {@code @FormField} 早已在 {@code WorkshopWidget} 里被注释掉，
    * 常量却没跟着改，这两条断言本就处于红状态，本次顺带修正。
    */
-  private static final Set<String> BASE_WIDGET_FIELDS = Set.of("name", "title");
+  private static final Set<String> BASE_WIDGET_FIELDS = Set.of("id", "title");
 
   /**
    * 已知的 {@code MULTI_SELECTABLE} 无行编辑器字段 —— <b>缺陷登记册，不是白名单</b>。
@@ -127,6 +129,48 @@ public class TestWidgetVariableContract {
         + "基类只应承载所有 Widget 共有的字段；变量绑定属于各 Widget，"
         + "不得再以 inputVariables/outputVariables 这类「角色列表」回到基类",
       BASE_WIDGET_FIELDS, actual);
+  }
+
+  /**
+   * Widget 身份字段的口径：{@code id}（客户端生成的 UUID，生命周期内不可变）。
+   *
+   * <p>三处必须同时对齐，漏任一处都是静默问题：
+   * <ul>
+   *   <li>Java 字段名 {@code id} + {@code identity = true}，且<b>不得</b>加
+   *       {@link Validator#identity}（UUID 有概率以数字开头）；</li>
+   *   <li>{@code WorkshopWidget.json} 的键是 {@code id} 且 {@code readonly: true}，
+   *       不再有 {@code name} 条目 —— 前端靠 {@code readonly} 把输入框置灰；</li>
+   *   <li>没有 {@code dftVal}：id 只能由创建方生成，服务端不得兜底。</li>
+   * </ul>
+   */
+  @Test
+  public void widgetIdentityFieldIsReadonlyClientGeneratedId() throws Exception {
+    Field idField;
+    try {
+      idField = WorkshopWidget.class.getField("id");
+    } catch (NoSuchFieldException e) {
+      throw new AssertionError("WorkshopWidget 的身份字段应为 id（原 name 已改名）", e);
+    }
+    FormField formField = idField.getAnnotation(FormField.class);
+    Assert.assertNotNull("id 必须是 @FormField", formField);
+    Assert.assertTrue("id 必须是 identity 字段（IdentityName 的双向校验依赖它）",
+      formField.identity());
+
+    Set<Validator> validators = new HashSet<>(Arrays.asList(formField.validate()));
+    Assert.assertTrue("id 必须要求非空", validators.contains(Validator.require));
+    Assert.assertFalse("id 不得使用 Validator.identity：UUID 有概率以数字开头",
+      validators.contains(Validator.identity));
+
+    JSONObject resource = formResource(WorkshopWidget.class);
+    Assert.assertNotNull("缺少 WorkshopWidget.json", resource);
+    Assert.assertFalse("身份字段已改名，json 里不应再有 name 条目",
+      resource.containsKey("name"));
+    JSONObject idEntry = resource.getJSONObject("id");
+    Assert.assertNotNull("WorkshopWidget.json 缺少 id 条目（表单上无文案）", idEntry);
+    Assert.assertTrue("id 必须标为 readonly，否则前端可编辑（身份不可变）",
+      idEntry.getBooleanValue(PluginExtraProps.KEY_READONLY));
+    Assert.assertNull("id 不得设置 dftVal：只能由客户端创建时生成",
+      idEntry.getString(PluginExtraProps.KEY_DFTVAL_PROP));
   }
 
   /**
@@ -575,7 +619,7 @@ public class TestWidgetVariableContract {
    * 只是默认项静默消失，用户新建 widget 时那个配置项是空的。
    *
    * <p>另钉住「确实设了默认值」：两个字段都必须有 {@code dftVal}
-   * （{@code width} 三选一、{@code conditionalVisibility} 单实现也要显式选中）。
+   * （{@code width} 三选一、{@code conditionalVisibility} 在 off / 默认实现之间显式选中）。
    */
   @Test
   public void displayConfigDefaultsMatchRealDescriptorDisplayNames() {
@@ -649,8 +693,8 @@ public class TestWidgetVariableContract {
    *
    * <p>索引条目形如 {@code ...widget.AutoSizingMode$DefaultDescriptor}，
    * 取其 enclosing class 判断是否属于值类型这一族（等于它或是它的子类）。
-   * 抽象值类型（{@code SizingMode}）得到全部子类；具体值类型
-   * （{@code ConditionalVisibility}）得到它自己的那一个。
+   * 抽象值类型（{@code SizingMode} / {@code ConditionalVisibilityConfig}）得到全部子类；
+   * 具体值类型得到它自己的那一个。
    */
   private static Set<String> candidateDisplayNames(Class<?> valueType) {
     Set<String> result = new TreeSet<>();

@@ -44,12 +44,12 @@ import java.util.Optional;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/5/28
  */
-public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved , IdentityDesc<OntologyDomain.OntologyDomainPojo>
-{
+public class DefaultOntologyDomain extends OntologyDomain implements IPluginStore.AfterPluginSaved, IdentityDesc<OntologyDomain.OntologyDomainPojo> {
 
     @Override
     public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
     }
+
     @Override
     public OntologyDomainPojo describePlugin() {
         return this.convertPojo();
@@ -77,16 +77,16 @@ public class DefaultOntologyDomain extends OntologyDomain implements IPluginStor
         }
 
 
-
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            UploadPluginMeta pluginMeta = UploadPluginMeta.createPluginMeta(context);
+
             Pair<OntologyDomain, IPluginStore<OntologyDomain>> existDoamin = OntologyDomain.load(value);
-            if (existDoamin.getKey() != null) {
+            if (!pluginMeta.isUpdate() && existDoamin.getKey() != null) {
                 msgHandler.addFieldError(context, fieldName, OntologyUtils.createDuplicateError(value));
                 return false;
             }
             return true;
         }
-
 
 
         @Override

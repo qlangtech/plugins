@@ -1,7 +1,13 @@
 {
+  "id": {
+    "label": "浮层 ID",
+    "help": "系统生成的唯一标识（UUID），创建浮层时自动生成，不可修改",
+    "readonly": true,
+    "advance": false
+  },
   "name": {
     "label": "浮层名称",
-    "help": "浮层的唯一标识符"
+    "help": "浮层的显示名称与引用键"
   },
   "type": {
     "label": "浮层类型",

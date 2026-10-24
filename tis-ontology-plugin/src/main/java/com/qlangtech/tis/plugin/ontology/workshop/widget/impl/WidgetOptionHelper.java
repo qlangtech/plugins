@@ -155,28 +155,33 @@ public class WidgetOptionHelper {
     }
 
     /**
-     * 当前 domain 下的<b>全部页面</b> —— 供 {@code PageRoutingConfig.targetPage} 的下拉使用。
+     * 当前模块下的<b>全部页面</b> —— 供 {@code PageRoutingConfig.targetPage} 与
+     * {@code SwitchToPageConfig} 的下拉使用。
      *
-     * <p>页面按 domain 归属、不按模块归属，故这里只用到 domain。
+     * <p>页面是模块的聚合子实体，落盘在 {@code workshop/{moduleName}/pages/} 下，
+     * 因此上下文必须同时有 domain 与 moduleName；缺任一个都返回空列表。
      *
-     * <p>选项的 {@code value} 用 {@code page.name} 而非 {@code page.id}：与变量一致，
-     * 模块内引用一律用<b>名字</b>（{@code page.id} 是自动生成的 UUID，只决定落盘文件名）。
-     * {@code label} 用 {@code displayName}，为空时回落到 {@code name}。
+     * <p>选项的 {@code value} 用 {@code page.id}：页面一律<b>按 id</b> 寻址，
+     * name 是可改的显示名。{@code label} 用 {@code displayName}，为空时回落到 {@code name}。
      *
      * @return 页面选项列表；无法解析上下文时为空列表
      */
     public static List<IdentityName> getWorkshopPageOptions() {
         String domain = getCurrentOntologyDomainId();
-        if (StringUtils.isEmpty(domain)) {
+        String moduleName = getCurrentWorkshopModuleName();
+        if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(moduleName)) {
             return Collections.emptyList();
         }
-        String modeuleName = null;
         try {
             List<IdentityName> options = new ArrayList<>();
             // 直接走 store：本方法是静态工具，为一次渲染新建一个 service 实例没有意义
-            for (WorkshopPage page : WorkshopModule.load(domain,modeuleName).loadAllPage()) {
+            for (WorkshopPage page : WorkshopModule.load(domain, moduleName).loadAllPage()) {
+                // 跳过没有 id 的坏数据：单条 item 抛异常会被外层 catch 把整个候选列表降级为空
+                if (StringUtils.isEmpty(page.id)) {
+                    continue;
+                }
                 String label = StringUtils.isEmpty(page.displayName) ? page.name : page.displayName;
-                options.add(new Option(label, page.name));
+                options.add(new Option(label, page.id));
             }
             return options;
         } catch (Throwable t) {
@@ -298,10 +303,11 @@ public class WidgetOptionHelper {
     /**
      * 当前 Workshop Module 里<b>全部页面下的全部区块</b> —— 供事件配置
      * （{@code expand-section} / {@code collapse-section} / {@code toggle-section}）的
-     * {@code sectionName} 下拉使用。
+     * {@code sectionId} 下拉使用。
      *
      * <p>区块隶属于页面（{@code WorkshopPage.sections}），故这里要把所有页面摊平。
-     * 选项的 {@code value} 用 {@code section.name}。
+     * 选项的 {@code value} 用 {@code section.id}（UUID 主键，与前端 LayoutService 的
+     * 区块寻址键一致），{@code label} 用 {@code section.name}。
      *
      * @return 区块选项列表；无法解析上下文时为空列表
      */
@@ -316,7 +322,7 @@ public class WidgetOptionHelper {
                 continue;
             }
             for (WorkshopSection section : page.sections) {
-                options.add(IdentityName.create(section.name));
+                options.add(new Option(section.name, section.identityValue()));
             }
         }
         return options;

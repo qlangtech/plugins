@@ -46,10 +46,10 @@ import java.io.Serializable;
  * {@code { type: resolveDefinitionKind(cfg), ...cfg }}，无需逐个事件手写映射表。
  *
  * <h3>为什么是多态，而不是「一个 eventType 枚举 + 若干可空载荷字段」</h3>
- * 20 种事件的载荷字段几乎两两不同（{@code pageName} / {@code overlayName} / {@code sectionName}
+ * 20 种事件的载荷字段几乎两两不同（{@code pageId} / {@code overlayName} / {@code sectionId}
  * / {@code objectRid} / …）。扁平化后表单会同时渲染出十几个字段、其中绝大多数与当前所选事件无关，
  * 且框架<b>没有任何条件可见性机制</b>（只有静态的 {@code advance} 分组）能按枚举值隐藏它们，
- * 于是「选了 open-overlay 却填了 pageName」这种自相矛盾的状态在表单上完全可达。
+ * 于是「选了 open-overlay 却填了 pageId」这种自相矛盾的状态在表单上完全可达。
  * 同 {@link com.qlangtech.tis.plugin.ontology.workshop.widget.ObjectListDisplay}。
  *
  * @author 百岁 (baisui@qlangtech.com)
@@ -64,10 +64,14 @@ public abstract class EventConfig implements Describable<EventConfig>, Serializa
      * descriptor 上恰好有一个 {@code identity = true} 的字段，缺了会在
      * {@code DescriptorsJSON} 构建表单时抛
      * {@code property identityProp can not be null} 让整张表单打不开。
-     * 事件本身没有天然的「名字」（{@code switch-to-page} 的载荷是 pageName，
+     * 事件本身没有天然的「名字」（{@code switch-to-page} 的载荷是 pageId，
      * 而不是标识），故统一由使用者起一个便于在列表中辨认的短名。
+     * <p>
+     * <b>刻意不加 {@link Validator#identity}</b>：那是标识符字符集
+     * （{@code [A-Z\d a-z_\-]+}），而本字段是给人看的短名 —— 中文、空格都是合理的，
+     * 加上的表现是「保存事件配置时被拒绝」。非空即可。
      */
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.identity})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
 
     @Override

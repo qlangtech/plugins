@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -22,9 +23,12 @@ import java.util.Map;
  * <p>
  * 以卡片网格形式展示对象集合，支持响应式布局和点击选择输出变量。
  * <p>
- * 字段分四组：<b>数据来源</b>（{@code objectSetVar} + 级联出的 {@code titleProperty}）、
- * <b>内容</b>（{@code cardFields}）、<b>展示形态</b>（{@code display}，列表/网格二选一）、
- * <b>交互</b>（{@code activeObjectVar} 写回、{@code cardActions} 行内动作）。
+ * 字段分组：<b>数据来源</b>（{@code objectSetVar} + 级联出的 {@code titleProperty} / {@code defaultSortField}）、
+ * <b>内容</b>（{@code cardFields}、{@code hideNullProperties}）、
+ * <b>排序</b>（{@code defaultSortField} / {@code defaultSortOrder} / {@code enableUserSorting}）、
+ * <b>展示形态</b>（{@code display}，列表/网格二选一）、
+ * <b>选择与交互</b>（{@code activeObjectVar} / {@code enableMultiSelect} / {@code selectedObjectsVar} 写回、
+ * {@code cardActions} 行内动作）、<b>外观</b>（{@code showObjectCount}、{@code emptyStateMessage}）。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
@@ -37,6 +41,14 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
     public static final String KEY_CARD_FIELDS = "cardFields";
     public static final String KEY_DISPLAY = "display";
     public static final String KEY_CARD_ACTIONS = "cardActions";
+    public static final String KEY_DEFAULT_SORT_FIELD = "defaultSortField";
+    public static final String KEY_DEFAULT_SORT_ORDER = "defaultSortOrder";
+    public static final String KEY_ENABLE_USER_SORTING = "enableUserSorting";
+    public static final String KEY_HIDE_NULL_PROPERTIES = "hideNullProperties";
+    public static final String KEY_ENABLE_MULTI_SELECT = "enableMultiSelect";
+    public static final String KEY_SELECTED_OBJECTS_VAR = "selectedObjectsVar";
+    public static final String KEY_SHOW_OBJECT_COUNT = "showObjectCount";
+    public static final String KEY_EMPTY_STATE_MESSAGE = "emptyStateMessage";
 
     /** 列表数据来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false, validate = {Validator.require})
@@ -75,8 +87,40 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
     public String activeObjectVar;
 
     /** 卡片行内动作按钮（点击后触发本体 Action），默认收起在「高级」分组 */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetActionConfig.class, ordinal = 15)
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetActionConfig.class, ordinal = 15, advance = true)
     public List<WidgetActionConfig> cardActions;
+
+    /** 默认排序属性，选项由 objectSetVar 级联供给 */
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 16, advance = false)
+    public String defaultSortField;
+
+    /** 默认排序方向 */
+    @FormField(type = FormFieldType.ENUM, ordinal = 17, advance = false)
+    public SortOrder defaultSortOrder = SortOrder.asc;
+
+    /** 是否在列表上方展示排序选择器（字段 + 方向） */
+    @FormField(type = FormFieldType.ENUM, ordinal = 18, advance = false)
+    public Boolean enableUserSorting = Boolean.FALSE;
+
+    /** 属性值为空（null / 空串）的字段是否按对象隐藏 */
+    @FormField(type = FormFieldType.ENUM, ordinal = 19, advance = false)
+    public Boolean hideNullProperties = Boolean.FALSE;
+
+    /** 是否允许多选：勾选集合写回 {@link #selectedObjectsVar} */
+    @FormField(type = FormFieldType.ENUM, ordinal = 20, advance = false)
+    public Boolean enableMultiSelect = Boolean.FALSE;
+
+    /** 多选结果写回的对象集合变量 */
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 21, advance = false)
+    public String selectedObjectsVar;
+
+    /** 是否在标题下方显示对象总数 */
+    @FormField(type = FormFieldType.ENUM, ordinal = 22, advance = false)
+    public Boolean showObjectCount = Boolean.FALSE;
+
+    /** 无对象时的自定义空态文案；空则前端回落「暂无数据」 */
+    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 23, advance = false)
+    public String emptyStateMessage;
 
     @Override
     public String getBoundObjectSetVar() {
@@ -88,6 +132,28 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
         return this.cardFields;
     }
 
+    /**
+     * 默认排序方向。
+     * <p>
+     * 中文 label 写在 {@code ObjectListWidget.json} 的 {@code enum} 数组里 —— ENUM 下拉 label
+     * 取的是<b>常量名</b>，{@link #shortComment()} 只会成为选项说明（见 CLAUDE.md 原则二）。
+     */
+    public enum SortOrder implements DescriptorUseableShortComment {
+        asc("升序"),
+        desc("降序");
+
+        private final String comment;
+
+        SortOrder(String comment) {
+            this.comment = comment;
+        }
+
+        @Override
+        public String shortComment() {
+            return comment;
+        }
+    }
+
     @TISExtension
     public static class DescriptorImpl extends BaseWidgetDescriptor<IWorkshopWidget> {
 
@@ -95,19 +161,22 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
             super();
             this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
             this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
 
             // === 级联属性字段：初始为空（未选 objectSetVar 时无选项）===
             this.registerSelectOptions(KEY_TITLE_PROPERTY, Collections::emptyList);
+            this.registerSelectOptions(KEY_DEFAULT_SORT_FIELD, Collections::emptyList);
 
-            // === 级联管道：objectSetVar 变化时，同时更新 titleProperty 的候选属性与 cardFields 的候选列 ===
+            // === 级联管道：objectSetVar 变化时，同时更新 titleProperty / defaultSortField 的候选属性
+            //     与 cardFields 的候选列 ===
             //
-            // titleProperty 与 cardFields 同源于 objectSetVar，但需要的内容形态不同（前者是属性下拉选项，
-            // 后者是列配置行），故用逐字段渲染，而不能共用一个广播结果。
+            // 三者同源于 objectSetVar，但需要的内容形态不同（前两者是属性下拉选项，后者是列配置行），
+            // 故用逐字段渲染，而不能共用一个广播结果。
             //
-            // 注意两者对 FunctionConfig 型对象集的口径目前不一致：getObjectPropertyOptions 内部宽
-            // catch 会静默降级为空候选，而 cardFields 走的 getObjectPropertyMetas 会直接抛错。
+            // 注意 getObjectPropertyOptions 与 cardFields 走的 getObjectPropertyMetas 对 FunctionConfig
+            // 型对象集的口径目前不一致：前者内部宽 catch 会静默降级为空候选，后者会直接抛错。
             // 已就此在 WidgetOptionHelper 上留了说明；本次有意不改动前者。
-            this.valueChangePipe(KEY_OBJECT_SET_VAR, KEY_TITLE_PROPERTY, KEY_CARD_FIELDS)
+            this.valueChangePipe(KEY_OBJECT_SET_VAR, KEY_TITLE_PROPERTY, KEY_CARD_FIELDS, KEY_DEFAULT_SORT_FIELD)
                     .render(KEY_TITLE_PROPERTY, (pluginMeta, params) -> {
                         String selectedVar = params.getString(KEY_OBJECT_SET_VAR);
                         if (selectedVar == null) {
@@ -117,7 +186,15 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
                                 selectedVar, OntologyPluginMeta.createPluginMeta(pluginMeta));
                     })
                     .render(KEY_CARD_FIELDS, (pluginMeta, params) -> WidgetColumnConfig.createFrom(
-                            WidgetOptionHelper.getObjectPropertyMetas(params.getString(KEY_OBJECT_SET_VAR))));
+                            WidgetOptionHelper.getObjectPropertyMetas(params.getString(KEY_OBJECT_SET_VAR))))
+                    .render(KEY_DEFAULT_SORT_FIELD, (pluginMeta, params) -> {
+                        String selectedVar = params.getString(KEY_OBJECT_SET_VAR);
+                        if (selectedVar == null) {
+                            return Collections.emptyList();
+                        }
+                        return WidgetOptionHelper.getObjectPropertyOptions(
+                                selectedVar, OntologyPluginMeta.createPluginMeta(pluginMeta));
+                    });
         }
 
         @Override

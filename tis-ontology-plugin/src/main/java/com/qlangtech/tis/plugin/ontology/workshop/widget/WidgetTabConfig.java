@@ -57,7 +57,7 @@ public class WidgetTabConfig implements Describable<WidgetTabConfig>, Serializab
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String title;
 
-    /** header 模式下切换到的页面（选项为当前域下的全部页面） */
+    /** header 模式下切换到的页面，存页面 id（选项为当前域下的全部页面） */
     @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, advance = false)
     public String targetPage;
 

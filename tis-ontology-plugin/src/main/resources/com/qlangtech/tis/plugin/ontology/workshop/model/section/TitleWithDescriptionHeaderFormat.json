@@ -1,0 +1,7 @@
+{
+  "description": {
+    "label": "描述文本",
+    "help": "在区块标题下方显示的描述信息",
+    "placeholder": "请输入描述"
+  }
+}

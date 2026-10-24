@@ -16,6 +16,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.workshop.store.BasicWorkshopStoreGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.RecomputeBehavior;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
@@ -281,8 +282,15 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      */
     public abstract VariableType getVariableType();
 
+    /**
+     * @throws IllegalStateException name 为空 —— identity 字段没有值属于链路上的缺陷，
+     *                               此处不兜底生成（取值恒为 {@link #name}，不做替换）
+     */
     @Override
     public String identityValue() {
+        if (this.name == null) {
+            throw new IllegalStateException("WorkshopVariable name can not be null");
+        }
         return this.name;
     }
 
@@ -374,6 +382,8 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         } else {
             service.addVariable(pluginContext, context, ontologyDomainId, moduleName, variable);
         }
+        // 变量同样挂在模块实例上（WorkshopModule#variables），写后让下一次读取整体重建
+        WorkshopModule.invalidateWorkshopData(ontologyDomainId, moduleName);
     }
 
     /**
@@ -422,7 +432,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         return outer.substring(outer.lastIndexOf('.') + 1);
     }
 
-    public static class WorkshopVariableStoreGetter extends WorkshopModule.BasicWorkshopStoreGetter<WorkshopVariable> {
+    public static class WorkshopVariableStoreGetter extends BasicWorkshopStoreGetter<WorkshopVariable> {
 
         @Override
         protected Class<WorkshopVariable> getPluginType() {

@@ -1,0 +1,22 @@
+{
+  "headerFormat": {
+    "label": "标题格式",
+    "help": "区块标题的显示方式。选择「标题和描述」后可在下方填写描述文本",
+    "dftVal": "TITLE"
+  },
+  "backgroundColor": {
+    "label": "背景颜色",
+    "help": "十六进制色值（如 #f5222d）；支持 #RGB / #RGBA / #RRGGBB / #RRGGBBAA",
+    "placeholder": "#f5222d"
+  },
+  "borderStyle": {
+    "label": "边框样式",
+    "help": "分区容器的边框呈现方式",
+    "dftVal": "NONE"
+  },
+  "padding": {
+    "label": "内边距",
+    "help": "内容与边框之间的距离，单位像素",
+    "dftVal": 16
+  }
+}

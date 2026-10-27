@@ -74,7 +74,7 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
     /**
      * 对象集输入变量（options 动态供给）
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 20, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 20,validate = {Validator.require})
     public String objectSetVar;
 
     public ObjectSetVariable getObjectSetVariable() {
@@ -84,7 +84,7 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
     /**
      * 列定义列表（由 SubForm 子表单结构化管理）
      */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class, ordinal = 21, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetColumnConfig.class,ordinal = 21,validate = {Validator.require})
     public List<WidgetColumnConfig> columns;
 
     /**
@@ -97,19 +97,19 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
      * <p>换了字段名（原 {@code pageSize: Integer}）而不是在旧字段旁挂一个开关：见 {@link Pagenator}
      * 的 javadoc —— 开关 + 载荷两个字段能拼出自相矛盾的状态。
      */
-    @FormField(ordinal = 22, advance = false, validate = {Validator.require})
+    @FormField(ordinal = 22,validate = {Validator.require})
     public Pagenator pagenator;
 
     /**
      * 当前行写回：点击某行后把该行对象写入此变量，供下游组件消费
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 23, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 23)
     public String activeObjectVar;
 
     /**
      * 多选集合写回：勾选集合变化后把选中行数组写入此变量，供下游组件消费
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 24, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 24)
     public String selectedObjectsVar;
 
     @Override

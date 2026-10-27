@@ -9,8 +9,9 @@
         "key": "endpoint",
         "options": [
           {
-            "impl": "com.qlangtech.tis.plugin.aliyun.AliyunEndpoint",
-            "name": "aliyun-bj-endpoint"
+            "endType": "aliyun",
+            "label": "aliyun-bj-endpoint",
+            "val": "aliyun-bj-endpoint"
           }
         ],
         "ord": 0,

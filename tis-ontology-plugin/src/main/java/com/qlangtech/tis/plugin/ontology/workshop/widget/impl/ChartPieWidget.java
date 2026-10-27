@@ -25,10 +25,10 @@ public class ChartPieWidget extends FullDisplayWidget {
     public static final String KEY_VALUE_PROPERTY = "valueProperty";
 
     /** 数据来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String dataSourceVar;
 
-    @FormField(type = FormFieldType.ENUM, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 11)
     public ChartType chartType = ChartType.pie;
 
     /**
@@ -37,10 +37,10 @@ public class ChartPieWidget extends FullDisplayWidget {
      * 选项随 {@code dataSourceVar} 级联（见 Descriptor 的 {@code valueChangePipe}），
      * 因此两者必须是<b>同层普通字段</b>（见 memory：valueChangePipe 要求 primary 是同层普通字段）。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 12, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 12)
     public String labelProperty;
 
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 13, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 13)
     public String valueProperty;
 
     /** 饼图形态 */

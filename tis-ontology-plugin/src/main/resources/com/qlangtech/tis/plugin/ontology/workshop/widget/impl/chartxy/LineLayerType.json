@@ -1,0 +1,12 @@
+{
+  "areaOption": {
+    "label": "面积选项",
+    "help": "折线图的三种形态：普通折线、面积（折线下方填充）、堆叠面积（分段值上下堆叠）",
+    "dftVal": "LINE"
+  },
+  "showLabels": {
+    "label": "显示数值标签",
+    "help": "是否在数据点上直接标注数值",
+    "dftVal": false
+  }
+}

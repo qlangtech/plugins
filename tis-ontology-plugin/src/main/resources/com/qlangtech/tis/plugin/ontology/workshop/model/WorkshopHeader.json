@@ -1,7 +1,8 @@
 {
   "visible": {
     "label": "显示头部",
-    "help": "是否渲染头部。关闭后头部仍然存在，可在左侧「页面」树的 Header 节点里重新打开"
+    "help": "是否渲染头部。关闭后头部仍然存在，可在左侧「页面」树的 Header 节点里重新打开",
+    "dftVal": true
   },
   "title": {
     "label": "标题",
@@ -27,6 +28,7 @@
   },
   "favoriteEnabled": {
     "label": "启用收藏",
-    "help": "是否显示收藏按钮"
+    "help": "是否显示收藏按钮",
+    "dftVal": true
   }
 }

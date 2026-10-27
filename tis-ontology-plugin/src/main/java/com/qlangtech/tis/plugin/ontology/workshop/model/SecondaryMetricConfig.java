@@ -1,18 +1,20 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
-
-import java.io.Serializable;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractNumericFormatting;
 
 /**
- * 副指标配置（如同比 / 环比）。
+ * 副指标配置（启用实现，如同比 / 环比）。
+ *
+ * <p>多态体系见父类 {@link AbstractSecondaryMetricConfig}：「不显示」由零字段的子类
+ * {@link SecondaryMetricOff} 表达；本类只在用户显式选择启用时出现，因此
+ * {@link #valueType} 与 {@link #valueVariable} 都带 {@code Validator.require}。
  *
  * <p>为什么单独一个类型、而不是让 {@link MetricConfig} 自嵌套：后者会让
  * {@code DescriptorsJSON} 的递归下钻无限进行（无环检测 / 无深度上限），指标卡表单直接
@@ -23,7 +25,7 @@ import java.io.Serializable;
  *
  * @author 百岁 (baisui@qlangtech.com)
  */
-public class SecondaryMetricConfig implements Describable<SecondaryMetricConfig>, Serializable {
+public class SecondaryMetricConfig extends AbstractSecondaryMetricConfig {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,11 +39,30 @@ public class SecondaryMetricConfig implements Describable<SecondaryMetricConfig>
     @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String valueVariable;
 
-    @FormField(ordinal = 3)
-    public NumericFormatting numericFormatting;
+    /**
+     * 数值格式化（off / 启用两态多态）。
+     */
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public AbstractNumericFormatting numericFormatting = new NumericFormatting();
+
+    /**
+     * 空值回填。既由本类的 {@code readResolve()} 调用，也由
+     * {@link MetricConfig#readResolve()} 兜一次 —— 后者覆盖「实例并非从 XML 读出、
+     * 但字段被显式置空」的路径（如表单逐字段回填）。
+     */
+    public void normalize() {
+        if (this.numericFormatting == null) {
+            this.numericFormatting = new NumericFormatting();
+        }
+    }
+
+    private Object readResolve() {
+        normalize();
+        return this;
+    }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<SecondaryMetricConfig> {
+    public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
 
         public DefaultDescriptor() {
             super();
@@ -52,6 +73,11 @@ public class SecondaryMetricConfig implements Describable<SecondaryMetricConfig>
         @Override
         public String getDisplayName() {
             return "Secondary Metric Config";
+        }
+
+        @Override
+        public String shortComment() {
+            return "副指标（取值变量与数值格式）";
         }
     }
 }

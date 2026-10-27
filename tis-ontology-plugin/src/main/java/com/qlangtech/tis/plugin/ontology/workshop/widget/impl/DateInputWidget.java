@@ -55,11 +55,11 @@ public class DateInputWidget extends CompactDisplayWidget {
     public static final String KEY_END_VAR = "endVar";
 
     /** 是否显示时分秒 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 10)
     public Boolean showTime;
 
     /** 输出变量格式：ISO 日期串 / 时间戳(毫秒) */
-    @FormField(type = FormFieldType.ENUM, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 11)
     public VariableKind variableKind;
 
     /**
@@ -68,11 +68,11 @@ public class DateInputWidget extends CompactDisplayWidget {
      * options 同时接受 DATE 与 TIMESTAMP：{@link #variableKind} 只决定<b>写出的值</b>的
      * 格式，不决定目标变量应有的类型，故两者都列出由使用者自行选择。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 12, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 12,validate = {Validator.require})
     public String startVar;
 
     /** 范围结束值绑定：与 {@link #startVar} 成对写入 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 13, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 13,validate = {Validator.require})
     public String endVar;
 
     /**

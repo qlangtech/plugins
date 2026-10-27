@@ -45,7 +45,7 @@ public class GroovyWorkshopWidget extends FullDisplayWidget {
     /**
      * 渲染提示符，告知前端采用何种 UI 方案渲染该 Widget
      */
-    @FormField(ordinal = 11, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 11,type = FormFieldType.ENUM)
     public RenderHint renderHint;
 
     /**

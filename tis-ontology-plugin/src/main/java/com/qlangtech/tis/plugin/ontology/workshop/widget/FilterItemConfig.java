@@ -75,7 +75,7 @@ public class FilterItemConfig implements Describable<FilterItemConfig>, IMultiEl
      * 同一个日期选择器，既可以表达「等于某天」，也可以表达「不晚于某天」。
      * 不给覆盖口就只能改控件形态来表达语义，那是把两件事混成一件。
      */
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = true)
+    @FormField(ordinal = 3,type = FormFieldType.ENUM)
     public FilterOperator operator;
 
     /**

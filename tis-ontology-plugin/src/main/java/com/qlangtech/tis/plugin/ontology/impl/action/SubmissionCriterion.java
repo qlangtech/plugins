@@ -150,10 +150,10 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
      * <p>由 {@code SubmissionCriterion.json} 的 {@code enum} 脚本调用，带 {@code :uncache_true}
      * 后缀，因此每次渲染表单都会重新求值（{@code PropertyType#getEnumPropOptions}）。
      *
-     * <p>为什么用 ENUM + json 脚本而不是 SELECTABLE：SELECTABLE 要求 Callable 返回
-     * {@code List<? extends IdentityName>}，框架会 {@code new SelectOption(r.identityValue(), ...)}，
-     * <b>丢掉 Option 的 label 与分组 comment</b>；而 ENUM 脚本路径保留 {@link OptionWithEndType}
-     * 的分组角标。
+     * <p>为什么用 ENUM + json 脚本而不是 SELECTABLE：两者现在共用 {@link Option} 选项模型，
+     * 不会再丢 label / 分组角标；保留 ENUM 是因为候选池由 json 的 {@code enum} 脚本按
+     * {@code :uncache_true} 在每次渲染时求值，而 {@link OptionWithEndType} 的
+     * {@code comment()} 分组角标正是这条路径承载的。
      *
      * <p>两条渲染路径下都能拿到完整的候选集：向导首次渲染第 4 步时，第 3 步的
      * {@code processPreSaved} 已顺手把第 2 步也发布了（见 {@link ActionParameters#processPreSaved}）；

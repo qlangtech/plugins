@@ -1,17 +1,20 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractLayerType;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.BarLayerType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -38,9 +41,9 @@ import java.util.List;
  *   Axis   ：坐标轴长什么样（{@link AxisConfig}）              ← 每轴一份，与层数无关
  *   Legend ：由各层的 series 名与配色自动生成
  * </pre>
- * 其中「数据从哪来」由多态的 {@link LayerDataInput} 承担、「分组键怎么切」由多态的
- * {@link XAxisBucketing} 承担 —— 为什么是多态、为什么当前只有这几个子类、新增子类的门槛，
- * 均见各自类的 javadoc。
+ * 其中「数据从哪来」由 {@link #dataSourceVar} 指向的变量承担，「分组键怎么切」由多态的
+ * {@link XAxisBucketing} 承担 —— 为什么是多态、为什么当前只有这两个子类、新增子类的门槛，
+ * 见它的 javadoc。
  * 因此「X 轴画哪个属性」（{@link #xAxisProperty}）与「X 轴怎么分桶」（{@link #xAxisBucketing}）
  * 都属于图层，「X 轴要不要显示标题」属于轴。旧实现把分组塞进 AxisConfig，是职责错位。
  *
@@ -59,30 +62,44 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String title;
 
+    public static final String KEY_DATA_SOURCE_VAR = "dataSourceVar";
+    public static final String KEY_X_AXIS_PROPERTY = "xAxisProperty";
     /**
-     * 数据输入来源 —— 本图层的数据从哪来。多态：具体输入方式自带自己的绑定字段与
-     * 选项供给（见 {@link LayerDataInput}）。
+     * 图层画法（柱 / 折线 / 散点），多态。
+     *
+     * <p>各画法专有的配置（面积选项、数值标签）落在对应子类里，因此散点图上不会
+     * 出现「面积选项」这种与自己无关的字段。见 {@link AbstractLayerType}。
      */
     @FormField(ordinal = 1, validate = {Validator.require})
-    public LayerDataInput dataInput;
-
+    public AbstractLayerType layerType = new BarLayerType();
     /**
-     * 图层画法（柱 / 折线 / 散点）。
+     * 数据输入来源 —— 本图层的数据从哪个<b>对象集合变量</b>来。
+     *
+     * <h3>为什么是扁平字段而不是多态子表单</h3>
+     * 早先这里是 {@code LayerDataInput dataInput}（多态，唯一子类 {@code ObjectSetDataInput}
+     * 只持有本字段）。扁平化的直接动因是级联：TIS 的 {@code ValueChangePipe} 要求 primary
+     * 必须是<b>同 descriptor 的普通非 Describable 字段</b>
+     * （见 {@code RootFormProperties.getInstancePropsJson}），字段埋在子表单里时
+     * {@link #xAxisProperty} 的候选属性就永远取不到。字段集既未真正分叉，这层多态只是
+     * 一层包壳 —— 判据与原 {@code LayerDataInput} 的 javadoc 一致。
+     *
+     * <h3>为什么选项供给用 getObjectSetSourceVariableOptions</h3>
+     * OBJECT_SET 类型的变量有两条来源：{@code ObjectSetDefinitionConfig}（可执行查询）与
+     * {@code ExternalInputConfig}（行点击等交互写入的选中载体，没有查询语义）。后者选中后
+     * 会在 {@code ObjectSetVariable.resolveDataSourceBinding} 抛 illegal type，故这里只列前者
+     * ——先例 {@code ObjectTableWidget.objectSetVar} 用的是同一个供给方。
+     *
+     * <p>将来若要支持时间序列集合作为图层数据源，把选项放宽成
+     * {@code getVariableOptions(OBJECT_SET, TIME_SERIES_SET)}（先例 {@code TimelineWidget}），
+     * 并在取数侧按变量类型分流即可，<b>不需要</b>再新建多态子类。
      */
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public LayerType layerType = LayerType.BAR;
+    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String dataSourceVar;
 
-    /**
-     * 面积选项；仅 {@link LayerType#LINE} 有效。
-     */
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = true)
-    public AreaOption areaOption = AreaOption.LINE;
+    // ordinal 3 / 4 留空：原 areaOption / showLabels 已分别下沉到折线 / 柱线画法子类
+    // （按本包既有约定，删字段后序位留空、不重排）。
 
-    /**
-     * 是否在图形上显示数值标签；柱状图与折线图支持。
-     */
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, advance = true)
-    public Boolean showLabels = false;
+
 
     /**
      * X 轴属性 —— 本图层按哪个属性分组（分组键）。
@@ -92,12 +109,11 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
      * 而分桶方式取决于属性的数据类型，不是本字段能表达的。
      *
      * <p>这是「轴绑定」的归属地：轴画什么由图层决定，轴长什么样由 {@link AxisConfig} 决定。
-     * 当前为纯文本输入。注意：级联所需的 primary 字段必须是<b>同 descriptor 的普通
-     * 非 Describable 字段</b>（见 {@code RootFormProperties.getInstancePropsJson}），
-     * 而 {@link ObjectSetDataInput#dataSourceVar} 现已随多态拆分下沉到子表单 ——
-     * 该级联在当前后端机制下不可达，故保持手输。前端若将来支持跨层 pipe 再接。
+     * 候选值随 {@link #dataSourceVar} 级联（见 {@code DescriptorImpl} 的 {@code valueChangePipe}）：
+     * 选中数据源变量后，下拉里是该对象类型的属性名。级联要求 primary 是同层普通字段，
+     * 这正是 {@link #dataSourceVar} 保持扁平而非下沉子表单的原因。
      */
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String xAxisProperty;
 
     /**
@@ -107,8 +123,8 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
      * 字符串/布尔属性选 {@link CategoricalBucketing}（取值方式）。为什么是多态、
      * 为什么 {@code limit} 在基类上，见 {@link XAxisBucketing} 的 javadoc。
      *
-     * <p>本子表单独立于 {@link #dataInput}，<b>不</b>依赖 {@link #xAxisProperty} 的级联
-     * —— 分桶方式由构建者按属性类型自选（同数据输入与轴性质的选择方式）。
+     * <p>本子表单独立于 {@link #dataSourceVar}，<b>不</b>依赖 {@link #xAxisProperty} 的级联
+     * —— 分桶方式由构建者按属性类型自选（同数据源与轴性质的选择方式）。
      */
     @FormField(ordinal = 6, validate = {Validator.require})
     public XAxisBucketing xAxisBucketing;
@@ -139,7 +155,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
      * 仍像开关；且 {@code *Var} 后缀是本包变量绑定字段的命名约定（{@code dataSourceVar}、
      * {@code filterOutputVar}、{@code activeObjectVar} …）。
      */
-    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, advance = true)
+    @FormField(ordinal = 8,type = FormFieldType.SELECTABLE)
     public String selectionAsFilterVar;
 
     @Override
@@ -147,52 +163,46 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
         return this.title;
     }
 
-
     /**
-     * 图层画法。
+     * XStream 反序列化不跑构造器与字段初值：历史落盘的图层可能整个缺失
+     * {@code layerType} 或 {@code series}，前者会让表单的 impl 选择器拿到 null，
+     * 后者会让取数直接 NPE。
      */
-    public enum LayerType implements DescriptorUseableShortComment {
-        BAR("柱状图"),
-        LINE("折线图"),
-        SCATTER("散点图");
-
-        private final String comment;
-
-        LayerType(String comment) {
-            this.comment = comment;
+    private Object readResolve() {
+        if (this.layerType == null) {
+            this.layerType = new BarLayerType();
         }
-
-        @Override
-        public String shortComment() {
-            return comment;
+        if (this.series == null) {
+            this.series = new ArrayList<>();
         }
-    }
-
-    /**
-     * 面积选项；仅折线图有效。
-     */
-    public enum AreaOption implements DescriptorUseableShortComment {
-        LINE("普通折线"),
-        AREA("面积（折线下方填充）"),
-        STACKED("堆叠面积（分段值上下堆叠）");
-
-        private final String comment;
-
-        AreaOption(String comment) {
-            this.comment = comment;
-        }
-
-        @Override
-        public String shortComment() {
-            return comment;
-        }
+        return this;
     }
 
     @TISExtension
-    public static class DescriptorImpl extends Descriptor<ChartLayer> {
+    public static class DescriptorImpl extends IPluginStore.MultiDescribleElementDescriptor<ChartLayer> {
 
         public DescriptorImpl() {
             super();
+            // 候选值：当前 Module 中「对象集合定义」型的变量名（ExternalInput 型没有查询语义）
+            // 先例：ObjectTableWidget.objectSetVar 注册的是同一个供给方
+            this.registerSelectOptions(KEY_DATA_SOURCE_VAR,
+                    WidgetOptionHelper::getObjectSetSourceVariableOptions);
+
+            // 级联属性字段：初始为空（未选 dataSourceVar 时无候选）。
+            // 必须注册：SELECTABLE 字段未注册会让 DescriptorsJSON.getSelectOptions 直接抛异常，
+            // 整张表单打不开。先例见 ChartPieWidget.labelProperty。
+            this.registerSelectOptions(KEY_X_AXIS_PROPERTY, Collections::emptyList);
+
+            this.valueChangePipe(KEY_DATA_SOURCE_VAR, KEY_X_AXIS_PROPERTY)
+                    .render((pluginMeta, params) -> {
+                        String selectedVar = params.getString(KEY_DATA_SOURCE_VAR);
+                        if (selectedVar == null) {
+                            return Collections.emptyList();
+                        }
+                        return WidgetOptionHelper.getObjectPropertyOptions(
+                                selectedVar, OntologyPluginMeta.createPluginMeta(pluginMeta));
+                    });
+
             // 候选值：当前 Module 中类型为「对象集合过滤器」的变量名
             // 先例：FilterListWidget.filterOutputVar 注册的是同一个供给方
             this.registerSelectOptions(KEY_SELECTION_AS_FILTER_VAR,
@@ -202,6 +212,30 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
         @Override
         public String getDisplayName() {
             return "Chart Layer";
+        }
+
+        @Override
+        public String shortComment() {
+            return "图表图层";
+        }
+
+        @Override
+        public ViewStyle viewStyle() {
+            return ViewStyle.Table;
+        }
+
+        @Override
+        public List<ColConfig> colsConfig() {
+            // width 是百分比（见前端 MultiChildViewDescriptor.colWidth）
+            return Lists.newArrayList(
+                    new ColConfig("title", 30).setClickable(),
+                    new ColConfig("xAxisProperty", 40),
+                    new ColConfig("selectionAsFilterVar", 30));
+        }
+
+        @Override
+        public int maxHeight() {
+            return 300;
         }
     }
 }

@@ -17,8 +17,9 @@
         "key": "k8sImage",
         "options": [
           {
-            "impl": "com.qlangtech.tis.config.k8s.impl.DefaultK8SImage",
-            "name": "datax-worker"
+            "endType": "docker",
+            "label": "datax-worker",
+            "val": "datax-worker"
           }
         ],
         "ord": 0,

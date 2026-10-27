@@ -2,11 +2,13 @@
   "width": {
     "label": "Drawer 宽度",
     "placeholder": "输入宽度（像素）",
-    "help": "Drawer 面板的宽度，默认 480px"
+    "help": "Drawer 面板的宽度，默认 480px",
+    "dftVal": 480
   },
   "placement": {
     "label": "弹出位置",
-    "help": "Drawer 从屏幕的哪个边缘滑出"
+    "help": "Drawer 从屏幕的哪个边缘滑出",
+    "dftVal": "right"
   },
   "closable": {
     "label": "显示关闭按钮",

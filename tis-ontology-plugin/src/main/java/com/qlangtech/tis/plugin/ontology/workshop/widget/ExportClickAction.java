@@ -45,7 +45,7 @@ public class ExportClickAction extends WidgetClickAction {
     public ExportFormat format = ExportFormat.csv;
 
     /** 导出文件名（不含扩展名）；留空时前端按对象集变量名 + 时间戳生成 */
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, advance = true)
+    @FormField(ordinal = 2,type = FormFieldType.INPUTTEXT)
     public String fileName;
 
     /** 导出格式；取值固定，硬编码于此（CLAUDE.md 原则二） */

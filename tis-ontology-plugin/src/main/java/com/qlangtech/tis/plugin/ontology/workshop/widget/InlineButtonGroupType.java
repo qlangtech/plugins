@@ -34,7 +34,7 @@ public class InlineButtonGroupType extends ButtonGroupType {
     private static final long serialVersionUID = 1L;
 
     /** 按钮排列方向（仅内联平铺下有意义） */
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 0,type = FormFieldType.ENUM)
     public GroupLayout layout = GroupLayout.horizontal;
 
     /** 按钮排列方向；取值固定，硬编码于此（CLAUDE.md 原则二：固定取值用 ENUM） */

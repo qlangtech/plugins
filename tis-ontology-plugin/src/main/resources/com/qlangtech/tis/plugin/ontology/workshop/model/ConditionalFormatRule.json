@@ -50,6 +50,6 @@
   "order": {
     "label": "顺序",
     "help": "规则优先级，数值小的先匹配；可直接拖拽行调整",
-    "advance": true
+    "dftVal": 0
   }
 }

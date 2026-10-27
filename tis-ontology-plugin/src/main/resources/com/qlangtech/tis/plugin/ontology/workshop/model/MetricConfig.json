@@ -20,31 +20,21 @@
   },
   "numericFormatting": {
     "label": "数值格式化",
-    "help": "数值类型指标的格式化配置"
+    "help": "数值类型指标的格式化配置；选 off 则按原始数值展示",
+    "dftVal": "Numeric Formatting"
   },
   "conditionalFormatting": {
     "label": "条件格式化",
     "help": "按值条件套用颜色 / 图标；规则按顺序匹配，首条命中生效"
   },
-  "showVisualization": {
-    "label": "显示可视化",
-    "help": "是否显示时间序列可视化图表（仅在卡片布局下支持）"
-  },
-  "visualization": {
-    "label": "可视化配置",
-    "help": "时间序列可视化的详细配置"
-  },
-  "showSecondaryMetric": {
-    "label": "显示副指标",
-    "help": "是否显示副指标（如同比 / 环比）；关闭时即使配置了也不渲染"
-  },
   "secondaryMetric": {
     "label": "副指标",
-    "help": "副指标的取值变量与数值格式"
+    "help": "副指标的取值变量与数值格式；选择 off 则不显示",
+    "dftVal": "off"
   },
   "order": {
     "label": "顺序",
     "help": "指标间的显示顺序，数值小的在前；可直接拖拽行调整",
-    "advance": true
+    "dftVal": 0
   }
 }

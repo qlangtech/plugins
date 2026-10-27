@@ -8,5 +8,10 @@
     "label": "标签与数值模板",
     "help": "单个指标内标签与数值的排布方式：上下堆叠或左右并排",
     "dftVal": "STACKED"
+  },
+  "visualization": {
+    "label": "时间序列可视化",
+    "help": "每个指标下方的迷你趋势图（仅卡片布局支持）；选择 off 则不显示",
+    "dftVal": "off"
   }
 }

@@ -16,6 +16,7 @@
   },
   "numericFormatting": {
     "label": "数值格式化",
-    "help": "副指标为数值时的格式化配置"
+    "help": "副指标为数值时的格式化配置；选 off 则按原始数值展示",
+    "dftVal": "Numeric Formatting"
   }
 }

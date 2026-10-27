@@ -23,7 +23,7 @@ public class TabsWidget extends FullDisplayWidget {
 
     public static final String KEY_TABS = "tabs";
 
-    @FormField(type = FormFieldType.ENUM, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 10)
     public TabStyle tabType = TabStyle.line;
 
     /**
@@ -36,11 +36,10 @@ public class TabsWidget extends FullDisplayWidget {
      * 在那之前先用一个显式字段消除静默失效。
      * TODO 布局容器支持透传 location 后，改为自动推导并删除该字段。
      */
-    @FormField(type = FormFieldType.ENUM, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 11)
     public TabLocation location = TabLocation.section;
 
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetTabConfig.class,
-            ordinal = 12, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetTabConfig.class,ordinal = 12,validate = {Validator.require})
     public List<WidgetTabConfig> tabs;
 
     /** 标签页视觉形态 */

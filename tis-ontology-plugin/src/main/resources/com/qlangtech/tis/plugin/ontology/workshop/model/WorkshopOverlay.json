@@ -2,8 +2,7 @@
   "id": {
     "label": "浮层 ID",
     "help": "系统生成的唯一标识（UUID），创建浮层时自动生成，不可修改",
-    "readonly": true,
-    "advance": false
+    "readonly": true
   },
   "name": {
     "label": "浮层名称",
@@ -11,15 +10,18 @@
   },
   "type": {
     "label": "浮层类型",
-    "help": "浮层的展现形式（抽屉或模态框）"
+    "help": "浮层的展现形式（抽屉或模态框）",
+    "dftVal": "DRAWER"
   },
   "typeConfig": {
     "label": "类型配置",
-    "help": "根据浮层类型选择对应的配置"
+    "help": "根据浮层类型选择对应的配置",
+    "dftVal": "Drawer"
   },
   "showHeader": {
     "label": "显示头部",
-    "help": "浮层是否显示头部区域"
+    "help": "浮层是否显示头部区域",
+    "dftVal": true
   },
   "title": {
     "label": "标题",
@@ -35,15 +37,18 @@
   },
   "closeOnBackdropClick": {
     "label": "点击背景关闭",
-    "help": "点击浮层外部背景时是否关闭浮层"
+    "help": "点击浮层外部背景时是否关闭浮层",
+    "dftVal": true
   },
   "addBackgroundBehindOverlay": {
     "label": "添加背景遮罩",
-    "help": "是否在浮层后面添加半透明遮罩"
+    "help": "是否在浮层后面添加半透明遮罩",
+    "dftVal": true
   },
   "sortOrder": {
     "label": "排序顺序",
-    "help": "浮层在列表中的显示顺序"
+    "help": "浮层在列表中的显示顺序",
+    "dftVal": 0
   },
   "sections": {
     "label": "区块列表",

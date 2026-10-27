@@ -29,10 +29,10 @@ import java.io.Serializable;
  * 若压成单类加 {@code kind} 字段，两组字段会同时出现在表单里——分类轴上会多出「时间粒度」，
  * 时间轴上会多出「取值方式」，用户必须自行判断哪些与自己选的属性类型有关。多态则让 TIS
  * 原生的 impl 选择器先定分桶方式、再渲染对应字段。形态对齐本模块既有先例
- * {@link AxisConfig} 与 {@link LayerDataInput}。
+ * {@link AxisConfig} 与 {@code chartxy.AbstractLayerType}。
  *
  * <h3>为什么 limit 能提到基类</h3>
- * 与 {@link LayerDataInput} 那个「宁可留空」的基类不同，本基类承载 {@link #limit} 是<b>有证据</b>的：
+ * 与那些「宁可留空」的抽象基类不同，本基类承载 {@link #limit} 是<b>有证据</b>的：
  * 每一种分桶都产出桶，且都受同一个硬上限约束（对象集聚合 API 对返回的聚合结果封顶
  * {@code 10000} 个桶，超出直接抛错）。把上限放在基类，等于声明「任何分桶方式都必须
  * 自证不超过这条线」，而不是让每个子类各自记得加。
@@ -77,6 +77,11 @@ public abstract class XAxisBucketing implements Describable<XAxisBucketing>, Ser
      * 天花板就是 1000 —— 下调做在 {@link CategoricalBucketing} 的构造函数里，见那里的说明。
      *
      * <p>序位取 {@code 99}（而非基类常规的 {@code 0..5}）：它是兜底项，排在子表单最后。
+     *
+     * <p><b>表单初值另写在 json 上</b>：{@code XAxisBucketing.json} 的
+     * {@code limit.dftVal = 10000}（子类 {@link CategoricalBucketing} 在自己的 json 里覆盖为
+     * {@code 1000}）。这里的字段初值只决定「代码 new 出来的实例」与「保存时表单漏提交该字段的
+     * 兜底」，前端新建表单<b>不读</b>它 —— 只写 Java 初值等于表单上留空。
      */
     @FormField(ordinal = 99, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer limit = MAX_LIMIT;

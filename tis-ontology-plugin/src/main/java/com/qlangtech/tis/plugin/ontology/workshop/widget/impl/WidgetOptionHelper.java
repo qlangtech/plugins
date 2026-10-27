@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -192,6 +193,9 @@ public class WidgetOptionHelper {
     // ===============================================================
     //  Public API — 变量绑定字段的 SELECTABLE 选项
     // ===============================================================
+    public static List<IdentityName> getVariableOptions(VariableType... types) {
+        return getVariableOptions((var) -> true, types);
+    }
 
     /**
      * 按变量类型取当前 Workshop Module 中的变量名列表 —— 所有变量绑定字段选项的唯一实现。
@@ -205,23 +209,26 @@ public class WidgetOptionHelper {
      *              （如日期选择器同时接受 DATE 与 TIMESTAMP）
      * @return IdentityName 列表，每个元素的 identityValue() 即为变量名
      */
-    public static List<IdentityName> getVariableOptions(VariableType... types) {
+    public static List<IdentityName> getVariableOptions(Predicate<WorkshopVariable> predicate, VariableType... types) {
         Set<VariableType> accepted = EnumSet.noneOf(VariableType.class);
         Collections.addAll(accepted, types);
         List<WorkshopVariable> variables = loadCurrentModuleVariables();
         if (variables == null) {
             return Collections.emptyList();
         }
+
         return variables.stream()
                 // 类型由具体子类固化，恒非 null，无需再判空
-                .filter(v -> accepted.contains(v.getVariableType()))
-                .map(v -> IdentityName.create(v.getName()))
+                .filter(v -> accepted.contains(v.getVariableType()) && predicate.test(v))
+                .map(v -> {
+                    VariableType varType = v.getVariableType();
+                    OptionWithEndType endType = new OptionWithEndType(v.getName(), v.getName(), varType.getEndType());
+                    if (types.length > 1) {
+                        endType.setComment(new Option.OptionComment(Option.OptionCommentColor.forObject(varType), varType.shortComment()));
+                    }
+                    return endType;
+                })
                 .collect(Collectors.toList());
-    }
-
-    /** 对象集合：ObjectTableWidget / ObjectListWidget 的 objectSetVar，ObjectSetDataInput.dataSourceVar */
-    public static List<IdentityName> getObjectSetVariableOptions() {
-        return getVariableOptions(VariableType.OBJECT_SET);
     }
 
     /**
@@ -234,28 +241,44 @@ public class WidgetOptionHelper {
      * 的候选里（那些字段正是要写外部值）。
      */
     public static List<IdentityName> getObjectSetSourceVariableOptions() {
-        List<WorkshopVariable> variables = loadCurrentModuleVariables();
-        if (variables == null) {
-            return Collections.emptyList();
-        }
-        return variables.stream()
-                .filter(v -> v.getVariableType() == VariableType.OBJECT_SET)
-                .filter(v -> v.getDefinitionConfig() instanceof ObjectSetDefinitionConfig)
-                .map(v -> IdentityName.create(v.getName()))
-                .collect(Collectors.toList());
+//        List<WorkshopVariable> variables = loadCurrentModuleVariables();
+//        if (variables == null) {
+//            return Collections.emptyList();
+//        }
+//        return variables.stream()
+//                .filter(v -> v.getVariableType() == VariableType.OBJECT_SET)
+//                .filter(v -> v.getDefinitionConfig() instanceof ObjectSetDefinitionConfig)
+//                .map(v -> IdentityName.create(v.getName()))
+//                .collect(Collectors.toList());
+        return getVariableOptions((var) -> var.getDefinitionConfig() instanceof ObjectSetDefinitionConfig
+                , VariableType.OBJECT_SET);
     }
 
-    /** 字符串：HeaderTextWidget.textVariable、TextInputWidget 的两个绑定、MarkdownWidget.contentVar */
+    /**
+     * 对象集合：ObjectTableWidget / ObjectListWidget 的 objectSetVar，ChartLayer.dataSourceVar
+     */
+    public static List<IdentityName> getObjectSetVariableOptions() {
+        return getVariableOptions(VariableType.OBJECT_SET);
+    }
+
+
+    /**
+     * 字符串：HeaderTextWidget.textVariable、TextInputWidget 的两个绑定、MarkdownWidget.contentVar
+     */
     public static List<IdentityName> getStringVariableOptions() {
         return getVariableOptions(VariableType.STRING);
     }
 
-    /** 数值：MetricCardWidget.valueVar */
+    /**
+     * 数值：MetricCardWidget.valueVar
+     */
     public static List<IdentityName> getNumericVariableOptions() {
         return getVariableOptions(VariableType.NUMERIC);
     }
 
-    /** 布尔：CheckboxWidget.checkedVar */
+    /**
+     * 布尔：CheckboxWidget.checkedVar
+     */
     public static List<IdentityName> getBooleanVariableOptions() {
         return getVariableOptions(VariableType.BOOLEAN);
     }
@@ -270,12 +293,16 @@ public class WidgetOptionHelper {
         return getVariableOptions(VariableType.DATE, VariableType.TIMESTAMP);
     }
 
-    /** 对象集合过滤器：FilterListWidget.filterOutputVar */
+    /**
+     * 对象集合过滤器：FilterListWidget.filterOutputVar
+     */
     public static List<IdentityName> getObjectSetFilterVariableOptions() {
         return getVariableOptions(VariableType.OBJECT_SET_FILTER);
     }
 
-    /** 时间序列集合：TimelineWidget.dataSourceVar */
+    /**
+     * 时间序列集合：TimelineWidget.dataSourceVar
+     */
     public static List<IdentityName> getTimeSeriesSetVariableOptions() {
         return getVariableOptions(VariableType.TIME_SERIES_SET);
     }
@@ -493,7 +520,7 @@ public class WidgetOptionHelper {
             throw new IllegalStateException("param domain or moduleName can not be null");
         }
 
-      return   WorkshopVariable.loadAll(domain,moduleName);
+        return WorkshopVariable.loadAll(domain, moduleName);
 
 //        WorkshopModule module = WorkshopModule.load(domain, moduleName);
 //        return module != null ? module.variables : null;

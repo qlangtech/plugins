@@ -84,13 +84,13 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     /**
      * 图标（Ant Design 图标名），文案左侧
      */
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, advance = true)
+    @FormField(ordinal = 4,type = FormFieldType.ENUM)
     public IEndTypeGetter.EndType leftIcon;
 
     /**
      * 图标（Ant Design 图标名），文案右侧
      */
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true)
+    @FormField(ordinal = 5,type = FormFieldType.ENUM)
     public IEndTypeGetter.EndType rightIcon;
 
     /**
@@ -102,10 +102,10 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     /**
      * 点击行为（四型多态，见 {@link WidgetClickAction}）
      */
-    @FormField(ordinal = 7, advance = false)
+    @FormField(ordinal = 7)
     public WidgetClickAction onClick;
 
-    @FormField(ordinal = 8, advance = false)
+    @FormField(ordinal = 8)
     public Integer order;
 
     @Override

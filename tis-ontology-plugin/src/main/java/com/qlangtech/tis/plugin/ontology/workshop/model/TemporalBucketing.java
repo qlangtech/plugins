@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.aggregation.TimeGranularity;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 /**
@@ -44,38 +45,11 @@ public class TemporalBucketing extends XAxisBucketing {
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer unitValue = 1;
 
-    /**
-     * 时间粒度。
-     *
-     * <p>取值集合对齐对象集聚合 API 的分桶方法：{@code byYear / byQuarter / byMonth / byWeek /
-     * byDays / byHours / byMinutes / bySeconds}。其中时 / 分 / 秒三级仅<b>时间戳</b>属性支持，
-     * 纯日期属性最多切到天——这是属性类型的约束，多态编码不了，由使用侧兜住。
-     *
-     * <p>{@link #shortComment()} 在此处只作为选项的<b>说明文案</b>下发；选项的显示 label
-     * 来自 {@code TemporalBucketing.json} 的 {@code enum} 数组，因为 TIS 的
-     * {@code resolveEnumLabel} 对枚举一律返回常量名。
-     */
-    public enum TimeGranularity implements DescriptorUseableShortComment {
-        YEAR("年"),
-        QUARTER("季度"),
-        MONTH("月"),
-        WEEK("周"),
-        DAY("天"),
-        HOUR("小时（仅时间戳属性）"),
-        MINUTE("分钟（仅时间戳属性）"),
-        SECOND("秒（仅时间戳属性）");
-
-        private final String comment;
-
-        TimeGranularity(String comment) {
-            this.comment = comment;
-        }
-
-        @Override
-        public String shortComment() {
-            return comment;
-        }
-    }
+    // TimeGranularity 已提升到
+    // com.qlangtech.tis.plugin.ontology.aggregation.TimeGranularity：
+    // 核心层的聚合 API（GroupKey）也要表达「按哪一级粒度切桶」，而核心层不该依赖本插件
+    // 工程的表单模型。常量名与 shortComment 原样保留，XStream / 表单选项按常量名持久化，
+    // 存量配置不受影响。时 / 分 / 秒仅时间戳属性的约束由使用侧（聚合下推 planner）校验。
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {

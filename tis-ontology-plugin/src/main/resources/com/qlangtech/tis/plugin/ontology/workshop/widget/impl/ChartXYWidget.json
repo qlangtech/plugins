@@ -4,23 +4,25 @@
     "help": "图表由一个或多个图层叠加而成。每个图层 = 一份数据输入 + 一种画法（柱状/折线/散点）。点击下方 [+添加] 新增图层；组合图（同一份数据的柱+线）就是两个图层分别设不同画法"
   },
   "xAxis": {
-    "label": "X 轴（水平轴）",
-    "help": "水平轴的外观配置。先选择轴性质：分类轴用于离散分组键（如告警类型），连续轴用于数值（如散点图的 X）"
+    "label": "X 轴（分桶轴）",
+    "help": "轴上的取值是各图层按「X 轴属性」分组得到的离散标签（分类键或时间桶），因此当前只能选分类轴。字段名指逻辑轴而非画面位置：图表方向选「横向」后本配置会被渲染到屏幕垂直的那条边上",
+    "dftVal": "Categorical Axis",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig.categoricalOnly(desc);"
   },
   "yAxis": {
-    "label": "Y 轴（垂直轴）",
-    "help": "垂直轴的外观配置。先选择轴性质：连续轴用于聚合数值，分类轴用于离散键"
+    "label": "Y 轴（值轴）",
+    "help": "轴上绘制各系列的聚合结果（count / sum / avg 等数值），因此当前只能选连续轴。散点图那种「X、Y 都是数值」的用法尚未支持",
+    "dftVal": "Continuous Axis",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig.continuousOnly(desc);"
   },
   "showLegend": {
-    "label": "显示图例",
-    "help": "是否显示图例。图例内容由各图层系列的配色与名称自动生成"
-  },
-  "legendPosition": {
-    "label": "图例位置",
-    "help": "图例在图表中的摆放位置；仅「显示图例」开启时生效"
+    "label": "图例",
+    "help": "选择 off 则不显示图例；开启后可配置图例位置。图例内容由各图层系列的配色与名称自动生成",
+    "dftVal": "Legend"
   },
   "orientation": {
     "label": "图表方向",
-    "help": "柱状图默认横向；折线图与散点图仅支持纵向"
+    "help": "横向仅当全部图层都是柱状图时可用；含折线或散点图层时只能纵向。点击问号查看规则与原因",
+    "dftVal": "VERTICAL"
   }
 }

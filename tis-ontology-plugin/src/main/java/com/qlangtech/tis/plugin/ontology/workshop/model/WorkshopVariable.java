@@ -511,6 +511,18 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         }
 
         /**
+         * 变量类型的图标直接取自 {@link VariableType#getEndType()}。
+         *
+         * <p>此前这里走的是 {@link IEndTypeGetter} 的默认实现（恒 {@code EndType.Blank}），
+         * 因此变量类型选择器上的 12 个子类全是同一个空白图标。类型本身已经有确定
+         * 的图标口径，Descriptor 只要转发即可，不必再维护一张映射表。
+         */
+        @Override
+        public EndType getEndType() {
+            return this.variableType.getEndType();
+        }
+
+        /**
          * 插件选择器上显示的名称，如「字符串变量」
          */
         @Override

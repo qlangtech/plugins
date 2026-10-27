@@ -33,7 +33,7 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 public class MarkdownWidget extends FullDisplayWidget {
 
     /** Markdown 文本内容（支持 {{varName}} 模板变量替换） */
-    @FormField(type = FormFieldType.TEXTAREA, ordinal = 13, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.TEXTAREA,ordinal = 13,validate = {Validator.require})
     public String content;
 
     public static final String KEY_CONTENT_VAR = "contentVar";
@@ -42,7 +42,7 @@ public class MarkdownWidget extends FullDisplayWidget {
      * 内容来源变量：可选。与 {@link #content} 是两种写法 —— 前者取当前模块中某个字符串变量的值
      * 作为渲染内容，后者是构建者手写的静态文本。两者互不排斥，由使用者择一。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 14, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 14)
     public String contentVar;
 
     @TISExtension

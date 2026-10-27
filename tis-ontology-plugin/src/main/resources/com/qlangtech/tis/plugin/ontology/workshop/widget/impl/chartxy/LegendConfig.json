@@ -1,0 +1,7 @@
+{
+  "legendPosition": {
+    "label": "图例位置",
+    "help": "图例在图表中的摆放位置。图例内容由各图层系列的配色与名称自动生成",
+    "dftVal": "BOTTOM"
+  }
+}

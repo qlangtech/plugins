@@ -1,7 +1,8 @@
 {
   "collapsedByDefault": {
     "label": "默认折叠",
-    "help": "打开模块时头部是否默认处于折叠状态"
+    "help": "打开模块时头部是否默认处于折叠状态",
+    "dftVal": false
   },
   "collapsedImage": {
     "label": "折叠图标",

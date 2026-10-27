@@ -2,8 +2,7 @@
   "id": {
     "label": "区块 ID",
     "help": "系统生成的唯一标识（UUID），创建区块时自动生成，不可修改",
-    "readonly": true,
-    "advance": false
+    "readonly": true
   },
   "name": {
     "label": "区块名称",
@@ -26,6 +25,7 @@
   },
   "sortOrder": {
     "label": "排序顺序",
-    "help": "区块在页面中的显示顺序"
+    "help": "区块在页面中的显示顺序",
+    "dftVal": 0
   }
 }

@@ -46,8 +46,7 @@ public class ConditionalFormatRule implements Describable<ConditionalFormatRule>
     private static final long serialVersionUID = 1L;
 
     /** 规则名，仅用于在列表中区分各条规则（同时是子表单行的 identity） */
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT,
-            validate = {Validator.require}, advance = true)
+    @FormField(identity = true,ordinal = 0,type = FormFieldType.INPUTTEXT,validate = {Validator.require})
     public String name;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM)
@@ -91,7 +90,7 @@ public class ConditionalFormatRule implements Describable<ConditionalFormatRule>
     /**
      * 趋势线（sparkline）颜色；{@code none} = 不改变。
      * <p>
-     * 仅当指标启用了 {@link MetricConfig#showVisualization} 时才有渲染对象。
+     * 仅当卡片布局启用了时间序列可视化（{@link CardLayout#visualization}）时才有渲染对象。
      */
     @FormField(ordinal = 8)
     public ButtonColor sparklineColor;
@@ -102,14 +101,14 @@ public class ConditionalFormatRule implements Describable<ConditionalFormatRule>
      * json 里用 {@code enumMode: model_assist}：该枚举常量近 800 条，走弹出式搜索面板，
      * 避免把全部图标塞进表单首屏 JSON。
      */
-    @FormField(ordinal = 9, type = FormFieldType.ENUM, advance = true)
+    @FormField(ordinal = 9,type = FormFieldType.ENUM)
     public IEndTypeGetter.EndType icon;
 
     /**
      * 规则优先级。子表单支持拖拽排序（见描述符的 {@code isEnableRowDragDrop}），
      * 前端读取时按本字段升序排序后求值。
      */
-    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, advance = true)
+    @FormField(ordinal = 10,type = FormFieldType.INT_NUMBER)
     public Integer order = 0;
 
     @Override

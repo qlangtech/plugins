@@ -1,7 +1,8 @@
 {
   "enabled": {
     "label": "启用路由",
-    "help": "是否启用自定义 URL 路由"
+    "help": "是否启用自定义 URL 路由",
+    "dftVal": false
   },
   "urlPattern": {
     "label": "URL 模式",

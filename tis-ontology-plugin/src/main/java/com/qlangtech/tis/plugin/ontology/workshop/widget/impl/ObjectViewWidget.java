@@ -25,11 +25,11 @@ public class ObjectViewWidget extends FullDisplayWidget implements IWidgetColumn
     public static final String KEY_PROPERTIES = "properties";
 
     /** 展示对象来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String objectVar;
 
     /** nz-descriptions 的列数 */
-    @FormField(type = FormFieldType.INT_NUMBER, ordinal = 11, advance = false, validate = {Validator.integer})
+    @FormField(type = FormFieldType.INT_NUMBER,ordinal = 11,validate = {Validator.integer})
     public Integer columnCount;
 
     /**
@@ -39,8 +39,7 @@ public class ObjectViewWidget extends FullDisplayWidget implements IWidgetColumn
      * {@link WidgetColumnConfig#prop} 来，ObjectView 组件此前读的是 {@code prop.key}，
      * 取不到值只能渲染空白行。
      */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class,
-            ordinal = 12, advance = false)
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetColumnConfig.class,ordinal = 12)
     public List<WidgetColumnConfig> properties;
 
     @Override

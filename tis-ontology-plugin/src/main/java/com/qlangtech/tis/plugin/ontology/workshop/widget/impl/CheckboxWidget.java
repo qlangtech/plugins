@@ -37,7 +37,7 @@ public class CheckboxWidget extends CompactDisplayWidget {
     /**
      * 复选框的标签文本
      */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 13, advance = false, validate = {Validator.none_blank})
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 13,validate = {Validator.none_blank})
     public String label;
 
     public static final String KEY_CHECKED_VAR = "checkedVar";
@@ -45,7 +45,7 @@ public class CheckboxWidget extends CompactDisplayWidget {
     /**
      * 勾选状态绑定：<b>双向</b> —— 组件既监听该变量取值作为初始勾选态，也在用户勾选后向其写回。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 14, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 14)
     public String checkedVar;
 
     @TISExtension

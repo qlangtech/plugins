@@ -13,14 +13,17 @@
   },
   "stateSavingEnabled": {
     "label": "启用状态保存",
-    "help": "是否启用用户状态保存功能（变量值、滚动位置等）"
+    "help": "是否启用用户状态保存功能（变量值、滚动位置等）",
+    "dftVal": false
   },
   "autoRefreshConfig": {
     "label": "自动刷新配置",
-    "help": "配置模块是否自动刷新及刷新间隔"
+    "help": "配置模块是否自动刷新及刷新间隔",
+    "dftVal": "Auto Refresh Config"
   },
   "routingConfig": {
     "label": "路由配置",
-    "help": "配置模块的 URL 路由规则"
+    "help": "配置模块的 URL 路由规则",
+    "dftVal": "Routing Config"
   }
 }

@@ -20,11 +20,11 @@ public class ObjectDropdownWidget extends CompactDisplayWidget {
     public static final String KEY_SELECTED_OBJECT_VAR = "selectedObjectVar";
 
     /** 候选对象来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String objectSetVar;
 
     /** 选中项写回：下拉选中一个对象后写入该变量，供下游组件消费 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 11)
     public String selectedObjectVar;
 
     @TISExtension

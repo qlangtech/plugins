@@ -18,8 +18,9 @@
         "key":"fsName",
         "options":[
           {
-            "impl":"com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory",
-            "name":"hdfs1"
+            "endType":"hdfs",
+            "label":"hdfs1",
+            "val":"hdfs1"
           }
         ],
         "ord":0,

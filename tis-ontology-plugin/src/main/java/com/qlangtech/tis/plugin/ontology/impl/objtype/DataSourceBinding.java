@@ -30,6 +30,12 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.ontology.AggregationFunc;
+import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
+import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
+import com.qlangtech.tis.plugin.ontology.aggregation.GroupKey;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilder;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilders;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
@@ -41,7 +47,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -84,7 +93,7 @@ public class DataSourceBinding extends ObjectTypeBinding {
         sql.append(" from ").append(escapedTableName(ds));
 
         // WHERE 必须在 ORDER BY / LIMIT 之前：过滤 → 排序 → 切页
-        final List<Object> filterParams = appendWhere(sql, criteria, ds);
+        final List<Object> filterParams = appendWhere(sql, criteria, ds, null);
 
         // 排序（列排序）必须加在分页**之前**：分页是对排好序的结果切页，顺序反了就成了
         // 「先随便切一页再排这一页」，页内看着有序、页与页之间是乱的。
@@ -126,24 +135,166 @@ public class DataSourceBinding extends ObjectTypeBinding {
     }
 
     /**
+     * 数据库端聚合：把分组键 + 聚合函数下推成一条 {@code SELECT ... GROUP BY ...}。
+     *
+     * <p>与 {@link #executeQuery} 的差异：
+     * <ul>
+     *   <li>不分页（聚合结果已是分组行），也不下推排序 —— {@code orderByCol} 非空直接拒绝，
+     *       静默忽略会让调用方误以为排序生效；</li>
+     *   <li>只给 X 分组键加 {@code IS NOT NULL}，与「X 为空则跳过」的旧语义对齐；
+     *       segment 为 NULL 仍作为一个分组；</li>
+     *   <li>分组数超过 {@link AggregationCriteria#getMaxGroups()} 时只返回前 N 组并置
+     *       {@link AggregationResult#truncated()}。</li>
+     * </ul>
+     *
+     * <p>标识符在这里做最后一道白名单校验（{@link #resolveTabCols()}）：即使调用方绕过
+     * 上层 planner，也不允许不存在的列进入 SQL。
+     */
+    @Override
+    public AggregationResult executeAggregation(AggregationCriteria criteria) {
+        Objects.requireNonNull(criteria, "aggregation criteria can not be null");
+        if (criteria.getGroupKeys().isEmpty()) {
+            throw new IllegalArgumentException("aggregation requires at least one group key");
+        }
+        if (criteria.getOrderByCol() != null) {
+            throw new IllegalArgumentException("aggregation does not support orderByCol:'"
+                    + criteria.getOrderByCol() + "', top-N must be resolved by caller after aggregation");
+        }
+        final DataSourceFactory ds = getDataSource();
+        final AggregationSqlBuilder builder = AggregationSqlBuilders.resolve(ds);
+        validateAggregationCols(criteria);
+
+        final List<GroupKey> groupKeys = criteria.getGroupKeys();
+        final List<AggregationCriteria.Metric> metrics = criteria.getMetrics();
+
+        StringBuilder sql = new StringBuilder("select ");
+        List<String> groupExprs = new ArrayList<>(groupKeys.size());
+        for (int i = 0; i < groupKeys.size(); i++) {
+            String groupExpr = builder.renderGroupKey(groupKeys.get(i), ds);
+            groupExprs.add(groupExpr);
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append(groupExpr).append(" AS ").append(AggregationCriteria.groupAlias(i));
+        }
+        for (int i = 0; i < metrics.size(); i++) {
+            AggregationCriteria.Metric metric = metrics.get(i);
+            sql.append(", ").append(builder.renderMetric(metric.func(), metric.property(), ds))
+                    .append(" AS ").append(AggregationCriteria.metricAlias(i));
+        }
+        sql.append(" from ").append(escapedTableName(ds));
+
+        final List<Object> filterParams = appendWhere(sql, criteria, ds,
+                "(" + groupExprs.get(0) + ") IS NOT NULL");
+
+        sql.append(" GROUP BY ");
+        for (int i = 0; i < groupExprs.size(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append(i + 1);
+        }
+        // 多取一行用于判断是否超出上限；不走 appendSqlLimit（它依赖 page/pageSize，且 StarRocks 未实现）
+        sql.append(" LIMIT ").append((long) criteria.getMaxGroups() + 1);
+
+        final int groupCount = groupKeys.size();
+        final int metricCount = metrics.size();
+        final int maxGroups = criteria.getMaxGroups();
+        final List<RowMap> rows = new ArrayList<>(Math.min(maxGroups, 1024));
+        final boolean[] truncated = {false};
+        ds.visitFirstConnection((conn) -> {
+            try (PreparedStatement statement = conn.preparedStatement(sql.toString())) {
+                for (int i = 0; i < filterParams.size(); i++) {
+                    statement.setObject(i + 1, filterParams.get(i));
+                }
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        if (rows.size() >= maxGroups) {
+                            truncated[0] = true;
+                            break;
+                        }
+                        rows.add(readAggregationRow(rs, groupCount, metricCount));
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return new AggregationResult(rows, truncated[0]);
+    }
+
+    /**
+     * 聚合结果按<b>列序号</b>读取。
+     *
+     * <p>不复用 {@link #readRow}（它按 targetCols 取物理列名），也不用
+     * {@code rs.getObject(alias)}：别名大小写规则在各方言 / 驱动上并不一致，取不到时
+     * 只会得到 null 而不是报错。列序号由 SELECT 的固定顺序（分组键在前、指标在后）保证。
+     *
+     * <p>包级可见<b>为了可测</b>：用 {@link java.lang.reflect.Proxy} 造一个只实现
+     * {@code getObject(int)} 的 {@link ResultSet} 即可覆盖，不必启动数据源。
+     */
+    static RowMap readAggregationRow(ResultSet rs, int groupCount, int metricCount) throws SQLException {
+        RowMap row = new RowMap();
+        for (int i = 0; i < groupCount; i++) {
+            row.put(AggregationCriteria.groupAlias(i), rs.getObject(i + 1));
+        }
+        for (int i = 0; i < metricCount; i++) {
+            row.put(AggregationCriteria.metricAlias(i), rs.getObject(groupCount + i + 1));
+        }
+        return row;
+    }
+
+    /**
+     * 最后一道标识符白名单：分组键、指标、过滤条件里的列都必须在物理表的真实列里。
+     */
+    private void validateAggregationCols(AggregationCriteria criteria) {
+        Set<String> tableCols = new HashSet<>();
+        for (ColumnMetaData col : resolveTabCols()) {
+            tableCols.add(col.getName());
+        }
+        if (tableCols.isEmpty()) {
+            throw new IllegalStateException("table:" + this.physicalTableName + " has no column metadata");
+        }
+        for (GroupKey key : criteria.getGroupKeys()) {
+            requireTableCol(tableCols, key.column(), "group key");
+        }
+        for (AggregationCriteria.Metric metric : criteria.getMetrics()) {
+            if (metric.property() != null) {
+                requireTableCol(tableCols, metric.property(), "metric");
+            }
+        }
+        for (ObjectTypeBinding.FilterCriterion filter : criteria.getFilters()) {
+            requireTableCol(tableCols, filter.property(), "filter");
+        }
+    }
+
+    private void requireTableCol(Set<String> tableCols, String col, String what) {
+        if (!tableCols.contains(col)) {
+            throw new IllegalArgumentException("aggregation " + what + " column:'" + col
+                    + "' does not exist in table:'" + this.physicalTableName + "', cols:" + tableCols);
+        }
+    }
+
+    /**
      * 按 {@link DataSourceQueryCriteria#getFilters()} 渲染 WHERE 子句，并返回按占位符顺序排列的绑定值。
      *
      * <p>操作符与属性名的白名单已在 {@code DataSourceQueryCriteria#addFilter} 里校验过，
      * 这里只负责映射成 SQL 片段；{@code default} 分支仍然显式抛错，避免将来新增操作符时
      * 静默生成一条语义错误的语句。
      */
-    private static List<Object> appendWhere(StringBuilder sql, DataSourceQueryCriteria criteria, DataSourceFactory ds) {
+    private static List<Object> appendWhere(StringBuilder sql, DataSourceQueryCriteria criteria, DataSourceFactory ds,
+                                            String trailingStaticPredicate) {
         List<ObjectTypeBinding.FilterCriterion> filters = criteria.getFilters();
         List<Object> params = new ArrayList<>();
-        if (filters.isEmpty()) {
+        if (filters.isEmpty() && trailingStaticPredicate == null) {
             return params;
         }
         sql.append(" WHERE ");
-        for (int i = 0; i < filters.size(); i++) {
-            if (i > 0) {
+        boolean appended = false;
+        for (ObjectTypeBinding.FilterCriterion filter : filters) {
+            if (appended) {
                 sql.append(" AND ");
             }
-            ObjectTypeBinding.FilterCriterion filter = filters.get(i);
             String escapedCol = ds.getEscapedEntity(filter.property());
             switch (filter.operator()) {
                 case DataSourceQueryCriteria.OP_EQUALS -> {
@@ -189,6 +340,14 @@ public class DataSourceBinding extends ObjectTypeBinding {
                 }
                 default -> throw new IllegalArgumentException("illegal filter operator:" + filter.operator());
             }
+            appended = true;
+        }
+        if (trailingStaticPredicate != null) {
+            // 无 filters 时 WHERE 已经由上面输出；有 filters 时补一个 AND，避免悬空
+            if (!filters.isEmpty()) {
+                sql.append(" AND ");
+            }
+            sql.append(trailingStaticPredicate);
         }
         return params;
     }

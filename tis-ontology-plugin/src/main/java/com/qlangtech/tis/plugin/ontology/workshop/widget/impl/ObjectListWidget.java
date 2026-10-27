@@ -51,7 +51,7 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
     public static final String KEY_EMPTY_STATE_MESSAGE = "emptyStateMessage";
 
     /** 列表数据来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10,validate = {Validator.require})
     public String objectSetVar;
 
     /**
@@ -60,13 +60,13 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
      * 选项由 {@code objectSetVar} 级联得出（见 Descriptor 中的 {@code valueChangePipe}），
      * 因此必须是<b>同层普通字段</b>，不能下沉进 {@code cardFields} 子表单。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 11,validate = {Validator.require})
     public String titleProperty;
 
     /**
      * 卡片正文展示的字段列表（由子表单结构化管理，非手写 JSON）
      */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class, ordinal = 12, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetColumnConfig.class,ordinal = 12,validate = {Validator.require})
     public List<WidgetColumnConfig> cardFields;
 
     /**
@@ -79,47 +79,47 @@ public class ObjectListWidget extends FullDisplayWidget implements IWidgetColumn
      * 默认项由同名 {@code .json} 里的 {@code "dftVal": "Grid"} 逐字匹配子类
      * {@code getDisplayName()} 决定（见 {@link ObjectListDisplay} 类注释）。
      */
-    @FormField(ordinal = 13, advance = false)
+    @FormField(ordinal = 13)
     public ObjectListDisplay display;
 
     /** 当前选中项写回：点击卡片后写入该变量，供下游组件消费 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 14, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 14)
     public String activeObjectVar;
 
     /** 卡片行内动作按钮（点击后触发本体 Action），默认收起在「高级」分组 */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetActionConfig.class, ordinal = 15, advance = true)
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetActionConfig.class,ordinal = 15)
     public List<WidgetActionConfig> cardActions;
 
     /** 默认排序属性，选项由 objectSetVar 级联供给 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 16, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 16)
     public String defaultSortField;
 
     /** 默认排序方向 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 17, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 17)
     public SortOrder defaultSortOrder = SortOrder.asc;
 
     /** 是否在列表上方展示排序选择器（字段 + 方向） */
-    @FormField(type = FormFieldType.ENUM, ordinal = 18, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 18)
     public Boolean enableUserSorting = Boolean.FALSE;
 
     /** 属性值为空（null / 空串）的字段是否按对象隐藏 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 19, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 19)
     public Boolean hideNullProperties = Boolean.FALSE;
 
     /** 是否允许多选：勾选集合写回 {@link #selectedObjectsVar} */
-    @FormField(type = FormFieldType.ENUM, ordinal = 20, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 20)
     public Boolean enableMultiSelect = Boolean.FALSE;
 
     /** 多选结果写回的对象集合变量 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 21, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 21)
     public String selectedObjectsVar;
 
     /** 是否在标题下方显示对象总数 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 22, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 22)
     public Boolean showObjectCount = Boolean.FALSE;
 
     /** 无对象时的自定义空态文案；空则前端回落「暂无数据」 */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 23, advance = false)
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 23)
     public String emptyStateMessage;
 
     @Override

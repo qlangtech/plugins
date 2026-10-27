@@ -26,26 +26,20 @@ public class CategoricalAxisConfig extends AxisConfig {
     @FormField(ordinal = 10, type = FormFieldType.ENUM)
     public CategoricalSortBy sortBy = CategoricalSortBy.KEY_ASCENDING;
 
-    /**
-     * 自定义排序所用的度量属性名；仅 {@link #sortBy} 为
-     * {@link CategoricalSortBy#CUSTOM} 时生效。
-     *
-     * <p>官方语义：给属性赋予数值排序值，再选择该属性作为排序度量。
-     */
-    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, advance = true)
-    public String customSortMetric;
+    // ordinal 11 留空：原 customSortMetric 随 CUSTOM 枚举值一并删除 ——
+    // 「给属性赋予数值排序值」这条能力在对象集聚合链路里没有对应实现，
+    // 留着它只会让用户配一个永远不生效的字段。
 
     /**
      * 分类键排序方式。
      *
-     * <p>四个取值对齐官方文档与 {@code arch/05-workshop-architecture.md} 中的
-     * {@code 'alphabetical' | 'value-asc' | 'value-desc' | 'custom'}。
+     * <p>三个取值对齐官方文档与 {@code arch/05-workshop-architecture.md} 中的
+     * {@code 'alphabetical' | 'value-asc' | 'value-desc'}。
      */
     public enum CategoricalSortBy implements DescriptorUseableShortComment {
         KEY_ASCENDING("按键升序（A→Z，默认）"),
         VALUE_ASCENDING("按值升序"),
-        VALUE_DESCENDING("按值降序"),
-        CUSTOM("自定义排序");
+        VALUE_DESCENDING("按值降序");
 
         private final String comment;
 

@@ -77,19 +77,19 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
     /**
      * 格式化方式
      */
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 3,type = FormFieldType.ENUM)
     public ColumnFormat format;
 
     /**
      * 文本对齐方式
      */
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 4,type = FormFieldType.ENUM)
     public ColumnAlign align;
 
     /**
      * 是否可排序
      */
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 5,type = FormFieldType.ENUM)
     public Boolean sortable;
 
     @Override

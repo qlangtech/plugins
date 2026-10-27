@@ -43,8 +43,10 @@ public class CategoricalBucketing extends XAxisBucketing {
 
     public CategoricalBucketing() {
         // 默认值随取值方式走：基类默认的 10000 是 hard cap，但对 topValues 这条路是够不着的
-        // 天花板。用构造函数而非 json 的 dftVal 覆盖 —— 后者只影响表单回显，落盘的实例
-        // 仍会保留基类字段初始化器的值，两条路会分叉。
+        // 天花板。
+        // 两处都要覆盖，缺一不可：本构造函数管「代码 new 出来的实例」与「保存时表单未提交该字段
+        // 的兜底」（parseDescribable 走 clazz.newInstance()），CategoricalBucketing.json 的
+        // limit.dftVal = 1000 管「新建表单的初值」。只写一边，两条路会分叉。
         this.limit = TOP_VALUES_LIMIT;
     }
 

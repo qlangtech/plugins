@@ -58,11 +58,11 @@ public class WidgetTabConfig implements Describable<WidgetTabConfig>, Serializab
     public String title;
 
     /** header 模式下切换到的页面，存页面 id（选项为当前域下的全部页面） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 1, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 1)
     public String targetPage;
 
     /** section 模式下选中该标签时触发的事件 */
-    @FormField(ordinal = 2, advance = false)
+    @FormField(ordinal = 2)
     public EventConfig onSelect;
 
     @Override

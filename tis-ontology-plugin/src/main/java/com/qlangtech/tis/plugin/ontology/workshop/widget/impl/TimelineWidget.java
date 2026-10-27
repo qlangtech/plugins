@@ -21,11 +21,11 @@ public class TimelineWidget extends FullDisplayWidget {
     public static final String KEY_DATA_SOURCE_VAR = "dataSourceVar";
 
     /** 事件来源：当前模块中的对象集合或时间序列集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String dataSourceVar;
 
     /** 时间线节点相对轴线的位置 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 11)
     public TimelineMode mode = TimelineMode.left;
 
     /**

@@ -31,11 +31,10 @@ public class ButtonGroupWidget extends CompactDisplayWidget {
     /** 按钮组的呈现形态：内联平铺 / 折叠为下拉菜单 / 主按钮 + 菜单两段式（Palantir 的「Button type」）。
      *  改为 {@link ButtonGroupType} 多态承载 —— 仅内联平铺子类带 {@code layout} 载荷，另两个子类零字段。
      *  {@link Validator#require} 与 {@code dftVal=inline} 同 {@code ObjectTableWidget.pagenator} 口径：始终有值，防旧数据缺字段落 null。 */
-    @FormField(ordinal = 9, advance = false, validate = {Validator.require})
+    @FormField(ordinal = 9,validate = {Validator.require})
     public ButtonGroupType buttonType;
 
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetButtonConfig.class,
-            ordinal = 10, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetButtonConfig.class,ordinal = 10,validate = {Validator.require})
     public List<WidgetButtonConfig> buttons;
 
     @TISExtension

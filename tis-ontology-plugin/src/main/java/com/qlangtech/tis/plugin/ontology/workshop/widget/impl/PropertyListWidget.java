@@ -44,10 +44,10 @@ public class PropertyListWidget extends FullDisplayWidget implements IWidgetColu
     public static final String KEY_PROPERTIES = "properties";
 
     /** 展示对象来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String objectVar;
 
-    @FormField(type = FormFieldType.INT_NUMBER, ordinal = 12, advance = false, validate = {Validator.require, Validator.integer})
+    @FormField(type = FormFieldType.INT_NUMBER,ordinal = 12,validate = {Validator.require,Validator.integer})
     public Integer columnsCount;
 
     /**
@@ -57,8 +57,7 @@ public class PropertyListWidget extends FullDisplayWidget implements IWidgetColu
      * 多选下拉；改为 {@code MULTI_DESCRIBLE_PLUGIN} 后由 {@link WidgetColumnConfig} 承担行结构，
      * 前端读的是同一批 {@code prop}/{@code label}/{@code format} 字段。
      */
-    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = WidgetColumnConfig.class,
-            ordinal = 11, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetColumnConfig.class,ordinal = 11,validate = {Validator.require})
     public List<WidgetColumnConfig> properties;
 
     @Override

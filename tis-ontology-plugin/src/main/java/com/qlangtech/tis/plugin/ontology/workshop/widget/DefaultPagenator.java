@@ -53,7 +53,7 @@ public class DefaultPagenator extends Pagenator {
      * <p>本字段无需显式 {@code type} —— {@code boolean} 会被自动挂上
      * {@code OverwriteProps.ENUM_BOOLEAN}（是 / 否）下拉，故 {@code .json} 里也不必手写 enum。
      */
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = false)
+    @FormField(ordinal = 1,type = FormFieldType.ENUM)
     public boolean showPageNumber = true;
 
     @Override

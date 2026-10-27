@@ -1,0 +1,7 @@
+{
+  "showLabels": {
+    "label": "显示数值标签",
+    "help": "是否在柱子上直接标注数值",
+    "dftVal": false
+  }
+}

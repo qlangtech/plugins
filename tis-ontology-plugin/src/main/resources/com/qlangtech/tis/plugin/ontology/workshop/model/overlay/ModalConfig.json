@@ -2,7 +2,8 @@
   "width": {
     "label": "Modal 宽度",
     "placeholder": "输入宽度（像素）",
-    "help": "模态框的宽度，默认 520px"
+    "help": "模态框的宽度，默认 520px",
+    "dftVal": 520
   },
   "closable": {
     "label": "显示关闭按钮",

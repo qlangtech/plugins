@@ -18,8 +18,9 @@
         "key":"flinkCluster",
         "options":[
           {
-            "impl":"com.qlangtech.plugins.incr.flink.common.FlinkCluster",
-            "name":"my-first-flink-cluster"
+            "endType":"flink",
+            "label":"my-first-flink-cluster",
+            "val":"my-first-flink-cluster"
           }
         ],
         "ord":1,

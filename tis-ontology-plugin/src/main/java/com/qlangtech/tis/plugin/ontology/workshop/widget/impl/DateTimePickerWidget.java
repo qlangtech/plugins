@@ -46,19 +46,19 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 public class DateTimePickerWidget extends CompactDisplayWidget {
 
     /** 是否显示时分秒 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 13, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 13)
     public Boolean showTime;
 
     /** 选择器粒度：日 / 周 / 月 / 年 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 15, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 15)
     public PickerMode pickerMode;
 
     /** 变量输出格式：ISO 日期串 / 时间戳(毫秒) */
-    @FormField(type = FormFieldType.ENUM, ordinal = 16, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 16)
     public VariableKind variableKind;
 
     /** 占位提示文本 */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 17, advance = false)
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 17)
     public String placeholder;
 
     public static final String KEY_DATE_VALUE_VAR = "dateValueVar";
@@ -68,7 +68,7 @@ public class DateTimePickerWidget extends CompactDisplayWidget {
      * options 同时接受 DATE 与 TIMESTAMP：{@link #variableKind} 只决定<b>写出的值</b>的格式，
      * 不决定目标变量应有的类型。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 18, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 18)
     public String dateValueVar;
 
     /**

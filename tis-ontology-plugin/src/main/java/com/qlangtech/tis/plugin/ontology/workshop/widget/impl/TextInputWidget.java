@@ -20,11 +20,11 @@ public class TextInputWidget extends CompactDisplayWidget {
     public static final String KEY_VALUE_VAR = "valueVar";
 
     /** 初始值来源：当前模块中的字符串变量，可选（不设则输入框起始为空） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 10, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
     public String initialValueVar;
 
     /** 输入值写回：用户输入内容写入该变量，供下游组件消费 */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 11)
     public String valueVar;
 
     @TISExtension

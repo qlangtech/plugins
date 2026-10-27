@@ -28,8 +28,9 @@
         "key": "k8sCfg",
         "options": [
           {
-            "impl": "com.qlangtech.tis.config.k8s.impl.DefaultK8sContext",
-            "name": "minikube"
+            "endType": "k8s",
+            "label": "minikube",
+            "val": "minikube"
           }
         ],
         "ord": 1,

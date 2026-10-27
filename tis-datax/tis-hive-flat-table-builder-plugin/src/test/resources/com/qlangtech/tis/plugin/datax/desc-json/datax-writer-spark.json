@@ -12,8 +12,9 @@
         "key":"hiveConn",
         "options":[
           {
-            "impl":"com.qlangtech.tis.hive.DefaultHiveConnGetter",
-            "name":"hive200"
+            "endType":"hms",
+            "label":"hive200",
+            "val":"hive200"
           }
         ],
         "ord":1,
@@ -67,8 +68,9 @@
         "key":"fsName",
         "options":[
           {
-            "impl":"com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory",
-            "name":"hdfs1"
+            "endType":"hdfs",
+            "label":"hdfs1",
+            "val":"hdfs1"
           }
         ],
         "ord":5,

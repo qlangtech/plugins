@@ -5,6 +5,8 @@ import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
+import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
+import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
@@ -84,6 +86,16 @@ public class ObjectSetVariable extends WorkshopVariable {
             throw new IllegalStateException("illegal type:" + this.definitionConfig.getClass().getName()
                     + " support:" + VariableDefinitionConfig.definitionsOf(this.getVariableType()).stream().map(Class::getName).collect(Collectors.joining(",")));
         }
+    }
+
+    /**
+     * 数据库端聚合：委托给已绑定的数据源。
+     *
+     * <p>与 {@link #getColsMeta()} 共用 {@link #resolveDataSourceBinding()}，
+     * 因此 FunctionConfig 定义同样在这里给出可执行的报错，而不是静默返回空结果。
+     */
+    public AggregationResult executeAggregation(AggregationCriteria criteria) {
+        return resolveDataSourceBinding().executeAggregation(criteria);
     }
 
     public List<OntologyProperty> getColsMeta() {

@@ -1,7 +1,8 @@
 {
   "position": {
     "label": "显示位置",
-    "help": "可视化图表与主指标的位置关系（并排或堆叠）"
+    "help": "可视化图表与主指标的位置关系（并排或堆叠）",
+    "dftVal": "SIDE_BY_SIDE"
   },
   "timeSeriesSet": {
     "label": "时间序列集",
@@ -10,10 +11,12 @@
   },
   "timeRange": {
     "label": "时间范围",
-    "help": "图表显示的时间范围配置"
+    "help": "图表显示的时间范围配置",
+    "dftVal": "Time Range Config"
   },
   "showBaseline": {
     "label": "显示基线",
-    "help": "是否显示基线值"
+    "help": "是否显示基线值",
+    "dftVal": false
   }
 }

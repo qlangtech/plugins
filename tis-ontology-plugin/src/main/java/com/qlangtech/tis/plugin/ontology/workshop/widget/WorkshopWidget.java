@@ -128,14 +128,13 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, I
      * 不影响表单 / 接口口径）。存量值可能是人读名称（如 {@code Widget 1}），
      * 按「不迁移」策略原样保留。
      */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 0, identity = true, advance = false,
-            validate = {Validator.require})
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 0,identity = true,validate = {Validator.require})
     public String id;
 
     /**
      * Widget 标题（画布与配置面板通用，面向用户展示）
      */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 1, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 1,validate = {Validator.require})
     public String title;
 
     /**

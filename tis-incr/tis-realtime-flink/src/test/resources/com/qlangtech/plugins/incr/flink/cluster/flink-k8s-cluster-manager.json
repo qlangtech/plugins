@@ -31,8 +31,9 @@
         "key":"k8sImage",
         "options":[
           {
-            "impl":"com.qlangtech.plugins.incr.flink.common.FlinkK8SImage",
-            "name":"local-tis"
+            "endType":"docker",
+            "label":"local-tis",
+            "val":"local-tis"
           }
         ],
         "ord":1,

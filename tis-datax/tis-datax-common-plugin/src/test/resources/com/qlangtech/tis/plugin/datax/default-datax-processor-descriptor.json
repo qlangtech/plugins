@@ -32,8 +32,8 @@
         "key":"globalCfg",
         "options":[
           {
-            "impl":"com.qlangtech.tis.plugin.datax.DataXGlobalConfig",
-            "name":"datax-global-config"
+            "label":"datax-global-config",
+            "val":"datax-global-config"
           }
         ],
         "ord":1,

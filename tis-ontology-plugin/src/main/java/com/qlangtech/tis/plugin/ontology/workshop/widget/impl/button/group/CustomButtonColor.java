@@ -43,7 +43,7 @@ public class CustomButtonColor extends ButtonColor {
     /**
      * 自定义色值（十六进制，如 #f5222d）
      */
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require}, advance = false)
+    @FormField(ordinal = 0,type = FormFieldType.INPUTTEXT,validate = {Validator.require})
     public String customColor;
 
     @TISExtension

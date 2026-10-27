@@ -38,27 +38,27 @@ public class HeaderTextWidget extends CompactDisplayWidget {
     public static final String KEY_TEXT_VARIABLE = "textVariable";
 
     /** 标题文本内容 */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 10, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 10,validate = {Validator.require})
     public String text;
 
     /** 文本变量绑定（字符串变量，可选） */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 11,validate = {Validator.require})
     public String textVariable;
 
     /** 图标（ng-zorro 图标名，如 font-size） */
-    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 12, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 12,validate = {Validator.require})
     public String icon;
 
     /** 标题级别 1-4 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 13, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 13)
     public HeaderLevel level;
 
     /** 文本对齐方式 */
-    @FormField(type = FormFieldType.ENUM, ordinal = 14, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 14)
     public TextAlignment alignment;
 
     /** 文本颜色（20 种预设色，hex 色值在 .json resource 中定义） */
-    @FormField(type = FormFieldType.ENUM, ordinal = 15, advance = false)
+    @FormField(type = FormFieldType.ENUM,ordinal = 15)
     public WidgetColor color;
 
     /** 标题级别枚举 */

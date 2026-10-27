@@ -62,7 +62,7 @@ public class ObjectSetDefinitionConfig extends VariableDefinitionConfig {
      * <h3>可选性</h3>
      * 不配置时行为与加此字段之前完全一致（只用 {@link #filters}），存量配置不受影响。
      */
-    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, advance = true)
+    @FormField(ordinal = 2,type = FormFieldType.SELECTABLE)
     public String filterVar;
 
     /**

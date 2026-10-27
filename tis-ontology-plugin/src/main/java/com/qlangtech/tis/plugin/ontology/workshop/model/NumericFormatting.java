@@ -1,19 +1,22 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractNumericFormatting;
 
 import java.io.Serializable;
 
 /**
- * 数值格式化配置
+ * 数值格式化配置 —— {@link AbstractNumericFormatting} 的「启用」实现（默认）。
  *
  * <p>被 {@link AxisConfig#numericFormatting}（轴的数值格式化）与 {@code MetricConfig}
- * （指标卡的数值格式化）共用。
+ * （指标卡的数值格式化）共用。「不启用」由零字段的
+ * {@code chartxy.NumericFormattingOff} 表达，宿主字段一律声明为抽象基类。
+ *
+ * <p>保留在本包并沿用原类名：它本来就是一个跨多处复用的具体类型，改名只会让同一个
+ * 概念出现两个名字。
  *
  * <h3>本轮修正</h3>
  * <ul>
@@ -27,7 +30,7 @@ import java.io.Serializable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/15
  */
-public class NumericFormatting implements Describable<NumericFormatting>, Serializable {
+public class NumericFormatting extends AbstractNumericFormatting {
 
   private static final long serialVersionUID = 1L;
 
@@ -48,14 +51,19 @@ public class NumericFormatting implements Describable<NumericFormatting>, Serial
   public Notation notation = Notation.STANDARD;
 
   /** 单位后缀（如 %、ms、元），可为空 */
-  @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, advance = true)
+  @FormField(ordinal = 4,type = FormFieldType.INPUTTEXT)
   public String unit;
 
   @TISExtension
-  public static class DefaultDescriptor extends Descriptor<NumericFormatting> {
+  public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
     @Override
     public String getDisplayName() {
       return "Numeric Formatting";
+    }
+
+    @Override
+    public String shortComment() {
+      return "数值格式化";
     }
   }
 

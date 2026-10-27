@@ -1,0 +1,112 @@
+SET NAMES utf8mb4;
+DROP TABLE IF EXISTS chartxy_order_fact;
+DROP TABLE IF EXISTS chartxy_server_metric;
+DROP TABLE IF EXISTS chartxy_daily_report;
+
+CREATE TABLE chartxy_order_fact (
+  order_id     BIGINT      NOT NULL AUTO_INCREMENT COMMENT '订单行主键',
+  order_time   DATETIME    NOT NULL COMMENT '下单时间（含时分秒，可做小时粒度分桶）',
+  order_date   DATE        NOT NULL COMMENT '下单日期（无时分秒，只能做到天粒度）',
+  region       VARCHAR(32) NOT NULL COMMENT '大区（低基数分类维度）',
+  channel      VARCHAR(32) NOT NULL COMMENT '销售渠道（低基数分类维度，用作 segmentBy）',
+  product_line VARCHAR(32) NOT NULL COMMENT '产品线（中等基数分类维度）',
+  quantity     INT         NOT NULL COMMENT '购买件数（整数度量）',
+  unit_price   DECIMAL(10,2) NOT NULL COMMENT '单价（定点小数度量）',
+  amount       DOUBLE      NOT NULL COMMENT '订单金额（浮点度量）',
+  cost         DOUBLE      DEFAULT NULL COMMENT '成本（含 NULL：验证缺口/空值显示）',
+  customer_id  BIGINT      NOT NULL COMMENT '客户 ID（用于 COUNT DISTINCT）',
+  is_paid      INT         NOT NULL DEFAULT 1 COMMENT '是否已支付（1=已付，0=未付）',
+  PRIMARY KEY (order_id),
+  KEY idx_order_time (order_time),
+  KEY idx_order_date (order_date),
+  KEY idx_region (region)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ChartXY 测试：订单事实表（bar / scatter）';
+
+INSERT INTO chartxy_order_fact
+  (order_id, order_time, order_date, region, channel, product_line,
+   quantity, unit_price, amount, cost, customer_id, is_paid)
+SELECT
+  oid,
+  STR_TO_DATE(CONCAT('2026-', m, '-', ELT(k+1,5,15,25), ' ',
+      LPAD(8 + MOD(m*3 + ri*5 + ci*7 + k*11, 12),2,'0'), ':',
+      LPAD(MOD(m*7 + ri*13 + ci*17 + k*23, 60),2,'0'), ':',
+      LPAD(MOD(m*11 + k*29, 60),2,'0')), '%Y-%c-%e %H:%i:%s'),
+  DATE(CONCAT('2026-', m, '-', ELT(k+1,5,15,25))),
+  ELT(ri+1,'华东','华北','华南','西南'),
+  ELT(ci+1,'线上','门店','分销'),
+  ELT(MOD(ri+ci+k,3)+1,'标准版','专业版','旗舰版'),
+  qty,
+  price,
+  ROUND(price * qty, 2),
+  CASE WHEN MOD(oid,4) = 0 THEN NULL
+       ELSE ROUND(ROUND(price * qty, 2) * (0.55 + 0.05 * MOD(oid,5)), 2) END,
+  5000 + MOD(oid*17, 97) + ELT(MOD(ri+ci+k,3)+1, 0, 500, 1000),
+  CASE WHEN MOD(oid,5) = 0 THEN 0 ELSE 1 END
+FROM (
+  SELECT
+    ((m-1)*36 + ri*9 + ci*3 + k + 1) AS oid,
+    m, ri, ci, k,
+    MOD(m*7 + ri*5 + ci*3 + k*2, 20) + 1 AS qty,
+    ROUND((99 + ri*40 + ci*25) * ELT(ri+1,1.0,0.9,1.15,0.8), 2) AS price
+  FROM (SELECT 1 AS m UNION ALL SELECT 2 AS m UNION ALL SELECT 3 AS m UNION ALL SELECT 4 AS m UNION ALL SELECT 5 AS m UNION ALL SELECT 6 AS m UNION ALL SELECT 7 AS m UNION ALL SELECT 8 AS m UNION ALL SELECT 9 AS m UNION ALL SELECT 10 AS m UNION ALL SELECT 11 AS m UNION ALL SELECT 12 AS m) m CROSS JOIN (SELECT 0 AS ri UNION ALL SELECT 1 AS ri UNION ALL SELECT 2 AS ri UNION ALL SELECT 3 AS ri) ri CROSS JOIN (SELECT 0 AS ci UNION ALL SELECT 1 AS ci UNION ALL SELECT 2 AS ci) ci CROSS JOIN (SELECT 0 AS k UNION ALL SELECT 1 AS k UNION ALL SELECT 2 AS k) k
+) t ORDER BY oid;
+
+
+CREATE TABLE chartxy_server_metric (
+  metric_id   BIGINT      NOT NULL AUTO_INCREMENT COMMENT '监控点主键',
+  event_time  DATETIME    NOT NULL COMMENT '采集时间（整点对齐，可做小时粒度分桶）',
+  host        VARCHAR(32) NOT NULL COMMENT '主机名（低基数分类维度）',
+  region      VARCHAR(32) NOT NULL COMMENT '机房（低基数分类维度，用作 segmentBy）',
+  cpu_usage   DECIMAL(6,2) NOT NULL COMMENT 'CPU 使用率（%）',
+  mem_usage   DECIMAL(6,2) NOT NULL COMMENT '内存使用率（%）',
+  qps         BIGINT      NOT NULL COMMENT '每秒查询数',
+  err_count   INT         NOT NULL COMMENT '错误数',
+  PRIMARY KEY (metric_id),
+  KEY idx_event_time (event_time),
+  KEY idx_host (host)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ChartXY 测试：主机监控时序表（line / scatter）';
+
+INSERT INTO chartxy_server_metric (metric_id, event_time, host, region, cpu_usage, mem_usage, qps, err_count)
+SELECT
+  mid,
+  TIMESTAMPADD(HOUR, h, TIMESTAMPADD(DAY, d, '2026-09-01 00:00:00')),
+  ELT(hi+1,'host-a','host-b','host-c'),
+  ELT(hi+1,'北京机房','北京机房','上海机房'),
+  LEAST(99, ROUND(30 + 25*ABS(12-h)/12.0 + hi*7 + MOD(d,3)*2 + MOD(mid,5), 2)),
+  LEAST(99, ROUND(45 + hi*9 + h*0.7 + MOD(mid,4), 2)),
+  FLOOR(800 + (24-h)*35 + hi*120 + MOD(mid,17)*6),
+  MOD(mid*13, 9)
+FROM (
+  SELECT d, h, hi, d*72 + h*3 + hi + 1 AS mid
+  FROM (SELECT 0 AS d UNION ALL SELECT 1 AS d UNION ALL SELECT 2 AS d UNION ALL SELECT 3 AS d UNION ALL SELECT 4 AS d UNION ALL SELECT 5 AS d UNION ALL SELECT 6 AS d) d CROSS JOIN (SELECT 0 AS h UNION ALL SELECT 1 AS h UNION ALL SELECT 2 AS h UNION ALL SELECT 3 AS h UNION ALL SELECT 4 AS h UNION ALL SELECT 5 AS h UNION ALL SELECT 6 AS h UNION ALL SELECT 7 AS h UNION ALL SELECT 8 AS h UNION ALL SELECT 9 AS h UNION ALL SELECT 10 AS h UNION ALL SELECT 11 AS h UNION ALL SELECT 12 AS h UNION ALL SELECT 13 AS h UNION ALL SELECT 14 AS h UNION ALL SELECT 15 AS h UNION ALL SELECT 16 AS h UNION ALL SELECT 17 AS h UNION ALL SELECT 18 AS h UNION ALL SELECT 19 AS h UNION ALL SELECT 20 AS h UNION ALL SELECT 21 AS h UNION ALL SELECT 22 AS h UNION ALL SELECT 23 AS h) h CROSS JOIN (SELECT 0 AS hi UNION ALL SELECT 1 AS hi UNION ALL SELECT 2 AS hi) hi
+) t ORDER BY mid;
+
+
+CREATE TABLE chartxy_daily_report (
+  report_id    BIGINT      NOT NULL AUTO_INCREMENT COMMENT '日报主键',
+  report_date  DATE        NOT NULL COMMENT '报表日期（仅日期，无时间部分）',
+  department   VARCHAR(32) NOT NULL COMMENT '部门（低基数分类维度）',
+  task_total   INT         NOT NULL COMMENT '任务总数',
+  task_success INT         NOT NULL COMMENT '成功数',
+  task_failed  INT         NOT NULL COMMENT '失败数',
+  duration_sec DOUBLE      DEFAULT NULL COMMENT '平均耗时（秒），可为空',
+  PRIMARY KEY (report_id),
+  KEY idx_report_date (report_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ChartXY 测试：部门日报表（DATE 分桶边界）';
+
+INSERT INTO chartxy_daily_report (report_id, report_date, department, task_total, task_success, task_failed, duration_sec)
+SELECT
+  rid,
+  DATE_ADD('2026-07-01', INTERVAL d DAY),
+  ELT(di+1,'数据平台','风控','结算'),
+  total,
+  total - failed,
+  failed,
+  CASE WHEN MOD(rid,11) = 0 THEN NULL ELSE ROUND(12.5 + MOD(rid,23)*0.9, 2) END
+FROM (
+  SELECT d, di, d*3 + di + 1 AS rid,
+         120 + MOD(d*3 + di*17, 180) AS total,
+         MOD(d*7 + di*5, 12) AS failed
+  FROM (SELECT 0 AS d UNION ALL SELECT 1 AS d UNION ALL SELECT 2 AS d UNION ALL SELECT 3 AS d UNION ALL SELECT 4 AS d UNION ALL SELECT 5 AS d UNION ALL SELECT 6 AS d UNION ALL SELECT 7 AS d UNION ALL SELECT 8 AS d UNION ALL SELECT 9 AS d UNION ALL SELECT 10 AS d UNION ALL SELECT 11 AS d UNION ALL SELECT 12 AS d UNION ALL SELECT 13 AS d UNION ALL SELECT 14 AS d UNION ALL SELECT 15 AS d UNION ALL SELECT 16 AS d UNION ALL SELECT 17 AS d UNION ALL SELECT 18 AS d UNION ALL SELECT 19 AS d UNION ALL SELECT 20 AS d UNION ALL SELECT 21 AS d UNION ALL SELECT 22 AS d UNION ALL SELECT 23 AS d UNION ALL SELECT 24 AS d UNION ALL SELECT 25 AS d UNION ALL SELECT 26 AS d UNION ALL SELECT 27 AS d UNION ALL SELECT 28 AS d UNION ALL SELECT 29 AS d UNION ALL SELECT 30 AS d UNION ALL SELECT 31 AS d UNION ALL SELECT 32 AS d UNION ALL SELECT 33 AS d UNION ALL SELECT 34 AS d UNION ALL SELECT 35 AS d UNION ALL SELECT 36 AS d UNION ALL SELECT 37 AS d UNION ALL SELECT 38 AS d UNION ALL SELECT 39 AS d UNION ALL SELECT 40 AS d UNION ALL SELECT 41 AS d UNION ALL SELECT 42 AS d UNION ALL SELECT 43 AS d UNION ALL SELECT 44 AS d UNION ALL SELECT 45 AS d UNION ALL SELECT 46 AS d UNION ALL SELECT 47 AS d UNION ALL SELECT 48 AS d UNION ALL SELECT 49 AS d UNION ALL SELECT 50 AS d UNION ALL SELECT 51 AS d UNION ALL SELECT 52 AS d UNION ALL SELECT 53 AS d UNION ALL SELECT 54 AS d UNION ALL SELECT 55 AS d UNION ALL SELECT 56 AS d UNION ALL SELECT 57 AS d UNION ALL SELECT 58 AS d UNION ALL SELECT 59 AS d UNION ALL SELECT 60 AS d UNION ALL SELECT 61 AS d UNION ALL SELECT 62 AS d UNION ALL SELECT 63 AS d UNION ALL SELECT 64 AS d UNION ALL SELECT 65 AS d UNION ALL SELECT 66 AS d UNION ALL SELECT 67 AS d UNION ALL SELECT 68 AS d UNION ALL SELECT 69 AS d UNION ALL SELECT 70 AS d UNION ALL SELECT 71 AS d UNION ALL SELECT 72 AS d UNION ALL SELECT 73 AS d UNION ALL SELECT 74 AS d UNION ALL SELECT 75 AS d UNION ALL SELECT 76 AS d UNION ALL SELECT 77 AS d UNION ALL SELECT 78 AS d UNION ALL SELECT 79 AS d UNION ALL SELECT 80 AS d UNION ALL SELECT 81 AS d UNION ALL SELECT 82 AS d UNION ALL SELECT 83 AS d UNION ALL SELECT 84 AS d UNION ALL SELECT 85 AS d UNION ALL SELECT 86 AS d UNION ALL SELECT 87 AS d UNION ALL SELECT 88 AS d UNION ALL SELECT 89 AS d UNION ALL SELECT 90 AS d) d CROSS JOIN (SELECT 0 AS di UNION ALL SELECT 1 AS di UNION ALL SELECT 2 AS di) di
+) t ORDER BY rid;
+

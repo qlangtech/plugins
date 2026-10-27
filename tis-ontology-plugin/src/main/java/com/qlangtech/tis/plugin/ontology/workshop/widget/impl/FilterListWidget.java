@@ -38,7 +38,7 @@ public class FilterListWidget extends FullDisplayWidget {
     /**
      * 过滤作用的对象集变量：决定候选项来源与写出谓词的 objectType。
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 20, advance = false, validate = {Validator.require})
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 20,validate = {Validator.require})
     public String objectSetVar;
 
     /**
@@ -47,13 +47,13 @@ public class FilterListWidget extends FullDisplayWidget {
      * <p>非必填：空列表表示「不过滤」，是页面刚建好、过滤项还没配时的合法中间态
      * （{@link FilterItemElementCreatorFactory} 对 null 行数组同样按空列表处理）。
      */
-    @FormField(type = FormFieldType.MULTI_SELECTABLE, ordinal = 21, advance = false)
+    @FormField(type = FormFieldType.MULTI_SELECTABLE,ordinal = 21)
     public List<FilterItemConfig> filters;
 
     /**
      * 过滤结果写回：组合出的过滤条件写入该「对象集合过滤器」变量，供下游组件作为过滤源
      */
-    @FormField(type = FormFieldType.SELECTABLE, ordinal = 22, advance = false)
+    @FormField(type = FormFieldType.SELECTABLE,ordinal = 22)
     public String filterOutputVar;
 
     @TISExtension

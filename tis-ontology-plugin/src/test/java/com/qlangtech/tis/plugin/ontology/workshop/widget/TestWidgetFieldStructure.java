@@ -9,6 +9,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.event.EventConfig;
+import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -74,7 +75,7 @@ import java.util.stream.Stream;
  *       它们不在 widget 继承链上，{@code allFormFields()} 天然收不到；</li>
  *   <li><b>字段默认值</b>——镜像测试只比名字。Java 初值为 {@code true} 的字段
  *       （{@code ChartXYWidget.showLegend} / {@code NumericFormatting.useGrouping} /
- *       {@code ContinuousAxisConfig.autoMinBound} / {@code UrlClickAction.openInNewTab} …）
+ *       {@code UrlClickAction.openInNewTab} …）
  *       若在前端归一化器里被写成 {@code ?? false}，会静默翻转，本测试看不出来。</li>
  * </ul>
  */
@@ -476,6 +477,15 @@ public class TestWidgetFieldStructure {
     return result;
   }
 
+  /**
+   * 索引里 {@code workshop.widget.impl} 包下的 Widget 实现。
+   *
+   * <p>⚠️ 判据必须是「是 {@link IWorkshopWidget} 的子类型」，不能只看包名前缀 + 非抽象：
+   * 该包下同时住着带 {@code @TISExtension} 的<b>配置结构类</b>（{@code ChartLayer}、
+   * {@code SeriesConfig}，以及 {@code chartxy} 子包里的 {@code LegendConfig} /
+   * {@code LineLayerType} / 各种零字段 off 子类）。按包名扫会把它们当 Widget ——
+   * 零字段的会直接撞上 {@code noWidgetIsAnEmptyShell}，其余会因前端没有同名配置接口而失败。
+   */
   private static Set<Class<?>> widgetImpls() {
     Set<Class<?>> result = new TreeSet<>(java.util.Comparator.comparing(Class::getName));
     for (String fqcn : sezpozIndexEntries()) {
@@ -483,7 +493,8 @@ public class TestWidgetFieldStructure {
         continue;
       }
       Class<?> clazz = outerClassOf(fqcn);
-      if (clazz != null && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+      if (clazz != null && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())
+        && IWorkshopWidget.class.isAssignableFrom(clazz)) {
         result.add(clazz);
       }
     }

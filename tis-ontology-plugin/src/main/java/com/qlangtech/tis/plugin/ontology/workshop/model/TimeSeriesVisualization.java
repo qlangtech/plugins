@@ -1,20 +1,19 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 
-import java.io.Serializable;
-
 /**
- * 时间序列可视化配置
+ * 时间序列可视化配置（启用实现）。
+ *
+ * <p>多态体系见父类 {@link AbstractTimeSeriesVisualization}：「不显示」由零字段的子类
+ * {@link TimeSeriesVisualizationOff} 表达；本类只在用户显式选择启用时出现。
  */
-public class TimeSeriesVisualization implements Describable<TimeSeriesVisualization>, Serializable {
+public class TimeSeriesVisualization extends AbstractTimeSeriesVisualization {
 
   private static final long serialVersionUID = 1L;
 
@@ -37,7 +36,7 @@ public class TimeSeriesVisualization implements Describable<TimeSeriesVisualizat
   public Boolean showBaseline = false;
 
   @TISExtension
-  public static class DefaultDescriptor extends Descriptor<TimeSeriesVisualization> {
+  public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
 
     public DefaultDescriptor() {
       super();
@@ -47,6 +46,11 @@ public class TimeSeriesVisualization implements Describable<TimeSeriesVisualizat
     @Override
     public String getDisplayName() {
       return "Time Series Visualization";
+    }
+
+    @Override
+    public String shortComment() {
+      return "每个指标下方的迷你趋势图";
     }
   }
 

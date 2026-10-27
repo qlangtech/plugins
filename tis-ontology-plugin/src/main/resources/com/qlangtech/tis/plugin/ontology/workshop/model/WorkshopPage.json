@@ -2,8 +2,7 @@
   "id": {
     "label": "页面 ID",
     "help": "系统生成的唯一标识（UUID），创建页面时自动生成，不可修改",
-    "readonly": true,
-    "advance": false
+    "readonly": true
   },
   "name": {
     "label": "页面名称",
@@ -20,6 +19,7 @@
   },
   "sortOrder": {
     "label": "排序顺序",
-    "help": "页面在导航中的显示顺序，数字越小越靠前"
+    "help": "页面在导航中的显示顺序，数字越小越靠前",
+    "dftVal": 0
   }
 }

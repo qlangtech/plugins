@@ -34,6 +34,7 @@ import com.qlangtech.tis.util.Selectable;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -113,7 +114,7 @@ import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptio
  */
 public abstract class WorkshopVariable implements Describable<WorkshopVariable>, Serializable, IdentityName,
         IPluginStore.ManipuldateProcessor {
-
+    public static final String VARIABLE_DIR_NAME = "variables";
     private static final WorkshopVariableStoreGetter storeGetter = new WorkshopVariableStoreGetter();
 
     public static List<WorkshopVariable> loadAll(String ontologyDomainId, String workshop) {
@@ -437,6 +438,11 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         @Override
         protected Class<WorkshopVariable> getPluginType() {
             return WorkshopVariable.class;
+        }
+
+        @Override
+        public File getAssistRootDir(String ontologyName, Optional<String> submodule) {
+            return new File(super.getAssistRootDir(ontologyName, submodule), VARIABLE_DIR_NAME);
         }
     }
 

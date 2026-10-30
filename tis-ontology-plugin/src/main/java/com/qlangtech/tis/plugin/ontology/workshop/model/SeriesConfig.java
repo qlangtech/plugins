@@ -12,6 +12,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractSe
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.CountAggregation;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -57,6 +58,17 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IP
 
     private static final long serialVersionUID = 1L;
 
+    public static final String KEY_SEGMENT_BY = "segmentBy";
+
+    /**
+     * 聚合方式字段名。
+     *
+     * <p>抽成常量是为了让三级级联的 {@code toField} 能被测试逐字核对：
+     * {@code "series[].aggregation.property"} 里的三层分别由前端 {@code propValChange}
+     * 逐层下钻（列表字段 → 多态子表单 → 其子属性），写错一个字符就是静默失效。
+     */
+    public static final String KEY_AGGREGATION = "aggregation";
+
     /**
      * 系列名称（图例中显示的默认名称）。
      */
@@ -80,8 +92,25 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IP
 
     /**
      * 二次分段属性（可选）—— 按该属性把每个值再拆开。
+     *
+     * <p>候选列表由宿主 {@link ChartLayer} 的级联管道供给：
+     * {@code valueChangePipe("dataSourceVar", "series[].segmentBy")}，即「数据源变量变了，
+     * 逐行刷新分段属性候选」。本类自己<b>看不到</b>宿主的 {@code dataSourceVar}（元组行的
+     * 校验上下文里没有兄弟字段的值），所以这里必须声明 {@code SELECTABLE} 而不是 {@code ENUM}：
+     * SELECTABLE 的候选本来就是运行时供给的，ENUM 则意味着候选固定。
+     * 先例见 {@code ObjectSetFilterConfig#property}。
+     *
+     * <p>取值是宿主对象类型的<b>属性名</b>，不是表列名 —— 聚合下推
+     * （{@code AggregationPushdownPlanner}）会拿它做 {@code GROUP BY} 的第二个分组键，
+     * 不存在的属性会在取数期报 {@code segmentBy column:'x' does not exist}。
+     * 这也是把自由文本换成下拉的原因：一个拼错的属性名要到取数时才暴露。
+     * <pre>
+     *     SELECT xAxisProperty, segmentBy, AGG(property)   -- ← property 在这里
+     *   FROM ...
+     *   GROUP BY xAxisProperty, segmentBy                -- ↑ segmentBy 在这里
+     * </pre>
      */
-    @FormField(ordinal = 4,type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 4, type = FormFieldType.SELECTABLE)
     public String segmentBy;
 
     /**
@@ -169,7 +198,11 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IP
 
         public DefaultDescriptor() {
             super();
-            // 无可选项的字段已不再存在（原 variable 已删除，理由见 SeriesConfig 类注释）
+            // SELECTABLE 字段必须在 descriptor 上登记候选来源，否则 DescriptorsJSON#getSelectOptions
+            // 直接抛异常、整张表单打不开。这里登记一个空列表作兜底：真实的候选由宿主
+            // ChartLayer 的级联管道在渲染期回填（见 SeriesConfig#segmentBy）。
+            // （原 variable 已删除，理由见 SeriesConfig 类注释）
+            this.registerSelectOptions(KEY_SEGMENT_BY, Collections::emptyList);
         }
 
         @Override

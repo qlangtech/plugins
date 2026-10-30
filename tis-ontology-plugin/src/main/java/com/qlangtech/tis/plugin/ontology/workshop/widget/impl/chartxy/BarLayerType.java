@@ -44,6 +44,11 @@ public class BarLayerType extends AbstractLayerType {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.ChartBar;
+        }
+
+        @Override
         public String shortComment() {
             return "柱状图";
         }

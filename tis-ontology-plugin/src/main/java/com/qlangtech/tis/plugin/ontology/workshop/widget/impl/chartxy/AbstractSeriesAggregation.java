@@ -4,6 +4,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.io.Serializable;
 
@@ -38,12 +39,33 @@ public abstract class AbstractSeriesAggregation
 
     private static final long serialVersionUID = 1L;
 
+    public static final String KEY_PROPERTY = "property";
+
     /**
      * 参与聚合的度量属性名。计数不使用本字段（子类的 json 会把它从表单移除）。
+     *
+     * <p>候选由宿主 {@code ChartLayer} 的级联管道供给：
+     * {@code valueChangePipe("dataSourceVar", "series[].aggregation.property")} —— 三段路径
+     * （列表字段 {@code []} → 多态子表单字段 → 其子属性），前端
+     * {@code item-prop-val.component.ts#propValChange} 一路下钻改写每个 impl 的候选。
+     *
+     * <p>必须 {@code SELECTABLE} 而不是 {@code INPUTTEXT}：管道只改写候选，改成自由文本就等于
+     * 让级联结果没有地方落地。也不该是 {@code ENUM}：候选是运行时数据（本体属性清单），
+     * 不是固定枚举。
+     *
+     * <p>{@code BasicDescriptor} 里登记了候选来源兜底（空列表）—— SELECTABLE 字段未注册会让
+     * {@code DescriptorsJSON#getSelectOptions} 抛 {@code has not been register}，整张表单打不开。
      */
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = Validator.require)
     public String property;
 
     public abstract static class BasicDescriptor extends Descriptor<AbstractSeriesAggregation> {
+
+        public BasicDescriptor() {
+            super();
+            // 兜底注册：真实候选由 ChartLayer 的级联管道在渲染期回填。
+            // 挂在抽象基类上，六种聚合子类的 descriptor 自动继承，不必逐个抄。
+            this.registerSelectOptions(KEY_PROPERTY, java.util.Collections::emptyList);
+        }
     }
 }

@@ -1,6 +1,8 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.koubei.web.tag.pager.Pager;
@@ -24,6 +26,7 @@ import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +64,22 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
      * 前端 `object-table.component.ts` 的 `onPageIndexChange` 是同一条线上口径。
      */
     public static final String KEY_PAGE = "page";
+
+    /**
+     * 中继（运行时）过滤条件的**请求参数**，不是表单字段 —— 故有意<b>不</b>出现在
+     * {@code get_data} 的 {@code createRelevantFieldsContext} 白名单里。
+     *
+     * <p>⚠️ 与 {@code ObjectSetDefinitionConfig.KEY_FILTERS} 字面相同但含义完全不同：
+     * 那个是<b>落盘的静态配置</b>（对象集变量定义里的过滤条件），由后端直接从
+     * {@code definitionConfig} 读取并施加（见 {@code ObjectSetVariable#applyConfiguredFilters}）；
+     * 本常量是<b>HTTP 请求里的运行时谓词</b>，来自 {@code ObjectSetDefinitionConfig#filterVar}
+     * 指向的过滤变量的当前值 —— 那个值只活在浏览器内存里，后端无从获取，只能由前端随请求上送。
+     *
+     * <p>把静态条件也从前端回传一遍是<b>错的</b>：后端已经读过配置，两边都送会重复施加。
+     * 上送格式见前端的 {@code resolveObjectSetRelayedFilters}，是摊平的
+     * {@code [{property, operator, value}]}（与 {@code ChartXYWidget.KEY_FILTERS_BY_LAYER} 的元素同形）。
+     */
+    public static final String KEY_FILTERS = "filters";
 
     /**
      * {@link PaginationResult#getTotalCount()} 的「未统计」哨兵值：关闭分页时不该为一个用不上的
@@ -174,6 +193,11 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
                     if (StringUtils.isNotEmpty(identityProp)) {
                         criteria.addTargetCol(identityProp);
                     }
+                    // 中继的运行时条件必须在这里施加、且必须早于 countQuery：
+                    // count 与 select 用的同一份 criteria 决定了分页条的总数，晚施加就成了
+                    // 「行数按过滤后算、总数按全表算」，末页永远翻不到底。
+                    // 静态条件不在这里读 —— 它由 objSetVar 的三个取数方法内部自动施加。
+                    applyRuntimeFilters(paramGetter, objSetVar, criteria);
 
                     // 分页策略：off 只取第一页、且不必查总数（前端没有分页条，总数无处可显）。
                     Pagenator pagenator = widget.pagenator!= null?widget.pagenator: new NoPagenator();
@@ -207,6 +231,41 @@ public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColum
             }
 
 
+        }
+
+        /**
+         * 读取请求里的中继过滤条件（{@link #KEY_FILTERS}）并施加到 criteria 上。
+         *
+         * <p><b>属性白名单由 {@link ObjectSetVariable#applyRuntimeFilters} 负责</b>：它在把列名
+         * 交给 {@code addFilterCol} 之前先按本体对象类型的属性清单校验。这里绝不能自己调
+         * {@code addFilterCol} —— 那等于把防注入边界交给浏览器。
+         *
+         * <p><b>非法值一律抛</b>，口径同 {@link #applyOrderBy} / {@link #parsePage}：空白
+         * {@code property}、非法操作符都直接抛。这条链路的值全由本工程前端生成，出现异常值就是
+         * bug；静默跳过等于悄悄放宽过滤，用户看到的是一张"条件明明生效了但没过滤"的表。
+         */
+        private static void applyRuntimeFilters(IControlMsgHandler paramGetter, ObjectSetVariable objSetVar,
+                                                ObjectTypeBinding.DataSourceQueryCriteria criteria) {
+            String filtersJson = paramGetter.getString(KEY_FILTERS);
+            if (StringUtils.isBlank(filtersJson)) {
+                return;
+            }
+            JSONArray filters = JSON.parseArray(filtersJson);
+            if (filters == null || filters.isEmpty()) {
+                return;
+            }
+            List<ObjectTypeBinding.FilterCriterion> runtime = new ArrayList<>(filters.size());
+            for (int i = 0; i < filters.size(); i++) {
+                JSONObject filter = filters.getJSONObject(i);
+                String property = filter == null ? null : filter.getString("property");
+                if (StringUtils.isBlank(property)) {
+                    throw new IllegalArgumentException("object table filter property can not be blank, index:" + i
+                            + ", filters:" + filtersJson);
+                }
+                runtime.add(new ObjectTypeBinding.FilterCriterion(
+                        property, filter.getString("operator"), filter.get("value")));
+            }
+            objSetVar.applyRuntimeFilters(criteria, runtime);
         }
 
         /**

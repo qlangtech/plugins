@@ -212,8 +212,15 @@ public class TestChartXYStructure {
     ValueChangePipe pipe = descriptor.getValueChangePipe(ChartLayer.KEY_DATA_SOURCE_VAR, false);
     Assert.assertNotNull("ChartLayer.DescriptorImpl 必须为 dataSourceVar 注册 valueChangePipe",
       pipe);
-    Assert.assertArrayEquals("xAxisProperty 应是 dataSourceVar 的（唯一）级联目标",
-      new String[]{ChartLayer.KEY_X_AXIS_PROPERTY}, pipe.getToField());
+    // dataSourceVar 驱动三个目标：同层的分组键 + 每行两个子字段（分段属性、度量属性）。
+    // 后两者的 toField 必须带 '[]'，且顺序与声明一致（去重后保首见序）。
+    // 度量属性那条是**三段**路径："series[].aggregation.property" —— 穿越列表 → 多态子表单 → 子属性。
+    Assert.assertArrayEquals("dataSourceVar 的级联目标应是「分组键 + 每行分段属性 + 每行度量属性」",
+      new String[]{ChartLayer.KEY_X_AXIS_PROPERTY,
+        ChartLayer.KEY_SERIES + "[]." + SeriesConfig.KEY_SEGMENT_BY,
+        ChartLayer.KEY_SERIES + "[]." + SeriesConfig.KEY_AGGREGATION + "."
+          + AbstractSeriesAggregation.KEY_PROPERTY},
+      pipe.getToField());
 
     // 两个 SELECTABLE 都必须注册选项供给：未注册时 DescriptorsJSON.getSelectOptions 抛异常，
     // 整张表单打不开。求值本身需要运行期上下文，故只认「未注册」这条报错。
@@ -226,6 +233,45 @@ public class TestChartXYStructure {
       } catch (Throwable ignored) {
         // 已注册，仅选项求值需要 TIS 运行期上下文
       }
+    }
+  }
+
+  /**
+   * {@code SeriesConfig.segmentBy} 的候选必须由宿主的级联管道供给。
+   *
+   * <p>三段都钉住，缺任一段就是静默失效：
+   * <ul>
+   *   <li>字段必须 {@code SELECTABLE}：{@code INPUTTEXT} 时级联结果无处落地，用户回到手打
+   *       属性名 —— 拼错的属性名要到取数期才由
+   *       {@code AggregationPushdownPlanner#requireCol} 报出来；</li>
+   *   <li>{@code SeriesConfig.DefaultDescriptor} 必须 {@code registerSelectOptions}，
+   *       否则 {@code DescriptorsJSON#getSelectOptions} 抛异常、整张表单打不开
+   *       （SELECTABLE 字段的硬约束，先例 {@code ObjectSetFilterConfig#property}）；</li>
+   *   <li>必须允许留空：留空即「不分段」，挂 {@code Validator.require} 会让最简配置校验失败。</li>
+   * </ul>
+   */
+  @Test
+  public void segmentByCascadesFromDataSourceVar() {
+    Assert.assertEquals("segmentBy 必须是 SELECTABLE：INPUTTEXT 时级联结果无处落地",
+      FormFieldType.SELECTABLE, formFieldOf(SeriesConfig.class, "segmentBy").type());
+    Assert.assertFalse("segmentBy 允许留空（留空即不分段）",
+      Arrays.asList(formFieldOf(SeriesConfig.class, "segmentBy").validate())
+        .contains(Validator.require));
+
+    Descriptor<?> descriptor;
+    try {
+      descriptor = new SeriesConfig.DefaultDescriptor();
+    } catch (Throwable t) {
+      throw new AssertionError("SeriesConfig.DefaultDescriptor 应可无参实例化", t);
+    }
+    try {
+      descriptor.getSelectOptions(SeriesConfig.KEY_SEGMENT_BY);
+    } catch (IllegalStateException e) {
+      Assert.assertFalse("SeriesConfig 未在 DefaultDescriptor 构造器中为 segmentBy "
+          + "registerSelectOptions —— 表单会报错：" + e.getMessage(),
+        String.valueOf(e.getMessage()).contains("has not been register"));
+    } catch (Throwable ignored) {
+      // 已注册，仅选项求值需要 TIS 运行期上下文
     }
   }
 
@@ -916,6 +962,29 @@ public class TestChartXYStructure {
         + "挂了会让 Count 的默认配置永远校验失败",
       Arrays.asList(formFieldOf(AbstractSeriesAggregation.class, "property").validate())
         .contains(Validator.require));
+
+    // 度量属性的候选由 ChartLayer 的 dataSourceVar 级联供给（三段 toField）。要成立必须两件事：
+    //   ① 字段是 SELECTABLE —— INPUTTEXT 时管道改写的候选项无处落地，静默退回手打属性名；
+    //   ② BasicDescriptor 构造器里 registerSelectOptions —— 未注册时
+    //      DescriptorsJSON#getSelectOptions 抛 "has not been register"，整张表单打不开。
+    Assert.assertEquals("property 必须是 SELECTABLE：INPUTTEXT 时级联结果无处落地",
+      FormFieldType.SELECTABLE, formFieldOf(AbstractSeriesAggregation.class, "property").type());
+    // 抽象基类自身没有 descriptor（子类才有），故按 Count 子类验证「注册在基类构造函数里」这条
+    Descriptor<?> countDesc;
+    try {
+      countDesc = new CountAggregation.DefaultDescriptor();
+    } catch (Throwable t) {
+      throw new AssertionError("CountAggregation.DefaultDescriptor 应可无参实例化", t);
+    }
+    try {
+      countDesc.getSelectOptions(AbstractSeriesAggregation.KEY_PROPERTY);
+    } catch (IllegalStateException e) {
+      Assert.assertFalse("BasicDescriptor 未为 property registerSelectOptions —— 表单会报错："
+          + e.getMessage(),
+        String.valueOf(e.getMessage()).contains("has not been register"));
+    } catch (Throwable ignored) {
+      // 已注册，仅选项求值需要 TIS 运行期上下文
+    }
 
     Set<Class<?>> expected = new HashSet<>(Arrays.asList(
       CountAggregation.class, SumAggregation.class, AverageAggregation.class,

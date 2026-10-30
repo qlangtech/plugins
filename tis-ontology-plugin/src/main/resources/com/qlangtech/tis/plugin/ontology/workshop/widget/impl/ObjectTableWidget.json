@@ -4,10 +4,12 @@
     "placeholder": "请选择对象集变量"
   },
   "pagenator": {
+    "label": "分页",
     "help": "分页策略：off 不开启分页（只显示第一页）；Default 开启服务端分页",
     "dftVal": "off"
   },
   "columns": {
+    "label": "列(s)",
     "help": "配置表格列定义：每行设置属性名(prop)、显示标签(label)、列宽(width)等。点击下方 [+添加] 新增列。"
   },
   "activeObjectVar": {

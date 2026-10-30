@@ -22,13 +22,13 @@ public class LineLayerType extends AbstractLayerType {
     /**
      * 面积选项；普通折线 / 面积 / 堆叠面积。
      */
-    @FormField(ordinal = 0,type = FormFieldType.ENUM)
+    @FormField(ordinal = 0, type = FormFieldType.ENUM)
     public AreaOption areaOption = AreaOption.LINE;
 
     /**
      * 是否在数据点上显示数值标签。
      */
-    @FormField(ordinal = 1,type = FormFieldType.ENUM)
+    @FormField(ordinal = 1, type = FormFieldType.ENUM)
     public Boolean showLabels = false;
 
     /**
@@ -56,6 +56,11 @@ public class LineLayerType extends AbstractLayerType {
         @Override
         public String getDisplayName() {
             return "Line";
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.ChartLine;
         }
 
         @Override

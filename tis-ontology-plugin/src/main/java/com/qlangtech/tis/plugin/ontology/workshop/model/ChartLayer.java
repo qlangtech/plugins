@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractLayerType;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractSeriesAggregation;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.BarLayerType;
 
 import java.io.Serializable;
@@ -130,7 +131,21 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
     public XAxisBucketing xAxisBucketing;
 
     /**
+     * 系列列表字段名。
+     *
+     * <p>抽成常量是为了让级联声明的 {@code toField} 可以被测试逐字核对：
+     * {@code "series[]." + SeriesConfig.KEY_SEGMENT_BY} 里的 {@code []} 是前端
+     * {@code propValChange} 的语法标记（「作用于列表里的每一条记录」），后端只按原样字符串
+     * 存与回传，写错一个字符就是静默失效。
+     */
+    public static final String KEY_SERIES = "series";
+
+    /**
      * 系列列表 —— 本图层内按维度/度量做的次级区分。
+     *
+     * <p>行内的 {@link SeriesConfig#segmentBy} 候选随 {@link #dataSourceVar} 级联
+     * （见 {@code DescriptorImpl} 的 {@code valueChangePipe}），故两个字段必须<b>同层</b>：
+     * 级联的 primary 只能引用同 descriptor 里的普通字段。
      */
     @FormField(ordinal = 7, desClazz = SeriesConfig.class, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, validate = {Validator.require})
     public List<SeriesConfig> series = new ArrayList<>();
@@ -193,7 +208,19 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
             // 整张表单打不开。先例见 ChartPieWidget.labelProperty。
             this.registerSelectOptions(KEY_X_AXIS_PROPERTY, Collections::emptyList);
 
-            this.valueChangePipe(KEY_DATA_SOURCE_VAR, KEY_X_AXIS_PROPERTY)
+            // 同一个 fromField 驱动三个目标字段：
+            //   ① xAxisProperty               —— 本图层的分组键（同层普通字段）
+            //   ② series[].segmentBy          —— 每一行的二次分段属性（'[]' 表示逐行回填，
+            //                                    解析点只在前端 item-prop-val.component.ts#propValChange）
+            //   ③ series[].aggregation.property —— 每一行的度量属性，比 ② 再深一层：
+            //                                    穿越多态子表单（aggregation 有 6 个 impl），
+            //                                    前端会逐个改写每个 impl 的 AttrDesc 候选
+            // 三者的候选完全相同（都是 dataSourceVar 所指对象类型的属性名），故共用一次广播
+            // render（ValueChangePipe 对广播只调用一次，多个 toField 复用同一结果）。
+            // 若将来某目标候选形态不同，再改用 render(toField, fn) 逐字段覆盖。
+            this.valueChangePipe(KEY_DATA_SOURCE_VAR, KEY_X_AXIS_PROPERTY, //
+                            KEY_SERIES + "[]." + SeriesConfig.KEY_SEGMENT_BY, //
+                            KEY_SERIES + "[]." + SeriesConfig.KEY_AGGREGATION + "." + AbstractSeriesAggregation.KEY_PROPERTY)
                     .render((pluginMeta, params) -> {
                         String selectedVar = params.getString(KEY_DATA_SOURCE_VAR);
                         if (selectedVar == null) {

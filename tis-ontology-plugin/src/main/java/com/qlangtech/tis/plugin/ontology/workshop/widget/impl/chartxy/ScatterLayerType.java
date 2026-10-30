@@ -27,6 +27,11 @@ public class ScatterLayerType extends AbstractLayerType {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.Scatter;
+        }
+
+        @Override
         public String shortComment() {
             return "散点图";
         }

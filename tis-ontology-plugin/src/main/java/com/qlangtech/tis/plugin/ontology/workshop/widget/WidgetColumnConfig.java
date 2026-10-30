@@ -77,20 +77,23 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
     /**
      * 格式化方式
      */
-    @FormField(ordinal = 3,type = FormFieldType.ENUM)
+    @FormField(ordinal = 3, type = FormFieldType.ENUM)
     public ColumnFormat format;
 
     /**
      * 文本对齐方式
      */
-    @FormField(ordinal = 4,type = FormFieldType.ENUM)
+    @FormField(ordinal = 4, type = FormFieldType.ENUM)
     public ColumnAlign align;
 
     /**
      * 是否可排序
      */
-    @FormField(ordinal = 5,type = FormFieldType.ENUM)
+    @FormField(ordinal = 5, type = FormFieldType.ENUM)
     public Boolean sortable;
+
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER)
+    public Integer order;
 
     @Override
     public String identityValue() {
@@ -225,6 +228,11 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
         @Override
         public EnumableSetCfg getEnumableSetCfg() {
             return new EnumableSetCfg(true);
+        }
+
+        @Override
+        protected RowDragDropCfg isEnableRowDragDrop() {
+            return new RowDragDropCfg(true, "order");
         }
 
         /**

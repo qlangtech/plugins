@@ -94,8 +94,9 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
                         pluginContext.addErrorMessage(context, "Unsupported workshop variable operation type: " + type);
                 }
             } catch (Exception e) {
-                logger.error("process workshop variable operation '" + type + "' faild", e);
-                pluginContext.addErrorMessage(context, "操作失败: " + e.getMessage());
+               // logger.error("process workshop variable operation '" + type + "' faild", e);
+               // 严禁像这样吃掉异常： pluginContext.addErrorMessage(context, "操作失败: " + e.getMessage());
+              throw  e;
             }
         }
 

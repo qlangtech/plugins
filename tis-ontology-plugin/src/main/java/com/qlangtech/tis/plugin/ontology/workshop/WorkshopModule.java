@@ -72,6 +72,7 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.getOntologyDomain
  * Workshop Module 聚合根实体
  * <p>
  * 作为 TIS 插件实现，支持通过 UI 表单配置
+ *
  * @see WorkshopPage
  * @see WorkshopSection
  * @see WorkshopWidget
@@ -755,7 +756,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                         pluginContext.addErrorMessage(context, "Unsupported workshop module operation type: " + type);
                 }
             } catch (Exception e) {
-                pluginContext.addErrorMessage(context, "操作失败: " + e.getMessage());
+                // 不要将异常吃掉，不然终端排查错误非常困难
+                // pluginContext.addErrorMessage(context, "操作失败: " + e.getMessage());
+                throw e;
             }
         }
 
@@ -910,7 +913,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             moduleJson.put(KEY_WIDGETS, widgetsJson);
         }
 
-        /** 把一个 section（顶层或子分区）的 widget 追加到下发数组，并带上归属信封字段。 */
+        /**
+         * 把一个 section（顶层或子分区）的 widget 追加到下发数组，并带上归属信封字段。
+         */
         private static void appendWidgetsJSON(AbstractWorkshopSection section, JSONArray widgetsJson)
                 throws Exception {
             if (section.widgets == null) {

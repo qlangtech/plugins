@@ -17,7 +17,8 @@ public abstract class BasicWorkshopStoreGetter<T extends Describable<?>> extends
 
     @Override
     public File getAssistRootDir(String ontologyName, Optional<String> submodule) {
-        return WorkshopModule.getWorkshopDir(ontologyName, submodule.orElseThrow());
+        return WorkshopModule.getWorkshopDir(ontologyName
+                , submodule.orElseThrow(() -> new IllegalStateException("must contain submodule name in:" + this.getClass().getName())));
     }
 
     @Override

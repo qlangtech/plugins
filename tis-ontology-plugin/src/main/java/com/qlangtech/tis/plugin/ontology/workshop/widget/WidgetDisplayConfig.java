@@ -19,6 +19,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -75,7 +76,7 @@ public class WidgetDisplayConfig implements Describable<WidgetDisplayConfig>, Se
      * Java 枚举常量名无法直接写成前端的字面量（{@code default} 是保留字、kebab-case 也不是合法标识符），
      * 因此用 {@link #key} 显式声明与前端 {@code WidgetDisplay.displayOptimization} 的映射。
      */
-    public enum DisplayOptimization {
+    public enum DisplayOptimization implements DescriptorUseableShortComment {
         /** 默认：进入视口即挂载，离开后卸载 */
         dft("default", "默认"),
         /** 提前挂载：即便不在视口也预先挂载，切换更快 */
@@ -90,6 +91,11 @@ public class WidgetDisplayConfig implements Describable<WidgetDisplayConfig>, Se
         DisplayOptimization(String key, String label) {
             this.key = key;
             this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return label;
         }
     }
 

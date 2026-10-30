@@ -101,12 +101,33 @@ public class DataSourceBinding extends ObjectTypeBinding {
         criteria.appendOrderBy(sql, ds);
         ds.appendSqlLimit(sql, criteria);
 
-        if (filterParams.isEmpty()) {
+        visitQuery(ds, sql.toString(), filterParams, (rs) -> rows.add(readRow(rs, criteria)));
+        return rows;
+    }
+
+    /**
+     * 执行一条查询并把每一行交给 {@code rowConsumer} —— {@link #executeQuery} 与
+     * {@link #countQuery} 共用的唯一执行路径。
+     *
+     * <p>为什么必须共用：过滤 → 计数 → 切页这三步对<b>同一个 criteria</b> 的解释必须完全一致。
+     * 各写一份的话，很容易出现「行数按过滤后算、总数按全表算」这种只在翻到末页才暴露的错位。
+     *
+     * <p>两条分支的差异只在「有没有绑定参数」：无参数沿用 {@code conn.query}
+     * （存量取数的语句与行为逐字不变，且它内部对 {@code JDBCConnection.class} 加了全局锁），
+     * 有参数一律走 {@link PreparedStatement}，值不拼进 SQL。
+     *
+     * <p>⚠️ 两条分支的回调契约不同：{@code conn.query} 的 {@code ResultProcess} 返回 {@code false}
+     * 才中断遍历，而 preparedStatement 分支是 {@code while (rs.next())}。这里把 {@code conn.query}
+     * 的包装回调统一成<b>恒返回 true</b>（即两条分支都读到尽头）。对 {@code count(1)} 这种单行结果，
+     * 读到尽头与「读一行就停」等价，count 的既有语义不变。
+     */
+    private static void visitQuery(DataSourceFactory ds, String sql, List<Object> params, RowConsumer rowConsumer) {
+        if (params.isEmpty()) {
             // 无过滤条件：保留原来的 conn.query 路径，存量表格取数的语句与行为逐字不变
             ds.visitFirstConnection((conn) -> {
                 try {
-                    conn.query(sql.toString(), (rs) -> {
-                        rows.add(readRow(rs, criteria));
+                    conn.query(sql, (rs) -> {
+                        rowConsumer.accept(rs);
                         // 兜底分页已在 sql 里由 appendSqlLimit 完成，这里读到尽头即可
                         return true;
                     });
@@ -117,13 +138,13 @@ public class DataSourceBinding extends ObjectTypeBinding {
         } else {
             // 有过滤条件：值一律走 PreparedStatement 绑定，不拼进 SQL
             ds.visitFirstConnection((conn) -> {
-                try (PreparedStatement statement = conn.preparedStatement(sql.toString())) {
-                    for (int i = 0; i < filterParams.size(); i++) {
-                        statement.setObject(i + 1, filterParams.get(i));
+                try (PreparedStatement statement = conn.preparedStatement(sql)) {
+                    for (int i = 0; i < params.size(); i++) {
+                        statement.setObject(i + 1, params.get(i));
                     }
                     try (ResultSet rs = statement.executeQuery()) {
                         while (rs.next()) {
-                            rows.add(readRow(rs, criteria));
+                            rowConsumer.accept(rs);
                         }
                     }
                 } catch (Exception e) {
@@ -131,7 +152,15 @@ public class DataSourceBinding extends ObjectTypeBinding {
                 }
             });
         }
-        return rows;
+    }
+
+    /**
+     * 逐行处理一个 {@link ResultSet} 的当前位置。允许抛 {@link SQLException} —— 读取出错必须立刻
+     * 终止，不能吞掉：那会让 count 拿到一个「看起来正常」的错误数字。
+     */
+    @FunctionalInterface
+    private interface RowConsumer {
+        void accept(ResultSet rs) throws SQLException;
     }
 
     /**
@@ -391,25 +420,21 @@ public class DataSourceBinding extends ObjectTypeBinding {
 
 
 
+    /**
+     * 与 {@link #executeQuery} <b>共用同一份 WHERE</b>：过滤之后的行数与过滤之后的总数必须来自
+     * 同一个条件，否则分页条会按全表算、末页永远翻不到底。
+     *
+     * <p>两种子句仍然不能带：ORDER BY 与总数无关；LIMIT（appendSqlLimit）更是会把「总数」变成
+     * 「第一页的行数」—— 那样数出来的末页永远是第 1 页，翻页就此锁死。
+     */
     @Override
     public long countQuery(DataSourceQueryCriteria criteria) {
         DataSourceFactory ds = getDataSource();
-        // 两种子句都不能带：ORDER BY 与总数无关；LIMIT（appendSqlLimit）更是会把「总数」变成
-        // 「第一页的行数」—— 那样数出来的末页永远是第 1 页，翻页就此锁死。
         StringBuilder sql = new StringBuilder("select count(1) from ").append(escapedTableName(ds));
+        final List<Object> filterParams = appendWhere(sql, criteria, ds, null);
         final long[] total = new long[1];
-        ds.visitFirstConnection((conn) -> {
-            try {
-                // query 的 callback 返回 false 即中断遍历；方法本身返回 boolean（是否有行），
-                // 故用单元素数组把标量带出来。
-                conn.query(sql.toString(), (rs) -> {
-                    total[0] = rs.getLong(1);
-                    return false;
-                });
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        // 单行结果，用单元素数组把标量带出来
+        visitQuery(ds, sql.toString(), filterParams, (rs) -> total[0] = rs.getLong(1));
         return total[0];
     }
 

@@ -24,6 +24,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityOff;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetStore;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
@@ -59,25 +61,31 @@ import java.util.Optional;
  * {@code setupConfig.impl} 即得类型，无需额外字段。
  *
  * <h3>字段序位</h3>
- * 基类占用 {@code 0}、{@code 1}（{@code 4} 让给了显示配置，见下）；各子类字段从 {@code 10} 起编排，
+ * 基类占用 {@code 0}、{@code 1}、{@code 2}；各子类字段从 {@code 10} 起编排，
  * 避免 ordinal 撞车 —— TIS 的表单排序是对 {@code formField.ordinal()} 做稳定排序，
- * 而字段集合来自 HashMap，相同 ordinal 的相对顺序不确定。{@code 2}、{@code 3} 原为变量绑定字段
- * 所占用，两字段已删除（见下），序位留空无害，不必重排。
+ * 而字段集合来自 HashMap，相同 ordinal 的相对顺序不确定。{@code 3} 原为变量绑定字段
+ * 所占用，该字段已删除（见下），序位留空无害，不必重排。
  *
- * <h3>显示配置为何不在基类</h3>
+ * <h3>显示配置为何是独立插件</h3>
  * 本类原先声明 {@code WidgetDisplayConfig displayConfig}（宽度 / 高度 / 条件可见性 / 展示优化），
- * 于是<b>每个</b> Widget 的表单都渲染这四项。但对单行表单控件（日期选择器、输入框、复选框…
- * 见 {@link CompactDisplayWidget}）而言，「高度」与「展示优化」没有语义 —— 用户填了不会有任何
- * 效果，只会困惑。
+ * 于是<b>每个</b> Widget 的表单都渲染这四项。为区分「有内容区」与「单行表单控件」，
+ * 曾拆出 {@code FullDisplayWidget} / {@code CompactDisplayWidget} 两条抽象中间基类。
  * <p>
- * 因此把显示配置下移到两条抽象分支，各自声明<b>同名的</b> {@code displayConfig} 字段：
- * <ul>
- *   <li>{@link CompactDisplayWidget} → {@link CompactDisplayConfig}（宽度 + 条件可见性）</li>
- *   <li>{@link FullDisplayWidget} → {@link WidgetDisplayConfig}（完整四项）</li>
- * </ul>
- * 具体 Widget 必须继承<b>两者之一</b>。⚠️ 直接继承本类虽能编译通过，但会<b>静默丢失</b>
- * 显示配置（表单上少一整块，且无任何报错）—— 这条已由
- * {@code TestWidgetVariableContract#everyWidgetInheritsADisplayWidgetBase} 兜住。
+ * 现在显示配置改为<b>独立落盘的插件实体</b>（扩展点 {@code IWorkshopWidgetDisplay}，
+ * 落盘 {@code widgets/{widgetId}_display.xml}，见 {@code WorkshopWidgetDisplayStore}）：
+ * 具体 Widget 一律直接继承本类，用户在编辑面板的 Display tab 里用一个 impl 选择器
+ * 在 {@link WidgetDisplayConfig}（完整）与 {@link CompactDisplayConfig}（精简）之间切换。
+ * <p>
+ * Widget 侧只保留一个 {@link #display} 引用（transient，加载时由
+ * {@code WorkshopModule.loadLayout} 回填），它<b>不是表单字段</b>。
+ * <p>
+ * <b>存量数据</b>：旧 XML 里嵌套的 {@code <displayConfig>} 按「不迁移」处理 —— 本类已无该字段，
+ * XStream 的标准反射转换器对未知元素直接跳过（{@code RobustReflectionConverter2} 的
+ * {@code doUnmarshal} 体是空实现，读字段走 XStream 默认行为）。
+ *
+ * <h3>条件可见性为何在基类</h3>
+ * Palantir 把它归在 widget setup（不是 Display），且每个 Widget 都要有，因此放在基类。
+ * 类型是 {@link ConditionalVisibilityConfig} 多态（off / 引用变量两实现）。
  *
  * <h3>变量绑定字段为何不在基类</h3>
  * 基类原先声明 {@code List<String> inputVariables} / {@code outputVariables}，作为
@@ -96,7 +104,9 @@ import java.util.Optional;
  */
 public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, IdentityName,
         IPluginStore.BeforePluginSaved, IStoreSelfManagement {
-    
+
+    protected static final String FIELD_CONDITIONAL_VISIBILITY = "conditionalVisibility";
+
     /**
      * 组件 UUID（identity 字段），由前端创建 widget 时生成（{@code crypto.randomUUID()}），
      * <b>生命周期内不可变</b>；后端把它当不透明值原样持久化。表单里以 {@code readonly} 展示。
@@ -136,6 +146,30 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, I
      */
     @FormField(type = FormFieldType.INPUTTEXT,ordinal = 1,validate = {Validator.require})
     public String title;
+
+    /**
+     * 条件可见性：引用一个变量，按变量值的真假控制该 Widget 的显示隐藏；{@code off} 表示恒显示。
+     *
+     * <p>类型是多态的（{@code off} / 引用变量两实现），与
+     * {@code AbstractWorkshopSection.conditionalVisibility} 同口径。
+     * <p>
+     * <b>XStream 不走字段初始化器</b>：旧 XML 没有该元素时反序列化出来是 {@code null}，
+     * 由 {@code WorkshopModule.normalizeConditionalVisibility} 在加载后补 {@code off}。
+     */
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public ConditionalVisibilityConfig conditionalVisibility = new ConditionalVisibilityOff();
+
+    /**
+     * 显示配置（独立落盘，见 {@link AbstractWidgetDisplayConfig}）。
+     *
+     * <p>加载时由 {@code WorkshopModule.loadLayout} 从
+     * {@code WorkshopWidgetDisplayStore} 回填；{@code null} = 该 widget 从未配置过 Display。
+     * 保存时由 {@code parseWidgets} 从请求信封的 {@code displayConfig} 解析后挂上。
+     * <p>
+     * <b>transient ⇒ XStream 跳过</b>，不会被写进 {@code {widgetId}.xml}（与
+     * {@code AbstractWorkshopSection.widgets}、{@code WorkshopModule.pages} 同一机制）。
+     */
+    public transient AbstractWidgetDisplayConfig display;
 
     /**
      * 所属 Section 的主键 —— 对应 {@code AbstractWorkshopSection.id}（UUID）。

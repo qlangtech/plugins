@@ -281,13 +281,15 @@ public class TestWidgetFieldStructure {
    * 前端 config 接口的公共基类名。
    *
    * <p>{@code export interface XxxWidget extends BaseWidgetConfig} 意味着后端还有
-   * {@link #BASE_INTERFACE_FIELDS} 这三个字段（它们声明在 {@code WorkshopWidget} /
-   * {@code CompactDisplayWidget|FullDisplayWidget} 上，不在子接口体内，故解析不到，
-   * 要靠 {@code extends} 这个信号补齐）。
+   * {@link #BASE_INTERFACE_FIELDS} 这三个字段（它们声明在 {@code WorkshopWidget} 上，
+   * 不在子接口体内，故解析不到，要靠 {@code extends} 这个信号补齐）。
+   *
+   * <p>{@code displayConfig} 不在其中：它已改为独立插件实体，随 widget 的 POST 信封下发，
+   * 不是 widget descriptor 的 {@code @FormField}。
    */
   private static final String FRONTEND_BASE_INTERFACE = "BaseWidgetConfig";
 
-  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("id", "title", "displayConfig");
+  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("id", "title", "conditionalVisibility");
 
   /**
    * 前端工程相对本模块根目录的候选位置。

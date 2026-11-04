@@ -5,9 +5,8 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetButtonConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetDisplayConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -51,8 +50,7 @@ public class TestConditionalVisibilitySplit {
 
     private static final Set<String> HOST_FIELDS = new TreeSet<>(Arrays.asList(
             "AbstractWorkshopSection.conditionalVisibility",
-            "WidgetDisplayConfig.conditionalVisibility",
-            "CompactDisplayConfig.conditionalVisibility",
+            "WorkshopWidget.conditionalVisibility",
             "WidgetButtonConfig.conditionalVisibility"));
 
     @Test
@@ -130,7 +128,7 @@ public class TestConditionalVisibilitySplit {
     }
 
     /**
-     * 四个宿主的 {@code conditionalVisibility} 默认值必须是 off。
+     * 三个宿主的 {@code conditionalVisibility} 默认值必须是 off。
      *
      * <p>默认值若仍是「启用」，它与 {@code variableId} 的 {@code Validator.require} 组合会造出
      * <b>一个过不了校验的缺省值</b>：用户没碰这个字段也会被拦在保存之外。
@@ -138,7 +136,7 @@ public class TestConditionalVisibilitySplit {
     @Test
     public void hostDefaultsAreOff() {
         for (Class<?> host : Arrays.asList(AbstractWorkshopSection.class,
-                WidgetDisplayConfig.class, CompactDisplayConfig.class, WidgetButtonConfig.class)) {
+                WorkshopWidget.class, WidgetButtonConfig.class)) {
             JSONObject resource = TisPluginFormTestSupport.formResource(host.getName());
             Assert.assertNotNull(host.getSimpleName() + ".json 应存在", resource);
             JSONObject visibility = resource.getJSONObject("conditionalVisibility");
@@ -153,7 +151,7 @@ public class TestConditionalVisibilitySplit {
     public void hostFieldsDeclaredAsAbstractParent() {
         Set<String> actual = new TreeSet<>();
         for (Class<?> host : Arrays.asList(AbstractWorkshopSection.class,
-                WidgetDisplayConfig.class, CompactDisplayConfig.class, WidgetButtonConfig.class)) {
+                WorkshopWidget.class, WidgetButtonConfig.class)) {
             try {
                 Field field = host.getField("conditionalVisibility");
                 Assert.assertEquals(host.getSimpleName() + ".conditionalVisibility 的声明类型应为抽象父类"

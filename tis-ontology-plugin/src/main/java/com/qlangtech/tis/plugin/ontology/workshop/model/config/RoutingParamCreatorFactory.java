@@ -29,8 +29,7 @@ import java.util.function.BiConsumer;
  * <p>与 {@link InterfaceInputCreatorFactory} 同构，此处不复用其实现：两者的
  * {@code ViewContent} token、{@code getTuplesKey()} 与身份字段名都不同，
  * 而这三个值正是线格式的全部内容，抽公共基类只会把差异藏进抽象方法里。
- * 仓库内其他元组行工厂（{@code OntologyPropertyCreatorFactory} /
- * {@code FilterItemElementCreatorFactory}）同样是各自独立的。
+ * 仓库内其他元组行工厂（如 {@code OntologyPropertyCreatorFactory}）同样是各自独立的。
  *
  * <p>由 {@code PageRoutingConfig.json} 里 {@code params} 字段的 {@code elementCreator}
  * 按 FQCN 反射实例化，因此<b>必须有无参构造器</b>。线格式约定见

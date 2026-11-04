@@ -1,0 +1,7 @@
+{
+  "widgetId": {
+    "label": "Widget ID",
+    "readonly": true,
+    "help": "所属 Widget 的 ID（= 本配置落盘文件的文件名前缀），由服务端按当前 Widget 自动填写，不可修改"
+  }
+}

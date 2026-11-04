@@ -68,6 +68,15 @@ public class WorkshopWidgetStore extends AbstractWorkshopEntityStore<WorkshopWid
     }
 
     /**
+     * {@code widgets/} 与 {@link WorkshopWidgetDisplayStore} 共用，后者写的
+     * {@code {id}_display.xml} 不归本 store 管 —— 列表与差集删除都要跳过。
+     */
+    @Override
+    protected boolean acceptStorageKey(String storageKey) {
+        return !storageKey.endsWith(WorkshopWidgetDisplayStore.DISPLAY_SUFFIX);
+    }
+
+    /**
      * 按「所属 section → section 内序号 → name」排序
      */
     @Override

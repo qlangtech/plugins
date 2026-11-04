@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
+import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
@@ -81,14 +82,15 @@ public class TestWidgetVariableContract {
    * 无角色概念），零读零写，唯一实际作用是让表单在 {@code buildMultiSelectedAttr} 里抛错。
    * 该断言是「防复活」闸门：谁把它加回来，这里立刻红。
    *
-   * <p>2026-09-20 起 {@code displayConfig} 也离开了基类：它与基类其余字段不同 ——
-   * 并非所有 Widget 都说得上「高度 / 展示优化」（单行表单控件就说不说），
-   * 故下移到 {@link CompactDisplayWidget} / {@link FullDisplayWidget} 两条抽象分支。
-   * 因此本集合在本次一并由 5 项收敛为 2 项：原常量里的 {@code sortOrder} 与
-   * {@code cssClass} 对应的 {@code @FormField} 早已在 {@code WorkshopWidget} 里被注释掉，
-   * 常量却没跟着改，这两条断言本就处于红状态，本次顺带修正。
+   * <p>{@code conditionalVisibility}（条件可见性）2026-10-30 从显示配置上移到这里 ——
+   * Palantir 把可见性归在 widget setup 而非 Display，且每个 Widget 都要有；
+   * 这也是它与「显示配置」的分界线：显示配置已成独立插件实体
+   * （{@code AbstractWidgetDisplayConfig}，落盘 {@code widgets/{id}_display.xml}）。
+   *
+   * <p>原常量里的 {@code sortOrder} 与 {@code cssClass} 对应的 {@code @FormField}
+   * 早已被注释掉，常量却没跟着改，故不在本集合内。
    */
-  private static final Set<String> BASE_WIDGET_FIELDS = Set.of("id", "title");
+  private static final Set<String> BASE_WIDGET_FIELDS = Set.of("id", "title", "conditionalVisibility");
 
   /**
    * 已知的 {@code MULTI_SELECTABLE} 无行编辑器字段 —— <b>缺陷登记册，不是白名单</b>。
@@ -437,101 +439,192 @@ public class TestWidgetVariableContract {
   }
 
   /**
-   * 每个具体 Widget 必须继承 {@link CompactDisplayWidget} 或 {@link FullDisplayWidget}
-   * 之一，且这两个抽象基类本身不得进入扩展点索引。
+   * 显示配置已从 Widget 继承树里剥离：所有具体 Widget 都直接继承 {@code WorkshopWidget}，
+   * 且<b>没有任何一个</b>再声明 {@code displayConfig} 字段。
    *
-   * <p>为什么需要这条：{@code displayConfig} 已从 {@code WorkshopWidget} 下移到两条抽象分支，
-   * 于是<b>直接继承 {@code WorkshopWidget} 依然能编译通过</b>，但该 Widget 的表单会
-   * <b>整块少掉显示配置</b>——不报错、不抛异常，界面上只是没有那一块。这是本次改动引入的
-   * 唯一一个「编译期管不住」的口子，故在此钉死。
-   *
-   * <p>后半段（抽象基类不得进索引）防的是反方向的坑：插件枚举走 sezpoz 注解索引，
-   * 加载路径（{@code ExtensionFinder.Sezpoz}）<b>没有抽象类过滤</b>，一旦有人给这两个基类
-   * 加上 {@code @TISExtension}（或加嵌套 Descriptor），它会以「可创建 Widget」的身份混进调色板，
-   * 同样运行期无任何报错。
+   * <p>防的是「回潮」：显示配置现在是独立插件实体（{@code AbstractWidgetDisplayConfig}，
+   * 落盘 {@code widgets/{id}_display.xml}），若有人再把字段挂回 widget 基类或某个具体类，
+   * 它会重新进入 widget 的表单、被写进 {@code {id}.xml}，与独立实体形成两份真源 ——
+   * 编译期毫无提示，界面只是多出一块「填了没有独立落盘」的显示配置。
    */
   @Test
-  public void everyWidgetInheritsADisplayWidgetBase() {
-    List<Class<?>> bases = Arrays.asList(CompactDisplayWidget.class, FullDisplayWidget.class);
-    List<String> problems = new ArrayList<>();
-
-    for (Class<?> base : bases) {
-      Assert.assertTrue(base.getSimpleName() + " 必须是抽象类",
-        Modifier.isAbstract(base.getModifiers()));
-
-      for (String entry : sezpozIndexEntries()) {
-        if (entry.startsWith(base.getName())) {
-          problems.add(base.getSimpleName() + " 不得带 @TISExtension 进入扩展点索引（"
-            + "插件加载没有抽象类过滤，它会被当成可创建的 Widget 混进调色板）：" + entry);
-        }
-      }
-    }
-
+  public void noWidgetDeclaresDisplayConfigAnyMore() {
     Set<Class<?>> widgets = concreteWidgets();
     Assert.assertFalse("未从 sezpoz 索引枚举到任何 Widget —— 索引读取或包名前缀已失效，本断言会假通过",
       widgets.isEmpty());
-    Assert.assertTrue("本断言应至少覆盖 widget.impl 下的全部 Widget",
-      widgets.containsAll(widgetImpls()));
     Assert.assertTrue("GroovyWorkshopWidget 应在本断言的覆盖范围内 —— 它在 widget.groovy 包、"
-        + "不在 widget.impl 下，正是这里改用 concreteWidgets() 而非 widgetImpls() 的理由。"
-        + "若该类已删除，请连同本行一并删掉",
+      + "不在 widget.impl 下，正是这里用 concreteWidgets() 而非 widgetImpls() 的理由",
       widgets.stream().anyMatch(c -> "GroovyWorkshopWidget".equals(c.getSimpleName())));
 
+    List<String> problems = new ArrayList<>();
     for (Class<?> widget : widgets) {
-      Class<?> sup = widget.getSuperclass();
-      if (sup != CompactDisplayWidget.class && sup != FullDisplayWidget.class) {
+      if (widget.getSuperclass() != WorkshopWidget.class) {
         problems.add(widget.getSimpleName() + " 的直接父类是 "
-          + (sup == null ? "null" : sup.getSimpleName())
-          + "，应为 CompactDisplayWidget 或 FullDisplayWidget"
-          + "（直接继承 WorkshopWidget 能编译通过，但会静默丢失整块显示配置）");
-        continue;
+          + (widget.getSuperclass() == null ? "null" : widget.getSuperclass().getSimpleName())
+          + "，应为 WorkshopWidget（显示配置已独立成插件实体，不再靠中间基类分叉）");
       }
-
-      // 顺带钉住「字段真的到得了」：从具体类向上解析 displayConfig，其声明类应是该基类
-      Class<?> expectedCfg = sup == CompactDisplayWidget.class
-        ? CompactDisplayConfig.class : WidgetDisplayConfig.class;
-      try {
-        Field f = widget.getField("displayConfig");
-        Assert.assertSame(sup.getSimpleName() + ".displayConfig 应由 " + sup.getSimpleName() + " 声明",
-          sup, f.getDeclaringClass());
-        Assert.assertSame(widget.getSimpleName() + ".displayConfig 的类型与基类不匹配",
-          expectedCfg, f.getType());
-      } catch (NoSuchFieldException e) {
-        problems.add(widget.getSimpleName() + " 解析不到 displayConfig 字段：" + e.getMessage());
+      for (Field f : widget.getDeclaredFields()) {
+        if ("displayConfig".equals(f.getName())) {
+          problems.add(widget.getSimpleName() + " 仍然声明了 displayConfig 字段 —— "
+            + "显示配置已改为独立插件实体，字段应删除");
+        }
       }
     }
-
     Assert.assertTrue(String.join("\n", problems), problems.isEmpty());
   }
 
   /**
-   * 两个显示配置类必须是「同名字段子集」—— 这是本次拆分的<b>目的</b>本身，
-   * 不是实现细节：简化组少的正是对单行表单控件无意义的 {@code height} /
+   * 两个显示配置 impl 都必须是 {@link AbstractWidgetDisplayConfig} 的子类、都实现扩展点
+   * {@link com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidgetDisplay}，且
+   * <b>都继承到恰好一个 identity 字段 {@code widgetId}</b>。
+   *
+   * <p>为什么必须「恰好一个」：框架的 {@code Descriptor.getPropertyTypes()} 对 identity 字段
+   * 数量做双向校验 —— 实现 {@link com.qlangtech.tis.plugin.IdentityName} 却一个都没有，
+   * 或没实现却声明了 identity 字段，都会在构造 descriptor 时抛 {@code IllegalStateException}。
+   * 而显示配置既要有身份（它是独立落盘的插件实体，文件名 {@code {widgetId}_display.xml}
+   * 与差集删除都靠它），又只能靠 {@code @FormField} 提供 identity，所以字段必须存在。
+   *
+   * <p>历史：2026-10-31 曾删掉 {@code widgetId} 并连带删掉 {@code IdentityName}
+   * （理由是「文件名的前缀已经是身份」），代价是 {@code AbstractWorkshopEntityStore}
+   * 的泛型上界要放宽、{@code save} 要加显式传身份的重载、差集删除要回落到文件名反解。
+   * 2026-11-01 已回退，这条断言改为防「又被删掉」。
+   *
+   * <p>基类不得进扩展点索引同样在此钉住：插件加载（{@code ExtensionFinder.Sezpoz}）
+   * 没有抽象类过滤，基类带上 {@code @TISExtension} 会以「可创建的 impl」身份混进
+   * 扩展点列表，且运行期无任何报错。
+   */
+  @Test
+  public void widgetDisplayImplsShareOneIdentityField() {
+    for (String entry : sezpozIndexEntries()) {
+      if (entry.startsWith(AbstractWidgetDisplayConfig.class.getName())) {
+        Assert.fail("AbstractWidgetDisplayConfig 不得带 @TISExtension 进入扩展点索引："
+          + entry + "（插件加载没有抽象类过滤，抽象基类会被当成可创建的 impl）");
+      }
+    }
+
+    List<Class<?>> impls = Arrays.asList(WidgetDisplayConfig.class, CompactDisplayConfig.class);
+    for (Class<?> impl : impls) {
+      Assert.assertTrue(impl.getSimpleName() + " 必须继承 AbstractWidgetDisplayConfig",
+        AbstractWidgetDisplayConfig.class.isAssignableFrom(impl));
+      Assert.assertTrue(impl.getSimpleName() + " 必须实现扩展点 IWorkshopWidgetDisplay",
+        com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidgetDisplay.class.isAssignableFrom(impl));
+
+      Assert.assertTrue(impl.getSimpleName() + " 必须实现 IdentityName —— 显示配置是独立落盘的"
+          + "插件实体，落盘文件名与差集删除都取自它的身份",
+        com.qlangtech.tis.plugin.IdentityName.class.isAssignableFrom(impl));
+
+      // getFields() 含继承来的字段：identity 字段在基类上，必须被扫到
+      List<String> identityFields = new ArrayList<>();
+      for (Field f : impl.getFields()) {
+        FormField ff = f.getAnnotation(FormField.class);
+        if (ff != null && ff.identity()) {
+          identityFields.add(f.getDeclaringClass().getSimpleName() + "." + f.getName());
+        }
+      }
+      Assert.assertEquals(impl.getSimpleName() + " 必须继承到恰好 1 个 identity 字段"
+        + "（框架做双向校验，0 个或多于 1 个都会在构造 descriptor 时抛异常）",
+        List.of(AbstractWidgetDisplayConfig.class.getSimpleName() + ".widgetId"), identityFields);
+
+      Descriptor<?> desc = descriptorOf(impl);
+      Assert.assertNotNull(impl.getSimpleName() + " 缺少 DefaultDescriptor，前端按 FQCN 取不到"
+        + "目标 impl 的表单", desc);
+      Assert.assertNotNull(impl.getSimpleName() + " 的 displayName 不能为空",
+        desc.getDisplayName());
+    }
+  }
+
+  /**
+   * 用哪个显示配置 impl <b>由 Widget 类型决定</b>，不由用户选 ——
+   * {@link AbstractWidgetDisplayConfig#configClazzOf(IWorkshopWidget)} 是唯一判据，
+   * 数据源是 {@link com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WorkShopWidgetType#fullDisplayWidget}
+   * （下发为前端 {@code extractProps.fullDisplay}）。
+   *
+   * <p>这条钉的是「两处各自漂移」：枚举上的布尔值是<b>手填</b>的（没有编译期保护），
+   * 前端的表单选择又是它的镜像。判据漂了不会报错 —— 表格 Widget 会静默拿到只有宽度的表单，
+   * 或者单行控件冒出「高度 / 展示优化」两个填了也没用的项。
+   *
+   * <p>覆盖范围内必须含 {@code GroovyWorkshopWidget}：它的 descriptor 不是
+   * {@code BaseWidgetDescriptor} 子类、没有 {@code WorkShopWidgetType}，
+   * 走的正是 {@code configClazzOf} 的兜底分支（完整）。
+   */
+  @Test
+  public void displayConfigImplIsDerivedFromWidgetType() {
+    Set<Class<?>> widgets = concreteWidgets();
+    Assert.assertFalse("未从 sezpoz 索引枚举到任何 Widget —— 本断言会假通过", widgets.isEmpty());
+
+    List<String> problems = new ArrayList<>();
+    boolean coveredGroovy = false;
+    for (Class<?> widgetClazz : widgets) {
+      Descriptor<?> desc = descriptorOf(widgetClazz);
+      if (desc == null) {
+        problems.add(widgetClazz.getSimpleName() + " 找不到嵌套 descriptor，无法判定显示配置 impl");
+        continue;
+      }
+      if (!(desc instanceof com.qlangtech.tis.plugin.ontology.workshop.widget.impl.BaseWidgetDescriptor<?> base)) {
+        coveredGroovy |= "GroovyWorkshopWidget".equals(widgetClazz.getSimpleName());
+        Class<? extends AbstractWidgetDisplayConfig> fallback =
+          AbstractWidgetDisplayConfig.configClazzOf(widgetStub(desc));
+        if (fallback != WidgetDisplayConfig.class) {
+          problems.add(widgetClazz.getSimpleName() + " 的 descriptor 不是 BaseWidgetDescriptor，"
+            + "应兜底按完整显示配置，实际：" + fallback.getSimpleName());
+        }
+        continue;
+      }
+      boolean full = base.getWidgetType().fullDisplayWidget;
+      Class<? extends AbstractWidgetDisplayConfig> actual =
+        AbstractWidgetDisplayConfig.configClazzOf(widgetStub(desc));
+      Class<? extends AbstractWidgetDisplayConfig> expected =
+        full ? WidgetDisplayConfig.class : CompactDisplayConfig.class;
+      if (actual != expected) {
+        problems.add(widgetClazz.getSimpleName() + "（fullDisplayWidget=" + full
+          + "）应得 " + expected.getSimpleName() + "，实际 " + actual.getSimpleName());
+      }
+    }
+    Assert.assertTrue("GroovyWorkshopWidget 未被覆盖 —— 兜底分支（非 BaseWidgetDescriptor → 完整）"
+      + "没有被验证到", coveredGroovy);
+    Assert.assertTrue(String.join("\n", problems), problems.isEmpty());
+  }
+
+  /**
+   * 只为了给 {@link AbstractWidgetDisplayConfig#configClazzOf(IWorkshopWidget)} 提供
+   * 「有 descriptor」的 Widget —— 默认的 {@code getDescriptor()} 要取 {@code TIS.get()}，
+   * 单测环境里没有运行期上下文。
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static IWorkshopWidget widgetStub(Descriptor<?> desc) {
+    return new IWorkshopWidget() {
+      @Override
+      public Descriptor getDescriptor() {
+        return desc;
+      }
+    };
+  }
+
+  /**
+   * 两个显示配置类必须是「同名字段子集」—— 这是拆成两个 impl 的<b>目的</b>本身，
+   * 不是实现细节：精简 impl 少的正是对单行表单控件无意义的 {@code height} /
    * {@code displayOptimization}，少掉它们，用户才不会看到「填了却没效果」的项。
    *
-   * <p>一条断言钉住四件容易静默漂移的事：
+   * <p>一条断言钉住三件容易静默漂移的事：
    * <ol>
-   *   <li>简化组恰好只有 {@code width} + {@code conditionalVisibility}
-   *       —— 多出第三项就失去了「简化」的意义；</li>
-   *   <li>两类的同名字段<b>类型一致</b>：前端对两组共用
-   *       {@code widget.displayConfig.width} 这一条读取路径，靠的就是这里。
+   *   <li>精简 impl 恰好只有 {@code width}
+   *       —— 多出第二项就失去了「精简」的意义；</li>
+   *   <li>两类的同名字段<b>类型一致</b>：前端对两个 impl 共用
+   *       {@code displayConfig.vals.width} 这一条读取路径，靠的就是这里。
    *       类型漂了前端不报错，只会读到 {@code undefined}；</li>
    *   <li>两个 config 各自的 {@code .json} 覆盖其每个 {@code @FormField} 字段
-   *       —— 缺条目时该字段在表单上没有 label/help；</li>
-   *   <li>两个中间基类的 {@code .json} 里有 {@code displayConfig} 条目 ——
-   *       文案必须声明在基类上（{@code PluginExtraProps.load} 沿继承链合并 json
-   *       且具体类最后处理），声明在各 widget 上等于要改 22 个文件且必漏。</li>
+   *       —— 缺条目时该字段在表单上没有 label/help。</li>
    * </ol>
    */
   @Test
   public void compactDisplayConfigIsTheSameNamedSubsetOfTheFullOne() {
     Set<String> compactFields = declaredFormFieldNames(CompactDisplayConfig.class);
-    Assert.assertEquals("简化组的显示配置应恰好只有 width + conditionalVisibility"
-        + "（height / displayOptimization 对单行表单控件无意义，正是被排除的那两项）",
-      Set.of("width", "conditionalVisibility"), compactFields);
+    Assert.assertEquals("精简 impl 应恰好只有 width（height / displayOptimization 对单行表单控件"
+        + "无意义，正是被排除的那两项）",
+      Set.of("width"), compactFields);
 
     Set<String> fullFields = declaredFormFieldNames(WidgetDisplayConfig.class);
-    Assert.assertTrue("简化组的字段应是全量组字段的子集，当前多出："
+    Assert.assertTrue("精简 impl 的字段应是全量 impl 字段的子集，当前多出："
         + minus(compactFields, fullFields),
       fullFields.containsAll(compactFields));
     Assert.assertNotEquals("两个显示配置类的字段集合相同 —— 拆分退化成了同一组选项，"
@@ -548,11 +641,12 @@ public class TestWidgetVariableContract {
         throw new AssertionError("同名字段解析失败：" + e.getMessage(), e);
       }
       Assert.assertSame("CompactDisplayConfig." + field + " 与 WidgetDisplayConfig." + field
-          + " 必须同类型 —— 前端对两组共用 widget.displayConfig." + field + " 这一条读取路径",
+          + " 必须同类型 —— 前端对两个 impl 共用 displayConfig.vals." + field + " 这一条读取路径",
         fullType, compactType);
     }
 
-    for (Class<?> config : Arrays.asList(CompactDisplayConfig.class, WidgetDisplayConfig.class)) {
+    for (Class<?> config : Arrays.asList(CompactDisplayConfig.class, WidgetDisplayConfig.class,
+      AbstractWidgetDisplayConfig.class)) {
       JSONObject resource = formResource(config);
       Assert.assertNotNull(config.getSimpleName() + " 缺少表单资源 " + resourcePath(config)
         + "（其字段在表单上没有 label/help）", resource);
@@ -561,23 +655,15 @@ public class TestWidgetVariableContract {
           + config.getSimpleName() + ".json 中没有条目（表单上无文案）", resource.containsKey(field));
       }
     }
-
-    for (Class<?> base : Arrays.asList(CompactDisplayWidget.class, FullDisplayWidget.class)) {
-      JSONObject resource = formResource(base);
-      Assert.assertNotNull(base.getSimpleName() + " 缺少表单资源 " + resourcePath(base)
-        + " —— 其子类的 displayConfig 字段会没有 label/help（json 沿继承链合并，"
-        + "故文案声明在这个中间基类上，不必改各 widget）", resource);
-      Assert.assertTrue(base.getSimpleName() + ".json 应含 displayConfig 条目",
-        resource.containsKey("displayConfig"));
-    }
   }
 
   /**
    * 上面那条查「声明了什么」，这条查「表单<b>实际产出</b>什么」—— 二者在多态 / 继承参与
    * 进来时会分叉，而用户看到的、被困惑到的是后者。
    *
-   * <p>这正是本次改动的验收口径：简化组 widget 的显示配置表单**只有 2 项**，
-   * 全量组仍是 4 项。此前两组的表单都是 4 项。
+   * <p>验收口径：精简 impl 的表单是 2 项（identity 的 {@code widgetId} + {@code width}），
+   * 全量 impl 是 4 项（再加 height / displayOptimization）。{@code widgetId} 计入 ——
+   * 它是表单产出的项（{@code readonly} 展示，但确实在 descriptor 里），不因不参与编辑而消失。
    */
   @Test
   public void compactFormProducesTwoDisplayOptionsWhileFullProducesFour() {
@@ -591,14 +677,17 @@ public class TestWidgetVariableContract {
       return;
     }
 
-    Assert.assertEquals("简化组 widget 的表单应恰好产出 2 项显示配置",
-      Set.of("width", "conditionalVisibility"), new TreeSet<>(compactProps.keySet()));
+    Assert.assertEquals("精简 impl 的表单应产出 2 项（widgetId + width）",
+      new TreeSet<>(List.of("widgetId", "width")), new TreeSet<>(compactProps.keySet()));
 
     Set<String> fullKeys = new TreeSet<>(fullProps.keySet());
-    Assert.assertEquals("全量组 widget 的表单应仍产出 4 项显示配置（本次未改全量组）", 4, fullKeys.size());
-    Assert.assertTrue("全量组表单应含 height —— 它正是被排除在简化组之外的那两项之一", fullKeys.contains("height"));
-    Assert.assertTrue("全量组表单应含 displayOptimization", fullKeys.contains("displayOptimization"));
-    Assert.assertTrue("全量组表单应含简化组的两项", fullKeys.containsAll(compactProps.keySet()));
+    Assert.assertEquals("全量 impl 的表单应产出 4 项"
+        + "（widgetId + width + height + displayOptimization）",
+      new TreeSet<>(List.of("widgetId", "width", "height", "displayOptimization")), fullKeys);
+    Assert.assertTrue("全量 impl 表单应含 height —— 它正是被排除在精简 impl 之外的两项之一",
+      fullKeys.contains("height"));
+    Assert.assertTrue("全量 impl 表单应含 displayOptimization", fullKeys.contains("displayOptimization"));
+    Assert.assertTrue("全量 impl 表单应含精简 impl 的项", fullKeys.containsAll(compactProps.keySet()));
   }
 
   /**
@@ -748,7 +837,16 @@ public class TestWidgetVariableContract {
     return result;
   }
 
-  /** {@code widget.impl} 下的 Widget 实现类（从索引里各 {@code XxxWidget$DescriptorImpl} 反推） */
+  /**
+   * {@code widget.impl} 下的 Widget 实现类（从索引里各 {@code XxxWidget$DescriptorImpl} 反推）。
+   *
+   * <p>包前缀<b>不足以</b>圈定 Widget：同一前缀下还住着大量嵌套 Describable ——
+   * {@code chartxy.*} 的 layerType / aggregation / legend / axisTitle / numericFormatting
+   * 子类，以及 {@code button.group} 的 6 个 Color 类。它们各有 descriptor，却不是 Widget
+   * （没有 {@code getWidgetType()}），按前缀取回来会让「widget ↔ WorkShopWidgetType 一一对应」
+   * 这条断言每新增一个多态子类就多一行红。所以这里再加一道
+   * {@link WorkshopWidget} 子类判据。
+   */
   private static Set<Class<?>> widgetImpls() {
     Set<Class<?>> result = new TreeSet<>(java.util.Comparator.comparing(Class::getName));
     for (String fqcn : sezpozIndexEntries()) {
@@ -756,7 +854,8 @@ public class TestWidgetVariableContract {
         continue;
       }
       Class<?> clazz = outerClassOf(fqcn);
-      if (clazz != null && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
+      if (clazz != null && WorkshopWidget.class.isAssignableFrom(clazz)
+        && !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
         result.add(clazz);
       }
     }
@@ -820,10 +919,19 @@ public class TestWidgetVariableContract {
       .collect(Collectors.toSet());
   }
 
-  /** 类的名称固定的嵌套 descriptor（约定名 {@code DescriptorImpl}），实例化失败返回 null */
+  /**
+   * 类上嵌套的 descriptor，实例化失败返回 null。
+   *
+   * <p>命名约定有三套并存：内置 Widget 用 {@code DescriptorImpl}（{@code BaseWidgetDescriptor}），
+   * 显示配置等普通 Describable 用 {@code DefaultDescriptor}，Groovy Widget 用
+   * {@code DftDescriptor}（继承 {@code GroovyWidgetDescriptor}）。全都认 ——
+   * 漏一种会让那类 Entity 被判成「没有 descriptor」，而它其实是有的。
+   */
   private static Descriptor<?> descriptorOf(Class<?> widget) {
     for (Class<?> nested : widget.getDeclaredClasses()) {
-      if (!"DescriptorImpl".equals(nested.getSimpleName())
+      String simpleName = nested.getSimpleName();
+      if (!("DescriptorImpl".equals(simpleName) || "DefaultDescriptor".equals(simpleName)
+        || "DftDescriptor".equals(simpleName))
         || !Descriptor.class.isAssignableFrom(nested)) {
         continue;
       }

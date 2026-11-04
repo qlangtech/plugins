@@ -9,6 +9,11 @@
     "help": "Widget 标题（画布与配置面板通用）",
     "placeholder": "输入 Widget 标题"
   },
+  "conditionalVisibility": {
+    "label": "条件可见性",
+    "help": "根据变量值控制组件的显示隐藏；选 off 则组件恒显示",
+    "dftVal": "off"
+  },
   "sortOrder": {
     "label": "排序顺序",
     "help": "Widget 在同一区块内的显示顺序"

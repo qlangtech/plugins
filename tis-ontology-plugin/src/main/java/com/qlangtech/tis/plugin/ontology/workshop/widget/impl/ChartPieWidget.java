@@ -5,7 +5,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.Collections;
@@ -18,7 +18,7 @@ import java.util.Collections;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class ChartPieWidget extends FullDisplayWidget {
+public class ChartPieWidget extends WorkshopWidget {
 
     public static final String KEY_DATA_SOURCE_VAR = "dataSourceVar";
     public static final String KEY_LABEL_PROPERTY = "labelProperty";

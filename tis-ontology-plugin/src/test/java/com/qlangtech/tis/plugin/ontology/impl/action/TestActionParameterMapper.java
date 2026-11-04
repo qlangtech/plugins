@@ -16,8 +16,6 @@ import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.EnumWidget;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.FileWidget;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.InputTextWidget;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.IntNumberWidget;
-import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.MultiDescriblePluginWidget;
-import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.MultiSelectableWidget;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.DefaultOntologyProperty;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.ConstraintsOfValueType;
 import com.qlangtech.tis.plugin.ontology.impl.valuetype.DefaultOntologyValueType;
@@ -201,8 +199,10 @@ public class TestActionParameterMapper {
         expected.put(OntologyType.DOUBLE, DecimalNumberWidget.class);
         expected.put(OntologyType.DECIMAL, DecimalNumberWidget.class);
         expected.put(OntologyType.VECTOR, InputTextWidget.class);
-        expected.put(OntologyType.ARRAY, MultiSelectableWidget.class);
-        expected.put(OntologyType.STRUCT, MultiDescriblePluginWidget.class);
+        // ARRAY / STRUCT 的专用控件（MultiSelectableWidget / MultiDescriblePluginWidget）源码整类被注释，
+        // ActionParameterMapper.defaultWidget 已让它们与 VECTOR / GEOPOINT / GEOSHAPE 一起回落单行文本
+        expected.put(OntologyType.ARRAY, InputTextWidget.class);
+        expected.put(OntologyType.STRUCT, InputTextWidget.class);
         expected.put(OntologyType.GEOPOINT, InputTextWidget.class);
         expected.put(OntologyType.GEOSHAPE, InputTextWidget.class);
         expected.put(OntologyType.MEDIA_REFERENCE, FileWidget.class);

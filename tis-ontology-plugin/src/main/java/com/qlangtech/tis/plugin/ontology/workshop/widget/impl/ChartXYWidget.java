@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -13,7 +14,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.CategoricalAxisConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ChartLayer;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ContinuousAxisConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.XAxisBucketing;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractLayerType;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractLegendConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.ChartXYDataProcessor;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.qlangtech.tis.plugin.annotation.FormFieldType.MULTI_DESCRIBLE_PLUGIN;
 
@@ -54,14 +56,15 @@ import static com.qlangtech.tis.plugin.annotation.FormFieldType.MULTI_DESCRIBLE_
  * 扁平的 {@code series} 列表换成 {@code layers}，并把 {@link AxisConfig} 由「一个类装
  * 三种刻度」改为按轴性质多态的子类体系。详见
  * {@code /opt/misc/palantir-study/use-case-data-quality/detail-design/workshop/05-08-widget-implementation-chartXY-widget.md}。
+ *
+ * @author 百岁 (baisui@qlangtech.com)
  * @code /opt/misc/palantir-study/foundry/workshop/detail/04-widgets/widgets-chart.md
  * @code /Users/mozhenghua/j2ee_solution/project/tis-console/src/workshop/components/widgets/chart-xy/chart-xy.component.ts
- *
+ * <p>
  * https://www.chartjs.org/docs/latest/samples/line/line.html
- * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class ChartXYWidget extends FullDisplayWidget {
+public class ChartXYWidget extends WorkshopWidget {
 
     /**
      * 图层列表 —— 一个图层 = 一份数据输入 + 一种画法，多层叠在同一坐标系。
@@ -120,7 +123,7 @@ public class ChartXYWidget extends FullDisplayWidget {
     /**
      * 图表方向 —— <b>整张图共用的一套坐标系设置，不是图层属性</b>。
      *
-     * <h4>硬性约束（保存期由 {@link DescriptorImpl#verify} 强制，运行期由 {@link #orientationViolation()} 兜底）</h4>
+     * <h4>硬性约束（保存期由 {@link DescriptorImpl#secondVerify(IControlMsgHandler, Context, Descriptor.PostFormVals, Descriptor.PostFormVals)} 强制，运行期由 {@link #orientationViolation()} 兜底）</h4>
      * <pre>
      *   HORIZONTAL 合法 ⟺ layers 非空 且 每一层的 layerType 都支持横向（当前只有 BarLayerType）
      * </pre>
@@ -218,7 +221,7 @@ public class ChartXYWidget extends FullDisplayWidget {
      * 校验 {@link #orientation} 与图层画法是否相容 —— 规则与原因的权威说明见
      * {@link #orientation} 字段注释。
      *
-     * <p>调用点：保存期 {@link DescriptorImpl#verify}（字段级报错、中止写盘）与运行期
+     * <p>调用点：保存期 {@link DescriptorImpl#secondVerify(IControlMsgHandler, Context, Descriptor.PostFormVals, Descriptor.PostFormVals)}（字段级报错、中止写盘）与运行期
      * {@link ChartXYDataProcessor#process}（兜住历史落盘数据或绕过表单的直接调用）。
      *
      * @return {@code null} 表示合法；否则为可直接展示给用户的错误描述
@@ -295,7 +298,7 @@ public class ChartXYWidget extends FullDisplayWidget {
      * 事实的三个侧面：<b>一张图只有一对共享 scale</b>。改任何一条前先读 {@link #orientation}
      * 的字段注释。
      *
-     * <p>调用点：保存期 {@link DescriptorImpl#verify}（字段级报错、中止写盘）与运行期
+     * <p>调用点：保存期 {@link DescriptorImpl#secondVerify(IControlMsgHandler, Context, Descriptor.PostFormVals, Descriptor.PostFormVals)}（字段级报错、中止写盘）与运行期
      * {@code ChartXYDataProcessor#process}（兜住历史落盘数据或绕过表单的直接调用）。
      *
      * @return {@code null} 表示合法；否则为可直接展示给用户的错误描述
@@ -342,6 +345,12 @@ public class ChartXYWidget extends FullDisplayWidget {
 
         public static final String METHOD_GET_DATA = "get_data";
 
+
+//        @Override
+//        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//
+//        }
+
         /**
          * 保存期的硬性约束，两条：
          * <ol>
@@ -361,7 +370,7 @@ public class ChartXYWidget extends FullDisplayWidget {
          * <p>两条都检查完再返回：一次保存把所有问题都报出来，避免用户改一条、再存、再遇到下一条。
          */
         @Override
-        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        public boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ChartXYWidget widget = postFormVals.newInstance();
             boolean valid = true;
 
@@ -380,10 +389,10 @@ public class ChartXYWidget extends FullDisplayWidget {
             return valid;
         }
 
-        @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            return this.verify(msgHandler, context, postFormVals);
-        }
+//        @Override
+//        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            return this.verify(msgHandler, context, postFormVals);
+//        }
 
         @Override
         public String getDisplayName() {
@@ -406,13 +415,13 @@ public class ChartXYWidget extends FullDisplayWidget {
             if (!METHOD_GET_DATA.equals(methodType)) {
                 throw new IllegalStateException("illegal methodType:" + methodType);
             }
-            JSONObject postContent = pluginContext.getJSONPostContent();
+            JSONObject postContent = Objects.requireNonNull(pluginContext.getJSONPostContent(), "postContent can not be null");
             // ⚠️ 白名单是唯一决定字段能不能被读到的开关：漏掉 layers，widget.layers 恒为 null 且不报错。
             // 嵌套的 layerType / xAxisBucketing / aggregation 由 createDescribable 递归解析，不必逐一列出。
             // orientation 必须列在这里，否则 ChartXYDataProcessor 里的横向约束校验只能看到字段初值。
             AttrValMap.RelevantFieldsContextAttrValMap<ChartXYWidget> attrs
                     = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                    (desc) -> List.of("layers", "xAxis", "yAxis", "orientation"));
+                    (desc) -> List.of("layers", "xAxis", "yAxis", "orientation", FIELD_CONDITIONAL_VISIBILITY));
             if (!attrs.validate().isValid()) {
                 return;
             }

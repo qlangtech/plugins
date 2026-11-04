@@ -53,6 +53,15 @@ import static com.qlangtech.tis.plugin.ontology.OntologyValueType.KEY_START_PERS
  * {@link #getStorageKey(String)}：存量 widget 的 identity 是旧版可编辑名称
  * （可能含中文、空格、括号），必须编码成安全且单射的文件名，才能映射回原文件。
  *
+ * <h3>身份一律取自实例</h3>
+ * 泛型上界同时要求 {@code Describable} 与 {@link IdentityName}：每个实体都自己持有身份字段
+ * （page / section / overlay / widget 是 {@code id}，显示配置是 {@code widgetId}），
+ * 调用方不需要、也没机会另外传一个身份进来。
+ * <p>
+ * 显示配置曾经为了「少一个冗余字段」把 {@code widgetId} 删掉过（2026-10-31），代价是这里
+ * 的泛型上界必须放宽、{@code save} 要加一个显式传身份的重载、差集删除要回落到文件名反解。
+ * 2026-11-01 已回退：冗余一份 id 换来的是所有调用点都不必知道「这个实体的身份不在实例上」。
+ *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/22
  */
@@ -118,18 +127,44 @@ public abstract class AbstractWorkshopEntityStore<T extends Describable<?> & Ide
     }
 
     /**
+     * 共享目录时，子类用它认领属于自己的文件。
+     *
+     * <p>{@code widgets/} 目录下同时放 widget 本身（{@code {id}.xml}）与它的显示配置
+     * （{@code {id}_display.xml}，见 {@code WorkshopWidgetDisplayStore}），而基类的
+     * {@link #listAll()} 与 {@link #deleteNotInStorageKeys(Set)} 都会扫全目录 —— 不加这道
+     * 过滤，差集删除会把另一类文件静默删掉、列表里也会混进别人的条目。
+     *
+     * @param storageKey 已由 {@link #getStorageKey(String)} 转换过的文件名（不含扩展名）
+     */
+    protected boolean acceptStorageKey(String storageKey) {
+        return true;
+    }
+
+    /**
      * 列出本模块下的全部实体（未排序）。子类按自己的排序口径覆盖。
+     *
+     * <p>这里不复用 {@code getStoreGetter().loadAll()}：那个方法会无差别解析目录下所有
+     * {@code *.xml}，无法按 {@link #acceptStorageKey(String)} 过滤（共享目录时会把另一类
+     * 实体也解析成 {@code T}，轻则多出脏条目、重则抛异常）。
      */
     public List<T> listAll() {
         File storeDir = getStoreDir();
         if (!storeDir.isDirectory()) {
             return Collections.emptyList();
         }
-        return new ArrayList<>(getStoreGetter().loadAll(ontologyDomainId, Optional.of(moduleName)));
+        List<T> entities = new ArrayList<>();
+        for (File file : FileUtils.listFiles(storeDir, new String[]{XmlFile.KEY_XML_EXTENSION}, false)) {
+            String storageKey = StringUtils.removeEnd(file.getName(), XmlFile.KEY_XML_DOT_EXTENSION);
+            if (!acceptStorageKey(storageKey)) {
+                continue;
+            }
+            entities.add(getStoreGetter().load(ontologyDomainId, Optional.of(moduleName), storageKey));
+        }
+        return entities;
     }
 
     /**
-     * 保存单个实体。是新增还是更新由文件是否已存在决定 —— 调用方无需跟踪状态。
+     * 保存单个实体，身份取自实体自身。是新增还是更新由文件是否已存在决定 —— 调用方无需跟踪状态。
      */
     public void save(IPluginContext pluginContext, Optional<Context> context, T entity) {
         Objects.requireNonNull(entity, "entity can not be null");
@@ -202,6 +237,10 @@ public abstract class AbstractWorkshopEntityStore<T extends Describable<?> & Ide
         }
         for (File file : FileUtils.listFiles(storeDir, new String[]{XmlFile.KEY_XML_EXTENSION}, false)) {
             String storageKey = StringUtils.removeEnd(file.getName(), XmlFile.KEY_XML_DOT_EXTENSION);
+            if (!acceptStorageKey(storageKey)) {
+                // 共享目录：不属于本 store 的文件一律不碰（否则差集删除会删掉另一类实体）
+                continue;
+            }
             if (keepStorageKeys.contains(storageKey)) {
                 continue;
             }

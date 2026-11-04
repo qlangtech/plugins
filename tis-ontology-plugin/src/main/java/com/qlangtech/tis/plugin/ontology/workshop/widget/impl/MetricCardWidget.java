@@ -8,7 +8,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.CardLayout;
 import com.qlangtech.tis.plugin.ontology.workshop.model.LayoutStyle;
 import com.qlangtech.tis.plugin.ontology.workshop.model.MetricConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public class MetricCardWidget extends FullDisplayWidget {
+public class MetricCardWidget extends WorkshopWidget {
 
     /**
      * 指标列表。行序即显示序（{@link MetricConfig} 的 {@code order} 字段支持拖拽调整）。

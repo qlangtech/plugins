@@ -22,7 +22,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetColumnConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
@@ -38,7 +38,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
-public class PropertyListWidget extends FullDisplayWidget implements IWidgetColumnHost {
+public class PropertyListWidget extends WorkshopWidget implements IWidgetColumnHost {
 
     public static final String KEY_OBJECT_VAR = "objectVar";
     public static final String KEY_PROPERTIES = "properties";

@@ -10,6 +10,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.OverlayType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableBasedVisibility;
 import com.qlangtech.tis.plugin.ontology.workshop.model.overlay.OverlayTypeConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
@@ -141,10 +143,15 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<WorkshopOverlay> {
+    public static class DefaultDescriptor extends Descriptor<WorkshopOverlay> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
             return "Workshop Overlay";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.Overlay;
         }
     }
 }

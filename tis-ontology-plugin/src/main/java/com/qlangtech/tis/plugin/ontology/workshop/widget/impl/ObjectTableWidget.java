@@ -15,7 +15,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FullDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.NoPagenator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.Pagenator;
@@ -36,7 +36,7 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
-public class ObjectTableWidget extends FullDisplayWidget implements IWidgetColumnHost {
+public class ObjectTableWidget extends WorkshopWidget implements IWidgetColumnHost {
 
     public static final String KEY_OBJECT_SET_VAR = "objectSetVar";
     public static final String KEY_ACTIVE_OBJECT_VAR = "activeObjectVar";

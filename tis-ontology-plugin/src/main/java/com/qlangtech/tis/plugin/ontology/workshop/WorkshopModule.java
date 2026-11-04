@@ -39,9 +39,14 @@ import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntitySt
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopOverlayStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopSectionStore;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetDisplayStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetStore;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.AbstractWidgetDisplayConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetDisplayConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.RobustReflectionConverter2;
@@ -76,6 +81,8 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.getOntologyDomain
  * @see WorkshopPage
  * @see WorkshopSection
  * @see WorkshopWidget
+ * @see WorkshopOverlay
+ * @see WorkshopVariable
  */
 public final class WorkshopModule extends OntologyDomainManipulate implements IManipulateStatus //
         , IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
@@ -374,6 +381,22 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             widgetsBySectionId.computeIfAbsent(widget.sectionId, k -> new ArrayList<>()).add(widget);
         }
 
+        // 显示配置是独立实体（widgets/{id}_display.xml）：一次性扫目录建索引再按 widgetId 挂回去，
+        // 避免逐 widget 一次文件存在性检查 + 解析。没配置过的 widget 对应 null。
+        // 索引键是显示配置实例上的 widgetId（identity），与 widget 侧的 identityValue 同一口径。
+        Map<String, AbstractWidgetDisplayConfig> displaysByWidgetId =
+                WorkshopWidgetDisplayStore.create(ontologyDomain, moduleName).listAllByWidgetId();
+        for (List<WorkshopWidget> sectionWidgets : widgetsBySectionId.values()) {
+            for (WorkshopWidget widget : sectionWidgets) {
+                AbstractWidgetDisplayConfig loaded = displaysByWidgetId.get(widget.identityValue());
+                // configClazzOf 要查一次 descriptor，没配过 Display 的 widget 不必查
+                if (loaded != null) {
+                    widget.display = reconcileDisplay(
+                            AbstractWidgetDisplayConfig.configClazzOf(widget), loaded);
+                }
+            }
+        }
+
         // 子侧外键 + 序号归一化（只改标量字段，不动集合）
         for (Map.Entry<String, List<WorkshopSection>> entry : sectionsByPageId.entrySet()) {
             normalizeSections(entry.getValue(), WorkshopCptParentId.pageParent(entry.getKey()));
@@ -387,10 +410,12 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             section.widgets = takeWidgets(widgetsBySectionId, section.identityValue());
             section.normalizeChildSectionOrder();
             normalizeConditionalVisibility(section);
+            normalizeWidgetConditionalVisibility(section.widgets);
             if (section.childSections != null) {
                 for (SectionChild child : section.childSections) {
                     child.widgets = takeWidgets(widgetsBySectionId, child.identityValue());
                     normalizeConditionalVisibility(child);
+                    normalizeWidgetConditionalVisibility(child.widgets);
                 }
             }
         }
@@ -423,6 +448,57 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
         if (section.conditionalVisibility == null) {
             section.conditionalVisibility = new ConditionalVisibilityOff();
         }
+    }
+
+    /**
+     * widget 的条件可见性同样缺失补 off（理由见
+     * {@link #normalizeConditionalVisibility(AbstractWorkshopSection)}）。
+     */
+    private static void normalizeWidgetConditionalVisibility(List<WorkshopWidget> widgets) {
+        if (widgets == null) {
+            return;
+        }
+        for (WorkshopWidget widget : widgets) {
+            if (widget.conditionalVisibility == null) {
+                widget.conditionalVisibility = new ConditionalVisibilityOff();
+            }
+        }
+    }
+
+    /**
+     * 把落盘的显示配置归一到目标 impl（{@code targetClazz}，由
+     * {@link AbstractWidgetDisplayConfig#configClazzOf} 按 Widget 类型算出）。
+     *
+     * <p>正常情况类名一致，原样返回。不一致只可能来自存量数据：显示配置独立落盘之前，
+     * 「完整 / 精简」由 Widget 继承的两条分支决定，有人手工搬过文件、或 widget 换过类型。
+     * 此时<b>保留两个 impl 共有的 {@code width}</b>，其余取目标类的字段默认值 ——
+     * height / displayOptimization 对新类型没有语义，带着错误语义比丢掉更糟。
+     *
+     * <p>只在内存里归一：文件本身要等下一次保存 Display 才被改写成新的类名。
+     */
+    static AbstractWidgetDisplayConfig reconcileDisplay(
+            Class<? extends AbstractWidgetDisplayConfig> targetClazz, AbstractWidgetDisplayConfig loaded) {
+        if (loaded == null) {
+            return null;
+        }
+        if (loaded.getClass() == targetClazz) {
+            return loaded;
+        }
+        AbstractWidgetDisplayConfig target;
+        try {
+            target = targetClazz.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("can not instantiate " + targetClazz.getName(), e);
+        }
+        // 身份必须跟着搬：归一后的实例要能继续回答「我属于哪个 widget」，
+        // 否则下一次保存 / 差集删除报告的 id 就是 null
+        target.widgetId = loaded.widgetId;
+        if (target instanceof CompactDisplayConfig compact && loaded instanceof WidgetDisplayConfig full) {
+            compact.width = full.width;
+        } else if (target instanceof WidgetDisplayConfig full && loaded instanceof CompactDisplayConfig compact) {
+            full.width = compact.width;
+        }
+        return target;
     }
 
     private static List<WorkshopWidget> takeWidgets(
@@ -584,6 +660,24 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
      * widget 的所属 section 信封字段（同上，不是 {@code @FormField}）
      */
     public static final String KEY_SECTION_ID = "sectionId";
+    /**
+     * widget 的显示配置信封字段（同上，不是 {@code @FormField}）。
+     *
+     * <p>值是独立的插件实体 {@code {impl, vals}}，服务端按 widget id 落盘到
+     * {@code widgets/{widgetId}_display.xml}；GET 时由 {@code loadLayout} 回填。
+     * 前端没有改动过 Display 时不会带这个键 —— 对应「从未配置过」。
+     *
+     * <p>两个方向上的 {@code impl} 都由服务端决定（{@link AbstractWidgetDisplayConfig#configClazzOf}）：
+     * GET 下发的是目标 impl，POST 收到的 impl 会被覆写后再解析 ——
+     * 完整 / 精简由 widget 类型决定，用户不能选。
+     *
+     * <p>同理，{@code vals.widgetId}（显示配置的 identity）也由服务端按当前 widget id 覆写，
+     * 不采信请求体 —— 见 {@code parseWidgetDisplay}。
+     */
+    public static final String KEY_DISPLAY_CONFIG = "displayConfig";
+
+    /** 显示配置的身份字段名（= {@link AbstractWidgetDisplayConfig#widgetId}） */
+    static final String KEY_WIDGET_ID = "widgetId";
 
     /**
      * delta 每个段的增量数组键名 / 删除数组键名
@@ -755,6 +849,12 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                     default:
                         pluginContext.addErrorMessage(context, "Unsupported workshop module operation type: " + type);
                 }
+            } catch (WorkshopFormParserException e) {
+
+                JSONObject targetPlugin = new JSONObject(Map.of(IdentityName.PLUGIN_IDENTITY_NAME, e.getPrimaryIDVal(), "targetType", e.getExpectedType()));
+
+                msgHandler.setBizResult(context, targetPlugin);
+                return;
             } catch (Exception e) {
                 // 不要将异常吃掉，不然终端排查错误非常困难
                 // pluginContext.addErrorMessage(context, "操作失败: " + e.getMessage());
@@ -924,6 +1024,10 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             for (WorkshopWidget widget : section.widgets) {
                 JSONObject widgetJson = widgetToJSON(widget);
                 widgetJson.put(KEY_SECTION_ID, widget.sectionId);
+                if (widget.display != null) {
+                    // 显示配置是独立实体，以信封字段下发；前端读到的是与旧版同形的 {impl, vals}
+                    widgetJson.put(KEY_DISPLAY_CONFIG, widgetDisplayToJSON(widget.display));
+                }
                 widgetsJson.add(widgetJson);
             }
         }
@@ -938,6 +1042,14 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
         @SuppressWarnings({"rawtypes", "unchecked"})
         private static JSONObject widgetToJSON(WorkshopWidget widget) throws Exception {
             return new DescribableJSON(widget, widget.getDescriptor()).getItemJson();
+        }
+
+        /**
+         * 显示配置的 item JSON —— 与 {@link #widgetToJSON} 同因（扩展点类型是接口而非自身）。
+         */
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        private static JSONObject widgetDisplayToJSON(AbstractWidgetDisplayConfig display) throws Exception {
+            return new DescribableJSON(display, display.getDescriptor()).getItemJson();
         }
 
         private void doList(IControlMsgHandler msgHandler,
@@ -1109,7 +1221,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          */
         private void doSaveModule(IControlMsgHandler msgHandler,
                                   IPluginContext pluginContext,
-                                  Context context) {
+                                  Context context) throws WorkshopFormParserException {
             String ontologyDomainId = msgHandler.getString("ontologyDomainId");
             String moduleName = msgHandler.getString("name");
 
@@ -1160,6 +1272,13 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             Set<String> removedWidgets = WorkshopWidgetStore.create(ontologyDomainId, moduleName)
                     .deleteNotIn(identities(widgets));
 
+            // 显示配置是独立实体：先写本轮带了 displayConfig 的，再把随 widget 一起消失的清掉
+            WorkshopWidgetDisplayStore displayStore = WorkshopWidgetDisplayStore.create(ontologyDomainId, moduleName);
+            persistWidgetDisplays(displayStore, pluginContext, context, widgets);
+            for (String removedWidgetId : removedWidgets) {
+                displayStore.delete(pluginContext, Optional.of(context), removedWidgetId);
+            }
+
             // 各 store 的 save/delete 已各自递增 generation，这里再兜一次底：
             // 即便将来某条写路径漏了失效，整模块保存后缓存也一定会重建
             invalidateWorkshopData(ontologyDomainId, moduleName);
@@ -1202,7 +1321,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          */
         private void doApplyModule(IControlMsgHandler msgHandler,
                                    IPluginContext pluginContext,
-                                   Context context) {
+                                   Context context) throws WorkshopFormParserException {
             String ontologyDomainId = msgHandler.getString("ontologyDomainId");
             String moduleName = msgHandler.getString("name");
 
@@ -1310,7 +1429,13 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             persistEntities(sectionUpserts, selfManagementMeta, pluginContext, context);
             persistEntities(widgetUpserts, selfManagementMeta, pluginContext, context);
 
+            // 显示配置是独立实体：只写本轮带了 displayConfig 的那些（未带 = 该 widget 没配过 Display）
+            WorkshopWidgetDisplayStore displayStore = WorkshopWidgetDisplayStore.create(ontologyDomainId, moduleName);
+            persistWidgetDisplays(displayStore, pluginContext, context, widgetUpserts);
+
             for (String widgetId : widgetDeletes) {
+                // 先删子实体（display）再删父实体（widget），避免留下孤儿显示配置
+                displayStore.delete(pluginContext, Optional.of(context), widgetId);
                 widgetStore.delete(pluginContext, Optional.of(context), widgetId);
             }
             for (String sectionId : sectionDeletes) {
@@ -1503,6 +1628,25 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             }
         }
 
+        /**
+         * 逐 widget 写显示配置 —— <b>只写本轮请求里带了 {@code displayConfig} 的那些</b>。
+         *
+         * <p>「没带」有两种含义，都按「不写」处理：该 widget 从未配置过 Display（不产生
+         * {@code _display.xml}），或者本轮的差量里只改了 Widget 配置（已有文件保持原样）。
+         */
+        private static void persistWidgetDisplays(WorkshopWidgetDisplayStore displayStore,
+                                                  IPluginContext pluginContext, Context context,
+                                                  List<WorkshopWidget> widgets) {
+            for (WorkshopWidget widget : widgets) {
+                if (widget.display != null) {
+                    // 落盘文件名由 display.widgetId 决定 —— 以所属 Widget 为准再对一次，
+                    // 防「归一或解析时把身份带丢」让文件落到 null_display.xml 上
+                    widget.display.widgetId = widget.identityValue();
+                    displayStore.save(pluginContext, Optional.of(context), widget.display);
+                }
+            }
+        }
+
         private static <T extends IdentityName> Set<String> identities(List<T> entities) {
             Set<String> ids = new HashSet<>();
             for (T entity : entities) {
@@ -1553,7 +1697,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          */
         private static List<WorkshopOverlay> parseOverlays(IControlMsgHandler msgHandler, Context context,
                                                            JSONArray overlaysJson,
-                                                           boolean sortOrderFromEnvelope) {
+                                                           boolean sortOrderFromEnvelope) throws WorkshopFormParserException {
             List<WorkshopOverlay> overlays = new ArrayList<>();
             if (overlaysJson == null) {
                 return overlays;
@@ -1598,7 +1742,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                                                            JSONArray sectionsJson,
                                                            Set<String> pageIds,
                                                            Set<String> overlayIds,
-                                                           boolean sortOrderFromEnvelope) {
+                                                           boolean sortOrderFromEnvelope) throws WorkshopFormParserException {
             List<WorkshopSection> sections = new ArrayList<>();
             if (sectionsJson == null) {
                 return sections;
@@ -1676,7 +1820,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
         private static List<WorkshopWidget> parseWidgets(IControlMsgHandler msgHandler, Context context,
                                                          JSONArray widgetsJson,
                                                          Set<String> sectionIds,
-                                                         boolean sortOrderFromEnvelope) {
+                                                         boolean sortOrderFromEnvelope) throws WorkshopFormParserException {
             List<WorkshopWidget> widgets = new ArrayList<>();
             if (widgetsJson == null) {
                 return widgets;
@@ -1700,12 +1844,59 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                             + "] refers to unknown section: " + sectionId);
                 }
                 widget.sectionId = sectionId;
+                widget.display = parseWidgetDisplay(msgHandler, context, itemJson, widget);
                 if (!names.add(widget.identityValue())) {
                     throw new IllegalStateException("duplicate widget id in module: " + widget.identityValue());
                 }
                 widgets.add(widget);
             }
             return widgets;
+        }
+
+        /**
+         * 解析 widget 信封里的显示配置；没带该键 ⇒ 返回 {@code null}（= 本次不改 Display）。
+         *
+         * <p>{@code impl} 由服务端算出（{@link AbstractWidgetDisplayConfig#configClazzOf}），
+         * <b>不采信前端</b>：用完整还是精简是 widget 类型的固有属性，不是用户选项。
+         * {@link WorkshopFormParser#parse} 只从 {@code itemJson.impl} 反查 descriptor
+         * （缺 impl 直接抛，找得到的 descriptor 字段集合还可能不是目标那份），
+         * 因此这里先覆写 impl 再交给它解析 —— 拿到的一定是目标类，字段校验也按目标类做。
+         *
+         * <p>{@code widgetId} 同理由服务端写死：它是显示配置的 identity（也是落盘文件名），
+         * 语义上等于「这份配置属于哪个 Widget」。前端表单里它以 {@code readonly} 展示，
+         * 但请求体是客户端可控的 —— 采信它等于允许把配置写到别的 Widget 名下。这里先覆写
+         * 再校验（该字段 {@code validate = require}，缺了会校验失败，不能指望前端一定带）。
+         *
+         * <p>覆写发生在 {@code clone()} 出来的副本上：{@code itemJson} 属于请求体，
+         * 后面解析 widget 自身时还要用原始的那份。
+         */
+        private static AbstractWidgetDisplayConfig parseWidgetDisplay(IControlMsgHandler msgHandler,
+                                                                      Context context, JSONObject itemJson,
+                                                                      WorkshopWidget widget) throws WorkshopFormParserException {
+            JSONObject displayJson = itemJson.getJSONObject(KEY_DISPLAY_CONFIG);
+            if (displayJson == null) {
+                return null;
+            }
+            JSONObject forced = (JSONObject) displayJson.clone();
+            forced.put(AttrValMap.PLUGIN_EXTENSION_IMPL,
+                    AbstractWidgetDisplayConfig.configClazzOf(widget).getName());
+            JSONObject vals = forced.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS);
+            if (vals == null) {
+                vals = new JSONObject();
+                forced.put(AttrValMap.PLUGIN_EXTENSION_VALS, vals);
+            }
+            JSONObject widgetIdVal = new JSONObject();
+            widgetIdVal.put(Descriptor.KEY_primaryVal, widget.identityValue());
+            vals.put(KEY_WIDGET_ID, widgetIdVal);
+
+            AbstractWidgetDisplayConfig display = parseEntity(msgHandler, context, forced,
+                    "widget[" + widget.identityValue() + "]." + KEY_DISPLAY_CONFIG,
+                    AbstractWidgetDisplayConfig.class);
+            if (display != null) {
+                // 校验通过后仍以服务端值为准（上面的覆写已经生效，这里只是把契约写明）
+                display.widgetId = widget.identityValue();
+            }
+            return display;
         }
 
         /**
@@ -1717,7 +1908,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          * 非法枚举、缺字段会一路带进落盘流程。
          */
         private static <T> T parseEntity(IControlMsgHandler msgHandler, Context context,
-                                         JSONObject itemJson, String label, Class<T> expectedType) {
+                                         JSONObject itemJson, String label, Class<T> expectedType) throws WorkshopFormParserException {
             return WorkshopFormParser.parse(msgHandler, context, itemJson, label, expectedType);
         }
 
@@ -1736,7 +1927,8 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          *                         {@code false} = delta 路径，序号取信封字段（必填）
          */
         private static List<WorkshopPage> parsePages(IControlMsgHandler msgHandler, Context context,
-                                                     JSONArray pagesJson, boolean normalizeByIndex) {
+                                                     JSONArray pagesJson, boolean normalizeByIndex)
+                throws WorkshopFormParserException {
             if (pagesJson == null) {
                 throw new IllegalStateException("snapshot '" + KEY_PAGES + "' must be an array");
             }

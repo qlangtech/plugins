@@ -17,23 +17,22 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
-
-import java.io.Serializable;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 
 /**
- * 单行表单控件的显示配置：只含<b>宽度</b>与<b>条件可见性</b>。
+ * 精简显示配置：只含<b>宽度</b>。
  *
  * <h3>与 {@link WidgetDisplayConfig} 的关系</h3>
- * 本类是 {@link WidgetDisplayConfig} 的<b>同名字段子集</b>：两个类的
- * {@code width} / {@code conditionalVisibility} 字段名、类型、ordinal 逐一相同
- * （{@code 0} / {@code 2} 与 {@code WidgetDisplayConfig} 对齐，便于读者对照），
- * 因此前端读 {@code widget.displayConfig.width} 对两组 Widget 走同一条路径。
+ * 本类是 {@link WidgetDisplayConfig} 的<b>同名字段子集</b>：{@code width} 字段名、类型、
+ * ordinal 逐一相同（都是 {@code 1}，便于读者对照），因此前端读
+ * {@code widget.displayConfig.vals.width} 对两个 impl 走同一条路径。
+ *
+ * <p>哪些 Widget 用本 impl 由 {@link AbstractWidgetDisplayConfig#configClazzOf} 决定
+ * （即 {@code WorkShopWidgetType.fullDisplayWidget == false}），用户不能选。
  *
  * <h3>为什么不含 height / displayOptimization</h3>
  * 这两项对单行输入控件没有语义：
@@ -44,37 +43,35 @@ import java.io.Serializable;
  *       在进出视口时该不该卸载」的问题，而表单控件无所谓挂载开销，也不存在需要保留的
  *       内部滚动位置。</li>
  * </ul>
- * 让这些字段出现在表单里，用户会填了却发现没有任何效果，这正是把
- * {@link CompactDisplayWidget} / {@link FullDisplayWidget} 拆开的理由。
+ * 让这些字段出现在表单里，用户会填了却发现没有任何效果。
  *
  * <p>同理，宽度槽位在自适应下也<b>不该</b>冒出高度概念：{@link AutoSizingMode} 的上限字段
  * 叫 {@code maxSize} 而非 {@code maxHeight}，正是为了让「宽度 → 自适应」下的那个输入框
  * 不对着一行的宽度谈高度。
  *
- * <h3>谁在用</h3>
- * 由 {@link CompactDisplayWidget} 承载，见该类的分组说明。新增单行表单类 Widget 时
- * 继承 {@link CompactDisplayWidget} 即可拿到本配置。
- *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/20
  */
-public class CompactDisplayConfig implements Describable<CompactDisplayConfig>, Serializable {
+public class CompactDisplayConfig extends AbstractWidgetDisplayConfig {
 
     private static final long serialVersionUID = 1L;
 
-    /** 宽度策略（与 {@link WidgetDisplayConfig#width} 逐字同名同序） */
-    @FormField(ordinal = 0)
+    /**
+     * 宽度策略（与 {@link WidgetDisplayConfig#width} 逐字同名同序）
+     */
+    @FormField(ordinal = 1)
     public SizingMode width;
 
-    /** 条件可见性：引用变量控制该 Widget 的显示隐藏（与 {@link WidgetDisplayConfig#conditionalVisibility} 同） */
-    @FormField(ordinal = 2,validate = {Validator.require})
-    public ConditionalVisibilityConfig conditionalVisibility;
-
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<CompactDisplayConfig> {
+    public static class DefaultDescriptor extends Descriptor<CompactDisplayConfig> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
-            return "Compact Widget Display Config";
+            return "精简显示配置";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.WidgetDisplayConfig;
         }
     }
 }

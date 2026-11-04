@@ -8,6 +8,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.IAjaxResult;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopFormParser;
+import com.qlangtech.tis.plugin.ontology.workshop.WorkshopFormParserException;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
@@ -201,7 +202,7 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
          *
          * @see WorkshopVariable#validateDefinition 「变量类型 ↔ 定义方式」组合合法性的校验点
          */
-        private static WorkshopVariable parseVariable(IControlMsgHandler msgHandler, Context context) {
+        private static WorkshopVariable parseVariable(IControlMsgHandler msgHandler, Context context) throws WorkshopFormParserException {
             String variableJson = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE);
             return WorkshopFormParser.parse(msgHandler, context,
                     JSONObject.parseObject(variableJson), "workshop variable", WorkshopVariable.class);

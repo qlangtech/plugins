@@ -1,0 +1,7 @@
+{
+  "optionsSource": {
+    "label": "候选项来源",
+    "help": "单选/多选的可选项从哪里来：手动录入 val/label 列表，或取自某个对象集变量并指定哪个属性作显示文本、哪个作选项值",
+    "dftVal": "object-set"
+  }
+}

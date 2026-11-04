@@ -22,7 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.CompactDisplayWidget;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 /**
@@ -49,7 +49,7 @@ import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/20
  */
-public class DateInputWidget extends CompactDisplayWidget {
+public class DateInputWidget extends WorkshopWidget {
 
     public static final String KEY_START_VAR = "startVar";
     public static final String KEY_END_VAR = "endVar";

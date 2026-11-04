@@ -17,54 +17,54 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
-
-import java.io.Serializable;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 
 /**
- * Widget 实例级的显示配置：尺寸、优化策略、条件可见性。
- * <p>
- * 与 Widget 基类 {@link WorkshopWidget} 同处本模块，因为它是基类的公共字段。
+ * 完整显示配置：宽度 / 高度 / 展示优化。
  *
- * <h3>与前端形状的对齐</h3>
- * 字段形状以后端向<em>前端</em>对齐为准：
+ * <h3>与 {@link CompactDisplayConfig} 的分工</h3>
+ * 本 impl 面向<b>有内容区</b>的 Widget（表格、图表、看板卡片、Markdown 正文…），内容长短不定，
+ * 高度与挂载策略都说得通。单行表单控件（日期选择器、输入框、复选框…）与页头文字、按钮组
+ * 用不了高度与挂载策略，对应 {@link CompactDisplayConfig}。
+ * <p>
+ * 走哪一个<b>由 Widget 类型决定</b>，不是用户的选项：判据单点在
+ * {@link AbstractWidgetDisplayConfig#configClazzOf(com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget)}，
+ * 数据源是 {@code WorkShopWidgetType.fullDisplayWidget}（下发为 {@code extractProps.fullDisplay}）。
+ * 前端 Display tab 只呈现对应那份表单，没有 impl 单选。
+ *
+ * <p>「条件可见性」不在本类，已上移到 {@link WorkshopWidget#conditionalVisibility}
+ * （Palantir 把可见性归在 Widget setup，不属于 Display）。
+ *
+ * <h3>字段形状</h3>
  * <ul>
- *   <li>{@link #width} / {@link #height} —— 由原来的自由文本 {@code String}（"100%"、"300px"）
- *       改为结构化的 {@link SizingMode} 多态（自适应 / 固定像素 / flex 比例）。
- *       自由文本要靠前端解析字符串，既无法校验也表达不了「按比例分配」。</li>
+ *   <li>{@link #width} / {@link #height} —— 结构化多态 {@link SizingMode}（自适应 / 固定像素 /
+ *       flex 比例），字段形状以前端为准：自由文本要靠前端解析字符串，既无法校验也
+ *       表达不了「按比例分配」。</li>
  *   <li>{@link #displayOptimization} —— 由原来的 {@code lazyLoading} + {@code virtualScroll}
- *       两个 Boolean 合并而来。两个布尔有 4 种组合，但真正有意义的只有 3 种，
- *       且原来的组合<em>表达不了</em>前端的 {@code never-unmount}（永不卸载）。</li>
- *   <li>{@link #conditionalVisibility} —— 与 {@code WorkshopSection} 共用，原样保留。</li>
+ *       两个 Boolean 合并而来。两个布尔有 4 种组合，真正有意义的只有 3 种，且原来的组合
+ *       <em>表达不了</em>前端的 {@code never-unmount}（永不卸载）。</li>
  * </ul>
- * 注意：尺寸与展示优化目前<b>尚无消费方</b>（前端 widgets.model 里声明了对应类型但未读取），
- * 这里是先把契约定下来。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/13
  */
-public class WidgetDisplayConfig implements Describable<WidgetDisplayConfig>, Serializable {
+public class WidgetDisplayConfig extends AbstractWidgetDisplayConfig {
 
     private static final long serialVersionUID = 1L;
 
     /** 宽度策略 */
-    @FormField(ordinal = 0)
+    @FormField(ordinal = 1)
     public SizingMode width;
 
     /** 高度策略 */
-    @FormField(ordinal = 1)
+    @FormField(ordinal = 2)
     public SizingMode height;
-
-    /** 条件可见性：引用变量控制该 Widget 的显示隐藏（off / 默认实现多态，见 {@link ConditionalVisibilityConfig}） */
-    @FormField(ordinal = 2,validate = {Validator.require})
-    public ConditionalVisibilityConfig conditionalVisibility;
 
     /** 挂载 / 渲染优化策略 */
     @FormField(ordinal = 3, type = FormFieldType.ENUM)
@@ -100,10 +100,15 @@ public class WidgetDisplayConfig implements Describable<WidgetDisplayConfig>, Se
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<WidgetDisplayConfig> {
+    public static class DefaultDescriptor extends Descriptor<WidgetDisplayConfig> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
-            return "Widget Display Config";
+            return "完整显示配置";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.WidgetDisplayConfig;
         }
     }
 }

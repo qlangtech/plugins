@@ -2,6 +2,8 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 
 import java.util.Map;
@@ -20,7 +22,7 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
  */
-public abstract class BaseWidgetDescriptor<T extends IWorkshopWidget> extends Descriptor<T> implements IEndTypeGetter {
+public abstract class BaseWidgetDescriptor<T extends IWorkshopWidget> extends Descriptor<T> implements IEndTypeGetter, WorkshopCptTypeGetter {
 
     /**
      * 子类返回对应的 Widget 类型枚举
@@ -35,6 +37,11 @@ public abstract class BaseWidgetDescriptor<T extends IWorkshopWidget> extends De
     @Override
     public final EndType getEndType() {
         return getWidgetType().icon;
+    }
+
+    @Override
+    public final WorkshopCptType getWorkshopCptType() {
+        return WorkshopCptType.Widget;
     }
 
     /**
@@ -53,6 +60,7 @@ public abstract class BaseWidgetDescriptor<T extends IWorkshopWidget> extends De
         props.put("icon", type.icon.getVal());
         props.put("category", type.category.val);
         props.put("widgetType", type.widgetType);
+        props.put("fullDisplay", type.fullDisplayWidget);
 
         // 合并子类的额外属性（如 defaultSize）
         return appendExtractProps(props);

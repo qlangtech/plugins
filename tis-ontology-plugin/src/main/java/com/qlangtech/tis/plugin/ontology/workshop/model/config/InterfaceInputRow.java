@@ -50,9 +50,12 @@ public class InterfaceInputRow implements Describable<InterfaceInputRow>, IMulti
      *
      * <p>取值来自 {@link InterfaceInputCreatorFactory} 随线格式下发的变量候选列表
      * （见其 {@code appendExternalJsonProp}），行编辑器渲染成下拉框。
-     * 这里声明为普通 {@code INPUTTEXT} 而非 {@code SELECTABLE}：候选集是<b>逐行相同的</b>，
-     * 而元组行的字段拿不到所在行的上下文，选项改由工厂统一挂在 {@code _eprops.enum} 上
-     * —— 与 {@code FilterItemConfig.property} 的做法一致。
+     * 这里声明为普通 {@code INPUTTEXT} 而非 {@code SELECTABLE}：本行是<b>元组行编辑器</b>
+     * （{@code MULTI_SELECTABLE} + {@code ElementCreatorFactory}）渲染的，其字段拿不到所在行的
+     * 上下文，选项只能由工厂统一挂在 {@code _eprops.enum} 上。注意不要照抄
+     * {@code FilterItemConfig.property}：那一个是子表单（{@code MULTI_DESCRIBLE_PLUGIN}）字段，
+     * 候选走 {@code registerSelectOptions} + 宿主 {@code valueChangePipe} 的回填，
+     * 两条渲染链路互不通用。
      */
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String variableName;

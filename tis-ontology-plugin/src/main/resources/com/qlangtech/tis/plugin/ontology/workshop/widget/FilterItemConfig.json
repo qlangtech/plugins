@@ -1,0 +1,20 @@
+{
+  "property": {
+    "label": "属性",
+    "help": "过滤作用的本体属性名；候选随宿主 Widget 所选「对象集变量」级联刷新"
+  },
+  "label": {
+    "label": "显示名",
+    "help": "过滤控件在页面上的显示名，例如「出发地」",
+    "placeholder": "出发地"
+  },
+  "component": {
+    "label": "控件形态",
+    "help": "输入框 / 日期选择 / 单选 / 多选；单选与多选还需在下方指定「候选项来源」。该字段同时决定未显式指定算子时的默认算子",
+    "dftVal": "keyword"
+  },
+  "operator": {
+    "label": "算子",
+    "help": "留空则按控件形态推导：keyword→包含、single-select→等于、multi-select→属于集合、date-picker→等于"
+  }
+}

@@ -77,9 +77,7 @@ public class InterfaceInputCreatorFactory implements ElementCreatorFactory<Inter
      * 把变量候选列表随 {@code _eprops.enum} 下发。
      *
      * <p>不把候选集放在行模型字段上：元组行的字段拿不到所在行的上下文，
-     * 而这一列的可选值<b>逐行相同</b>，由工厂统一下发最省事，也与
-     * {@code FilterItemElementCreatorFactory} 下发 {@code components}/{@code operators}
-     * 的做法一致。
+     * 而这一列的可选值<b>逐行相同</b>，由工厂统一下发最省事。
      */
     @Override
     public void appendExternalJsonProp(IPropertyType propertyType, JSONObject biz) {

@@ -8,6 +8,8 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.section.DropHandling;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopSectionStore;
@@ -105,10 +107,15 @@ public final class WorkshopSection extends AbstractWorkshopSection
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<WorkshopSection> {
+    public static class DefaultDescriptor extends Descriptor<WorkshopSection> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
             return "Workshop Section";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.Section;
         }
     }
 }

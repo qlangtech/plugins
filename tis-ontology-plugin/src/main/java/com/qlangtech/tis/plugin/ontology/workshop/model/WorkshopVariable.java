@@ -16,10 +16,11 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
-import com.qlangtech.tis.plugin.ontology.workshop.store.BasicWorkshopStoreGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.RecomputeBehavior;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.MappingInterfaceConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.NoneInterfaceConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableInterfaceConfig;
@@ -27,6 +28,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableRoutingCo
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableStateSavingConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.VariableDefinitionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
+import com.qlangtech.tis.plugin.ontology.workshop.store.BasicWorkshopStoreGetter;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
@@ -474,7 +476,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      * <p>注意脚本里的形参名固定为 {@code desc}（见 {@code PropertyType} 的模板）。
      */
     public abstract static class BasicDescriptor extends Descriptor<WorkshopVariable>
-            implements DescriptorUseableShortComment, IEndTypeGetter {
+            implements DescriptorUseableShortComment, IEndTypeGetter, WorkshopCptTypeGetter {
 
         private final VariableType variableType;
 
@@ -526,6 +528,11 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         @Override
         public EndType getEndType() {
             return this.variableType.getEndType();
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.Variable;
         }
 
         /**

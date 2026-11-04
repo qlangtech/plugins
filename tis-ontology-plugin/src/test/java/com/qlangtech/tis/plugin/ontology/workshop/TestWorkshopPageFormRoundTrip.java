@@ -63,7 +63,7 @@ public class TestWorkshopPageFormRoundTrip {
      * 也会因为 Java 字段初始化而「看起来正确」，抓不住线格式错误。
      */
     @Test
-    public void pagePostItemRoundTrip() {
+    public void pagePostItemRoundTrip() throws Exception {
         Assume.assumeTrue("当前环境未初始化 TIS（JDK17 下通常还缺 "
                         + "--add-opens java.base/java.lang=ALL-UNNAMED），跳过页面线格式检查",
                 tisPageDescriptorReachable());

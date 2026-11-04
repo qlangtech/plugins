@@ -7,6 +7,8 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 
@@ -123,10 +125,15 @@ public class WorkshopPage implements Describable<WorkshopPage>, Serializable, Id
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<WorkshopPage> {
+    public static class DefaultDescriptor extends Descriptor<WorkshopPage> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
             return "Workshop Page";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.Page;
         }
     }
 }

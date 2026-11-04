@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.ontology.workshop;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.runtime.module.misc.FormVaildateType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
@@ -46,15 +47,20 @@ public final class WorkshopFormParser {
      *                     比较 impl —— 后者只对「一类一 descriptor」的实体成立
      */
     public static <T> T parse(IControlMsgHandler msgHandler, Context context,
-                              JSONObject itemJson, String label, Class<T> expectedType) {
+                              JSONObject itemJson, String label, Class<T> expectedType) throws WorkshopFormParserException {
         Objects.requireNonNull(itemJson, label + " item can not be null");
         String impl = itemJson.getString(AttrValMap.PLUGIN_EXTENSION_IMPL);
         AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), itemJson);
 
+
+        if (!(attrValMap.descriptor instanceof WorkshopCptTypeGetter cptTypeGetter)) {
+            throw new IllegalStateException(attrValMap.descriptor.clazz.getName() + " must be type of :" + WorkshopCptTypeGetter.class);
+        }
+
         Descriptor.PluginValidateResult validateResult =
                 attrValMap.validateWithScope(msgHandler, context, 0, 0, FormVaildateType.STRICT);
         if (!validateResult.isValid()) {
-            throw new IllegalStateException(label + " 表单校验未通过（impl=" + impl + "）");
+            throw new WorkshopFormParserException(attrValMap, cptTypeGetter.getWorkshopCptType(), label + " 表单校验未通过（impl=" + impl + "）");
         }
 
         Object instance = validateResult.newInstance();

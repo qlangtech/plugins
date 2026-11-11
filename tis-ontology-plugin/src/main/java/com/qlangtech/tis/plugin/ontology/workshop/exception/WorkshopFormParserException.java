@@ -1,4 +1,4 @@
-package com.qlangtech.tis.plugin.ontology.workshop;
+package com.qlangtech.tis.plugin.ontology.workshop.exception;
 
 import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
 import com.qlangtech.tis.util.AttrValMap;

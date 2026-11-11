@@ -26,7 +26,7 @@ import java.nio.file.Paths;
  *       {@code <maxObjects>} 元素。XStream 不走构造器、也不执行字段初值，所以这个字段必须能被
  *       兜底成默认值；若写成 {@code int} 会得到 0（一条都取不到，且表格看起来「就是没数据」）。</li>
  *   <li>{@link #jsonDftValIsANumber()} —— 前端新建表单的初值只读 {@code eprops.dftVal}。
- *       写成字符串 {@code "50"} 时输入框能显示、但控件类型与 {@code INT_NUMBER} 不匹配。</li>
+ *       写成字符串 {@code "25"} 时输入框能显示、但控件类型与 {@code INT_NUMBER} 不匹配。</li>
  *   <li>{@link #maxObjectsIsNotPartOfValidateStage()} —— 白名单顺序的护栏：它必须在
  *       {@code validate()} 之后追加，否则存量 widget 的取数会整体失败。</li>
  * </ol>
@@ -61,8 +61,8 @@ public class TestObjectListWidgetMaxObjects {
         widget.maxObjects = 1;
         Assert.assertEquals("合法下界原样通过", 1, widget.resolveMaxObjects());
 
-        widget.maxObjects = 300;
-        Assert.assertEquals("合法值原样通过", 300, widget.resolveMaxObjects());
+        widget.maxObjects = 80;
+        Assert.assertEquals("合法值原样通过", 80, widget.resolveMaxObjects());
 
         widget.maxObjects = ObjectListWidget.MAX_OBJECTS_LIMIT + 1;
         Assert.assertEquals("超硬顶饱和（夹取而非抛）",
@@ -81,7 +81,7 @@ public class TestObjectListWidgetMaxObjects {
         Assert.assertEquals(FormFieldType.INT_NUMBER, formField.type());
     }
 
-    /** {@code dftVal} 必须是数字 50 —— 字符串 "50" 会让输入控件按文本初始化 */
+    /** {@code dftVal} 必须是数字 25 —— 字符串 "25" 会让输入控件按文本初始化 */
     @Test
     public void jsonDftValIsANumber() throws IOException {
         JSONObject json = loadJson();

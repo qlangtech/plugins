@@ -32,7 +32,7 @@ public final class ObjectSetRowQuery {
      * 未指定上限时的默认行数。
      *
      * <p>500 这个值对应「卡片 / 图表一次展示」的量级：列表类 widget 自己还有更小的
-     * {@code maxObjects}（50），这里是其余消费方的兜底。
+     * {@code maxObjects}（{@code ObjectListWidget#DEFAULT_MAX_OBJECTS}），这里是其余消费方的兜底。
      */
     public static final int DEFAULT_MAX_ROWS = 500;
 

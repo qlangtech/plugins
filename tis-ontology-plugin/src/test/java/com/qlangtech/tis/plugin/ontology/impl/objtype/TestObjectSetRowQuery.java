@@ -49,7 +49,7 @@ public class TestObjectSetRowQuery {
                 ObjectSetRowQuery.DEFAULT_MAX_ROWS, ObjectSetRowQuery.clampMaxRows(Integer.MIN_VALUE));
     }
 
-    /** 合法区间原样通过 —— 不能顺手「优化」成默认值，否则 maxObjects=50 的配置会被悄悄放大 */
+    /** 合法区间原样通过 —— 不能顺手「优化」成默认值，否则用户配的条数会被悄悄放大 */
     @Test
     public void testLegalValuePassesThrough() {
         Assert.assertEquals(1, ObjectSetRowQuery.clampMaxRows(1));

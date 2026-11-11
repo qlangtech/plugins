@@ -76,16 +76,16 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
     /**
      * {@code maxObjects} 的默认值。
      *
-     * <p>50 是「一屏卡片能看过来」的量级。此前的实现一次拉 1000 行（{@code OBJECT_SET_QUERY_LIMIT}）
+     * <p>25 是「一屏卡片能看过来」的量级。此前的实现一次拉 1000 行（{@code OBJECT_SET_QUERY_LIMIT}）
      * 并全部渲染，既拉长了首屏也把排序推到了浏览器内存里。
      */
-    public static final int DEFAULT_MAX_OBJECTS = 50;
+    public static final int DEFAULT_MAX_OBJECTS = 25;
 
     /**
      * {@code maxObjects} 的硬顶。再大就退回「把整个对象集搬进浏览器」的旧形态，
      * 与「取数在服务端完成一次」的目标相悖。
      */
-    public static final int MAX_OBJECTS_LIMIT = 1000;
+    public static final int MAX_OBJECTS_LIMIT = 100;
 
     /**
      * 列表数据来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给）

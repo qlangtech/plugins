@@ -15,36 +15,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qlangtech.tis.plugin.ontology.workshop.widget.impl.button.group;
+package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.ButtonColor;
 
 /**
- * 默认颜色：跟随按钮形态（即不指定意图色）。零字段 —— 见 {@link ButtonColor} 的多态理由。
+ * 不排序：列表保持变量返回的原始顺序，表头也不出排序选择器。
+ *
+ * <p>本类<b>零 {@code @FormField} 字段</b> —— 没有字段可配，故同包下<b>没有</b>对应
+ * {@code NoListSorting.json}（写了是死文件：TIS 只在类上存在表单字段时才去查同名资源）。
  *
  * @author 百岁 (baisui@qlangtech.com)
- * @date 2026/10/20
+ * @date 2026/11/10
  */
-public class NoneButtonColor extends ButtonColor {
+public class NoListSorting extends ListSorting {
 
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public boolean sortingEnabled() {
+        return false;
+    }
+
+    @Override
+    public String resolveSortField() {
+        return null;
+    }
+
+    @Override
+    public SortOrder resolveSortOrder() {
+        return null;
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
 
         @Override
         public String getDisplayName() {
-            // 必须是短 key "none"：WidgetButtonConfig.json 的 color.dftVal 要逐字对它，
-            // 前端 resolveButtonColor 也按这个短 key 判态。
-            return "none";
+            // 必须是框架常量 "off"：ObjectListWidget.json 的 listSorting.dftVal 要逐字对它，
+            // 前端 resolveObjectListSorting 也按这个短 key 判态。写成「关闭」不报错，只会静默换子类。
+            return SWITCH_OFF;
         }
 
         @Override
         public String shortComment() {
-            // 该颜色类型被按钮、指标卡文字色 / 背景色复用，措辞不能只提「按钮」。
-            return "默认：不指定颜色";
+            return "不排序，保持对象集返回的原始顺序";
         }
     }
 }

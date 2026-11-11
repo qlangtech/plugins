@@ -20,8 +20,8 @@
   },
   "color": {
     "label": "配色",
-    "help": "本系列的显示颜色，支持 CSS 颜色值",
-    "placeholder": "如：#1890ff"
+    "help": "本系列的显示颜色（十六进制，如 #1890ff）；留空由调色板按序分配",
+    "placeholder": "#1890ff"
   },
   "nullDisplay": {
     "label": "空值显示方式",

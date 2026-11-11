@@ -12,7 +12,8 @@
     "placeholder": "请选择本体动作"
   },
   "icon": {
-    "help": "按钮图标（Ant Design 图标名），如 EyeOutlined"
+    "help": "按钮图标（Ant Design 图标名），如 EyeOutlined",
+    "enumMode": "model_assist"
   },
   "confirmBeforeExecute": {
     "help": "执行前是否需要二次确认",

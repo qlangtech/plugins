@@ -11,6 +11,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.CategoricalBucketing;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ChartLayer;
 import com.qlangtech.tis.plugin.ontology.workshop.model.SeriesConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.TemporalBucketing;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -224,7 +225,7 @@ public class TestAggregationPushdownPlanner {
     public void filterColumnsAreValidatedAndApplied() {
         ChartLayer layer = layer(new CategoricalBucketing(), series("s", new CountAggregation()));
         List<AggregationPushdownPlanner.Filter> filters = List.of(
-                new AggregationPushdownPlanner.Filter(PROP_SEGMENT, "equals", "north"));
+                new AggregationPushdownPlanner.Filter(PROP_SEGMENT, FilterOperator.equals, "north"));
 
         AggregationCriteria criteria = plan(layer, filters).get(0).criteria();
         Assert.assertEquals(1, criteria.getFilters().size());
@@ -235,7 +236,7 @@ public class TestAggregationPushdownPlanner {
     public void unknownFilterColumnFails() {
         ChartLayer layer = layer(new CategoricalBucketing(), series("s", new CountAggregation()));
         try {
-            plan(layer, List.of(new AggregationPushdownPlanner.Filter("not_exists", "equals", "x")));
+            plan(layer, List.of(new AggregationPushdownPlanner.Filter("not_exists", FilterOperator.equals, "x")));
             Assert.fail("过滤列同样必须命中本体属性");
         } catch (IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().contains("not_exists"));

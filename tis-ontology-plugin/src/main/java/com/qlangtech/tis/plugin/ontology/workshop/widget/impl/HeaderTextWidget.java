@@ -17,7 +17,9 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -37,53 +39,90 @@ public class HeaderTextWidget extends WorkshopWidget {
 
     public static final String KEY_TEXT_VARIABLE = "textVariable";
 
-    /** 标题文本内容 */
-    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 10,validate = {Validator.require})
+    /**
+     * 标题文本内容
+     */
+    @FormField(type = FormFieldType.INPUTTEXT, ordinal = 10, validate = {Validator.require})
     public String text;
 
-    /** 文本变量绑定（字符串变量，可选） */
-    @FormField(type = FormFieldType.SELECTABLE,ordinal = 11,validate = {Validator.require})
+    /**
+     * 文本变量绑定（字符串变量，可选）
+     */
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 11, validate = {Validator.require})
     public String textVariable;
 
-    /** 图标（ng-zorro 图标名，如 font-size） */
-    @FormField(type = FormFieldType.INPUTTEXT,ordinal = 12,validate = {Validator.require})
-    public String icon;
+    /**
+     * 图标（ng-zorro 图标名，如 font-size）
+     */
+    @FormField(type = FormFieldType.ENUM, ordinal = 12, validate = {Validator.require})
+    public IEndTypeGetter.EndType icon;
 
-    /** 标题级别 1-4 */
-    @FormField(type = FormFieldType.ENUM,ordinal = 13)
+    /**
+     * 标题级别 1-4
+     */
+    @FormField(type = FormFieldType.ENUM, ordinal = 13)
     public HeaderLevel level;
 
-    /** 文本对齐方式 */
-    @FormField(type = FormFieldType.ENUM,ordinal = 14)
+    /**
+     * 文本对齐方式
+     */
+    @FormField(type = FormFieldType.ENUM, ordinal = 14)
     public TextAlignment alignment;
 
-    /** 文本颜色（20 种预设色，hex 色值在 .json resource 中定义） */
-    @FormField(type = FormFieldType.ENUM,ordinal = 15)
+    /**
+     * 文本颜色（20 种预设色，hex 色值在 .json resource 中定义）
+     */
+    @FormField(type = FormFieldType.ENUM, ordinal = 15)
     public WidgetColor color;
 
-    /** 标题级别枚举 */
+    /**
+     * 标题级别枚举
+     */
     public enum HeaderLevel {
         H1("1"), H2("2"), H3("3"), H4("4");
         public final String label;
-        HeaderLevel(String label) { this.label = label; }
+
+        HeaderLevel(String label) {
+            this.label = label;
+        }
     }
 
-    /** 文本对齐方式枚举 */
-    public enum TextAlignment {
+    /**
+     * 文本对齐方式枚举
+     */
+    public enum TextAlignment implements DescriptorUseableShortComment {
         left("左对齐"), center("居中"), right("右对齐");
         public final String label;
-        TextAlignment(String label) { this.label = label; }
+
+        TextAlignment(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return label;
+        }
     }
 
-    /** 20 种常用颜色枚举，hex 色值在 .json resource 中定义，前端可渲染颜色预览圆点 */
-    public enum WidgetColor {
+    /**
+     * 20 种常用颜色枚举，hex 色值在 .json resource 中定义，前端可渲染颜色预览圆点
+     */
+    public enum WidgetColor implements DescriptorUseableShortComment {
         inherit("继承"), primary("品牌色"), red("红色"), volcano("火山橙"),
         orange("橙色"), gold("金色"), yellow("黄色"), lime("黄绿"),
         green("绿色"), cyan("青色"), blue("蓝色"), geekblue("靛蓝"),
         purple("紫色"), magenta("品红"), grey("灰色"), darkGrey("深灰"),
         black("黑色"), white("白色"), success("成功绿"), error("错误红");
         public final String label;
-        WidgetColor(String label) { this.label = label; }
+
+        WidgetColor(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String shortComment() {
+            return this.label;
+        }
     }
 
     @TISExtension

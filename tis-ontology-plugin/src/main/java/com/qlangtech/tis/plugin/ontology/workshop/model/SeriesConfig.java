@@ -10,6 +10,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.AbstractSeriesAggregation;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.CountAggregation;
+import com.qlangtech.tis.plugin.utils.InputColor;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -120,11 +121,10 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IP
     public String displayOverride;
 
     /**
-     * 系列配色（CSS 颜色值）。
-     * use ButtonColor
+     * 系列配色（十六进制色值）；留空 = 由前端调色板按序分配。
      */
-    @FormField(ordinal = 6,type = FormFieldType.INPUTTEXT)
-    public String color;
+    @FormField(ordinal = 6, type = FormFieldType.Color)
+    public InputColor color;
 
     /**
      * 空值显示方式；仅折线图有效。

@@ -6,8 +6,8 @@
   },
   "backgroundColor": {
     "label": "背景颜色",
-    "help": "十六进制色值（如 #f5222d）；支持 #RGB / #RGBA / #RRGGBB / #RRGGBBAA",
-    "placeholder": "#f5222d"
+    "help": "十六进制色值（如 #fafafa）；支持 #RGB / #RGBA / #RRGGBB / #RRGGBBAA；留空不改变",
+    "placeholder": "#fafafa"
   },
   "borderStyle": {
     "label": "边框样式",

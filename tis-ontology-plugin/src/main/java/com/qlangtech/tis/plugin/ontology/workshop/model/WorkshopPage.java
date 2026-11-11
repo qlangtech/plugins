@@ -63,8 +63,22 @@ public class WorkshopPage implements Describable<WorkshopPage>, Serializable, Id
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT)
     public String displayName;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
-    public PageTemplate template = PageTemplate.BLANK;
+    /**
+     * 页面布局模板：定义直接子 Section 的排布规则（左右 / 上下 / 网格等）。
+     *
+     * <p>从枚举改造成插件类后，支持可配置的栏宽 / 栏高。
+     *
+     * <p><b>⚠️ 聚合属性插件字段不得指定 {@code type}</b>：写成
+     * {@code type = FormFieldType.SELECTABLE} 会让 {@code DescriptorsJSON} 走 SELECTABLE 分支去要
+     * {@code getSelectOptions}，而多态 Describable 的类型信息本就由 {@code @TISExtension} 派生类提供，
+     * 结果在取 descriptor 时直接抛 {@code IllegalStateException}，并连坐整个 module 的表单下发。
+     * 正确写法与 {@code PropertyMappingConfig.source} 一致：只声明类型，不写 {@code type}。
+     *
+     * <p><b>不提供 Java 字段初值</b>：XStream 反序列化不走构造器，初值对落盘数据无效；
+     * 缺失时的兜底放在 {@link #readResolve()}（补 {@link PageTemplate#createDefault()}）。
+     */
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public PageTemplate template;
 
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER)
     public Integer sortOrder = 0;
@@ -97,6 +111,21 @@ public class WorkshopPage implements Describable<WorkshopPage>, Serializable, Id
             throw new IllegalStateException("WorkshopPage id can not be null");
         }
         return this.id;
+    }
+
+    /**
+     * XStream 反序列化后的补偿钩子：兜底 {@link #template} 缺失。
+     *
+     * <p>{@code template} 没有 Java 初值 —— XStream 不走构造器，写初值对落盘数据无效；
+     * 缺失时的兜底只能放在这里，统一取 {@link PageTemplate#createDefault()}。
+     *
+     * @return 本实例（XStream 约定）
+     */
+    private Object readResolve() {
+        if (template == null) {
+            template = PageTemplate.createDefault();
+        }
+        return this;
     }
 
     /**

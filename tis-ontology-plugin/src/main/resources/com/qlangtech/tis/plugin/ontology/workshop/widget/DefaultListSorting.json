@@ -1,0 +1,12 @@
+{
+  "sortField": {
+    "label": "排序字段",
+    "help": "按哪个属性排序（选项随「对象集变量」联动）",
+    "placeholder": "请选择排序属性"
+  },
+  "sortOrder": {
+    "label": "排序方向",
+    "help": "升序 / 降序",
+    "dftVal": "asc"
+  }
+}

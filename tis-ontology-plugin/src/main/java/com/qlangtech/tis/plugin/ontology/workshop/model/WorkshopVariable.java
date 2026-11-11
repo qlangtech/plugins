@@ -35,6 +35,8 @@ import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Selectable;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
@@ -115,7 +117,8 @@ import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptio
  * @see BasicDescriptor
  */
 public abstract class WorkshopVariable implements Describable<WorkshopVariable>, Serializable, IdentityName,
-        IPluginStore.ManipuldateProcessor {
+        IPluginStore.ManipuldateProcessor, IPluginStore.AfterPluginSaved {
+    private static final Logger logger = LoggerFactory.getLogger(WorkshopVariable.class);
     public static final String VARIABLE_DIR_NAME = "variables";
     private static final WorkshopVariableStoreGetter storeGetter = new WorkshopVariableStoreGetter();
 
@@ -245,7 +248,15 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
     public RecomputeBehavior recomputeBehavior = RecomputeBehavior.AUTOMATIC;
 
     /**
-     * 是否延迟加载变量值，直到实际使用时才计算
+     * 是否延迟加载变量值，直到实际使用时才计算。
+     *
+     * <p><b>已废弃（2026-11）：前端变量一律按需计算，本字段不再有任何执行点。</b>
+     * 现在 {@code VariableService} 只在出现订阅者（widget 的 {@code watchValue*}）时才计算变量的值，
+     * 与这里的取值无关 —— 见前端 {@code variable.service.ts#ensureDemand}。
+     *
+     * <p>之所以保留字段而不删：它已落在存量模块的 XML 里（{@code <lazyLoading>false</lazyLoading>}），
+     * 而 XStream 的反序列化对配置节点是严格口径，删字段会让已有 workshop 模块打不开。
+     * 保留即「忽略」，无需数据迁移。
      */
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean lazyLoading = false;
@@ -363,6 +374,47 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
                     + PARAM_MODULE_NAME + "' must not be empty");
         }
         persistVariable(pluginContext, context, ontologyDomainId, moduleName, this, pluginMeta.isUpdate());
+    }
+
+    /**
+     * 标准保存链路（{@code PluginStore#setPlugins}）的写后回调 —— 变量落盘成功后让
+     * {@link WorkshopModule} 的服务端快照失效，否则模块 GET 会一直下发保存前的变量列表。
+     *
+     * <p><b>为什么不能靠 {@link #manipuldateProcess}</b>：那条入口只在
+     * {@code IPluginStore.noSaveStore} 上被调用（{@code PluginItems#getStore} 只在子表单实例
+     * 是 {@code IStoreSelfManagement} 时才选它），而变量用的是真实持久化 store，所以
+     * {@link #persistVariable} 里的 {@code invalidateWorkshopData} 在真实保存路径上永远
+     * 不执行。这里补的正是这个缺口。
+     *
+     * <p>domain / module 从 context 里的 {@link UploadPluginMeta} 取（
+     * {@code PluginItemsParser#parsePluginItems} 已 {@code putPluginMeta}）。注意 extraParam
+     * 的键名是 {@code ontology_<domain>} / {@code workshop_<module>}，即
+     * {@link OntologyDomain#NAME_ONTOLOGY_DOMAIN} / {@link OntologyDomain#KEY_WORKSHOP}，
+     * <b>不是</b>自定义 CRUD 端点用的 {@code ontologyDomainId} / {@code moduleName} ——
+     * 那两个键在上传元数据里根本不存在，写错的表现是失效静默不执行。
+     */
+    @Override
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
+        // 文件已经写成功了，这里抛出只会把一次成功的保存报成失败；失效本身失败也无害
+        // （下次写布局会把 generation 顶上去），故整体吞掉
+        try {
+            Context ctx = context.orElse(null);
+            if (ctx == null) {
+                // 直接调 setPlugins 且不传 Context 的调用方（含单测）：退回请求线程的上下文
+                IPluginContext threadCtx = IPluginContext.getThreadLocalInstance();
+                ctx = threadCtx == null ? null : threadCtx.getContext();
+            }
+            if (ctx == null) {
+                return;
+            }
+            UploadPluginMeta meta = (UploadPluginMeta.createPluginMeta(ctx, true));
+
+            WorkshopModule.invalidateWorkshopData(
+                    meta.getExtraParam(OntologyDomain.NAME_ONTOLOGY_DOMAIN),
+                    meta.getExtraParam(OntologyDomain.KEY_WORKSHOP));
+        } catch (RuntimeException e) {
+            logger.warn("invalidate workshop data after variable saved faild", e);
+        }
     }
 
     /**

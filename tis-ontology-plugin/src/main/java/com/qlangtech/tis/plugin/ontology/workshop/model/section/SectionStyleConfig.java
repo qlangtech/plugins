@@ -1,6 +1,5 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.section;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
@@ -8,8 +7,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.util.HexColorValidator;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.plugin.utils.InputColor;
 
 import java.io.Serializable;
 
@@ -33,8 +31,11 @@ public class SectionStyleConfig implements Describable<SectionStyleConfig>, Seri
     @FormField(ordinal = 0, validate = {Validator.require})
     public HeaderFormat headerFormat;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
-    public String backgroundColor;
+    /**
+     * 背景颜色；留空 = 不改变。格式校验由 {@link FormFieldType#Color} 提供。
+     */
+    @FormField(ordinal = 1, type = FormFieldType.Color)
+    public InputColor backgroundColor;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM)
     public BorderStyle borderStyle = BorderStyle.NONE;
@@ -47,15 +48,6 @@ public class SectionStyleConfig implements Describable<SectionStyleConfig>, Seri
         @Override
         public String getDisplayName() {
             return "Section Style Config";
-        }
-
-        /**
-         * {@code backgroundColor} 的格式校验 —— 框架按 {@code validate${字段名}} 约定反射发现
-         * （见 {@code Descriptor#createValidateMap}），空值不进来。
-         */
-        public boolean validateBackgroundColor(IFieldErrorHandler msgHandler, Context context,
-                                               String fieldName, String value) {
-            return HexColorValidator.validate(msgHandler, context, fieldName, value);
         }
     }
 

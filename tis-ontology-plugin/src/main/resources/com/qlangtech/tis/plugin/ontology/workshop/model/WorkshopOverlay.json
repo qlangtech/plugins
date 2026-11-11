@@ -29,7 +29,8 @@
   },
   "icon": {
     "label": "图标",
-    "help": "浮层标题旁边的图标"
+    "help": "浮层标题旁边的图标",
+    "enumMode": "model_assist"
   },
   "variableBasedVisibility": {
     "label": "基于变量的可见性",

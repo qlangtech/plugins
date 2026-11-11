@@ -10,7 +10,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
-import com.qlangtech.tis.plugin.ontology.workshop.model.definition.ObjectSetFilterConfig.FilterOperator;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -76,7 +76,7 @@ public class ObjectSetDefinitionConfig extends VariableDefinitionConfig {
      * <h3>容错口径</h3>
      * 一律「跳过该行 + warn」，<b>不抛</b>：一个配错的条件不该让整张表打不开。三条跳过规则：
      * <ul>
-     *   <li>{@code property} 为空 —— 同 {@code WorkshopOntologyService} 的口径；</li>
+     *   <li>{@code property} 为空 —— 同 {@code ObjectSetRowQuery} 的口径，空白属性组不出标识符；</li>
      *   <li>{@code value} 为 null / 空白 —— 表单里 {@code value} 没有 {@code require}，
      *       「没填」与「用户故意要 {@code = ''}」在输入端无从区分，而放行会让
      *       {@code appendWhere} 绑定一个空值参数；</li>
@@ -107,13 +107,18 @@ public class ObjectSetDefinitionConfig extends VariableDefinitionConfig {
             }
             // operator 同样可能是 null（XStream 不走字段初值），回落到表单里的默认算子
             FilterOperator operator = filter.operator == null ? FilterOperator.equals : filter.operator;
+            if (operator.isValueFree()) {
+                // isNull 不比较值：放它过了下面这道「空值即跳过」的闸门，否则配了也不生效
+                criteria.add(new ObjectTypeBinding.FilterCriterion(property, operator, null));
+                continue;
+            }
             Object value = normalizeFilterValue(operator, filter.value);
             if (value == null) {
                 logger.warn("objectSet definition filter has blank value, skipped, label:" + filter.label
                         + ", property:" + property + ", operator:" + operator.valueToken());
                 continue;
             }
-            criteria.add(new ObjectTypeBinding.FilterCriterion(property, operator.valueToken(), value));
+            criteria.add(new ObjectTypeBinding.FilterCriterion(property, operator, value));
         }
         return criteria;
     }

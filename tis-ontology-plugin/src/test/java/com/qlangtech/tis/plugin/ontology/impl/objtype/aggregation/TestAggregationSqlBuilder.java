@@ -108,6 +108,42 @@ public class TestAggregationSqlBuilder {
         }
     }
 
+    /**
+     * 数值分桶只产出桶序号 {@code FLOOR(col / width)}，<b>没有</b> {@code * width} 的还原。
+     *
+     * <p>与时间分桶的差别是刻意的：时间分桶把序号乘回成时间戳（图表横轴要能读），
+     * 数值分桶的序号直接就是数组下标，还原成区间起点由
+     * {@code HistogramDataProcessor} 在 Java 侧做（那里的桶边界要按 {@code bucketCount}
+     * 折进末桶，SQL 侧做不到）。若这里顺手也乘一次，末桶折叠会整体错位一格。
+     */
+    @Test
+    public void numericGroupKeyRendersBareFloor() {
+        // toPlainString 保留 BigDecimal.valueOf 给出的标度，`100.0` 与 `100` 在 SQL 侧等价
+        Assert.assertEquals("FLOOR(" + ESCAPED + " / 100.0)",
+                MYSQL.renderGroupKey(GroupKey.numeric(COL, 100d, 1), KEYS));
+        Assert.assertEquals("MPP 与 MySQL 系一致",
+                MYSQL.renderGroupKey(GroupKey.numeric(COL, 7.5d, 1), KEYS),
+                MPP.renderGroupKey(GroupKey.numeric(COL, 7.5d, 1), KEYS));
+    }
+
+    /**
+     * 桶宽用<b>平铺小数</b>渲染，不用 {@code Double.toString}。
+     *
+     * <p>极小的桶宽在 {@code Double.toString} 下会变成 {@code 1.0E-20}：科学计数法在各方言里
+     * 的接受程度不一致，而 {@code toPlainString} 在全部受支持方言上都合法。
+     */
+    @Test
+    public void numericBucketWidthIsPlainDecimal() {
+        String rendered = MYSQL.renderGroupKey(GroupKey.numeric(COL, 1.0E-20d, 1), KEYS);
+        Assert.assertFalse("桶宽不能渲染成科学计数法：" + rendered, rendered.contains("E"));
+        Assert.assertTrue("桶宽必须是平铺小数：" + rendered,
+                rendered.startsWith("FLOOR(" + ESCAPED + " / 0.0000000000000000000"));
+
+        // 大桶宽同理：Double.toString 会给 1.0E20
+        Assert.assertEquals("FLOOR(" + ESCAPED + " / 100000000000000000000)",
+                MYSQL.renderGroupKey(GroupKey.numeric(COL, 1.0E20d, 1), KEYS));
+    }
+
     // ------------------------------------------------------------------
     // 指标
     // ------------------------------------------------------------------

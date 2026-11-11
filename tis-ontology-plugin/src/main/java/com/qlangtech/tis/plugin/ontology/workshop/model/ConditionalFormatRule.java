@@ -9,7 +9,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.ButtonColor;
+import com.qlangtech.tis.plugin.utils.InputColor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -26,12 +26,11 @@ import java.util.List;
  * {@code Validator.identity} 的字符集是 {@code [A-Z\d a-z_\-]+}，
  * {@code "<= 0"} 这样的比较值含空格与比较符，会被直接拒掉。
  *
- * <h3>颜色为什么是 {@link ButtonColor} 而不是十六进制字符串</h3>
- * 文本色 / 背景色 / 趋势线色与按钮颜色是同一套品牌色语义，复用现成的多态体系后：
- * 固定色（primary/success/warning/danger）由前端统一映射，只有「自定义」子类才带
- * {@code customColor} 载荷并由 {@code validateCustomColor} 做十六进制校验 —— 免去在本类
- * 里再写一遍颜色校验，也不会出现「选了预设色还填着十六进制」的自相矛盾状态。
- * {@code none} 表示<b>不改变</b>该处颜色。
+ * <h3>颜色为什么是 {@link InputColor}</h3>
+ * 文本色 / 背景色 / 趋势线色各是一个自由的十六进制色值，三个都<b>可以为空</b> ——
+ * 空值表示<b>不改变</b>该处颜色。格式校验与取色器由 {@code FormFieldType.Color} 统一提供
+ * （框架的 {@code HexColorValidator}），本类不再需要自己的校验方法，也不会出现
+ * 「选了预设色还填着十六进制」这类自相矛盾的状态。
  *
  * <h3>图标为什么是 {@link IEndTypeGetter.EndType}</h3>
  * 该枚举的 {@code val} 同时是合法的 Ant Design 图标名（{@code IEnumTypeSer} 让表单线与
@@ -79,21 +78,21 @@ public class ConditionalFormatRule implements Describable<ConditionalFormatRule>
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
     public String upperBound;
 
-    /** 文本颜色；{@code none} = 不改变 */
-    @FormField(ordinal = 6)
-    public ButtonColor color;
+    /** 文本颜色；留空 = 不改变 */
+    @FormField(ordinal = 6, type = FormFieldType.Color)
+    public InputColor color;
 
-    /** 背景颜色；{@code none} = 不改变 */
-    @FormField(ordinal = 7)
-    public ButtonColor backgroundColor;
+    /** 背景颜色；留空 = 不改变 */
+    @FormField(ordinal = 7, type = FormFieldType.Color)
+    public InputColor backgroundColor;
 
     /**
-     * 趋势线（sparkline）颜色；{@code none} = 不改变。
+     * 趋势线（sparkline）颜色；留空 = 不改变。
      * <p>
      * 仅当卡片布局启用了时间序列可视化（{@link CardLayout#visualization}）时才有渲染对象。
      */
-    @FormField(ordinal = 8)
-    public ButtonColor sparklineColor;
+    @FormField(ordinal = 8, type = FormFieldType.Color)
+    public InputColor sparklineColor;
 
     /**
      * 命中后显示在数值旁的图标；留空 = 不显示。

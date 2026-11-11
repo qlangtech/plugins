@@ -1,0 +1,7 @@
+{
+  "headerHeight": {
+    "label": "头部高度",
+    "help": "配置头部区域的高度",
+    "dftVal": "Pixel_Header_Height"
+  }
+}

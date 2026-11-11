@@ -5,6 +5,8 @@ import com.qlangtech.tis.plugin.ontology.AggregationFunc;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationNotSupportedException;
 import com.qlangtech.tis.plugin.ontology.aggregation.GroupKey;
 
+import java.math.BigDecimal;
+
 /**
  * MySQL 系方言的分组 / 聚合表达式。
  *
@@ -31,6 +33,11 @@ public class MySqlAggregationSqlBuilder implements AggregationSqlBuilder {
     @Override
     public String renderGroupKey(GroupKey key, IDBReservedKeys reservedKeys) {
         final String col = reservedKeys.getEscapedEntity(key.column());
+        if (key.isNumeric()) {
+            // 桶宽用 toPlainString 渲染：`Double.toString` 对大值会输出 1.0E20 这种科学计数法，
+            // 各方言对它的接受程度不一致，而平铺写法在全部受支持方言上都合法。
+            return "FLOOR(" + col + " / " + BigDecimal.valueOf(key.bucketWidth()).toPlainString() + ")";
+        }
         if (!key.isTemporal()) {
             return col;
         }

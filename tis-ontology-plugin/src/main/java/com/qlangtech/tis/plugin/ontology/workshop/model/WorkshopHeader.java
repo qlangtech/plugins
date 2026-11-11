@@ -12,6 +12,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.header.CollapseConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.header.HeaderOrientation;
 import com.qlangtech.tis.plugin.ontology.workshop.model.header.HorizontalOrientation;
 import com.qlangtech.tis.plugin.ontology.workshop.model.header.NoneCollapseConfig;
+import com.qlangtech.tis.plugin.utils.InputColor;
 import com.qlangtech.tis.util.DescribableJSON;
 
 import java.io.Serializable;
@@ -68,8 +69,9 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
     public String title;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT)
-    public String titleColor;
+    /** 标题颜色；留空 = 用主题默认 */
+    @FormField(ordinal = 2, type = FormFieldType.Color)
+    public InputColor titleColor;
 
     /**
      * 排布方向：水平顶栏 / 垂直侧栏。高度、宽度分别是两个子类的载荷字段，不在本类上。
@@ -90,8 +92,9 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
     @FormField(ordinal = 4, validate = {Validator.require})
     public CollapseConfig collapseConfig;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
-    public String backgroundColor;
+    /** 背景色；留空 = 用主题默认 */
+    @FormField(ordinal = 5, type = FormFieldType.Color)
+    public InputColor backgroundColor;
 
     @FormField(ordinal = 6, type = FormFieldType.ENUM)
     public Boolean favoriteEnabled = true;

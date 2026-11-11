@@ -2,14 +2,12 @@ package com.qlangtech.tis.plugin.ontology.workshop.model.definition;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.IEnumTypeSer;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,8 +62,11 @@ public class ObjectSetFilterConfig implements Describable<ObjectSetFilterConfig>
     public String property;
 
     /**
-     * 谓词算子。取值见 {@link FilterOperator}，其落盘 token 与
-     * {@link ObjectTypeBinding.DataSourceQueryCriteria} 白名单逐字一致。
+     * 谓词算子。类型与取值见 {@link FilterOperator}（本体取数层唯一的算子定义）。
+     *
+     * <p>本字段曾是插件侧的嵌套枚举，现已上收到 core，与 {@code FilterItemConfig.operator}
+     * 共用同一个类型 —— 以前两处各一份，其中一份把 {@code in} 落成常量名 {@code in_} 传进
+     * {@code addFilter}，与线格式 token 对不上。
      */
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public FilterOperator operator = FilterOperator.equals;
@@ -83,58 +84,6 @@ public class ObjectSetFilterConfig implements Describable<ObjectSetFilterConfig>
     @Override
     public String identityValue() {
         return this.label;
-    }
-
-    /**
-     * 谓词算子。
-     *
-     * <p><b>实现 {@link IEnumTypeSer} 的唯一目的是把 {@code in_} 落成 {@code in}。</b>
-     * {@code in} 是 Java 关键字、不能作枚举常量名，而下游
-     * {@code ObjectTypeBinding.DataSourceQueryCriteria#addFilter} 的操作符白名单里是字面量
-     * {@code "in"}。若不实现本接口，选项 val 就是常量名 {@code in_}，会在查询期被白名单
-     * 拒掉（{@code illegal filter operator}）。其余常量名与白名单字面量逐字相同，直接回退到
-     * {@link Enum#name()}。
-     *
-     * <p>中文标签经 {@link DescriptorUseableShortComment#shortComment()} 作为选项的 help 下发，
-     * 故 {@code ObjectSetFilterConfig.json} 里不声明 {@code enum} 数组（声明了会连带丢掉
-     * 端类型/说明的自动派生）。
-     *
-     * @see ObjectTypeBinding.DataSourceQueryCriteria
-     */
-    public enum FilterOperator implements DescriptorUseableShortComment, IEnumTypeSer {
-        equals(ObjectTypeBinding.DataSourceQueryCriteria.OP_EQUALS, "等于"),
-        contains(ObjectTypeBinding.DataSourceQueryCriteria.OP_CONTAINS, "包含"),
-        greaterThan(ObjectTypeBinding.DataSourceQueryCriteria.OP_GREATER_THAN, "大于"),
-        lessThan(ObjectTypeBinding.DataSourceQueryCriteria.OP_LESS_THAN, "小于"),
-        greaterThanOrEqual(ObjectTypeBinding.DataSourceQueryCriteria.OP_GREATER_THAN_OR_EQUAL, "大于等于"),
-        lessThanOrEqual(ObjectTypeBinding.DataSourceQueryCriteria.OP_LESS_THAN_OR_EQUAL, "小于等于"),
-        in_(ObjectTypeBinding.DataSourceQueryCriteria.OP_IN, "属于集合");
-
-        private final String comment;
-        private final String operatorToken;
-
-        FilterOperator(String operatorToken, String comment) {
-            this.comment = comment;
-            this.operatorToken = operatorToken;
-        }
-
-        @Override
-        public String shortComment() {
-            return this.comment;
-        }
-
-        @Override
-        public String valueToken() {
-            // return this == in_ ? ObjectTypeBinding.DataSourceQueryCriteria.OP_IN : name();
-            return operatorToken;
-        }
-
-        /**
-         * 该算子的取值是否必须是多个值（{@code IN (...)}）。
-         */
-        public boolean isMultiValued() {
-            return this == in_;
-        }
     }
 
     @TISExtension

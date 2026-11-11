@@ -27,7 +27,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ConditionalVisibilityConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.button.group.CustomButtonColor;
+import com.qlangtech.tis.plugin.utils.InputColor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -69,11 +69,13 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     public ButtonType type = ButtonType.default_;
 
     /**
-     * 按钮颜色（Palantir 的「Button color」）；改为 {@link ButtonColor} 多态承载 ——
-     * {@code customColor} 载荷并入 {@link CustomButtonColor}，其余子类零字段
+     * 按钮颜色（Palantir 的「Button color」）：一个十六进制色值，留空 = 沿用按钮形态自带的配色。
+     * <p>
+     * 走 {@link FormFieldType#Color} —— 取色器与十六进制格式校验都由框架统一提供，
+     * 不再需要插件侧的颜色类型。
      */
-    @FormField(ordinal = 2)
-    public ButtonColor color;
+    @FormField(ordinal = 2, type = FormFieldType.Color)
+    public InputColor color;
 
     /**
      * 按钮尺寸

@@ -125,20 +125,37 @@ public class WorkshopVariableOperation implements Describable<WorkshopVariableOp
             pluginContext.setBizResult(context, singleResult(variable));
         }
 
+        /**
+         * 列出模块下的全部变量。
+         *
+         * <p>本端点现在<b>只服务「变量保存 / 删除之后的刷新」</b>：模块初始化时的变量列表
+         * 由模块 GET 一起下发（{@code WorkshopModule#doGet}），面板不再单独请求一次。
+         * 两条链路共用 {@link WorkshopVariable#toVariableJSON}，故这里的逐项形态与模块
+         * payload 里的 {@code variables} 必须保持一致（含信封字段 {@code moduleId}）。
+         */
         private void doList(IControlMsgHandler msgHandler, IPluginContext pluginContext, Context context) throws Exception {
             String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
             String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
 
-            List<WorkshopVariable> variables = createVariableService().listVariables(ontologyDomainId, moduleName);
+            WorkshopModuleService svc = createVariableService();
+            List<WorkshopVariable> variables = svc.listVariables(ontologyDomainId, moduleName);
+
             JSONArray variablesJson = new JSONArray();
-            for (WorkshopVariable variable : variables) {
-                variablesJson.add(WorkshopVariable.toVariableJSON(variable));
+            if (!variables.isEmpty()) {
+                WorkshopModule module = svc.getModule(ontologyDomainId, moduleName);
+                // 与模块 GET 一致：信封里带的是模块的 UUID 主键，不是 moduleName。
+                // 只在确有变量时才加载模块 —— 空列表没有任何条目需要这个信封字段。
+                String moduleId = module == null ? null : module.getId();
+                for (WorkshopVariable variable : variables) {
+                    JSONObject vj = WorkshopVariable.toVariableJSON(variable);
+                    vj.put("moduleId", moduleId);
+                    variablesJson.add(vj);
+                }
             }
 
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);
             result.put("variables", variablesJson);
-            result.put("total", variablesJson.size());
             pluginContext.setBizResult(context, result);
         }
 

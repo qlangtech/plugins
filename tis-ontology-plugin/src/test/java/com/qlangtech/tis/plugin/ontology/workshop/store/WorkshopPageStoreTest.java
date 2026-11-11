@@ -2,7 +2,10 @@ package com.qlangtech.tis.plugin.ontology.workshop.store;
 
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.GridPageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.PixelColumnWidth;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.TwoColumnPageTemplate;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -45,8 +48,10 @@ public class WorkshopPageStoreTest {
         IPluginContext pluginContext = Mockito.mock(IPluginContext.class);
         WorkshopPageStore store = WorkshopPageStore.create(ONTOLOGY_DOMAIN_ID, MODULE_NAME);
 
-        WorkshopPage first = page("11111111-1111-1111-1111-111111111111", "页面 1", PageTemplate.BLANK);
-        WorkshopPage second = page("22222222-2222-2222-2222-222222222222", "页面 2", PageTemplate.GRID);
+        WorkshopPage first = page("11111111-1111-1111-1111-111111111111", "页面 1",
+                PageTemplate.createDefault());
+        WorkshopPage second = page("22222222-2222-2222-2222-222222222222", "页面 2",
+                new GridPageTemplate());
 
         Set<String> removed = store.replaceAll(pluginContext, Optional.empty(), List.of(first, second));
         Assert.assertTrue("首次保存不应删除任何页面", removed.isEmpty());
@@ -57,10 +62,12 @@ public class WorkshopPageStoreTest {
         List<WorkshopPage> loaded = store.listAll();
         Assert.assertEquals(2, loaded.size());
         Assert.assertEquals("页面 1", loaded.get(0).name);
-        Assert.assertEquals(PageTemplate.BLANK, loaded.get(0).template);
+        Assert.assertEquals("template 必须按插件类落盘 / 回读",
+                TwoColumnPageTemplate.class, loaded.get(0).template.getClass());
         Assert.assertEquals(Integer.valueOf(0), loaded.get(0).sortOrder);
         Assert.assertEquals("页面 2", loaded.get(1).name);
-        Assert.assertEquals(PageTemplate.GRID, loaded.get(1).template);
+        Assert.assertEquals("template 必须按插件类落盘 / 回读",
+                GridPageTemplate.class, loaded.get(1).template.getClass());
         Assert.assertEquals(Integer.valueOf(1), loaded.get(1).sortOrder);
 
         // 第二轮快照只保留 second，且改了名字：first 的文件应被删除，second 原地覆盖
@@ -79,7 +86,8 @@ public class WorkshopPageStoreTest {
     @Test
     public void testPagesAreModuleScoped() {
         IPluginContext pluginContext = Mockito.mock(IPluginContext.class);
-        WorkshopPage page = page("33333333-3333-3333-3333-333333333333", "只属于模块 A", PageTemplate.DETAILS);
+        WorkshopPage page = page("33333333-3333-3333-3333-333333333333", "只属于模块 A",
+                pixelTwoColumn(260));
         WorkshopPageStore.create(ONTOLOGY_DOMAIN_ID, MODULE_NAME)
                 .replaceAll(pluginContext, Optional.empty(), List.of(page));
 
@@ -95,7 +103,8 @@ public class WorkshopPageStoreTest {
         WorkshopPageStore store = WorkshopPageStore.create(ONTOLOGY_DOMAIN_ID, MODULE_NAME);
 
         // 增量路径（module-apply）不再归一化，sortOrder 由前端信封给出，必须原样落盘
-        WorkshopPage page = page("44444444-4444-4444-4444-444444444444", "显式序号", PageTemplate.BLANK);
+        WorkshopPage page = page("44444444-4444-4444-4444-444444444444", "显式序号",
+                PageTemplate.createDefault());
         page.sortOrder = 7;
         store.save(pluginContext, Optional.empty(), page);
 
@@ -109,6 +118,15 @@ public class WorkshopPageStoreTest {
 
         Assert.assertFalse("删除不存在的页面应返回 false",
                 store.delete(pluginContext, Optional.empty(), "55555555-5555-5555-5555-555555555555"));
+    }
+
+    /** 两栏 + 固定像素左栏（原 DETAILS 形态） */
+    private static TwoColumnPageTemplate pixelTwoColumn(int pixels) {
+        TwoColumnPageTemplate template = new TwoColumnPageTemplate();
+        PixelColumnWidth width = new PixelColumnWidth();
+        width.pixels = pixels;
+        template.leftColumnWidth = width;
+        return template;
     }
 
     private static WorkshopPage page(String id, String name, PageTemplate template) {

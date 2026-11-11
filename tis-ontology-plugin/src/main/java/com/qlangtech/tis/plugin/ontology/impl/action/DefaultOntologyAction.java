@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.LinkActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
 import com.qlangtech.tis.runtime.module.misc.FormVaildateType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
@@ -44,6 +45,7 @@ import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -392,6 +394,19 @@ public class DefaultOntologyAction extends OntologyAction {
                     }
                     executePreviewForm(actionType, paramMeta, paramPool, previewForm, deleteConfirmed,
                             paramGetter, context);
+                }
+                case "resolveLinkTargets" -> {
+                    // 链接 Action 的目标对象下拉候选：按 targetObjectType 现查一批行。
+                    // 参数走 query string（只两个标量），不投影 Action 树。
+                    if (!(actionType instanceof LinkActionType linkActionType)) {
+                        throw new IllegalStateException("Action '" + actionName
+                                + "' 的 ActionType 不是 LinkActionType，无法解析链接目标");
+                    }
+                    ActionParameters targetParamPool = ActionParameters.loadParameters(paramMeta);
+                    // limit 缺失/非法交给 resolveTargetOptions 走默认值（夹取而非报错）
+                    int limit = NumberUtils.toInt(paramGetter.getString("limit"), ObjectSetRowQuery.DEFAULT_MAX_ROWS);
+                    paramGetter.setBizResult(context,
+                            linkActionType.resolveTargetOptions(ontologyName, targetParamPool, limit));
                 }
                 case "resolveRuntimeForm" -> {
                     // workshop 按钮组打开运行时表单：参数池已落盘，直接加载并现场生成

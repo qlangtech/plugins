@@ -9,6 +9,7 @@ import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationNotSupportedException;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
 import com.qlangtech.tis.plugin.ontology.aggregation.TimeGranularity;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilders;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.CategoricalAxisConfig;
@@ -257,8 +258,13 @@ public final class ChartXYDataProcessor {
             if (StringUtils.isBlank(property)) {
                 throw new IllegalStateException("ChartXY layer '" + layer.title + "' filter property can not be blank");
             }
-            result.add(new AggregationPushdownPlanner.Filter(
-                    property, filter.getString("operator"), filter.get("value")));
+            try {
+                result.add(new AggregationPushdownPlanner.Filter(
+                        property, FilterOperator.parse(filter.getString("operator")), filter.get("value")));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("ChartXY layer '" + layer.title + "' filter[" + i + "] "
+                        + e.getMessage() + ", filters:" + filters, e);
+            }
         }
         return result;
     }

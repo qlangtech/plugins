@@ -70,7 +70,8 @@ public class ExportClickAction extends WidgetClickAction {
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            // 导出即取数：只列「对象集合定义」型的对象集变量（外部写入 / 函数计算的没有可查询 schema）
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
         }
 
         @Override

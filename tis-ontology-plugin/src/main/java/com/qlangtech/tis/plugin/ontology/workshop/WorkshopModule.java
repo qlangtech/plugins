@@ -3,6 +3,8 @@ package com.qlangtech.tis.plugin.ontology.workshop;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IManipulateStatus;
 import com.qlangtech.tis.extension.Describable;
@@ -34,6 +36,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopSection;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.service.WorkshopModuleService;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopOverlayStore;
@@ -47,6 +50,7 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetDisplayConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
+import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.RobustReflectionConverter2;
@@ -84,6 +88,7 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.getOntologyDomain
  * @see WorkshopOverlay
  * @see WorkshopVariable
  */
+@SuppressWarnings("all")
 public final class WorkshopModule extends OntologyDomainManipulate implements IManipulateStatus //
         , IdentityDesc<JSONObject>, IPluginStore.BeforePluginSaved, IPluginStore.AfterPluginSaved {
 
@@ -651,6 +656,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
      * 快照里的 widget 数组键名
      */
     public static final String KEY_WIDGETS = "widgets";
+    public static final String KEY_WIDGETS_DESC = "widgetsDesc";
     /**
      * section 的父容器信封字段（不是 {@code @FormField}，故与 {@code vals} 平级）
      */
@@ -676,7 +682,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
      */
     public static final String KEY_DISPLAY_CONFIG = "displayConfig";
 
-    /** 显示配置的身份字段名（= {@link AbstractWidgetDisplayConfig#widgetId}） */
+    /**
+     * 显示配置的身份字段名（= {@link AbstractWidgetDisplayConfig#widgetId}）
+     */
     static final String KEY_WIDGET_ID = "widgetId";
 
     /**
@@ -991,6 +999,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
 
             JSONArray sectionsJson = new JSONArray();
             JSONArray widgetsJson = new JSONArray();
+            // LinkedHashSet：descriptor 的下发顺序要稳定。HashSet 每次响应 key 顺序都可能不同，
+            // 对比响应/快照时会误以为「配置变了」，也不好写断言。
+            final Set<Descriptor> widgetDescs = Sets.newLinkedHashSet();
             for (WorkshopSection section : topSections) {
                 JSONObject sectionJson = new DescribableJSON<>(section).getItemJson();
                 WorkshopCptParentId parent = Objects.requireNonNull(section.parent,
@@ -999,33 +1010,55 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                 sectionJson.put(KEY_PARENT_TYPE, parent.parentType.getLiteral());
                 sectionsJson.add(sectionJson);
 
-                appendWidgetsJSON(section, widgetsJson);
+                appendWidgetsJSON(section, widgetsJson, widgetDescs);
                 // 子分区本身嵌套在父 section 的 childSections 里，但它挂的 widget 同样是
                 // 独立落盘的实体 —— 漏下发会让这些 widget 在前端消失，且下一次快照保存时
                 // 被差集删除。
                 if (section.childSections != null) {
                     for (SectionChild child : section.childSections) {
-                        appendWidgetsJSON(child, widgetsJson);
+                        appendWidgetsJSON(child, widgetsJson, widgetDescs);
                     }
                 }
             }
             moduleJson.put(KEY_SECTIONS, sectionsJson);
             moduleJson.put(KEY_WIDGETS, widgetsJson);
+            if (!widgetDescs.isEmpty()) {
+                moduleJson.put(KEY_WIDGETS_DESC,
+                        new DefaultDescriptorsJSON(Lists.newArrayList(widgetDescs)).getDescriptorsJSON());
+            }
         }
 
         /**
          * 把一个 section（顶层或子分区）的 widget 追加到下发数组，并带上归属信封字段。
+         *
+         * @param widgetDescs 顺带收集这些 widget 用到的 descriptor，供 {@link #KEY_WIDGETS_DESC} 下发
          */
-        private static void appendWidgetsJSON(AbstractWorkshopSection section, JSONArray widgetsJson)
+        private static void appendWidgetsJSON(AbstractWorkshopSection section, JSONArray widgetsJson,
+                                              Set<Descriptor> widgetDescs)
                 throws Exception {
             if (section.widgets == null) {
                 return;
             }
             for (WorkshopWidget widget : section.widgets) {
                 JSONObject widgetJson = widgetToJSON(widget);
+                // getDescriptor() 找不到时返回 null（插件被卸载/迁移的存量 widget）。
+                // 收集进来会让 DefaultDescriptorsJSON 在构造时 NPE，整个模块 GET 直接 500 ——
+                // 宁可让那个 widget 在前端降级成占位，也不能让整页打不开。
+                Descriptor widgetDesc = widget.getDescriptor();
+                if (widgetDesc != null) {
+                    widgetDescs.add(widgetDesc);
+                }
                 widgetJson.put(KEY_SECTION_ID, widget.sectionId);
                 if (widget.display != null) {
-                    // 显示配置是独立实体，以信封字段下发；前端读到的是与旧版同形的 {impl, vals}
+                    // ⚠️ 这段**不是**上一行 `widgetToJSON()` 的重复：那行只序列化 widget 的
+                    // `@FormField`（id / title / conditionalVisibility + 各子类字段），而显示
+                    // 配置是独立落盘的插件实体（widgets/{id}_display.xml），在 widget 上挂的是
+                    // `WorkshopWidget#display` —— 一个 transient、**无** @FormField 的字段，
+                    // 框架的 `Descriptor.getPropertyTypes()` 压根看不到它，因此不会进 `vals`。
+                    // 两处 put 的是同一个 JSON 对象上互不重叠的两个键（vals 与信封字段）；
+                    // 删掉这里 = displayConfig 彻底不下发，前端 resolveWidgetDisplay 恒返回 {}，
+                    // 所有 widget 的宽高静默回退到兜底值。前端读的是 raw.displayConfig
+                    // （与 sectionId 同级的信封字段，见 layout-hydration.ts），不是 vals。
                     widgetJson.put(KEY_DISPLAY_CONFIG, widgetDisplayToJSON(widget.display));
                 }
                 widgetsJson.add(widgetJson);
@@ -1917,8 +1950,8 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          *
          * <p>线与 section / overlay / widget 完全一致：{@code {impl, vals}} 的 POST 表单项，
          * 由 {@link WorkshopFormParser} 校验并实例化。{@code template} 是
-         * {@link com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate} 枚举，
-         * 框架按常量名（{@code BLANK} / {@code TWO_COLUMN} …）反序列化，前端投影时负责大小写归一。
+         * {@link PageTemplate} 聚合属性插件，线上形态是嵌套的 {@code {impl, vals}}，
+         * 由框架按 Describable 规则反序列化。
          *
          * <p>信封 {@code sortOrder} 不是表单字段语义（快照路径由数组顺序表达、delta 路径由客户端
          * 实体给出），因此实例化后再覆盖。
@@ -2041,9 +2074,24 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             pj.put("id", page.identityValue());
             pj.put("name", page.name);
             pj.put("displayName", page.displayName);
-            pj.put("template", page.template != null ? page.template.name().toLowerCase() : "blank");
+            // template 现在是 Describable 插件对象，必须走标准 GET 序列化（{impl, vals}）——
+            // 手写字段列表会把它整个丢掉，前端拿不到 impl 就只能回落成默认布局，
+            // 表现为「选的模板永远不生效」且不报任何错。
+            pj.put("template", templateToJSON(page.template));
             pj.put("sortOrder", page.sortOrder != null ? page.sortOrder : 0);
             return pj;
+        }
+
+        private static JSONObject templateToJSON(PageTemplate template) {
+            if (template == null) {
+                return null;
+            }
+            try {
+                return new DescribableJSON<>(template).getItemJson();
+            } catch (Exception e) {
+                throw new RuntimeException("fail to serialize page template:"
+                        + template.getClass().getName(), e);
+            }
         }
 
         // ==================================================================

@@ -7,6 +7,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.VariableType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
@@ -54,6 +55,30 @@ public class ObjectSetVariable extends WorkshopVariable {
     public List<RowMap> executeQuery(ObjectTypeBinding.DataSourceQueryCriteria criteria) {
         applyConfiguredFilters(criteria);
         return resolveDataSourceBinding().executeQuery(criteria);
+    }
+
+    /**
+     * 「一次性取前 N 行」的薄封装，供卡片 / 图表类 widget 的 {@code get_data} 使用。
+     *
+     * <p>与 {@link #executeQuery} 的唯一差异是「criteria 由本方法构造」：调用方只需要给出
+     * 要取的列与行数上限，不必各自拼 {@code page} / {@code pageSize} / 主键列 —— 那三样
+     * 每写错一处都是静默的（页码不对取到空表、漏主键则 {@code __rid} 全空、少列则图表缺维度）。
+     *
+     * <p><b>仍然经 {@link #executeQuery} 落地</b>，因此静态过滤照常施加。不要另起一条直接调
+     * {@code resolveDataSourceBinding().executeQuery()} 的路径 —— 那会让「对象集变量上配的过滤条件」
+     * 在这类 widget 上静默失效，而表格类 widget 却正常，形成难以排查的不一致。
+     *
+     * @param targetCols 本次要取的列；不能为空
+     * @param maxRows    行数上限，内部按 {@link ObjectSetRowQuery#clampMaxRows} 夹取
+     * @return 已补好 {@link ObjectTypeBinding#KEY_ROW_IDENTITY} 的行
+     */
+    public List<RowMap> fetchRows(List<String> targetCols, int maxRows) {
+        // 主键名要取两次会各读一遍本体定义（磁盘 + 缓存），这里只解析一次
+        final String identityProp = getIdentityPropName();
+        ObjectTypeBinding.DataSourceQueryCriteria criteria
+                = ObjectSetRowQuery.createCriteria(targetCols, identityProp, maxRows);
+        // ⚠️ __rid 由这里补而不是由 executeQuery 补 —— 后者对交互侧的保留键一无所知
+        return ObjectSetRowQuery.decorateIdentity(executeQuery(criteria), identityProp);
     }
 
     /**
@@ -149,10 +174,9 @@ public class ObjectSetVariable extends WorkshopVariable {
      * 由前端随请求上送）施加到 criteria 上。
      *
      * <p>与 {@link #applyConfiguredFilters} 的差异只在「属性不存在时怎么办」：这里<b>抛</b>。
-     * 属性名来自 HTTP 请求，静默跳过等于默默忽略错配（甚至恶意）的列名；而 REST 取数路径
-     * （{@code WorkshopOntologyService#queryObjectSet}）对同一份错配条件同样会抛 ——
-     * 两条路径的反应必须一致，否则会出现「刷新后表格好好的、一点过滤就 500」这种只在切换路径时
-     * 才暴露的差异。
+     * 属性名来自 HTTP 请求，静默跳过等于默默忽略错配（甚至恶意）的列名。多值算子
+     * （{@code in_} / {@code inOrNull}）必须给集合，形态校验交给
+     * {@link ObjectTypeBinding.DataSourceQueryCriteria#addFilter}。
      *
      * @param runtime 中继条件；空/null 时什么都不做
      */
@@ -189,7 +213,8 @@ public class ObjectSetVariable extends WorkshopVariable {
      * 塞进 {@code targetCols}：那会让它进 SELECT，{@code DataSourceBinding#readRow} 按
      * targetCols 取值，于是每行都多带一个前端没申请过的键。
      *
-     * <p>操作符合法性交给 {@code addFilter} 自己判（白名单 + {@code IN} 需集合），不在这里重复。
+     * <p>算子已经是枚举（{@code FilterOperator}），合法性由类型保证；{@code addFilter} 只再做
+     * 「多值算子必须给集合」这一项形态校验，不在这里重复。
      */
     private static void addFilter(ObjectTypeBinding.DataSourceQueryCriteria criteria,
                                   ObjectTypeBinding.FilterCriterion criterion) {

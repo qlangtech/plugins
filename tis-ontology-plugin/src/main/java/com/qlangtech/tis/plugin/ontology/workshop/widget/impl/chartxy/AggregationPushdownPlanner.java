@@ -7,6 +7,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.GroupKey;
 import com.qlangtech.tis.plugin.ontology.aggregation.TimeGranularity;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.ChartLayer;
 import com.qlangtech.tis.plugin.ontology.workshop.model.CategoricalBucketing;
 import com.qlangtech.tis.plugin.ontology.workshop.model.SeriesConfig;
@@ -63,7 +64,7 @@ final class AggregationPushdownPlanner {
     /**
      * 一条运行时过滤条件（来自 {@code get_data} 的 {@code filtersByLayer}）。
      */
-    record Filter(String property, String operator, Object value) {
+    record Filter(String property, FilterOperator operator, Object value) {
     }
 
     /**

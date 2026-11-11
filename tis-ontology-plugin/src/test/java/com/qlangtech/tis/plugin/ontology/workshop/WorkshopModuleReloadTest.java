@@ -1,16 +1,27 @@
 package com.qlangtech.tis.plugin.ontology.workshop;
 
+import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyDomain;
+import com.qlangtech.tis.plugin.ontology.OntologyValueType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopCptParentId;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopSection;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.model.definition.StaticConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
+import com.qlangtech.tis.plugin.ontology.workshop.model.variable.StringVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopSectionStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetStore;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.TextInputWidget;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.util.XStream2;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import org.apache.commons.io.FileUtils;
@@ -21,7 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -197,6 +210,53 @@ public class WorkshopModuleReloadTest {
     }
 
     /**
+     * 变量走标准保存链路（{@code PluginStore#setPlugins}）落盘后，模块快照必须失效。
+     *
+     * <p>这是「初始化时变量只取一次、以模块 GET 为唯一来源」的前置条件：模块 GET 下发的是
+     * {@code module.variables} 这份服务端快照，若变量保存后快照不重建，前端就再也看不到新变量。
+     * 缺口在于变量用的不是 {@code IPluginStore.noSaveStore}（{@link WorkshopVariable} 不是
+     * {@code IStoreSelfManagement}），所以 {@code manipuldateProcess} 那条路根本不会执行，
+     * 补的是 {@link WorkshopVariable#afterSaved} 这个写后回调。
+     *
+     * <p>去掉那个回调，本用例的第二次 {@code ensureWorkshopData} 会因 generation 未变而短路，
+     * 仍然读到 0 个变量 —— 正好钉住这个缺口。
+     */
+    @Test
+    public void testVariableSaveInvalidatesModuleSnapshot() throws Exception {
+        WorkshopModule module = newModule();
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertTrue("新建模块下不应有变量", module.variables.isEmpty());
+
+        StringVariable variable = new StringVariable();
+        variable.name = "snapshot_probe_var";
+        StaticConfig definitionConfig = new StaticConfig();
+        definitionConfig.value = "hello";
+        variable.definitionConfig = definitionConfig;
+
+        IPluginStore<WorkshopVariable> variableStore = WorkshopVariable.workshopVariable
+                .getPluginStore(PLUGIN_CONTEXT, variableMeta(variable.getName()));
+        Assert.assertNotNull("元数据齐全时必须拿到可落盘的 store", variableStore);
+
+        // 真实保存链路（PluginItems.getStore）把 UploadPluginMeta 放进 Context；
+        // afterSaved 正是从这里取 domain / module 去失效。只调 setPlugins 不传 Context 时，
+        // 请求线程里也没有 ThreadLocal 上下文，钩子会静默 no-op —— 所以这里必须显式给。
+        DefaultContext context = new DefaultContext();
+        UploadPluginMeta.putPluginMeta(context, variableMeta(variable.getName()));
+        Assert.assertTrue("变量保存应当成功", variableStore.setPlugins(PLUGIN_CONTEXT,
+                Optional.of(context), Collections.singletonList(
+                        new Descriptor.ParseDescribable<>(variable)), false).success);
+
+        File variableFile = new File(new File(WorkshopModule.getWorkshopDir(domain, moduleName),
+                WorkshopVariable.VARIABLE_DIR_NAME), variable.getName() + ".xml");
+        Assert.assertTrue("变量应落在 " + variableFile.getAbsolutePath(), variableFile.exists());
+
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertEquals("变量保存后模块快照必须重建，否则模块 GET 一直下发旧列表",
+                1, module.variables.size());
+        Assert.assertEquals(variable.getName(), module.variables.get(0).getName());
+    }
+
+    /**
      * 有 domain 时 unmarshal 即回填（readResolve 被 XStream 调用）。
      * <p>
      * 依赖 TIS 运行期（子实体 store 走 {@code TIS.getPluginStore}），环境不具备时跳过。
@@ -275,7 +335,7 @@ public class WorkshopModuleReloadTest {
         page.id = id;
         page.name = "页面";
         page.displayName = "页面";
-        page.template = PageTemplate.BLANK;
+        page.template = PageTemplate.createDefault();
         return page;
     }
 
@@ -294,6 +354,24 @@ public class WorkshopModuleReloadTest {
         widget.title = id;
         widget.sectionId = sectionId;
         return widget;
+    }
+
+    /**
+     * 变量专属 store 的元数据：四个 extraParam 缺一不可，
+     * 与 {@code WorkshopVariableTest#pluginMeta} 保持同一份契约
+     * （那里逐条解释了缺哪个会怎样）。
+     * <p>
+     * 注意 {@code afterSaved} 读的是同一条元数据里的
+     * {@code ontology_<domain>} / {@code workshop_<module>} —— 它把元数据塞进 Context 再取出，
+     * 因此这里既是「store 的寻址依据」也是「失效钩子的输入」，两处口径必须一致。
+     */
+    private UploadPluginMeta variableMeta(String variableName) {
+        UploadPluginMeta pluginMeta = UploadPluginMeta.create(Ontology.ONTOLOGY);
+        pluginMeta.putExtraParams(OntologyDomain.NAME_ONTOLOGY_DOMAIN, domain);
+        pluginMeta.putExtraParams(OntologyDomain.KEY_WORKSHOP, moduleName);
+        pluginMeta.putExtraParams(OntologyValueType.KEY_START_PERSISTENCE, Boolean.TRUE.toString());
+        pluginMeta.putExtraParams(IdentityName.PLUGIN_IDENTITY_NAME, variableName);
+        return pluginMeta;
     }
 
     private static void setOntologyDomain(WorkshopModule module, String value) throws Exception {

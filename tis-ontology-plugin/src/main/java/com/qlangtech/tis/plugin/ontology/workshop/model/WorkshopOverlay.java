@@ -5,6 +5,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IStoreSelfManagement;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -62,8 +63,8 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
     public String title;
 
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT)
-    public String icon;
+    @FormField(ordinal = 6, type = FormFieldType.ENUM)
+    public IEndTypeGetter.EndType icon;
 
     @FormField(ordinal = 7)
     public VariableBasedVisibility variableBasedVisibility;

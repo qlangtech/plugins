@@ -12,6 +12,7 @@ import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
@@ -244,7 +245,11 @@ public class ObjectTableWidget extends WorkshopWidget implements IWidgetColumnHo
          * {@code property}、非法操作符都直接抛。这条链路的值全由本工程前端生成，出现异常值就是
          * bug；静默跳过等于悄悄放宽过滤，用户看到的是一张"条件明明生效了但没过滤"的表。
          */
-        private static void applyRuntimeFilters(IControlMsgHandler paramGetter, ObjectSetVariable objSetVar,
+        // ⚠️ 包内可见是**有意的**：ObjectListWidget 在同一包、同一份 get_data 协议，
+        // 共用这段解析（漏一条属性名白名单、把非法方向静默升序，都是不报错的静默失效）。
+        // 同理 parsePage / parseSortOrderAsc / clampPage / applyOrderBy 也是同包公共契约，
+        // 故本类注释在此声明：这几个 static **不要**改成 private，测试也直接按本类寻址。
+        static void applyRuntimeFilters(IControlMsgHandler paramGetter, ObjectSetVariable objSetVar,
                                                 ObjectTypeBinding.DataSourceQueryCriteria criteria) {
             String filtersJson = paramGetter.getString(KEY_FILTERS);
             if (StringUtils.isBlank(filtersJson)) {
@@ -262,8 +267,13 @@ public class ObjectTableWidget extends WorkshopWidget implements IWidgetColumnHo
                     throw new IllegalArgumentException("object table filter property can not be blank, index:" + i
                             + ", filters:" + filtersJson);
                 }
-                runtime.add(new ObjectTypeBinding.FilterCriterion(
-                        property, filter.getString("operator"), filter.get("value")));
+                try {
+                    runtime.add(new ObjectTypeBinding.FilterCriterion(
+                            property, FilterOperator.parse(filter.getString("operator")), filter.get("value")));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("object table filter[" + i + "] " + e.getMessage()
+                            + ", filters:" + filtersJson, e);
+                }
             }
             objSetVar.applyRuntimeFilters(criteria, runtime);
         }

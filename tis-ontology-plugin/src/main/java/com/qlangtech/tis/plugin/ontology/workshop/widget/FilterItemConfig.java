@@ -2,12 +2,12 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.AbstractSelectComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.FilterComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.KeywordComponent;
@@ -30,7 +30,8 @@ import java.util.List;
  * 枚举只能表达「长什么样」，表达不了「单选/多选的可选项从哪来」。候选项来源本身是一个
  * 有字段的配置（手填列表 / 取自某个对象集变量并指定 label、val 属性），必须承载为嵌套子表单：
  * <ul>
- *   <li>{@link FilterComponent} —— 四种形态（keyword / date-picker / single-select / multi-select）</li>
+ *   <li>{@link FilterComponent} —— 五种形态（keyword / date-picker / single-select / multi-select /
+ *       {@link com.qlangtech.tis.plugin.ontology.workshop.widget.component.HistogramComponent histogram}）</li>
  *   <li>{@link AbstractSelectComponent} —— 单选/多选的公共父类，声明 {@code optionsSource}</li>
  *   <li>{@code AbstractOpsSource} —— 候选项来源（manual / object-set）</li>
  * </ul>
@@ -101,6 +102,11 @@ public class FilterItemConfig implements Describable<FilterItemConfig>, IPluginS
      * <p>之所以留着这个覆盖口，是因为「控件形态」与「比较语义」不是一一对应的：
      * 同一个日期选择器，既可以表达「等于某天」，也可以表达「不晚于某天」。
      * 不给覆盖口就只能改控件形态来表达语义，那是把两件事混成一件。
+     *
+     * <p>类型是 core 的 {@link FilterOperator}（与 {@code ObjectSetFilterConfig.operator} 同一个枚举）。
+     * 此前这里是本类自己的嵌套枚举、且不实现 {@code IEnumTypeSer}，表单值下发成常量名 {@code in_}，
+     * 而下游认的是线格式 {@code in} —— 于是「多选过滤器」这条配置一旦中继到后端就抛
+     * {@code illegal filter operator:in_}。上收后由 {@link FilterOperator#valueToken()} 统一给出 {@code in}。
      */
     @FormField(ordinal = 3, type = FormFieldType.ENUM)
     public FilterOperator operator;
@@ -140,40 +146,6 @@ public class FilterItemConfig implements Describable<FilterItemConfig>, IPluginS
         if (this.component instanceof AbstractSelectComponent selectComponent
                 && selectComponent.optionsSource == null) {
             selectComponent.optionsSource = new ObjectSetOpsSource();
-        }
-    }
-
-    /**
-     * 谓词算子。取值与前端 {@code OntologyFilterOperator} 联合类型一一对应。
-     *
-     * <p>后端无需认识这些取值：{@code WorkshopOntologyService.Filter.operator} 声明为普通
-     * {@code String}，{@code WorkshopOntologyAction.doQueryObjectSet} 只做 {@code getString}
-     * 透传，没有白名单校验。本枚举存在的意义是让构建者有个可选项列表，而不是做协议约束。
-     *
-     * <h3>为什么叫 {@code in_} 而不是 {@code in}</h3>
-     * {@code in} 是 Java 关键字，不能做标识符。同一文件里的 {@link WidgetColumnConfig.ColumnFormat}
-     * 对 {@code boolean} 用了同样的尾下划线写法（{@code boolean_}），此处沿用。
-     * 落盘值是 {@code in_}，前端在 {@code filter-list.component.ts} 的算子归一里
-     * 把它翻译回线格式的 {@code in} —— 下游 {@code ObjectSetFilterValue} 只认 {@code in}。
-     */
-    public enum FilterOperator implements DescriptorUseableShortComment {
-        equals("等于"),
-        contains("包含"),
-        greaterThan("大于"),
-        lessThan("小于"),
-        greaterThanOrEqual("大于等于"),
-        lessThanOrEqual("小于等于"),
-        in_("属于集合");
-
-        private final String label;
-
-        FilterOperator(String label) {
-            this.label = label;
-        }
-
-        @Override
-        public String shortComment() {
-            return this.label;
         }
     }
 

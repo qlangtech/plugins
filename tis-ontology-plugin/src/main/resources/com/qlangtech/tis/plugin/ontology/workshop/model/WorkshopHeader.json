@@ -10,7 +10,8 @@
   },
   "titleColor": {
     "label": "标题颜色",
-    "help": "标题文本的颜色，支持 CSS 颜色值"
+    "help": "标题文本的颜色（十六进制，如 #1f1f1f）；留空用主题默认",
+    "placeholder": "#1f1f1f"
   },
   "orientation": {
     "label": "方向",
@@ -24,7 +25,8 @@
   },
   "backgroundColor": {
     "label": "背景颜色",
-    "help": "头部背景颜色，支持 CSS 颜色值"
+    "help": "头部背景颜色（十六进制，如 #001529）；留空用主题默认",
+    "placeholder": "#001529"
   },
   "favoriteEnabled": {
     "label": "启用收藏",

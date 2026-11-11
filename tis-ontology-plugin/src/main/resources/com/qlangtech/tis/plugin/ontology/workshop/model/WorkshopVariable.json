@@ -13,8 +13,8 @@
     "dftVal": "AUTOMATIC"
   },
   "lazyLoading": {
-    "label": "懒加载",
-    "help": "是否延迟加载变量值，直到实际使用时才计算",
+    "label": "懒加载（已废弃）",
+    "help": "已废弃，配置后无任何效果：变量现在一律按需计算 —— 只有被 widget 实际订阅时才会计算值，未被任何 widget 引用的变量不会向后端发起查询",
     "dftVal": false
   },
   "interfaceConfig": {

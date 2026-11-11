@@ -8,6 +8,7 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.AggregationFunc;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -164,24 +166,73 @@ public class ObjectSetOpsSource extends AbstractOpsSource {
             criteria.addTargetCol(valueProp);
             criteria.addGroupKey(GroupKey.rawColumn(valueProp));
         }
+        // 每个候选值有多少行 —— 前端在每个候选右侧显示这个数并据此画分布条。
+        // 计数口径是「按该属性自身分组」，不随其它过滤项联动（与 Palantir 一致）。
+        criteria.addMetric(AggregationFunc.COUNT, null);
+        // 空值也作为一个独立候选（Palantir 的 "No value" 行）。聚合的默认实现会给第一个分组键
+        // 加 (c0) IS NOT NULL —— 那样空值组根本查不出来，故显式关掉。
+        criteria.setIncludeNullGroups(true);
         criteria.setMaxGroups(MAX_OPTIONS);
 
         AggregationResult aggregation = objSetVar.executeAggregation(criteria);
-        for (RowMap row : aggregation.rows()) {
-            Object labelVal = row.get(AggregationCriteria.groupAlias(0));
-            Object valueVal = sameProp ? labelVal : row.get(AggregationCriteria.groupAlias(1));
-            if (valueVal == null) {
-                // 分组键 c1 没有 IS NOT NULL 约束（方言侧只对第一个分组键加），这里自行跳过
-                continue;
-            }
-            options.add(new Option(labelVal == null ? String.valueOf(valueVal) : String.valueOf(labelVal)
-                    , String.valueOf(valueVal)));
-        }
+        options.addAll(buildOptions(aggregation.rows(), sameProp));
         if (aggregation.truncated()) {
             logger.warn("[filter-list] 对象集变量 '{}' 的去重结果超过 {} 条，候选项已截断",
                     sourceObjectSetVar, MAX_OPTIONS);
         }
         return options;
+    }
+
+    /**
+     * 空值候选的显示文本。与 Palantir 的 {@code No value} 对齐；前端会额外加斜体。
+     */
+    public static final String NULL_OPTION_LABEL = "No value";
+
+    /**
+     * 聚合行 → 候选项（含计数），按计数降序；空值行固定排在最后。
+     *
+     * <p>包级可见<b>为了可测</b>：本方法是纯转换，造几个 {@link RowMap} 即可覆盖，
+     * 不必启动数据源（与 {@code DataSourceBinding#readAggregationRow} 同一约定）。
+     *
+     * <p><b>为什么排序放在 Java 侧</b>：聚合不支持 {@code orderByCol}
+     * （{@code DataSourceBinding#executeAggregation} 直接拒绝），而分组行最多
+     * {@link #MAX_OPTIONS} 条，内存排序的代价可以忽略。
+     *
+     * <p><b>空值行的计数为什么是累加</b>：label 与 value 是两个属性时，{@code (label, value)}
+     * 可能有多行落在 value 为空上（label 各不相同）；对使用者来说它们都是「空值」这一个候选，
+     * 故合并计数。只有累加结果 &gt; 0 才产出这一行 —— 等价于「该属性确实存在 NULL」。
+     *
+     * @param sameProp label 与 value 是同一个属性时为 true，此时只有一列分组键
+     */
+    static List<Option> buildOptions(List<RowMap> rows, boolean sameProp) {
+        List<OptionWithCount> counted = new ArrayList<>(rows.size());
+        long nullCount = 0;
+        for (RowMap row : rows) {
+            Object labelVal = row.get(AggregationCriteria.groupAlias(0));
+            Object valueVal = sameProp ? labelVal : row.get(AggregationCriteria.groupAlias(1));
+            long count = toCount(row.get(AggregationCriteria.metricAlias(0)));
+            if (valueVal == null) {
+                nullCount += count;
+                continue;
+            }
+            counted.add(OptionWithCount.of(
+                    labelVal == null ? String.valueOf(valueVal) : String.valueOf(labelVal),
+                    String.valueOf(valueVal), count));
+        }
+        // List.sort 是稳定排序：计数相同的候选保持 SQL 的分组顺序，刷新前后不会跳动
+        counted.sort(Comparator.comparingLong(OptionWithCount::getCount).reversed());
+
+        List<Option> options = new ArrayList<>(counted.size() + 1);
+        options.addAll(counted);
+        if (nullCount > 0) {
+            options.add(OptionWithCount.nullValue(NULL_OPTION_LABEL, nullCount));
+        }
+        return options;
+    }
+
+    /** COUNT 的返回类型随驱动不同（Long / Integer / BigDecimal），统一取 long */
+    private static long toCount(Object count) {
+        return count instanceof Number num ? num.longValue() : 0L;
     }
 
 

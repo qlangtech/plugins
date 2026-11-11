@@ -9,7 +9,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.WidgetOptionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.FilterItemConfig.FilterOperator;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.AbstractOpsSource;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.AbstractSelectComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.DatePickerComponent;
@@ -183,26 +183,32 @@ public class TestFilterItemConfigContract {
     }
 
     /**
-     * 控件形态族恰为四个具体子类，且各自的 {@code getDisplayName()} 就是前端的 kebab token。
+     * 控件形态族恰为五个具体子类，且各自的 {@code getDisplayName()} 就是前端的 kebab token。
      *
      * <p>前端 {@code resolveFilterComponent} 用 {@code resolveImplKind(impl, "Component")}
      * 从类名推 token，与这里的 {@code getDisplayName()} 是两套推导 —— 两边必须给出<b>同一串</b>，
      * 否则 {@code ngSwitchCase} 全部落空、控件渲染不出来（且不报错）。
      *
      * <p>{@code AbstractSelectComponent} 是抽象的，不会出现在选择器里
-     * （{@code concreteSubclassesOf} 已过滤 abstract），这里通过「恰为四个」把多余的类一并挡住。
+     * （{@code concreteSubclassesOf} 已过滤 abstract），这里通过「恰为五个」把多余的类一并挡住。
+     *
+     * <p>{@code HistogramComponent} 与另外四个的差别不止是「长什么样」：它不产出单值，
+     * 而是点柱子产出一对区间谓词（见 {@code HistogramDataProcessor}）。它同样必须出现在本断言里 ——
+     * 新增控件形态时如果只改前端 {@code FILTER_COMPONENT_KINDS} 不改这里，两边的形态集合就会分叉。
      */
     @Test
-    public void componentSubclassesAreExactlyFourKebabTokens() {
+    public void componentSubclassesAreExactlyFiveKebabTokens() {
         Set<Class<?>> subs = TisPluginFormTestSupport.concreteSubclassesOf(FilterComponent.class, COMPONENT_PKG);
-        Assert.assertEquals("控件形态应恰为四个具体子类", Set.of("DatePickerComponent", "KeywordComponent",
-                "MultiSelectComponent", "SingleSelectComponent"), TisPluginFormTestSupport.names(subs));
+        Assert.assertEquals("控件形态应恰为五个具体子类", Set.of("DatePickerComponent", "KeywordComponent",
+                "MultiSelectComponent", "SingleSelectComponent", "HistogramComponent"),
+                TisPluginFormTestSupport.names(subs));
 
         Map<String, String> expectedTokens = Map.of(
                 "KeywordComponent", "keyword",
                 "DatePickerComponent", "date-picker",
                 "SingleSelectComponent", "single-select",
-                "MultiSelectComponent", "multi-select");
+                "MultiSelectComponent", "multi-select",
+                "HistogramComponent", "histogram");
         subs.forEach(sub -> {
             Descriptor<?> desc = TisPluginFormTestSupport.descriptorOf(sub);
             Assert.assertEquals(sub.getSimpleName() + " 的 getDisplayName() 是线格式（前端 kebab token）",
@@ -432,15 +438,22 @@ public class TestFilterItemConfigContract {
     // ==================================================================
 
     /**
-     * {@code FilterOperator} 的常量名是<b>线格式</b>：前端 {@code normalizeOperator} 按
-     * {@code in_} 翻译成 {@code in}。增删常量必须同步前端。
+     * 下发/落盘的<b>线格式</b>是 {@link FilterOperator#valueToken()}，不是常量名：
+     * {@code in} 是 Java 关键字，常量只能叫 {@code in_}，而前端 {@code OntologyFilterOperator}
+     * 只认 {@code in}。增删常量必须同步前端。
+     *
+     * <p>这正是本枚举上收 core 时要修的东西 —— 插件侧原先那两份嵌套枚举，其中一份不实现
+     * {@code IEnumTypeSer}，表单值就是常量名 {@code in_}，中继到 {@code addFilter} 时炸。
      */
     @Test
     public void operatorTokensAreWireFormat() {
         Assert.assertEquals(List.of("equals", "contains", "greaterThan", "lessThan",
-                        "greaterThanOrEqual", "lessThanOrEqual", "in_"),
-                Arrays.stream(FilterOperator.values()).map(Enum::name).collect(Collectors.toList()));
+                        "greaterThanOrEqual", "lessThanOrEqual", "in", "isNull", "inOrNull"),
+                Arrays.stream(FilterOperator.values()).map(FilterOperator::valueToken)
+                        .collect(Collectors.toList()));
         Assert.assertEquals("属于集合", FilterOperator.in_.shortComment());
+        Assert.assertEquals("为空", FilterOperator.isNull.shortComment());
+        Assert.assertEquals("属于集合或为空", FilterOperator.inOrNull.shortComment());
     }
 
     private static Field declaredFormField(Class<?> clazz, String fieldName) {

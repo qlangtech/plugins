@@ -15,55 +15,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qlangtech.tis.plugin.ontology.workshop.widget.impl.button.group;
+package com.qlangtech.tis.plugin.ontology.workshop.widget;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.ButtonColor;
-import com.qlangtech.tis.plugin.ontology.workshop.util.HexColorValidator;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
 
 /**
- * 自定义：十六进制色值。唯一带 {@code customColor} 载荷的子类 —— 见 {@link ButtonColor}
- * 的多态理由。
+ * 支持多选：每个对象前出现勾选框，勾选集合写回指定对象集变量。
  *
  * @author 百岁 (baisui@qlangtech.com)
- * @date 2026/10/20
+ * @date 2026/11/10
  */
-public class CustomButtonColor extends ButtonColor {
+public class DefaultObjectSelection extends ObjectSelection {
 
     private static final long serialVersionUID = 1L;
 
-
+    public static final String KEY_SELECTED_OBJECTS_VAR = "selectedObjectsVar";
 
     /**
-     * 自定义色值（十六进制，如 #f5222d）
+     * 选中集合写回的对象集变量。必填 —— 开了多选却没绑变量，勾选结果无处可去。
      */
-    @FormField(ordinal = 0,type = FormFieldType.INPUTTEXT,validate = {Validator.require})
-    public String customColor;
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String selectedObjectsVar;
 
+    @Override
+    public boolean multiSelectEnabled() {
+        return true;
+    }
+
+    @Override
+    public String resolveSelectedObjectsVar() {
+        return selectedObjectsVar;
+    }
+
+    /**
+     * 无参构造是必需的：{@code clazz = getClass().getEnclosingClass()} 靠它把 descriptor 绑到
+     * {@code DefaultObjectSelection} 上，写成带参（或移到基类里）两个子类的 {@code getId()} 会撞号。
+     */
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
-        @Override
-        public String getDisplayName() {
-            return "custom";
+
+        public DefaultDescriptor() {
+            super();
+            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
         }
 
-        /**
-         * {@code customColor} 的格式校验 —— 框架按 {@code validate${字段名}} 约定反射发现
-         * （见 {@code Descriptor#createValidateMap}），空值不进来（由 {@link Validator#require} 负责）。
-         */
-        public boolean validateCustomColor(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return HexColorValidator.validate(msgHandler, context, fieldName, value);
+        @Override
+        public String getDisplayName() {
+            return "Default";
         }
 
         @Override
         public String shortComment() {
-            return "自定义：十六进制色值";
+            return "支持多选，勾选集合写回指定变量";
         }
     }
 }

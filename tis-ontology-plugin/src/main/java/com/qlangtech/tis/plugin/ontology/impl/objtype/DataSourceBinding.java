@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDBReservedKeys;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ontology.AggregationFunc;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
@@ -171,10 +172,17 @@ public class DataSourceBinding extends ObjectTypeBinding {
      *   <li>不分页（聚合结果已是分组行），也不下推排序 —— {@code orderByCol} 非空直接拒绝，
      *       静默忽略会让调用方误以为排序生效；</li>
      *   <li>只给 X 分组键加 {@code IS NOT NULL}，与「X 为空则跳过」的旧语义对齐；
-     *       segment 为 NULL 仍作为一个分组；</li>
+     *       segment 为 NULL 仍作为一个分组。调用方调了
+     *       {@link AggregationCriteria#setIncludeNullGroups(boolean)} 时该谓词不加，
+     *       空值单独成组；</li>
      *   <li>分组数超过 {@link AggregationCriteria#getMaxGroups()} 时只返回前 N 组并置
      *       {@link AggregationResult#truncated()}。</li>
      * </ul>
+     *
+     * <p><b>不带分组键是合法形态</b>：此时退化成「单行标量聚合」（{@code select MIN(x), MAX(x) from t}），
+     * 不追加 {@code GROUP BY} 与 {@code LIMIT}，只返回一行，行里只有 {@code m0…} 这些指标键。
+     * 直方图的「先取一次 MIN/MAX 定桶宽」就靠这个形态 —— 没有它就只能退化成先拉全部明细再算，
+     * 那在大表上会被 {@code maxGroups} 截断成一份残缺分布。
      *
      * <p>标识符在这里做最后一道白名单校验（{@link #resolveTabCols()}）：即使调用方绕过
      * 上层 planner，也不允许不存在的列进入 SQL。
@@ -182,9 +190,7 @@ public class DataSourceBinding extends ObjectTypeBinding {
     @Override
     public AggregationResult executeAggregation(AggregationCriteria criteria) {
         Objects.requireNonNull(criteria, "aggregation criteria can not be null");
-        if (criteria.getGroupKeys().isEmpty()) {
-            throw new IllegalArgumentException("aggregation requires at least one group key");
-        }
+        requireRenderable(criteria);
         if (criteria.getOrderByCol() != null) {
             throw new IllegalArgumentException("aggregation does not support orderByCol:'"
                     + criteria.getOrderByCol() + "', top-N must be resolved by caller after aggregation");
@@ -208,23 +214,32 @@ public class DataSourceBinding extends ObjectTypeBinding {
         }
         for (int i = 0; i < metrics.size(); i++) {
             AggregationCriteria.Metric metric = metrics.get(i);
-            sql.append(", ").append(builder.renderMetric(metric.func(), metric.property(), ds))
+            // 无分组键时第一个指标前面不能带逗号
+            if (i > 0 || !groupExprs.isEmpty()) {
+                sql.append(", ");
+            }
+            sql.append(builder.renderMetric(metric.func(), metric.property(), ds))
                     .append(" AS ").append(AggregationCriteria.metricAlias(i));
         }
         sql.append(" from ").append(escapedTableName(ds));
 
-        final List<Object> filterParams = appendWhere(sql, criteria, ds,
-                "(" + groupExprs.get(0) + ") IS NOT NULL");
+        // 无分组键 = 单行标量聚合（直方图取 MIN/MAX 定桶宽那一趟），此时既没有分组列可判空，
+        // 也不该追加 GROUP BY / LIMIT —— 标量聚合恒返回一行，LIMIT 只会把这一行切掉
+        final boolean scalarOnly = groupKeys.isEmpty();
+        final String nonNullGroupPredicate = nonNullGroupPredicate(criteria, groupExprs);
+        final List<Object> filterParams = appendWhere(sql, criteria, ds, nonNullGroupPredicate);
 
-        sql.append(" GROUP BY ");
-        for (int i = 0; i < groupExprs.size(); i++) {
-            if (i > 0) {
-                sql.append(", ");
+        if (!scalarOnly) {
+            sql.append(" GROUP BY ");
+            for (int i = 0; i < groupExprs.size(); i++) {
+                if (i > 0) {
+                    sql.append(", ");
+                }
+                sql.append(i + 1);
             }
-            sql.append(i + 1);
+            // 多取一行用于判断是否超出上限；不走 appendSqlLimit（它依赖 page/pageSize，且 StarRocks 未实现）
+            sql.append(" LIMIT ").append((long) criteria.getMaxGroups() + 1);
         }
-        // 多取一行用于判断是否超出上限；不走 appendSqlLimit（它依赖 page/pageSize，且 StarRocks 未实现）
-        sql.append(" LIMIT ").append((long) criteria.getMaxGroups() + 1);
 
         final int groupCount = groupKeys.size();
         final int metricCount = metrics.size();
@@ -250,6 +265,25 @@ public class DataSourceBinding extends ObjectTypeBinding {
             }
         });
         return new AggregationResult(rows, truncated[0]);
+    }
+
+    /**
+     * 拒绝渲染不出合法 SQL 的空条件。
+     *
+     * <p>三种合法形态：只有指标（单行标量聚合）、只有分组键（按分组键去重）、两者都有。
+     * 只有「两者都空」才渲染成 {@code select  from t} —— 那在各方言上都不合法。
+     *
+     * <p>⚠️ 「只有分组键」这一形态曾被漏判：早先的闸门写的是 {@code metrics.isEmpty()}，
+     * 于是「按分组键去重」被当成非法条件抛掉。它不会报错，只是让
+     * {@code ObjectSetOpsSource#resolveOptions} 的候选恒为空 —— 候选项解析的 catch 把异常
+     * 降级成了空列表，用户看到的只是「下拉里没有选项」。
+     *
+     * <p>包级可见<b>为了可测</b>：本方法是纯判断，不必启动数据源即可覆盖全部组合。
+     */
+    static void requireRenderable(AggregationCriteria criteria) {
+        if (criteria.getGroupKeys().isEmpty() && criteria.getMetrics().isEmpty()) {
+            throw new IllegalArgumentException("aggregation requires at least one group key or metric");
+        }
     }
 
     /**
@@ -305,14 +339,38 @@ public class DataSourceBinding extends ObjectTypeBinding {
     }
 
     /**
+     * 分组键的「非空」静态谓词；不进 WHERE 时返回 {@code null}。
+     *
+     * <p>默认给第一个分组键加 {@code IS NOT NULL}，与「X 为空则跳过该行」的旧语义对齐。
+     * 两种情形不加：没有分组键（标量聚合没有分组列可判空）、调用方显式要了空值分组
+     * （{@link AggregationCriteria#setIncludeNullGroups(boolean)}，候选项的 {@code No value} 行）。
+     *
+     * <p>包级可见<b>为了可测</b>：纯判断，不必启动数据源即可覆盖全部组合
+     * （与 {@link #requireRenderable} / {@link #readAggregationRow} 同一约定）。
+     */
+    static String nonNullGroupPredicate(AggregationCriteria criteria, List<String> groupExprs) {
+        if (groupExprs.isEmpty() || criteria.isIncludeNullGroups()) {
+            return null;
+        }
+        return "(" + groupExprs.get(0) + ") IS NOT NULL";
+    }
+
+    /**
      * 按 {@link DataSourceQueryCriteria#getFilters()} 渲染 WHERE 子句，并返回按占位符顺序排列的绑定值。
      *
-     * <p>操作符与属性名的白名单已在 {@code DataSourceQueryCriteria#addFilter} 里校验过，
-     * 这里只负责映射成 SQL 片段；{@code default} 分支仍然显式抛错，避免将来新增操作符时
-     * 静默生成一条语义错误的语句。
+     * <p>属性名的白名单已在 {@code DataSourceQueryCriteria#addFilter} 里校验过，算子的合法性由
+     * {@link com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator} 这个类型本身保证，
+     * 这里只负责映射成 SQL 片段。
+     *
+     * <p>⚠️ {@code default} 分支必须保留：枚举上的 {@code switch} <b>语句</b>（不是 switch 表达式）
+     * 不强制穷尽，新增一个算子却忘了在这里加 render arm 时，编译器不会报错 —— 这条兜底是唯一
+     * 能让「静默渲染出一条语义错误的 SQL」变成显式失败的东西。
+     *
+     * <p>标识符转义只要 {@link IDBReservedKeys}：本方法不碰连接，收窄成接口后单测可以传一个
+     * 「只加反引号」的桩，不必造一个活的 {@link DataSourceFactory}。包级可见<b>为了可测</b>。
      */
-    private static List<Object> appendWhere(StringBuilder sql, DataSourceQueryCriteria criteria, DataSourceFactory ds,
-                                            String trailingStaticPredicate) {
+    static List<Object> appendWhere(StringBuilder sql, DataSourceQueryCriteria criteria, IDBReservedKeys ds,
+                                    String trailingStaticPredicate) {
         List<ObjectTypeBinding.FilterCriterion> filters = criteria.getFilters();
         List<Object> params = new ArrayList<>();
         if (filters.isEmpty() && trailingStaticPredicate == null) {
@@ -326,48 +384,55 @@ public class DataSourceBinding extends ObjectTypeBinding {
             }
             String escapedCol = ds.getEscapedEntity(filter.property());
             switch (filter.operator()) {
-                case DataSourceQueryCriteria.OP_EQUALS -> {
+                case equals -> {
                     sql.append(escapedCol).append("=?");
                     params.add(filter.value());
                 }
-                case DataSourceQueryCriteria.OP_CONTAINS -> {
+                case contains -> {
                     sql.append(escapedCol).append(" LIKE ?");
                     params.add("%" + escapeLike(String.valueOf(filter.value())) + "%");
                 }
-                case DataSourceQueryCriteria.OP_GREATER_THAN -> {
+                case greaterThan -> {
                     sql.append(escapedCol).append(">?");
                     params.add(filter.value());
                 }
-                case DataSourceQueryCriteria.OP_LESS_THAN -> {
+                case lessThan -> {
                     sql.append(escapedCol).append("<?");
                     params.add(filter.value());
                 }
-                case DataSourceQueryCriteria.OP_GREATER_THAN_OR_EQUAL -> {
+                case greaterThanOrEqual -> {
                     sql.append(escapedCol).append(">=?");
                     params.add(filter.value());
                 }
-                case DataSourceQueryCriteria.OP_LESS_THAN_OR_EQUAL -> {
+                case lessThanOrEqual -> {
                     sql.append(escapedCol).append("<=?");
                     params.add(filter.value());
                 }
-                case DataSourceQueryCriteria.OP_IN -> {
+                case in_ -> {
                     Collection<?> values = toCollection(filter.value());
                     if (values.isEmpty()) {
                         throw new IllegalArgumentException("filter 'in' requires a non-empty collection for property:"
                                 + filter.property());
                     }
-                    sql.append(escapedCol).append(" IN (");
-                    int index = 0;
-                    for (Object value : values) {
-                        if (index++ > 0) {
-                            sql.append(',');
-                        }
-                        sql.append('?');
-                        params.add(value);
-                    }
-                    sql.append(')');
+                    appendInList(sql, escapedCol, values, params);
                 }
-                default -> throw new IllegalArgumentException("illegal filter operator:" + filter.operator());
+                case isNull -> {
+                    // 不带比较值，也不绑定参数
+                    sql.append(escapedCol).append(" IS NULL");
+                }
+                case inOrNull -> {
+                    Collection<?> values = toCollection(filter.value());
+                    if (values.isEmpty()) {
+                        // 空集合时 IN () 非法；语义上「属于空集合或者为空」就等于「为空」
+                        sql.append(escapedCol).append(" IS NULL");
+                    } else {
+                        sql.append('(');
+                        appendInList(sql, escapedCol, values, params);
+                        sql.append(" OR ").append(escapedCol).append(" IS NULL)");
+                    }
+                }
+                default -> throw new IllegalStateException("filter operator:'" + filter.operator()
+                        + "' has no SQL render arm, add one in appendWhere");
             }
             appended = true;
         }
@@ -379,6 +444,26 @@ public class DataSourceBinding extends ObjectTypeBinding {
             sql.append(trailingStaticPredicate);
         }
         return params;
+    }
+
+    /**
+     * 追加 {@code col IN (?,?…)} 片段（含括号）并把值按顺序放进 {@code params}。
+     *
+     * <p>抽出来是因为 {@code IN} 与 {@code IN_OR_NULL} 两个分支拼的是同一段，
+     * 而占位符下标必须与 {@code params} 的追加顺序严格一致 —— 复制一份最容易出现的就是
+     * 「参数少了一个」这种只在运行时才炸的错。
+     */
+    private static void appendInList(StringBuilder sql, String escapedCol, Collection<?> values, List<Object> params) {
+        sql.append(escapedCol).append(" IN (");
+        int index = 0;
+        for (Object value : values) {
+            if (index++ > 0) {
+                sql.append(',');
+            }
+            sql.append('?');
+            params.add(value);
+        }
+        sql.append(')');
     }
 
     /**

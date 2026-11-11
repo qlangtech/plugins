@@ -1,7 +1,12 @@
 {
-  "propertyStyle": {
-    "label": "属性排布方式",
-    "help": "属性名与属性值如何排布",
-    "dftVal": "inline"
+  "columnCount": {
+    "label": "每行属性列数",
+    "help": "一行展示几组「属性名：属性值」，可填 1-6",
+    "dftVal": 2
+  },
+  "showBorder": {
+    "label": "显示属性表边框",
+    "help": "开启后每个对象的属性以带边框的表格展示；关闭更紧凑",
+    "dftVal": false
   }
 }

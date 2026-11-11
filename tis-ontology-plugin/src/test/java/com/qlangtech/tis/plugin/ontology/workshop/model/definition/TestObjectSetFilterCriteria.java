@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model.definition;
 
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
-import com.qlangtech.tis.plugin.ontology.workshop.model.definition.ObjectSetFilterConfig.FilterOperator;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,8 +62,8 @@ public class TestObjectSetFilterCriteria {
             .resolveFilterCriteria();
 
     Assert.assertEquals(2, criteria.size());
-    Assert.assertEquals(ObjectTypeBinding.DataSourceQueryCriteria.OP_IN, criteria.get(0).operator());
-    Assert.assertEquals(ObjectTypeBinding.DataSourceQueryCriteria.OP_GREATER_THAN_OR_EQUAL,
+    Assert.assertEquals(FilterOperator.in_, criteria.get(0).operator());
+    Assert.assertEquals(FilterOperator.greaterThanOrEqual,
             criteria.get(1).operator());
   }
 
@@ -74,7 +74,7 @@ public class TestObjectSetFilterCriteria {
             .resolveFilterCriteria();
 
     Assert.assertEquals(1, criteria.size());
-    Assert.assertEquals(ObjectTypeBinding.DataSourceQueryCriteria.OP_EQUALS, criteria.get(0).operator());
+    Assert.assertEquals(FilterOperator.equals, criteria.get(0).operator());
     Assert.assertEquals("北京", criteria.get(0).value());
   }
 
@@ -118,7 +118,7 @@ public class TestObjectSetFilterCriteria {
     Assert.assertEquals(" abc ", criteria.get(0).value());
   }
 
-  /** 空白 property 跳过（同 WorkshopOntologyService 的口径） */
+  /** 空白 property 跳过（同 {@code ObjectSetRowQuery} 的口径：组不出标识符的属性直接不用） */
   @Test
   public void testBlankPropertySkipped() {
     Assert.assertTrue(configOf(filter("  ", FilterOperator.equals, "x")).resolveFilterCriteria().isEmpty());
@@ -148,6 +148,46 @@ public class TestObjectSetFilterCriteria {
     Assert.assertEquals(2, criteria.size());
     Assert.assertEquals("city", criteria.get(0).property());
     Assert.assertEquals("level", criteria.get(1).property());
+  }
+
+  /**
+   * {@code isNull} 必须穿过「空值即跳过」的闸门。
+   *
+   * <p>这条算子<b>没有</b>比较值，而上面几条用例全是「值空就丢掉整行」。少了
+   * {@code isValueFree()} 的放行，用户配了「为空」过滤后什么都不会发生 ——
+   * 不报错、不警告，只是永远查全量。
+   */
+  @Test
+  public void testIsNullSurvivesBlankValueGate() {
+    List<ObjectTypeBinding.FilterCriterion> criteria = configOf(filter("city", FilterOperator.isNull, null))
+            .resolveFilterCriteria();
+
+    Assert.assertEquals(1, criteria.size());
+    Assert.assertEquals(FilterOperator.isNull, criteria.get(0).operator());
+    Assert.assertNull("为空算子不该带比较值", criteria.get(0).value());
+  }
+
+  /** {@code inOrNull} 与 {@code in} 同形：逗号拆分、空项丢弃 */
+  @Test
+  public void testInOrNullSplitsLikeIn() {
+    List<ObjectTypeBinding.FilterCriterion> criteria = configOf(
+            filter("city", FilterOperator.inOrNull, " 北京 ,上海 "))
+            .resolveFilterCriteria();
+
+    Assert.assertEquals(1, criteria.size());
+    Assert.assertEquals(FilterOperator.inOrNull, criteria.get(0).operator());
+    Assert.assertEquals(List.of("北京", "上海"), criteria.get(0).value());
+  }
+
+  /**
+   * {@code inOrNull} 拆完为空 → 跳过（与 {@code in} 同口径）。
+   *
+   * <p>注意<b>不</b>退化成「为空」：那会让一条填错的配置静默变成「只筛空值」，
+   * 用户看到的是一张几乎空白的表，却完全找不到原因。要「只要空值」请用 {@code isNull}。
+   */
+  @Test
+  public void testInOrNullAllBlankSkipped() {
+    Assert.assertTrue(configOf(filter("city", FilterOperator.inOrNull, " , ")).resolveFilterCriteria().isEmpty());
   }
 
   /** 列表里的 null 元素（手工构造/异常数据）直接忽略 */

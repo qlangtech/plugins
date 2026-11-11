@@ -17,15 +17,28 @@
  */
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.AttrValMap;
+import com.qlangtech.tis.util.IPluginContext;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * P1 Widget：甘特图（Gantt Chart）
@@ -65,8 +78,8 @@ public class GanttChartWidget extends WorkshopWidget {
         public DescriptorImpl() {
             super();
 
-            // === 对象集变量选项 ===
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            // === 对象集变量选项（只列可查询的「对象集合定义」型，见 getObjectSetSourceVariableOptions）===
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
 
             // === 级联属性字段：初始为空（未选 objectSetVar 时无选项）===
             this.registerSelectOptions(KEY_LABEL_PROP, Collections::emptyList);
@@ -83,6 +96,44 @@ public class GanttChartWidget extends WorkshopWidget {
                         return WidgetOptionHelper.getObjectPropertyOptions(
                                 selectedVar, OntologyPluginMeta.createPluginMeta(pluginMeta));
                     });
+        }
+
+        /**
+         * 服务端取数：标签 / 开始 / 结束三列 + 主键，行数封顶 {@link ObjectSetRowQuery#DEFAULT_MAX_ROWS}。
+         *
+         * <p>与前端 {@code gantt-chart.component.ts} 的 {@code fetchRows()} 一一对应。
+         */
+        @Override
+        public void httpProcess(IControlMsgHandler paramGetter, IPluginContext pluginContext, Context context) throws Exception {
+            String methodType = paramGetter.getString("type");
+            switch (methodType) {
+                case "get_data": {
+                    JSONObject postContent = pluginContext.getJSONPostContent();
+                    AttrValMap.RelevantFieldsContextAttrValMap<GanttChartWidget> attrs
+                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            (desc) -> Lists.newArrayList(KEY_OBJECT_SET_VAR, KEY_LABEL_PROP, KEY_START_PROP, KEY_END_PROP));
+                    if (!attrs.validate().isValid()) {
+                        return;
+                    }
+                    GanttChartWidget widget = attrs.createPluginInstance();
+
+                    ObjectSetVariable objSetVar = WorkshopVariable.loadDetail(widget.objectSetVar);
+                    List<String> targetCols = new ArrayList<>(3);
+                    targetCols.add(widget.labelProp);
+                    targetCols.add(widget.startProp);
+                    targetCols.add(widget.endProp);
+
+                    ObjectTypeBinding.DataSourceQueryCriteria criteria
+                            = ObjectSetRowQuery.createCriteria(targetCols, objSetVar.getIdentityPropName()
+                            , ObjectSetRowQuery.DEFAULT_MAX_ROWS);
+                    ObjectTableWidget.DescriptorImpl.applyRuntimeFilters(paramGetter, objSetVar, criteria);
+                    List<RowMap> rows = objSetVar.executeQuery(criteria);
+                    paramGetter.setBizResult(context, rows);
+                    return;
+                }
+                default:
+                    throw new IllegalStateException("illegal methodType:" + methodType);
+            }
         }
 
         @Override

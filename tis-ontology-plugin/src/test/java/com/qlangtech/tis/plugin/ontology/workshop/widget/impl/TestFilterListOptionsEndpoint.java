@@ -7,6 +7,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.WidgetOptionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.FilterItemConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.component.HistogramComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.KeywordComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.ManualOpsSource;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.MultiSelectComponent;
@@ -136,6 +137,47 @@ public class TestFilterListOptionsEndpoint {
         // 落盘配置仍在 vals 里 —— 候选是附加载荷，不是配置的替代品
         Assert.assertNotNull("optionsSource 的落盘配置仍在 vals 里",
                 source.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS).get(ManualOpsSource.KEY_OPTIONS));
+    }
+
+    /**
+     * 直方图载荷挂在 {@code filters[i].vals.component.appendVals} —— <b>控件信封层</b>，
+     * 与 {@code vals} 同级，而不是像候选项那样再往下一层（{@code vals.optionsSource}）。
+     *
+     * <h3>为什么要专门钉这一条</h3>
+     * 直方图与候选项虽然共用 {@link com.qlangtech.tis.util.DescribableJSON.AppendPayloadAttribute}，
+     * 但<b>声明位置差了整整一层</b>：候选项的实现类在 {@code component.vals.optionsSource} 里，
+     * 直方图的实现类就是 {@code component} 本身。前端 {@code toFilterItem} 按
+     * {@code row['component']['appendVals']} 取值，这条路径一旦写成
+     * {@code payloadOf(component)}（返回的是 {@code vals}）就恒 undefined，且没有任何报错。
+     *
+     * <p>载荷内容是 {@code histogramError}：本类跑在<b>没有对象集变量上下文</b>的环境里，
+     * 变量解析必然失败 —— 这恰好是「算不出来也必须降级、不能连坐整次序列化」的确定形态。
+     * 正常形态（{@code histogram: {buckets: […]}}）需要数据库，由
+     * {@code TestHistogramComponentPayload} 覆盖降级契约、真实链路留给联调。
+     */
+    @Test
+    public void testHistogramPayloadHangsOnComponentEnvelope() throws Exception {
+        HistogramComponent histogram = new HistogramComponent();
+        histogram.bucketCount = 20;
+
+        JSONObject item = descriptor.getItemJson(widget(row("amount", "金额", histogram)));
+
+        JSONObject component = componentEnvelope(item, 0);
+        JSONObject appendVals = component.getJSONObject(AttrValMap.PLUGIN_APPEND_VALS);
+        Assert.assertNotNull("直方图的 appendVals 必须在 component 信封层，实际：" + component, appendVals);
+        Assert.assertNull("appendVals 不能在 component 的 vals 里",
+                component.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS)
+                        .get(AttrValMap.PLUGIN_APPEND_VALS));
+
+        Assert.assertFalse("本环境下列变量必然失败，不该有 histogram 数据",
+                appendVals.containsKey(HistogramComponent.KEY_HISTOGRAM));
+        String error = appendVals.getString(HistogramComponent.KEY_HISTOGRAM_ERROR);
+        Assert.assertNotNull("算不出来时必须下发错误文案，而不是静默少一个键", error);
+        Assert.assertFalse("错误文案不能是空白", error.isBlank());
+
+        // 落盘配置照旧在 vals 里 —— 载荷不替代配置，桶数仍要能被回传
+        Assert.assertEquals(20, component.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS)
+                .getIntValue("bucketCount"));
     }
 
     /**

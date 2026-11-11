@@ -1,0 +1,7 @@
+{
+  "leftColumnWidth": {
+    "label": "左列宽度",
+    "help": "配置左侧列的宽度",
+    "dftVal": "Percent_Column_Width"
+  }
+}

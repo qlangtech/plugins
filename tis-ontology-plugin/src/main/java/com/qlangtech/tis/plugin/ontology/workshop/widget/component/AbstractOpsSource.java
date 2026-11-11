@@ -18,7 +18,7 @@ import java.util.Map;
  * 三个下拉（变量 + label 属性 + val 属性）外加一条级联管道。扁平化后必然出现
  * 「选了 manual 却还填着 sourceObjectSetVar」这类自相矛盾的状态，而框架只有静态
  * {@code advance} 分组、没有条件可见性。多态把「带哪些载荷」交给子类 ——
- * 与 {@link FilterComponent}、{@code ButtonColor}、{@code SizingMode} 同一处理方式。
+ * 与 {@link FilterComponent}、{@code SizingMode} 同一处理方式。
  *
  * <h3>为什么 {@link BasicDescriptor} 独立于 {@link FilterComponent.BasicDescriptor}</h3>
  * {@code DescriptorExtensionList} 按 {@code describableType.isAssignableFrom(descriptor.getT())}
@@ -69,7 +69,7 @@ public abstract class AbstractOpsSource implements Describable<AbstractOpsSource
      * 的实现契约）。
      */
     @Override
-    public final Map<String, Object> createPayloadProps() {
+    public final Map<String, Object> createPayloadProps(List<Describable<?>> parent) {
         List<Option> options = createOptions();
         return Map.of(Descriptor.KEY_OPTIONS, Option.toJson(options == null ? List.of() : options));
     }

@@ -29,18 +29,18 @@
   },
   "color": {
     "label": "文本颜色",
-    "help": "命中时数值的颜色；不改变请选 none",
-    "dftVal": "none"
+    "help": "命中时数值的颜色（十六进制，如 #ff4d4f）；留空则不改变",
+    "placeholder": "#ff4d4f"
   },
   "backgroundColor": {
     "label": "背景颜色",
-    "help": "命中时数值的背景色；不改变请选 none",
-    "dftVal": "none"
+    "help": "命中时数值的背景色（十六进制，如 #fff1f0）；留空则不改变",
+    "placeholder": "#fff1f0"
   },
   "sparklineColor": {
     "label": "趋势线颜色",
-    "help": "命中时迷你趋势图的颜色（需指标启用可视化）；不改变请选 none",
-    "dftVal": "none"
+    "help": "命中时迷你趋势图的颜色（需指标启用可视化；十六进制）；留空则不改变",
+    "placeholder": "#ff4d4f"
   },
   "icon": {
     "label": "图标",

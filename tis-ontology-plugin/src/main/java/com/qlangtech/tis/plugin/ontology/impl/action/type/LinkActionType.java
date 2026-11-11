@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -52,6 +53,7 @@ import com.qlangtech.tis.plugin.ontology.impl.linker.RelationshipTypeBackingObje
 import com.qlangtech.tis.plugin.ontology.impl.linker.RelationshipTypeJoinTableDataset;
 import com.qlangtech.tis.plugin.ontology.impl.linker.RelationshipTypeObjectTypeForeignKeys;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.DataSourceBinding;
+import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
@@ -243,6 +245,71 @@ public class LinkActionType extends ActionType {
         result.put("targetObjectType", definition.target().objectType());
         result.put("targetRidFieldName", targetParam);
         result.put("targetDisplayProperty", resolveDisplayProperty(definition.target().ontologyObjectType()));
+        return result;
+    }
+
+    /**
+     * 目标对象选择器的候选行（{@code resolveLinkTargets} 分支的实现）。
+     *
+     * <p>这是原 {@code WorkshopOntologyService#queryObjectSet} 的最后一块活逻辑：按
+     * <b>objectType</b>（而非对象集变量名）取一批行给下拉当候选。参数池在这里只用于
+     * {@link #resolveLinkMetadata} 的前置校验（缺 RID 参数时前端本来就不会走到这一步）。
+     *
+     * <p>⚠️ <b>必须显式用 {@link Ontology#loadObjectTypeDetail(String, String)}</b>，不能借
+     * {@code ObjectSetDefinitionConfig#loadObjectTypeDetail()}：后者靠
+     * {@code OntologyPluginMeta.createPluginMeta()} 读线程局部上下文，而 Action 的
+     * {@code httpProcess} 里线程局部挂的是 <b>Action</b> 的 meta，不是对象集变量的。</p>
+     *
+     * <p>取全属性而不是只取展示列：前端可能按 {@code targetDisplayProperty} 之外的信息
+     * 判断显示文本（且该属性可能为空），少取的列会让下拉整片空白。
+     *
+     * @param domain    本体域
+     * @param paramPool Action 参数池（对应 {@code resolveLinkMetadata} 的前置校验）
+     * @param limit     期望行数；{@code < 1} 走 {@link ObjectSetRowQuery#DEFAULT_MAX_ROWS}
+     * @return {@code {rows: [{rid, label}], truncated}}
+     */
+    public JSONObject resolveTargetOptions(String domain, ActionParameters paramPool, int limit) {
+        JSONObject linkMeta = resolveLinkMetadata(domain, paramPool);
+        String targetObjectTypeName = linkMeta.getString("targetObjectType");
+        String displayProperty = linkMeta.getString("targetDisplayProperty");
+
+        OntologyObjectType objectType = Ontology.loadObjectTypeDetail(domain, targetObjectTypeName);
+        if (objectType == null) {
+            throw new IllegalStateException("object type not found: '" + targetObjectTypeName
+                    + "' (ontology:" + domain + ")");
+        }
+        ObjectTypeBinding binding = objectType.getDataSourceBinding();
+        if (binding == null || !binding.hasBound()) {
+            throw new IllegalStateException("objectType:" + objectType.getName() + " has not bind dataSource");
+        }
+        String identityProp = objectType.hasDisablePK()
+                ? null : objectType.getPk().map(OntologyProperty::getName).orElse(null);
+
+        int maxRows = ObjectSetRowQuery.clampMaxRows(limit);
+        List<RowMap> rows = ObjectSetRowQuery.fetch(binding, identityProp,
+                ObjectSetRowQuery.allColNames(objectType.getCols()), maxRows);
+
+        com.alibaba.fastjson.JSONArray targetRows = new com.alibaba.fastjson.JSONArray();
+        for (RowMap row : rows) {
+            Object rid = identityProp == null ? null : row.get(identityProp);
+            if (rid == null) {
+                // 没有主键的对象类型在这里组不出可用候选：目标 RID 是链接的唯一定位手段，
+                // 给一个 rid 为空的行只会让用户选中后提交失败。前端仍可手填 RID。
+                continue;
+            }
+            JSONObject target = new JSONObject();
+            target.put("rid", rid);
+            Object display = displayProperty == null ? null : row.get(displayProperty);
+            // label 缺失时回落 rid：下拉里至少还能认出是哪一行
+            target.put("label", display == null || String.valueOf(display).isBlank()
+                    ? String.valueOf(rid) : String.valueOf(display));
+            targetRows.add(target);
+        }
+
+        JSONObject result = new JSONObject();
+        result.put("rows", targetRows);
+        // 取满上限即视为可能还有更多（服务端不做 count：这是候选下拉，不是分页列表）
+        result.put("truncated", rows.size() >= maxRows);
         return result;
     }
 

@@ -27,11 +27,12 @@ import java.io.Serializable;
  * <p>
  * 对应官方文档的 <b>Widget display</b> 设置：默认按列表显示，也可切换为网格。
  * <p>
- * 本工程目前只实现每行卡片数量（{@link GridDisplay#columns}）；文档中的行数、
- * 卡片尺寸、卡片间距尚未实现。
+ * 本工程目前只实现每行的排布数量（{@link GridDisplay#columns} 每行卡片数、
+ * {@link ListDisplay#columnCount} 每行属性列数）；文档中的行数、卡片尺寸、
+ * 卡片间距尚未实现。
  *
  * <h3>为什么是两个子类、而不是「一个 mode 枚举 + 若干可空载荷字段」</h3>
- * 后者允许出现 {@code mode=GRID} 却填了「属性对齐方式」这类<b>自相矛盾</b>的状态，
+ * 后者允许出现 {@code mode=GRID} 却填了「每行属性列数」这类<b>自相矛盾</b>的状态，
  * 编译器无从约束；而「固定取值集合 + 每种取值有各自的载荷」正是 TIS 中 Describable
  * 多态要解决的问题 —— 选了 Grid 就只渲染 Grid 的字段，选了 List 就只渲染 List 的字段。
  * 这与 {@link SizingMode}、{@code VariableDefinitionConfig}、{@code OverlayTypeConfig}

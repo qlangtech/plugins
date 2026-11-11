@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
+import com.qlangtech.tis.plugin.utils.InputColor;
 import com.qlangtech.tis.util.AttrValMap;
 import org.junit.Assert;
 import org.junit.Test;
@@ -316,7 +317,7 @@ public class TestWorkshopHeaderConfig {
     private static WorkshopHeader sampleHeader() {
         WorkshopHeader header = WorkshopHeader.defaultOf("salesDashboard");
         header.title = "销售看板";
-        header.backgroundColor = "#1677ff";
+        header.backgroundColor = new InputColor("#1677ff");
 
         VerticalOrientation orientation = new VerticalOrientation();
         orientation.width = 240;

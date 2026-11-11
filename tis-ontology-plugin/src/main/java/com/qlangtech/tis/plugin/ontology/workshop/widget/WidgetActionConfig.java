@@ -21,6 +21,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper;
@@ -73,8 +74,8 @@ public class WidgetActionConfig implements Describable<WidgetActionConfig>, Seri
     /**
      * 图标（Ant Design 图标名）
      */
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT)
-    public String icon;
+    @FormField(ordinal = 3, type = FormFieldType.ENUM)
+    public IEndTypeGetter.EndType icon;
 
     /**
      * 执行前是否二次确认

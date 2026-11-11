@@ -34,7 +34,8 @@
   },
   "variableBasedVisibility": {
     "label": "基于变量的可见性",
-    "help": "根据变量值控制浮层的显示隐藏"
+    "help": "根据变量值控制浮层的显示隐藏",
+    "dftVal": "off"
   },
   "closeOnBackdropClick": {
     "label": "点击背景关闭",

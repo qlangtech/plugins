@@ -1,0 +1,15 @@
+{
+  "variableId": {
+    "label": "引用变量",
+    "help": "被引用的模块变量名（大小写不敏感）",
+    "placeholder": "请选择变量"
+  },
+  "expression": {
+    "label": "比较表达式",
+    "dftVal": "equals"
+  },
+  "compareValue": {
+    "label": "比较值",
+    "help": "等于 / 大于 / 小于 需要填写；非空、为真两个表达式忽略此值"
+  }
+}

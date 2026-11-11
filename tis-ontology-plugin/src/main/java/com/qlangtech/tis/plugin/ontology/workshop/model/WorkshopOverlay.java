@@ -13,7 +13,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.OverlayType;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
-import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableBasedVisibility;
+import com.qlangtech.tis.plugin.ontology.workshop.model.config.NoneVariableBasedVisibility;
+import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableBasedVisibilityConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.overlay.OverlayTypeConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopOverlayStore;
@@ -66,8 +67,13 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
     @FormField(ordinal = 6, type = FormFieldType.ENUM)
     public IEndTypeGetter.EndType icon;
 
+    /**
+     * 基于变量的可见性。声明为抽象父类，让「不启用」（{@link NoneVariableBasedVisibility}）
+     * 在类型层面可表示；不加 {@code Validator.require} —— 该字段线上可缺省，
+     * off 子类本身就是合法的「未启用」值。
+     */
     @FormField(ordinal = 7)
-    public VariableBasedVisibility variableBasedVisibility;
+    public VariableBasedVisibilityConfig variableBasedVisibility = new NoneVariableBasedVisibility();
 
     @FormField(ordinal = 8, type = FormFieldType.ENUM)
     public Boolean closeOnBackdropClick = true;
@@ -108,6 +114,21 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
         AbstractWorkshopSection.normalizeOrder(sections,
                 s -> s.sortOrder == null ? 0 : s.sortOrder,
                 (s, index) -> s.sortOrder = index);
+    }
+
+    /**
+     * XStream 反序列化后的补偿钩子：兜底 {@link #variableBasedVisibility} 缺失。
+     *
+     * <p>字段上的 Java 初值（off）对落盘数据无效 —— XStream 不走构造器。
+     * 存量 overlay XML 里没有该元素，缺失时统一补「不启用」。
+     *
+     * @return 本实例（XStream 约定）
+     */
+    private Object readResolve() {
+        if (variableBasedVisibility == null) {
+            variableBasedVisibility = new NoneVariableBasedVisibility();
+        }
+        return this;
     }
 
     /**

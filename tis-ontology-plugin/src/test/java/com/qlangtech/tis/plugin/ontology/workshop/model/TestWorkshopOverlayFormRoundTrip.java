@@ -3,16 +3,20 @@ package com.qlangtech.tis.plugin.ontology.workshop.model;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.plugin.ontology.workshop.enums.OverlayType;
+import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.NoneVariableBasedVisibility;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableBasedVisibility;
 import com.qlangtech.tis.plugin.ontology.workshop.model.overlay.DrawerConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.PercentColumnWidth;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.TwoColumnPageTemplate;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 import static com.qlangtech.tis.extension.Descriptor.KEY_DESC_VAL;
@@ -55,6 +59,7 @@ public class TestWorkshopOverlayFormRoundTrip {
 
         Assert.assertEquals("off 实现必须能被实例化出来（零字段子类不应有必填校验）",
                 NoneVariableBasedVisibility.class, overlay.variableBasedVisibility.getClass());
+        assertTemplateParsed(overlay);
     }
 
     /** 启用形态：variableId + expression + compareValue 全部经 POST 线格式还原 */
@@ -78,6 +83,52 @@ public class TestWorkshopOverlayFormRoundTrip {
         Assert.assertEquals("expression 必须按枚举常量名反序列化 —— 老值 greaterThan 读不回就是丢配置",
                 VariableBasedVisibility.VisibilityExpression.greaterThan, visibility.expression);
         Assert.assertEquals("100", visibility.compareValue);
+        assertTemplateParsed(overlay);
+    }
+
+    /**
+     * 覆盖层也走页面那套 {@code template}（多态 Describable）线格式 ——
+     * 与页面唯一不同的地方是它<b>没有</b> {@code displayName} 字段，
+     * 所以这里专门钉「非默认栏宽能不能读回」，别让模板静默退化成两栏 30%。
+     */
+    @Test
+    public void overlayTemplateResourceAndFallback() {
+        JSONObject resource = TisPluginFormTestSupport.formResource(WorkshopOverlay.class.getName());
+        Assert.assertNotNull("WorkshopOverlay.json 应存在", resource);
+        Assert.assertFalse("type 字段已删除（与 typeConfig.impl 重复），json 里不能再有它",
+                resource.containsKey("type"));
+        Assert.assertFalse("title 字段已删除（与 name 重复），json 里不能再有它",
+                resource.containsKey("title"));
+        Assert.assertEquals("WorkshopOverlay.json 的 template.dftVal 必须等于模板子类的 getDisplayName()",
+                "Two_Column_Page_Template",
+                resource.getJSONObject("template").getString("dftVal"));
+    }
+
+    /** 存量 overlay XML 没有 template 元素时，readResolve 必须补默认模板（否则画布无法渲染栅格） */
+    @Test
+    public void readResolveFillsMissingTemplate() throws Exception {
+        WorkshopOverlay overlay = new WorkshopOverlay();
+        overlay.template = null;
+
+        Method readResolve = WorkshopOverlay.class.getDeclaredMethod("readResolve");
+        readResolve.setAccessible(true);
+        readResolve.invoke(overlay);
+
+        Assert.assertNotNull("readResolve 缺失字段时应补默认模板", overlay.template);
+        Assert.assertEquals(TwoColumnPageTemplate.class, overlay.template.getClass());
+        Assert.assertEquals("默认左栏宽度应为 30%（与前端 null 分支一致）",
+                Integer.valueOf(30),
+                ((PercentColumnWidth) ((TwoColumnPageTemplate) overlay.template).leftColumnWidth).percentage);
+    }
+
+    private static void assertTemplateParsed(WorkshopOverlay overlay) {
+        Assert.assertNotNull("template 必须被解析成插件实例", overlay.template);
+        Assert.assertEquals("template.impl 必须是 TwoColumnPageTemplate",
+                TwoColumnPageTemplate.class, overlay.template.getClass());
+        PageTemplate template = overlay.template;
+        Assert.assertEquals("percentage 必须按 _primaryVal 反序列化（用 45% 才能区分于默认 30%）",
+                Integer.valueOf(45),
+                ((PercentColumnWidth) ((TwoColumnPageTemplate) template).leftColumnWidth).percentage);
     }
 
     // ===================================================================
@@ -93,7 +144,9 @@ public class TestWorkshopOverlayFormRoundTrip {
         JSONObject vals = new JSONObject();
         vals.put("id", primary(OVERLAY_ID));
         vals.put("name", primary("详情浮层"));
-        vals.put("type", primary(OverlayType.DRAWER.name()));
+        vals.put("template", describable(TwoColumnPageTemplate.class.getName(),
+                valsOf("leftColumnWidth", describable(PercentColumnWidth.class.getName(),
+                        valsOf("percentage", primary(45))))));
         vals.put("typeConfig", describable(DrawerConfig.class.getName(), typeConfigVals));
         vals.put("variableBasedVisibility", visibility);
 
@@ -101,6 +154,12 @@ public class TestWorkshopOverlayFormRoundTrip {
         item.put(AttrValMap.PLUGIN_EXTENSION_IMPL, WorkshopOverlay.class.getName());
         item.put(AttrValMap.PLUGIN_EXTENSION_VALS, vals);
         return item;
+    }
+
+    private static JSONObject valsOf(String key, Object value) {
+        JSONObject vals = new JSONObject();
+        vals.put(key, value);
+        return vals;
     }
 
     /** POST 侧嵌套 Describable 包一层 {@code {descVal: {impl, vals}}} */

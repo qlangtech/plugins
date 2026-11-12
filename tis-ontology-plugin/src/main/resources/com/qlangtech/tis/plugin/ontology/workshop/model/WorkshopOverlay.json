@@ -6,12 +6,12 @@
   },
   "name": {
     "label": "浮层名称",
-    "help": "浮层的显示名称与引用键"
+    "help": "浮层的显示名称，同时是打开/关闭浮层事件的引用键（改名会让已配置的事件找不到本浮层）"
   },
-  "type": {
-    "label": "浮层类型",
-    "help": "浮层的展现形式（抽屉或模态框）",
-    "dftVal": "DRAWER"
+  "template": {
+    "label": "浮层模板",
+    "help": "决定本浮层里直接子区块如何排布（分几栏）；各模板的栏宽 / 栏高在选中后展开配置",
+    "dftVal": "Two_Column_Page_Template"
   },
   "typeConfig": {
     "label": "类型配置",
@@ -22,10 +22,6 @@
     "label": "显示头部",
     "help": "浮层是否显示头部区域",
     "dftVal": true
-  },
-  "title": {
-    "label": "标题",
-    "help": "浮层头部的标题文本"
   },
   "icon": {
     "label": "图标",

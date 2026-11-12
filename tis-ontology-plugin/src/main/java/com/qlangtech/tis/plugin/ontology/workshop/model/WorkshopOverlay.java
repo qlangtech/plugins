@@ -10,12 +10,12 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.enums.OverlayType;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
 import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.NoneVariableBasedVisibility;
 import com.qlangtech.tis.plugin.ontology.workshop.model.config.VariableBasedVisibilityConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.overlay.OverlayTypeConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.store.AbstractWorkshopEntityStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopOverlayStore;
 import com.qlangtech.tis.util.IPluginContext;
@@ -49,20 +49,34 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
             validate = {Validator.require})
     public String id;
 
+    /**
+     * 浮层显示名称，<b>可编辑</b>；同时是运行态 open / close 事件的寻址键
+     * （{@code LayoutService#openOverlays} 是按 name 存的集合、{@code open-overlay} 事件的
+     * {@code option.value} 也是它）。树节点、配置面板等编辑期寻址走的仍是 {@link #id}。
+     */
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
 
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public OverlayType type;
+    /**
+     * 浮层布局模板：决定浮层里直接子 Section 的排布（与 {@link WorkshopPage#template}
+     * 是同一套插件）。
+     *
+     * <p><b>⚠️ 聚合属性插件字段不得指定 {@code type}</b>：写成
+     * {@code type = FormFieldType.SELECTABLE} 会让 {@code DescriptorsJSON} 走 SELECTABLE 分支去要
+     * {@code getSelectOptions}，而多态 Describable 的类型信息本就由 {@code @TISExtension} 派生类提供，
+     * 结果在取 descriptor 时直接抛 {@code IllegalStateException}，并连坐整个 module 的表单下发。
+     *
+     * <p><b>不提供 Java 字段初值</b>：XStream 反序列化不走构造器，初值对落盘数据无效；
+     * 缺失时的兜底放在 {@link #readResolve()}（补 {@link PageTemplate#createDefault()}）。
+     */
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public PageTemplate template;
 
     @FormField(ordinal = 3, validate = {Validator.require})
     public OverlayTypeConfig typeConfig;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM)
     public Boolean showHeader = true;
-
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
-    public String title;
 
     @FormField(ordinal = 6, type = FormFieldType.ENUM)
     public IEndTypeGetter.EndType icon;
@@ -117,16 +131,20 @@ public final class WorkshopOverlay implements Describable<WorkshopOverlay>, Seri
     }
 
     /**
-     * XStream 反序列化后的补偿钩子：兜底 {@link #variableBasedVisibility} 缺失。
+     * XStream 反序列化后的补偿钩子：兜底 {@link #variableBasedVisibility} 与 {@link #template} 缺失。
      *
-     * <p>字段上的 Java 初值（off）对落盘数据无效 —— XStream 不走构造器。
-     * 存量 overlay XML 里没有该元素，缺失时统一补「不启用」。
+     * <p>字段上的 Java 初值对落盘数据无效 —— XStream 不走构造器。
+     * 存量 overlay XML 里可能没有这两个元素，缺失时分别补「不启用」与
+     * {@link PageTemplate#createDefault()}（与 {@link WorkshopPage#readResolve()} 同构）。
      *
      * @return 本实例（XStream 约定）
      */
     private Object readResolve() {
         if (variableBasedVisibility == null) {
             variableBasedVisibility = new NoneVariableBasedVisibility();
+        }
+        if (template == null) {
+            template = PageTemplate.createDefault();
         }
         return this;
     }

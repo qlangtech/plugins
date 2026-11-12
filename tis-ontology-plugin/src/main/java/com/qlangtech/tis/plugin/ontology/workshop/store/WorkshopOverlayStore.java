@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.ontology.workshop.store;
 
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopOverlay;
 
 import java.io.File;
@@ -24,6 +25,18 @@ import java.util.Optional;
 public class WorkshopOverlayStore extends AbstractWorkshopEntityStore<WorkshopOverlay> {
 
     public static final String OVERLAYS_DIR_NAME = "overlays";
+
+    static {
+        // 存量 XML 兼容：type / title 两个字段已删除（type 与 typeConfig.impl 重复，title 与 name 重复），
+        // 但已落盘的 overlay 文件里仍有 <type> / <title> 元素。
+        // TISCompositConvert 最终走库存 AbstractReflectionConverter.doUnmarshal，未知元素分支会
+        // handleUnknownField → 抛 UnknownFieldException（XStreamException，不落进 ReadError），
+        // 于是 PluginStore.processError 拦不住它，整个模块加载直接失败。
+        // omitField 让 ElementIgnoringMapper.shouldSerializeMember 返回 false，
+        // handleUnknownField 沿父类链查到就静默 return；顺带也阻止这两个元素被重新写回。
+        XmlFile.DEFAULT_XSTREAM.omitField(WorkshopOverlay.class, "type");
+        XmlFile.DEFAULT_XSTREAM.omitField(WorkshopOverlay.class, "title");
+    }
 
     private static final WorkshopOverlayStoreGetter storeGetter = new WorkshopOverlayStoreGetter();
 

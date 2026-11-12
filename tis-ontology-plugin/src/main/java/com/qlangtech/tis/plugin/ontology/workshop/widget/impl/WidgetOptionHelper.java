@@ -322,7 +322,7 @@ public class WidgetOptionHelper {
         }
         List<IdentityName> options = new ArrayList<>();
         for (WorkshopOverlay overlay : module.overlays) {
-            options.add(new Option(StringUtils.isEmpty(overlay.title) ? overlay.name : overlay.title, overlay.name));
+            options.add(new Option(overlay.name, overlay.name));
         }
         return options;
     }

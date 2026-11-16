@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.model.header;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 
@@ -32,8 +33,8 @@ public class CollapsibleConfig extends CollapseConfig {
      *
      * <p>非必填：不填时前端退化为只显示折叠按钮，是合法形态。
      */
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
-    public String collapsedImage;
+    @FormField(ordinal = 1, type = FormFieldType.ENUM)
+    public IEndTypeGetter.EndType collapsedImage;
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {

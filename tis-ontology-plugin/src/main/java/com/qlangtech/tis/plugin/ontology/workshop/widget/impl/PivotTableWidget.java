@@ -122,7 +122,7 @@ public class PivotTableWidget extends WorkshopWidget {
             super();
 
             // === 对象集变量选项（只列可查询的「对象集合定义」型）===
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper.getObjectSetSourceVariableOptions());
 
             // === 级联属性字段：初始为空（未选 objectSetVar 时无选项）===
             this.registerSelectOptions(KEY_ROW_PROPERTY, Collections::emptyList);

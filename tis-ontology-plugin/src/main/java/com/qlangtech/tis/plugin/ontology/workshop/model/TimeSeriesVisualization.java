@@ -40,7 +40,7 @@ public class TimeSeriesVisualization extends AbstractTimeSeriesVisualization {
 
     public DefaultDescriptor() {
       super();
-      this.registerSelectOptions(KEY_TIME_SERIES_SET, WidgetOptionHelper::getTimeSeriesSetVariableOptions);
+      this.registerSelectOptions(KEY_TIME_SERIES_SET, WidgetOptionHelper.getTimeSeriesSetVariableOptions());
     }
 
     @Override

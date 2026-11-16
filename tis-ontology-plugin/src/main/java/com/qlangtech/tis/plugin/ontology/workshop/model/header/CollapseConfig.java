@@ -15,9 +15,10 @@ import java.io.Serializable;
  * {@code collapsible} + {@code collapsedByDefault} + {@code collapsedImage} 三个平铺
  * 字段，能构造出「不可折叠却带着折叠图标 URL」这种状态。
  *
- * <p>折叠与方向是<b>正交</b>的两个维度（水平顶栏同样可以折叠），
- * 因此本类挂在 {@code WorkshopHeader} 顶层，而不是塞进
- * {@link VerticalOrientation} 里。
+ * <p>本类挂在 {@link VerticalOrientation} 上作为其载荷字段而非
+ * {@code WorkshopHeader} 顶层：折叠语义只在垂直侧栏下成立（前端的折叠视觉只对
+ * vertical 实现，Palantir 亦把折叠设置门控在垂直方向之下），挂顶层会让
+ * 「水平 + 可折叠」这种渲染出来必坏的状态在类型层面可表示。
  *
  * <p>本类<b>刻意不声明任何 {@code @FormField} 字段</b>（原因同
  * {@link HeaderOrientation}），因此也没有自己的 {@code .json}。

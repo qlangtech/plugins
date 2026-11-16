@@ -191,9 +191,11 @@ public class ObjectSetDefinitionConfig extends VariableDefinitionConfig {
         public DefaultDescriptor() {
             super();
             // 只列 OBJECT_SET_FILTER 类型的变量：本字段要读的是「过滤条件」，不是别的值。
-            // registerSelectOptions 收的是 Callable，惰性求值——无插件上下文的 descriptor 构造
-            // （如单测里直接 new DefaultDescriptor()）不会被触发而抛异常。
-            this.registerSelectOptions(KEY_FILTER_VAR, WidgetOptionHelper::getObjectSetFilterVariableOptions);
+            // registerSelectOptions 收的是 FieldRefConfig——config 对象本身在构造期构建、
+            // 零重逻辑；creator 与选项求值都惰性（首次 getCreator()/getSelectOpts()，即表单
+            // 元数据下发时），无插件上下文的 descriptor 构造（如单测里直接 new DefaultDescriptor()）
+            // 不会被触发而抛异常。
+            this.registerSelectOptions(KEY_FILTER_VAR, WidgetOptionHelper.getObjectSetFilterVariableOptions());
 
             // 对象类型 → 过滤行里每一条的「属性」候选。
             //

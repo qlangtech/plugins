@@ -149,9 +149,9 @@ public class ObjectTableWidget extends WorkshopWidget implements IWidgetColumnHo
             super();
             // 数据源只能是「可查询的」对象集变量（ObjectSet Definition）；
             // 「外部写入」定义的对象集是选中行载体，填到这里会在取数时抛 illegal type。
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
-            this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
-            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper.getObjectSetSourceVariableOptions());
+            this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
+            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
 
             // === 级联管道：objectSetVar 变化时，按该对象集变量的属性自动生成候选列 ===
             this.valueChangePipe(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR).render((pluginMeta, param) ->

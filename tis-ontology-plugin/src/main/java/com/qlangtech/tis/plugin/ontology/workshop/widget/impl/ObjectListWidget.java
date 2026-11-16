@@ -15,6 +15,7 @@ import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.model.event.EventConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.DefaultObjectSelection;
 import com.qlangtech.tis.runtime.module.action.IParamGetter;
@@ -52,8 +53,10 @@ import java.util.Map;
  * <b>内容</b>（{@code cardFields}、{@code hideNullProperties}）、
  * <b>排序策略</b>（{@code listSorting}，{@link ListSorting} 的 off / Default 多态）、
  * <b>展示形态</b>（{@code display}，列表/网格二选一）、
- * <b>选择与交互</b>（{@code activeObjectVar} 单选写回、{@code objectSelection} 多选策略、
- * {@code cardActions} 行内动作）、<b>外观</b>（{@code showObjectCount}、{@code emptyStateMessage}）。
+ * <b>选择与交互</b>（{@code activeObjectVar} 单选写回、{@code autoSelectActiveObject} 首行自动选中、
+ * {@code objectSelection} 多选策略、{@code cardActions} 行内动作、
+ * {@code onActiveObjectSelection} 选中后触发的事件）、
+ * <b>外观</b>（{@code showObjectCount}、{@code emptyStateMessage}）。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/12
@@ -62,6 +65,7 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
 
     public static final String KEY_OBJECT_SET_VAR = "objectSetVar";
     public static final String KEY_ACTIVE_OBJECT_VAR = "activeObjectVar";
+    public static final String KEY_AUTO_SELECT_ACTIVE_OBJECT = "autoSelectActiveObject";
     public static final String KEY_TITLE_PROPERTY = "titleProperty";
     public static final String KEY_CARD_FIELDS = "cardFields";
     public static final String KEY_DISPLAY = "display";
@@ -72,6 +76,7 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
     public static final String KEY_SHOW_OBJECT_COUNT = "showObjectCount";
     public static final String KEY_EMPTY_STATE_MESSAGE = "emptyStateMessage";
     public static final String KEY_MAX_OBJECTS = "maxObjects";
+    public static final String KEY_ON_ACTIVE_OBJECT_SELECTION = "onActiveObjectSelection";
 
     /**
      * {@code maxObjects} 的默认值。
@@ -177,6 +182,24 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
     public ObjectSelection objectSelection = new NoObjectSelection();
 
     /**
+     * 加载时是否自动把第一行设为「当前选中对象」（写回 {@link #activeObjectVar}）。
+     *
+     * <p>与 Palantir 的 <i>Enable active object auto-selection</i> 对齐：那边<b>默认开启</b>
+     * （「By default, the first row in the list is automatically set as the active object at
+     * load time」），关掉之后加载时 active object 为空。
+     *
+     * <p>只在 {@link #activeObjectVar} 有值、且本开关打开时才做事；两个条件缺一都不写回。
+     * 取值走 {@link #autoSelectActiveObject()} 而不是直接读字段 —— XStream 反序列化不执行
+     * 字段初值，存量落盘 XML 里没有这个元素时字段是 {@code null}，语义应当是「按默认值开启」
+     * 而不是「关闭」。
+     *
+     * <p>ordinal 取 21：紧挨 {@code objectSelection}(20) 之后，归在「选择与交互」组里；
+     * 18 被跳过是为了让 {@code maxObjects}(17) 与 {@code hideNullProperties}(19) 保持相邻。
+     */
+    @FormField(type = FormFieldType.ENUM, ordinal = 21)
+    public Boolean autoSelectActiveObject = Boolean.TRUE;
+
+    /**
      * 是否在标题下方显示对象总数
      */
     @FormField(type = FormFieldType.ENUM, ordinal = 22)
@@ -187,6 +210,22 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
      */
     @FormField(type = FormFieldType.INPUTTEXT, ordinal = 23)
     public String emptyStateMessage;
+
+    /**
+     * 行选中后触发的 Workshop 事件（对标 Palantir 的 <i>On active object selection</i>）。
+     *
+     * <p>典型用法是 {@code open-overlay}：点某一行 → 弹出浮层，里面放一个 Object View，
+     * 其 {@code activeObjectVar} 与这里的 {@link #activeObjectVar} 指向同一个变量。
+     * 浮层只按名字寻址、<b>没有参数通道</b>（{@code LayoutService.showOverlay(name)}），
+     * 共享变量是唯一的传导方式 —— 不要把选中项塞进 overlay 参数里。
+     *
+     * <p>事件行的 FQCN→kebab 短 key 与前端 {@code WorkshopEvent} 联合类型逐一相同，
+     * 前端用 {@code toWorkshopEvents()} 机械转换，无需映射表。
+     *
+     * <p>可选字段：不配就只是写回变量，不触发任何事件。
+     */
+    @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN, desClazz = EventConfig.class, ordinal = 24)
+    public List<EventConfig> onActiveObjectSelection;
 
     @Override
     public String getBoundObjectSetVar() {
@@ -202,6 +241,17 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
             return DEFAULT_MAX_OBJECTS;
         }
         return Math.min(this.maxObjects, MAX_OBJECTS_LIMIT);
+    }
+
+    /**
+     * 加载时是否自动选中第一行。{@code null}（存量 XML 缺该元素 / 表单清空）按<b>开启</b>处理，
+     * 与字段初值 {@code TRUE} 及 Palantir 的默认行为一致。
+     *
+     * <p>本方法不做「{@code activeObjectVar} 是否为空」的判断 —— 那是调用方（前端）的事：
+     * 没有写回变量时自动选中无处可写，但那是「没配输出」，不是「关掉了自动选中」。
+     */
+    public boolean autoSelectActiveObject() {
+        return this.autoSelectActiveObject == null || this.autoSelectActiveObject;
     }
 
     /**
@@ -238,9 +288,9 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
             super();
             // 数据源只能是「可查询的」对象集变量（ObjectSet Definition）；
             // 「函数计算 / 外部写入」定义的对象集在 get_data 里会抛 illegal type，不该出现在数据源下拉里。
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper.getObjectSetSourceVariableOptions());
             // 写回载体则允许任意 OBJECT_SET（外部写入型正是「接收选中项」的典型用法）
-            this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
 
             // === 级联属性字段：初始为空（未选 objectSetVar 时无选项）===
             //
@@ -260,8 +310,8 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
             // render(...) 里 —— 少了任一处都会在运行期抛异常或静默失效。
             //
             // 注意 getObjectPropertyOptions 与 cardFields 走的 getObjectPropertyMetas 对 FunctionConfig
-            // 型对象集的口径目前不一致：前者内部宽 catch 会静默降级为空候选，后者会直接抛错。
-            // 已就此在 WidgetOptionHelper 上留了说明；本次有意不改动前者。
+            // 型对象集的口径已经统一：两者都降级为空候选（前者宽 catch，后者只兜 schema 缺失）。
+            // 渲染期都不再抛异常 —— 抛出会让整个 widget 配置表单 500。
             this.valueChangePipe(KEY_OBJECT_SET_VAR, KEY_TITLE_PROPERTY, KEY_CARD_FIELDS
                             , KEY_LIST_SORTING + "." + DefaultListSorting.KEY_SORT_FIELD)
                     .render(KEY_TITLE_PROPERTY, DescriptorImpl::objectPropertyOptions)

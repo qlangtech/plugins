@@ -280,16 +280,23 @@ public class TestWidgetFieldStructure {
   /**
    * 前端 config 接口的公共基类名。
    *
-   * <p>{@code export interface XxxWidget extends BaseWidgetConfig} 意味着后端还有
-   * {@link #BASE_INTERFACE_FIELDS} 这三个字段（它们声明在 {@code WorkshopWidget} 上，
-   * 不在子接口体内，故解析不到，要靠 {@code extends} 这个信号补齐）。
+   * <p>{@code export interface XxxWidget extends BaseWidgetConfig} 意味着除子接口体内的字段外，
+   * 还有基座接口声明的那些（它们声明在 {@code WorkshopWidget} 上，不在子接口体内，
+   * 故解析不到，要靠 {@code extends} 这个信号补齐）。
    *
-   * <p>{@code displayConfig} 不在其中：它已改为独立插件实体，随 widget 的 POST 信封下发，
-   * 不是 widget descriptor 的 {@code @FormField}。
+   * <p>⚠️ 基座字段一律<b>从 TS 源码实际解析</b>（{@link #parseBaseWidgetConfigFields}），
+   * <b>不要</b>改回硬编码常量。这里曾经是 {@code Set.of("id","title","conditionalVisibility")}，
+   * 于是「{@code conditionalVisibility} 根本不在 {@code BaseWidgetConfig} 里」这个真实缺口
+   * 被常量悄悄补上了，测试照样绿 —— 守卫等于没有。前端的基座接口才是被守护的那一端，
+   * 它的字段集合必须来自它自己。
+   *
+   * <p>{@code displayConfig} 解析出来会一并被排除：它已改为独立插件实体，随 widget 的 POST
+   * 信封下发，不是 widget descriptor 的 {@code @FormField}。
    */
   private static final String FRONTEND_BASE_INTERFACE = "BaseWidgetConfig";
 
-  private static final Set<String> BASE_INTERFACE_FIELDS = Set.of("id", "title", "conditionalVisibility");
+  /** 基座接口里<b>不是</b> {@code @FormField} 的字段（见 {@link #FRONTEND_BASE_INTERFACE} 的说明） */
+  private static final Set<String> BASE_INTERFACE_NON_FORM_FIELDS = Set.of("displayConfig");
 
   /**
    * 前端工程相对本模块根目录的候选位置。
@@ -313,8 +320,10 @@ public class TestWidgetFieldStructure {
   /**
    * 每个 Widget config 接口的字段名，必须与后端整条继承链上的 {@code @FormField} 双向对齐。
    *
-   * <p>断言四步：① 解析到的接口数 ≥ 21（护栏，防扫描范围悄悄失效）；② 每个后端 Widget
-   * 都有同名接口；③ 后端有、前端没镜像的字段；④ 前端有、后端从未声明的字段。
+   * <p>断言五步：① 解析到的接口数 ≥ 21（护栏，防扫描范围悄悄失效）；② 每个后端 Widget
+   * 都有同名接口；③ 后端有、前端没镜像的字段；④ 前端有、后端从未声明的字段；
+   * ⑤ 基座接口 {@code BaseWidgetConfig} 能被真实解析出来且含 {@code id} / {@code title}
+   * （护栏，防 ③ 因为基座字段集空掉而变瞎）。
    * ③ 的后果是前端读它恒 {@code undefined}；④ 则是「幻影字段」——本轮修的 9 处就是它。
    */
   @Test
@@ -322,7 +331,15 @@ public class TestWidgetFieldStructure {
     Path configDir = locateWidgetConfigDir();
     Assume.assumeTrue("未找到前端 widget config 目录（候选见 stdout），跳过镜像对齐检查", configDir != null);
 
-    Map<String, Set<String>> frontend = parseWidgetConfigInterfaces(configDir);
+    Set<String> baseInterfaceFields = parseBaseWidgetConfigFields(configDir);
+    Assert.assertTrue("未能从 " + configDir.resolveSibling("widget-config.model.ts")
+        + " 解析出 " + FRONTEND_BASE_INTERFACE + " 的字段 —— 基座镜像检查会退化成"
+        + "「前端基座字段一个都不用比」，与硬编码常量同样瞎", !baseInterfaceFields.isEmpty());
+    Assert.assertTrue(FRONTEND_BASE_INTERFACE + " 里应至少有 id / title（后端 WorkshopWidget 的"
+        + "既有 @FormField），实际解析到：" + baseInterfaceFields,
+      baseInterfaceFields.containsAll(Set.of("id", "title")));
+
+    Map<String, Set<String>> frontend = parseWidgetConfigInterfaces(configDir, baseInterfaceFields);
     Assert.assertTrue("从 " + configDir + " 只解析到 " + frontend.size()
         + " 个 config 接口，应 >= 21 —— 扫描范围失效（接口改成 export type 了？目录挪了？）",
       frontend.size() >= 21);
@@ -394,8 +411,12 @@ public class TestWidgetFieldStructure {
    * 是约定，接口名才是与后端类名对齐的那个键。特意 glob 全部 {@code *.config.ts} 而不只取
    * 21 个：同一目录下还有 {@code ChartLayer} / {@code ObjectListGridDisplay} 这类嵌套结构块，
    * 它们不参与本断言（后端没有同名 widget 类），但一起解析进来能让护栏计数更有意义。
+   *
+   * @param baseInterfaceFields {@code extends BaseWidgetConfig} 时要补进来的字段名，
+   *                            由 {@link #parseBaseWidgetConfigFields} 从 TS 源码解析
    */
-  private static Map<String, Set<String>> parseWidgetConfigInterfaces(Path dir) throws IOException {
+  private static Map<String, Set<String>> parseWidgetConfigInterfaces(
+    Path dir, Set<String> baseInterfaceFields) throws IOException {
     Map<String, Set<String>> result = new LinkedHashMap<>();
 
     List<Path> files = new ArrayList<>();
@@ -423,12 +444,58 @@ public class TestWidgetFieldStructure {
           }
         }
         if (m.group("header").contains("extends " + FRONTEND_BASE_INTERFACE)) {
-          fields.addAll(BASE_INTERFACE_FIELDS);
+          fields.addAll(baseInterfaceFields);
         }
         result.put(m.group("name"), fields);
       }
     }
     return result;
+  }
+
+  /**
+   * 从 {@code widget-config.model.ts} 真实解析 {@code BaseWidgetConfig} 的字段名。
+   *
+   * <p>为什么必须真解析：基座字段是「前端到底有没有镜像后端基类字段」的<b>唯一</b>见证。
+   * 本项目曾经把 {@code Set.of("id","title","conditionalVisibility")} 硬编码进来当补丁，
+   * 结果 {@code conditionalVisibility} 实际并不在 {@code BaseWidgetConfig} 里 ——
+   * 常量把缺口补上了，测试永远是绿的（真实发生过，2026-11 才发现）。
+   *
+   * <p>解析约定与 {@link #parseWidgetConfigInterfaces} 完全一致（同一套 stripComments /
+   * {@link #INTERFACE_HEADER} / {@link #matchingBrace} / {@link #INTERFACE_FIELD}），
+   * 所以两边对注释、跨行字段、可选标记的判断口径不会漂。
+   *
+   * <p>{@link #BASE_INTERFACE_NON_FORM_FIELDS} 里的字段会被剔除 —— 它们不是 {@code @FormField}，
+   * 不该参与与后端 {@code @FormField} 集合的比对。剔到空了返回空集，由调用方断言失败。
+   */
+  private static Set<String> parseBaseWidgetConfigFields(Path widgetConfigDir) throws IOException {
+    Path modelFile = widgetConfigDir.resolveSibling("widget-config.model.ts");
+    if (!Files.isRegularFile(modelFile)) {
+      return Set.of();
+    }
+
+    String text = stripComments(new String(Files.readAllBytes(modelFile), StandardCharsets.UTF_8));
+    Matcher m = INTERFACE_HEADER.matcher(text);
+    while (m.find()) {
+      if (!FRONTEND_BASE_INTERFACE.equals(m.group("name"))) {
+        continue;
+      }
+      int bodyStart = m.end() - 1;
+      int bodyEnd = matchingBrace(text, bodyStart);
+      if (bodyEnd < 0) {
+        throw new AssertionError("接口 " + FRONTEND_BASE_INTERFACE + " 的花括号不配对：" + modelFile);
+      }
+
+      Set<String> fields = new LinkedHashSet<>();
+      for (String line : text.substring(bodyStart + 1, bodyEnd).split("\n")) {
+        Matcher fm = INTERFACE_FIELD.matcher(line);
+        if (fm.find()) {
+          fields.add(fm.group(1));
+        }
+      }
+      fields.removeAll(BASE_INTERFACE_NON_FORM_FIELDS);
+      return fields;
+    }
+    return Set.of();
   }
 
   /**

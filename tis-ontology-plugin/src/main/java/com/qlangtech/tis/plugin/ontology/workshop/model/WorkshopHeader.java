@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.ontology.workshop.model;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
@@ -8,14 +9,18 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ontology.workshop.model.header.CollapseConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptType;
+import com.qlangtech.tis.plugin.ontology.workshop.enums.WorkshopCptTypeGetter;
 import com.qlangtech.tis.plugin.ontology.workshop.model.header.HeaderOrientation;
 import com.qlangtech.tis.plugin.ontology.workshop.model.header.HorizontalOrientation;
-import com.qlangtech.tis.plugin.ontology.workshop.model.header.NoneCollapseConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.header.LogoConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopHeaderStore;
 import com.qlangtech.tis.plugin.utils.InputColor;
 import com.qlangtech.tis.util.DescribableJSON;
+import com.qlangtech.tis.util.IPluginContext;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Workshop Header 配置。
@@ -30,15 +35,19 @@ import java.io.Serializable;
  * <p>本类不是插件、没有多实现，{@link DefaultDescriptor} 的存在只是为了
  * {@code IPluginStore} 能按 {@code impl} 反序列化落盘内容。
  *
- * <h3>两个多态字段</h3>
- * {@link #orientation} 与 {@link #collapseConfig} 都是聚合属性插件（取值集合固定、
- * 每种取值有各自的载荷），由<b>子类类型</b>而非「枚举 + 可空字段」承担。改造前它们是
- * 「一个枚举 + height/width 两个平铺字段」和「collapsible + collapsedByDefault +
+ * <h3>多态字段</h3>
+ * {@link #orientation}（其垂直子类的载荷里含折叠配置）与 {@link #logoConfig} 都是聚合属性插件
+ * （取值集合固定、每种取值有各自的载荷），由<b>子类类型</b>而非「枚举 + 可空字段」承担。
+ * 改造前它们是「一个枚举 + height/width 两个平铺字段」和「collapsible + collapsedByDefault +
  * collapsedImage 三个平铺字段」，能构造出「垂直方向 + 高度值」「不可折叠 + 折叠图标」
- * 这类自相矛盾的状态。详见两个抽象基类的类注释。
+ * 这类自相矛盾的状态。详见各抽象基类的类注释。
+ *
+ * <p>折叠配置曾经也挂在本类顶层，因「折叠语义只在垂直侧栏下成立」已迁入
+ * {@link com.qlangtech.tis.plugin.ontology.workshop.model.header.VerticalOrientation}
+ * （存量 XML 由 {@code WorkshopHeaderStore} 的 omitField 兜底）。
  *
  * @see com.qlangtech.tis.plugin.ontology.workshop.model.header.HeaderOrientation
- * @see com.qlangtech.tis.plugin.ontology.workshop.model.header.CollapseConfig
+ * @see com.qlangtech.tis.plugin.ontology.workshop.model.header.LogoConfig
  */
 public final class WorkshopHeader implements Describable<WorkshopHeader>, Serializable, IdentityName {
 
@@ -65,12 +74,23 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
      */
     @FormField(ordinal = 0, type = FormFieldType.ENUM)
     public Boolean visible = true;
+    /**
+     * 应用 Logo（Palantir 的 "Enable an application logo"）：图标 / 图片二选一，由子类类型承担
+     * （{@link com.qlangtech.tis.plugin.ontology.workshop.model.header.IconLogoConfig} /
+     * {@link com.qlangtech.tis.plugin.ontology.workshop.model.header.ImageLogoConfig}）。
+     *
+     * <p>可空、刻意不加 {@code require}：不配置 = 不显示 logo（Palantir 的语义就是
+     * 「Enable logo」开关，可空字段天然表达）。折叠态下的呈现见
+     * {@link com.qlangtech.tis.plugin.ontology.workshop.model.header.CollapsibleConfig#collapsedImage}。
+     */
+    @FormField(ordinal = 1)
+    public LogoConfig logoConfig;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT)
     public String title;
 
     /** 标题颜色；留空 = 用主题默认 */
-    @FormField(ordinal = 2, type = FormFieldType.Color)
+    @FormField(ordinal = 3, type = FormFieldType.Color)
     public InputColor titleColor;
 
     /**
@@ -80,17 +100,10 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
      * {@link Describable} 自动识别为嵌套子表单并生成 impl 选择器，多写一个
      * {@code type = FormFieldType.SELECTABLE} 会在运行期报错。
      */
-    @FormField(ordinal = 3, validate = {Validator.require})
+    @FormField(ordinal = 4, validate = {Validator.require})
     public HeaderOrientation orientation;
 
-    /**
-     * 折叠配置：不可折叠 / 可折叠（可折叠时才有默认折叠与折叠图标）。
-     *
-     * <p>挂在顶层而非塞进 {@link com.qlangtech.tis.plugin.ontology.workshop.model.header.VerticalOrientation}：
-     * 折叠与方向是两个正交维度，水平顶栏同样可以折叠。
-     */
-    @FormField(ordinal = 4, validate = {Validator.require})
-    public CollapseConfig collapseConfig;
+
 
     /** 背景色；留空 = 用主题默认 */
     @FormField(ordinal = 5, type = FormFieldType.Color)
@@ -99,8 +112,26 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
     @FormField(ordinal = 6, type = FormFieldType.ENUM)
     public Boolean favoriteEnabled = true;
 
+    /**
+     * 读取模块的 header；尚未配置过回落 {@link #defaultOf(String)}（visible = true）。
+     *
+     * <p>落盘在 {@code ontology/{domain}/workshop/{moduleName}/header/{moduleName}.xml}，
+     * 见 {@link WorkshopHeaderStore}。
+     */
     public static WorkshopHeader loadOrDefault(String ontologyDomain, String moduleName) {
-        return null;
+        return WorkshopHeaderStore.create(ontologyDomain, moduleName).loadOrDefault();
+    }
+
+    /**
+     * 覆盖保存模块的 header（1:1，新增与更新都写同一份文件）。
+     *
+     * <p>{@code id}（即落盘文件名）由存储层强制覆写成 moduleName，不采信表单里的值 ——
+     * 否则改一下 id 就会写到别的模块的 header 文件上。
+     */
+    public static WorkshopHeader save(IPluginContext pluginContext, Optional<Context> context,
+                                      String ontologyDomain, String moduleName, WorkshopHeader header) {
+        return WorkshopHeaderStore.create(ontologyDomain, moduleName)
+                .save(pluginContext, context, header);
     }
 
     /**
@@ -132,25 +163,24 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
         WorkshopHeader header = new WorkshopHeader();
         header.id = moduleId;
         header.orientation = new HorizontalOrientation();
-        header.collapseConfig = new NoneCollapseConfig();
         return header;
     }
 
     /**
-     * 把两个多态字段的 null 补成默认实现，返回 this 便于链式调用。
+     * 把多态字段的 null 补成默认实现，返回 this 便于链式调用。
      *
      * <p>为什么需要：{@code loadOrDefault} 只在<b>文件不存在</b>时才回落
      * {@link #defaultOf}。而多态字段是本类改造后才出现的，改造前落盘的 header XML 里
-     * 没有 {@code orientation}/{@code collapseConfig} 元素，XStream 反序列化出来就是 null；
+     * 没有 {@code orientation} 元素，XStream 反序列化出来就是 null；
      * 字段上虽写了初始化表达式，但 XStream 不走构造器赋值。不补的话前端会拿到一个
-     * 没有方向、没有折叠配置的 header，配置面板两个下拉都是空的。
+     * 没有方向的 header，配置面板方向下拉是空的。
+     *
+     * <p>折叠配置已迁入 {@link com.qlangtech.tis.plugin.ontology.workshop.model.header.VerticalOrientation}，
+     * 其 null 兜底由它自己的 {@code readResolve()} 负责，这里不用管。
      */
     public WorkshopHeader normalize() {
         if (this.orientation == null) {
             this.orientation = new HorizontalOrientation();
-        }
-        if (this.collapseConfig == null) {
-            this.collapseConfig = new NoneCollapseConfig();
         }
         return this;
     }
@@ -160,8 +190,8 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
      *
      * <p>{@code DescribableJSON.getItemJson()} 产出 {@code {impl, displayName, vals}}：
      * {@code impl} 是<b>本类</b>的 FQCN，{@code vals} 是平铺字段，其中
-     * {@code orientation} / {@code collapseConfig} 各自以自己的 {@code impl} 表达具体子类
-     * （如 {@code VerticalOrientation} / {@code CollapsibleConfig}），前端据此知道该渲染
+     * {@code orientation} / {@code logoConfig} 各自以自己的 {@code impl} 表达具体子类
+     * （如 {@code VerticalOrientation} / {@code IconLogoConfig}），前端据此知道该渲染
      * 哪套子字段。这与 {@code WorkshopVariable.toVariableJSON} 的下发形态一致。
      *
      * <p>改造前这里是手写字段清单的平铺 JSON，且 {@code orientation} 被转成小写枚举名 ——
@@ -172,11 +202,18 @@ public final class WorkshopHeader implements Describable<WorkshopHeader>, Serial
         return new DescribableJSON<>(header).getItemJson();
     }
 
+
+
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<WorkshopHeader> {
+    public static class DefaultDescriptor extends Descriptor<WorkshopHeader> implements WorkshopCptTypeGetter {
         @Override
         public String getDisplayName() {
             return "Workshop Header";
+        }
+
+        @Override
+        public WorkshopCptType getWorkshopCptType() {
+            return WorkshopCptType.Header;
         }
     }
 }

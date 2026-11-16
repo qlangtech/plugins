@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.model.header;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
@@ -14,7 +15,6 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,6 +94,26 @@ public class TestWorkshopHeaderConfig {
     }
 
     /**
+     * {@code LogoConfig} 恰好两个子类，且<b>都不是</b>关态
+     * （logo 是「图标 / 图片」二选一，没有「不设置」形态——不配置由宿主字段为 null 表达）。
+     */
+    @Test
+    public void logoConfigHasExactlyTwoNonOffSubclasses() {
+        Set<Class<?>> actual = TisPluginFormTestSupport.concreteSubclassesOf(
+                LogoConfig.class, HEADER_PKG);
+        Assert.assertEquals("LogoConfig 应恰好两个具体子类（图标 / 图片）",
+                new TreeSet<>(Arrays.asList(IconLogoConfig.class.getSimpleName(),
+                        ImageLogoConfig.class.getSimpleName())),
+                TisPluginFormTestSupport.names(actual));
+
+        for (Class<?> sub : actual) {
+            Assert.assertNotEquals(sub.getSimpleName() + " 是 logo 子类，其 displayName 不得是 SWITCH_OFF"
+                            + "（「不设置 logo」由 WorkshopHeader.logoConfig 为 null 表达，不需要关态子类）",
+                    Descriptor.SWITCH_OFF, TisPluginFormTestSupport.descriptorOf(sub).getDisplayName());
+        }
+    }
+
+    /**
      * {@code CollapseConfig} 恰好两个子类，其中恰好一个的 displayName 是
      * {@link Descriptor#SWITCH_OFF}。
      *
@@ -122,7 +142,7 @@ public class TestWorkshopHeaderConfig {
     }
 
     /**
-     * 四个子类 descriptor 的 {@code getId()} 都必须等于<b>它自己</b>的 FQCN。
+     * 六个具体子类 descriptor 的 {@code getId()} 都必须等于<b>它自己</b>的 FQCN。
      *
      * <p>{@code Descriptor()} 无参构造把 {@code clazz} 置为 {@code getClass().getEnclosingClass()}，
      * 所以只要 descriptor 嵌在具体子类里就自然成立；一旦有人图省事把 descriptor 提到基类上
@@ -132,7 +152,8 @@ public class TestWorkshopHeaderConfig {
     @Test
     public void descriptorsIdentifyTheirConcreteSubclass() {
         for (Class<?> sub : Arrays.asList(HorizontalOrientation.class, VerticalOrientation.class,
-                CollapsibleConfig.class, NoneCollapseConfig.class)) {
+                CollapsibleConfig.class, NoneCollapseConfig.class,
+                IconLogoConfig.class, ImageLogoConfig.class)) {
             Assert.assertEquals(sub.getSimpleName() + " 的 descriptor.getId() 应等于其自身 FQCN"
                             + "（同族子类撞成同一个 id 时前端无法区分 impl）",
                     sub.getName(), TisPluginFormTestSupport.descriptorOf(sub).getId());
@@ -154,7 +175,8 @@ public class TestWorkshopHeaderConfig {
     @Test
     public void formResourceExistenceFollowsFormFields() {
         for (Class<?> sub : Arrays.asList(HorizontalOrientation.class, VerticalOrientation.class,
-                CollapsibleConfig.class, NoneCollapseConfig.class)) {
+                CollapsibleConfig.class, NoneCollapseConfig.class,
+                IconLogoConfig.class, ImageLogoConfig.class)) {
             boolean hasFormField = declaresFormField(sub);
             JSONObject resource = TisPluginFormTestSupport.formResource(sub.getName());
             if (hasFormField) {
@@ -176,26 +198,32 @@ public class TestWorkshopHeaderConfig {
     // ===================================================================
 
     /**
-     * {@code WorkshopHeader.json} 里两个多态字段的 {@code dftVal} 必须逐字等于对应默认子类
-     * descriptor 的 {@code displayName}。
+     * 多态字段的 {@code dftVal} 必须逐字等于对应默认子类 descriptor 的 {@code displayName}。
      *
      * <p>这条没有任何编译期保护：前端拿 {@code dftVal} 去逐项比对子类的 {@code displayName}
      * 来选默认项，值写错的表现是「默认项悄悄拐到了另一个子类」，一行日志都没有。
      * 断言用 {@code descriptorOf(...).getDisplayName()} 而不是写死 {@code "Horizontal"}，
      * 这样改了 displayName 而忘了改 json 同样会被抓住（写成字面量就只能抓住一半）。
+     *
+     * <p>注意折叠配置的宿主是 <b>VerticalOrientation.json</b>（已从 WorkshopHeader.json 迁来）。
      */
     @Test
     public void polymorphicFieldsDefaultValueMatchesSubclassDisplayName() {
-        JSONObject resource = TisPluginFormTestSupport.formResource(WorkshopHeader.class.getName());
-        Assert.assertNotNull("WorkshopHeader.json 应存在", resource);
+        JSONObject headerResource = TisPluginFormTestSupport.formResource(WorkshopHeader.class.getName());
+        Assert.assertNotNull("WorkshopHeader.json 应存在", headerResource);
+        Assert.assertNull("collapseConfig 已迁入 VerticalOrientation，WorkshopHeader.json 不应再有它的条目",
+                headerResource.getJSONObject(FIELD_COLLAPSE_CONFIG));
 
-        assertDftValMatchesDisplayName(resource, FIELD_ORIENTATION, HorizontalOrientation.class);
-        assertDftValMatchesDisplayName(resource, FIELD_COLLAPSE_CONFIG, NoneCollapseConfig.class);
+        assertDftValMatchesDisplayName(headerResource, FIELD_ORIENTATION, HorizontalOrientation.class);
+
+        JSONObject verticalResource = TisPluginFormTestSupport.formResource(VerticalOrientation.class.getName());
+        Assert.assertNotNull("VerticalOrientation.json 应存在", verticalResource);
+        assertDftValMatchesDisplayName(verticalResource, FIELD_COLLAPSE_CONFIG, NoneCollapseConfig.class);
 
         // 关态那个额外钉一次字面量：SWITCH_OFF 本身是框架常量，不是可以随便改的显示名
         Assert.assertEquals("collapseConfig 的默认项必须是框架的关态常量",
                 Descriptor.SWITCH_OFF,
-                resource.getJSONObject(FIELD_COLLAPSE_CONFIG).getString("dftVal"));
+                verticalResource.getJSONObject(FIELD_COLLAPSE_CONFIG).getString("dftVal"));
     }
 
     // ===================================================================
@@ -220,9 +248,19 @@ public class TestWorkshopHeaderConfig {
             }
         }
 
-        // 两个多态字段的类型也一并钉住：必须是抽象基类，不能退回枚举或 Object
+        // orientation 的类型钉住：必须是抽象基类，不能退回枚举或 Object
         assertFieldType(FIELD_ORIENTATION, HeaderOrientation.class);
-        assertFieldType(FIELD_COLLAPSE_CONFIG, CollapseConfig.class);
+
+        // collapseConfig 已迁入 VerticalOrientation（折叠语义只在垂直侧栏下成立）：
+        // 宿主上不得复辟，垂直子类上必须有且类型为抽象基类
+        try {
+            WorkshopHeader.class.getField(FIELD_COLLAPSE_CONFIG);
+            Assert.fail("WorkshopHeader.collapseConfig 已迁入 VerticalOrientation，不得复辟"
+                    + "（复辟即意味着「水平 + 可折叠」这种渲染必坏的矛盾态重新可表示）");
+        } catch (NoSuchFieldException expected) {
+            // 正是期望的结果
+        }
+        assertFieldType(VerticalOrientation.class, FIELD_COLLAPSE_CONFIG, CollapseConfig.class);
     }
 
     // ===================================================================
@@ -276,12 +314,16 @@ public class TestWorkshopHeaderConfig {
         Assert.assertEquals("垂直方向的载荷是子类自己的 width",
                 240, orientation.getJSONObject("vals").getIntValue("width"));
 
-        JSONObject collapse = Objects.requireNonNull(vals.getJSONObject(FIELD_COLLAPSE_CONFIG),
-                "collapseConfig 应以嵌套对象下发");
+        // 折叠配置已迁入 VerticalOrientation 的载荷：GET 侧是三层嵌套
+        // vals.orientation.vals.collapseConfig
+        JSONObject collapse = Objects.requireNonNull(
+                orientation.getJSONObject("vals").getJSONObject(FIELD_COLLAPSE_CONFIG),
+                "collapseConfig 应以嵌套对象下发在 orientation 的载荷里");
         Assert.assertEquals(CollapsibleConfig.class.getName(), collapse.getString("impl"));
         Assert.assertTrue("可折叠时的 collapsedByDefault 应在子类自己的 vals 里",
                 collapse.getJSONObject("vals").getBooleanValue("collapsedByDefault"));
-        Assert.assertEquals("折叠图标同理", "http://example.com/logo.png",
+        // EndType 字段经 getItemJson 下发的是枚举名本身（图片地址由前端 EndType 选择器回填）
+        Assert.assertEquals("折叠图标同理", IEndTypeGetter.EndType.FileImage.name(),
                 collapse.getJSONObject("vals").getString("collapsedImage"));
 
         // ---------- POST 侧：前端回传的形状 ----------
@@ -305,7 +347,9 @@ public class TestWorkshopHeaderConfig {
                 240, unwrappedOrientation.getJSONObject("vals").getIntValue("width"));
         Assert.assertEquals("_primaryVal 剥掉后 title 应还原成裸值",
                 header.title, unwrapped.getString("title"));
-        Assert.assertTrue(unwrapped.getJSONObject(FIELD_COLLAPSE_CONFIG)
+        // 三层嵌套的折叠配置同样应被逐层剥干净
+        Assert.assertTrue(unwrappedOrientation.getJSONObject("vals")
+                .getJSONObject(FIELD_COLLAPSE_CONFIG)
                 .getJSONObject("vals").getBooleanValue("collapsedByDefault"));
     }
 
@@ -313,7 +357,7 @@ public class TestWorkshopHeaderConfig {
     //  helpers
     // ===================================================================
 
-    /** 一份「垂直方向 + 可折叠」的样本，两个多态字段都取<b>非默认</b>子类 */
+    /** 一份「垂直方向 + 可折叠」的样本，折叠配置取<b>非默认</b>子类且内嵌在 orientation 载荷里 */
     private static WorkshopHeader sampleHeader() {
         WorkshopHeader header = WorkshopHeader.defaultOf("salesDashboard");
         header.title = "销售看板";
@@ -321,12 +365,11 @@ public class TestWorkshopHeaderConfig {
 
         VerticalOrientation orientation = new VerticalOrientation();
         orientation.width = 240;
-        header.orientation = orientation;
-
         CollapsibleConfig collapse = new CollapsibleConfig();
         collapse.collapsedByDefault = true;
-        collapse.collapsedImage = "http://example.com/logo.png";
-        header.collapseConfig = collapse;
+        collapse.collapsedImage = IEndTypeGetter.EndType.FileImage;
+        orientation.collapseConfig = collapse;
+        header.orientation = orientation;
         return header;
     }
 
@@ -381,11 +424,15 @@ public class TestWorkshopHeaderConfig {
     }
 
     private static void assertFieldType(String fieldName, Class<?> expectedType) {
+        assertFieldType(WorkshopHeader.class, fieldName, expectedType);
+    }
+
+    private static void assertFieldType(Class<?> host, String fieldName, Class<?> expectedType) {
         try {
-            Assert.assertEquals("WorkshopHeader." + fieldName + " 的类型应是抽象基类",
-                    expectedType, WorkshopHeader.class.getField(fieldName).getType());
+            Assert.assertEquals(host.getSimpleName() + "." + fieldName + " 的类型应是抽象基类",
+                    expectedType, host.getField(fieldName).getType());
         } catch (NoSuchFieldException e) {
-            Assert.fail("WorkshopHeader 缺少 " + fieldName + " 字段");
+            Assert.fail(host.getSimpleName() + " 缺少 " + fieldName + " 字段");
         }
     }
 

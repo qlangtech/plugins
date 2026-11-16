@@ -244,7 +244,7 @@ public class ObjectSetOpsSource extends AbstractOpsSource {
             // SELECTABLE 字段未注册候选来源会让 DescriptorsJSON#getSelectOptions 抛
             // 「has not been register」，整张表单打不开。三个字段一个都不能漏。
             this.registerSelectOptions(KEY_SOURCE_OBJECT_SET_VAR,
-                    WidgetOptionHelper::getObjectSetSourceVariableOptions);
+                    WidgetOptionHelper.getObjectSetSourceVariableOptions());
             // 两个属性字段的真实候选由下面的级联管道在渲染期逐实例回填，这里登记空列表兜底
             this.registerSelectOptions(KEY_LABEL_PROPERTY, Collections::emptyList);
             this.registerSelectOptions(KEY_VALUE_PROPERTY, Collections::emptyList);

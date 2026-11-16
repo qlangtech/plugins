@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -56,6 +57,17 @@ public class WidgetTabConfig implements Describable<WidgetTabConfig>, Serializab
     /** 标签名，同时作为子表单行的唯一标识 */
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String title;
+
+    /**
+     * 标签图标（Ant Design 图标名）。
+     *
+     * <p>普通展示态显示在标签文字左侧；页头<b>折叠态</b>下（Palantir："the Tabs widget
+     * will also have a collapsed state that will only show the icons"）只显示图标、
+     * 文字丢弃。声明方式与 {@code WidgetButtonConfig.leftIcon} 一致
+     * （EndType 枚举 + {@code enumMode: model_assist} 的 json 条目）。
+     */
+    @FormField(ordinal = 3, type = FormFieldType.ENUM)
+    public IEndTypeGetter.EndType icon;
 
     /** header 模式下切换到的页面，存页面 id（选项为当前域下的全部页面） */
     @FormField(type = FormFieldType.SELECTABLE,ordinal = 1)

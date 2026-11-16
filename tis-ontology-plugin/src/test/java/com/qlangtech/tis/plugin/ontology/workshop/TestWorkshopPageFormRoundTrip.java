@@ -3,17 +3,25 @@ package com.qlangtech.tis.plugin.ontology.workshop;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopFormParser;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PercentColumnWidth;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.TwoColumnPageTemplate;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.AttrValMap;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import static com.qlangtech.tis.extension.Descriptor.KEY_DESC_VAL;
@@ -115,6 +123,141 @@ public class TestWorkshopPageFormRoundTrip {
         Assert.assertEquals("sortOrder 先取表单值（随后会被信封覆盖）", Integer.valueOf(3), page.sortOrder);
     }
 
+    /**
+     * {@code routeId}（页面 URL 标识）的往返：POST 能解析进来、GET 能下发出去。
+     *
+     * <p>两处都是<b>静默失效</b>型：POST 侧解析不到只是字段恒为 null（页面照样能存），
+     * GET 侧 {@code pageToJSON} 是手写 JSON，漏写 {@code routeId} 不报错、前端永远拿
+     * {@code undefined}，URL 恒回落成 UUID 段 —— 用户会以为「填了 URL 标识但链接没变」。
+     */
+    @Test
+    public void routeIdRoundTrip() throws Exception {
+        Assume.assumeTrue("当前环境未初始化 TIS（JDK17 下通常还缺 "
+                        + "--add-opens java.base/java.lang=ALL-UNNAMED），跳过 routeId 线格式检查",
+                tisPageDescriptorReachable());
+
+        String pageId = "7f2d3b9f-ac4e-4d6f-9a81-2b3c4d5e6f70";
+        String routeId = "case-detail";
+        JSONObject postItem = pagePostItem(pageId, "案件详情", 1);
+        postItem.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS)
+                .put("routeId", primary(routeId));
+
+        IControlMsgHandler msgHandler = IControlMsgHandler.namedContext("workshop");
+        WorkshopPage page = WorkshopFormParser.parse(msgHandler, new DefaultContext(),
+                postItem, "page[0]", WorkshopPage.class);
+
+        Assert.assertEquals("routeId 必须按 _primaryVal 反序列化", routeId, page.routeId);
+
+        // GET 侧：pageToJSON 是手写 JSON，不经过 DescribableJSON，因此单独钉一次
+        JSONObject pageJson = pageToJSON(page);
+        Assert.assertTrue("pageToJSON 必须下发 routeId，否则前端永远拿不到"
+                + "（漏写不报错，表现为「填了 URL 标识但链接仍是 UUID」）",
+                pageJson.containsKey("routeId"));
+        Assert.assertEquals(routeId, pageJson.getString("routeId"));
+    }
+
+    /**
+     * {@code routeId} 是可选的：空值必须能存、GET 也照常下发（值为 null）。
+     *
+     * <p>{@link Validator#identity} 的规则带 {@code guardNotBlank=true}，空值直接通过 ——
+     * 这条约束一旦被改成 {@code require}，「没填 URL 标识的页面」就整批存不进去了。
+     */
+    @Test
+    public void emptyRouteIdIsAllowed() throws Exception {
+        Assume.assumeTrue("当前环境未初始化 TIS（JDK17 下通常还缺 "
+                        + "--add-opens java.base/java.lang=ALL-UNNAMED），跳过 routeId 线格式检查",
+                tisPageDescriptorReachable());
+
+        JSONObject postItem = pagePostItem("8a3e4c0a-bd5f-4e70-ab92-3c4d5e6f7081", "无标识页", 2);
+        // 空串（用户填了又删空，前端提交的就是 ""，不是缺键）
+        postItem.getJSONObject(AttrValMap.PLUGIN_EXTENSION_VALS).put("routeId", primary(""));
+
+        IControlMsgHandler msgHandler = IControlMsgHandler.namedContext("workshop");
+        WorkshopPage page = WorkshopFormParser.parse(msgHandler, new DefaultContext(),
+                postItem, "page[0]", WorkshopPage.class);
+
+        Assert.assertNull("空 routeId 是合法的（可选字段），不应被校验拦下", page.routeId);
+        Assert.assertNull("GET 侧照常下发该键，值为 null",
+                pageToJSON(page).getString("routeId"));
+    }
+
+    /**
+     * {@code routeId} 的字符集校验来自 {@link Validator#identity}：不能以数字开头。
+     *
+     * <p>这条并非可有可无 —— 以数字开头的段在 URL 里无法与路径层级 / 版本号等数字段
+     * 区分，是 {@code ValidatorCommons.PATTERN_FORBID_START_WITH_NUMBER} 存在的理由。
+     * 直接调校验器（不经过表单）即可，无需 TIS 运行期。
+     */
+    @Test
+    public void routeIdMustNotStartWithNumber() {
+        Assert.assertFalse("以数字开头的 routeId 必须校验失败",
+                Validator.identity.validate(fieldErrorHandler(), new DefaultContext(),
+                        "routeId", "1case-detail"));
+        Assert.assertTrue("允许以字母开头（含连字符）",
+                Validator.identity.validate(fieldErrorHandler(), new DefaultContext(),
+                        "routeId", "case-detail"));
+        Assert.assertTrue("空值直接通过（guardNotBlank）",
+                Validator.identity.validate(fieldErrorHandler(), new DefaultContext(),
+                        "routeId", ""));
+    }
+
+    /**
+     * {@code WorkshopPage.json} 里必须给 {@code routeId} 配上 label / help。
+     *
+     * <p>缺条目时表单照常渲染，只是这个字段既没有中文标签也没有说明 ——
+     * 「页面 ID（可选）」是用户理解「这是写进 URL 的」的唯一途径。
+     */
+    @Test
+    public void routeIdHasFormResourceEntry() {
+        JSONObject resource = TisPluginFormTestSupport.formResource(WorkshopPage.class.getName());
+        Assert.assertNotNull("WorkshopPage.json 应存在", resource);
+        JSONObject routeIdMeta = resource.getJSONObject("routeId");
+        Assert.assertNotNull("WorkshopPage.json 缺少 routeId 条目", routeIdMeta);
+        Assert.assertNotNull("routeId 的 label 不能为空", routeIdMeta.getString("label"));
+        Assert.assertNotNull("routeId 的 help 不能为空（要说明「写进 URL，改了旧链接会失效」）",
+                routeIdMeta.getString("help"));
+    }
+
+    // ===================================================================
+    //  routeId 唯一性（同批 / 并上磁盘存量）
+    // ===================================================================
+
+    /**
+     * 同一批页面里 routeId 重号必须抛错 —— 这是快照路径（{@code module-save}）的校验点。
+     *
+     * <p>重号的后果不是「报错」而是「同一个链接指向两页」：前端按首个匹配渲染，
+     * 另一页<b>永远打不开</b>，且没有任何日志。
+     */
+    @Test
+    public void duplicateRouteIdsInSameBatchAreRejected() {
+        assertDuplicateRejected(page("page-a", "home"), page("page-b", "home"));
+    }
+
+    /**
+     * 多个页面都没有 routeId 是<b>合法</b>的（可选字段），不能当成重号。
+     *
+     * <p>空值在唯一性检查里必须先 {@code trimToNull} 再跳过：写成「空串也算一个值」
+     * 会让「所有人都没填 URL 标识」的模块整批保存失败。
+     */
+    @Test
+    public void multipleEmptyRouteIdsAreAllowed() {
+        // 不抛即通过
+        invokeAssertUniqueRouteIds(List.of(page("page-a", null), page("page-b", ""), page("page-c", "  ")));
+        invokeAssertUniqueRouteIds(List.of(page("page-a", "   "), page("page-b", "home")));
+    }
+
+    /**
+     * routeId 前后的空白不构成差异：`" home"` 与 `"home"` 是同一个 URL 段。
+     *
+     * <p>校验按 {@code trimToNull} 归一，所以这里必须被判成重号 —— 否则用户填了
+     * `" home "` 就能绕过唯一性，而它在地址栏里和 `home` 完全等价。
+     */
+    @Test
+    public void routeIdUniquenessIgnoresSurroundingWhitespace() {
+        assertDuplicateRejected(page("page-a", "home"), page("page-b", " home "));
+    }
+
+
     // ===================================================================
     //  helpers
     // ===================================================================
@@ -162,6 +305,81 @@ public class TestWorkshopPageFormRoundTrip {
         JSONObject wrapped = new JSONObject();
         wrapped.put(KEY_primaryVal, value);
         return wrapped;
+    }
+
+    /** 页面 POST item 的 vals 段（直接改它就能加字段） */
+    private static WorkshopPage page(String id, String routeId) {
+        WorkshopPage page = new WorkshopPage();
+        page.id = id;
+        page.name = id;
+        page.routeId = routeId;
+        return page;
+    }
+
+    /**
+     * 调 {@code WorkshopModule#assertUniqueRouteIds}。
+     *
+     * <p>它是 {@code private static}（内部校验，产品上只经 {@code parsePages} /
+     * {@code doApplyModule} 进入），这里走反射直连：走 {@code parsePages} 需要 JSON POST 体、
+     * 走 {@code doApplyModule} 需要磁盘存量，都会把「一个纯校验逻辑」的用例变成集成测试。
+     */
+    private static void invokeAssertUniqueRouteIds(Collection<WorkshopPage> pages) {
+        try {
+            Method m = uniqueRouteIdAsserter();
+            m.invoke(null, pages);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new AssertionError("assertUniqueRouteIds 抛了非运行时异常", cause);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("无法调用 assertUniqueRouteIds（方法被改名/移走了？）", e);
+        }
+    }
+
+    private static void assertDuplicateRejected(WorkshopPage... pages) {
+        try {
+            invokeAssertUniqueRouteIds(Arrays.asList(pages));
+            Assert.fail("routeId 重号必须抛错：同一个 URL 段指向两页时，前端按首个匹配渲染，"
+                    + "另一页永远打不开且没有任何日志");
+        } catch (IllegalStateException expected) {
+            Assert.assertTrue("错误信息里应带上重号的 routeId，实际是：" + expected.getMessage(),
+                    expected.getMessage().contains("duplicate page routeId"));
+        }
+    }
+
+    /** {@code assertUniqueRouteIds} 是 {@code WorkshopModule.DefaultDescriptor} 的私有静态方法 */
+    private static Method uniqueRouteIdAsserter() throws NoSuchMethodException {
+        Method m = WorkshopModule.DefaultDescriptor.class
+                .getDeclaredMethod("assertUniqueRouteIds", Collection.class);
+        m.setAccessible(true);
+        return m;
+    }
+
+    /** {@code pageToJSON} 同样是 {@code DefaultDescriptor} 的私有静态方法 */
+    private static JSONObject pageToJSON(WorkshopPage page) {
+        try {
+            Method m = WorkshopModule.DefaultDescriptor.class
+                    .getDeclaredMethod("pageToJSON", WorkshopPage.class);
+            m.setAccessible(true);
+            return (JSONObject) m.invoke(null, page);
+        } catch (InvocationTargetException e) {
+            throw new AssertionError("pageToJSON 抛异常", e.getCause());
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError("无法调用 pageToJSON（方法被改名/移走了？）", e);
+        }
+    }
+
+    /**
+     * 直接调 {@link Validator} 用的字段错误处理器。
+     *
+     * <p>用 Mockito 而不是手写实现：{@link IFieldErrorHandler} 是给 Web 层用的胖接口
+     * （还有 {@code validateBizLogic} / {@code getPipelineValidator} 等与校验器无关的方法），
+     * 手写实现会让「我只关心 addFieldError 有没有被调」这件事被一堆空方法淹没。
+     */
+    private static IFieldErrorHandler fieldErrorHandler() {
+        return Mockito.mock(IFieldErrorHandler.class);
     }
 
     /** descriptor 扫描是否可用（惰性列表必须在 try 里物化，否则异常会漏成失败而非跳过） */

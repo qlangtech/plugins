@@ -145,28 +145,35 @@ public class TestWorkshopVariableTypes {
     }
 
     // ===================================================================
-    // 3. CRUD 端点独立寻址
+    // 3. 变量端点收编进 WorkshopModule 后的寻址契约
     // ===================================================================
 
     /**
-     * 变量 CRUD 端点搬到了 {@code WorkshopVariableOperation}，前端用它的 FQCN 作
-     * {@code impl} 参数寻址，所以那条路必须真的能解析到 descriptor。
+     * 变量 CRUD 端点已收编进 {@code WorkshopModule.DefaultDescriptor.httpProcess}
+     * （type = variable_get / variable_list / variable_delete），前端与模块操作共用
+     * 同一个 {@code impl}（WorkshopModule 的 FQCN）寻址，所以那条路必须真的能解析到 descriptor。
      *
-     * <p>同时验证它与 12 个变量类型 descriptor <b>解耦</b>：后者是前端类型选择器的数据源，
-     * 混进一个「不是类型」的条目会让选择器出现第 13 个空表单项。
+     * <p>同时反向钉住：旧的独立端点 {@code WorkshopVariableOperation} 已删除，
+     * 它的 FQCN 不允许再解析到 descriptor（防回潮）；并验证变量端点与 12 个变量类型
+     * descriptor <b>解耦</b>：后者是前端类型选择器的数据源，混进一个「不是类型」的条目
+     * 会让选择器出现第 13 个空表单项。
      */
     @Test
-    public void operationDescriptorIsAddressableByItsFqcn() {
-        String impl = "com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperation";
+    public void variableEndpointsAreAddressableByModuleDescriptorAndLegacyImplIsGone() {
+        String moduleImpl = "com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule";
 
-        Descriptor operationDesc = TIS.get().getDescriptor(impl);
-        Assert.assertNotNull("前端以 impl=" + impl + " 寻址变量 CRUD 端点，必须能解析到 descriptor",
-                operationDesc);
-        Assert.assertEquals("impl 即 descriptor 的 id", impl, operationDesc.getId());
+        Descriptor moduleDesc = TIS.get().getDescriptor(moduleImpl);
+        Assert.assertNotNull("前端以 impl=" + moduleImpl + " 寻址模块与变量端点，必须能解析到 descriptor",
+                moduleDesc);
+        Assert.assertEquals("impl 即 descriptor 的 id", moduleImpl, moduleDesc.getId());
+
+        String legacyImpl = "com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperation";
+        Assert.assertNull("旧变量端点 impl 不允许再解析到 descriptor（已迁入 WorkshopModule，type=variable_*）",
+                TIS.get().getDescriptor(legacyImpl));
 
         for (Descriptor<WorkshopVariable> vd : scanVariableDescriptors()) {
-            Assert.assertNotEquals("CRUD 描述符不应混进变量类型选择器：" + vd.getClass(),
-                    impl, vd.getId());
+            Assert.assertNotEquals("模块 descriptor 不应混进变量类型选择器：" + vd.getClass(),
+                    moduleImpl, vd.getId());
         }
     }
 

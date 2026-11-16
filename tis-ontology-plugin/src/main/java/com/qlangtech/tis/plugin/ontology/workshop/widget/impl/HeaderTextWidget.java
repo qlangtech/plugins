@@ -130,7 +130,7 @@ public class HeaderTextWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_TEXT_VARIABLE, WidgetOptionHelper::getStringVariableOptions);
+            this.registerSelectOptions(KEY_TEXT_VARIABLE, WidgetOptionHelper.getStringVariableOptions());
         }
 
         @Override

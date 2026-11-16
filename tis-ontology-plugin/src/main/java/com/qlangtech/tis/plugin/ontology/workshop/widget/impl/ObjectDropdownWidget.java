@@ -47,8 +47,8 @@ public class ObjectDropdownWidget extends WorkshopWidget {
             super();
             // 数据源只列「对象集合定义」的变量（取数需要可查询的 schema）；
             // 写回载体（selectedObjectVar）反过来必须是任意 OBJECT_SET —— 外部写入型正是它的典型用法。
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
-            this.registerSelectOptions(KEY_SELECTED_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper.getObjectSetSourceVariableOptions());
+            this.registerSelectOptions(KEY_SELECTED_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
         }
 
         /**

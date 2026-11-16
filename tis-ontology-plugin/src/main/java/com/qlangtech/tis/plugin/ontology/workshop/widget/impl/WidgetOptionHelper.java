@@ -1,5 +1,9 @@
 package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.DescriptorExtensionList;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -21,11 +25,14 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariab
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -33,14 +40,17 @@ import java.util.stream.Collectors;
 /**
  * Widget SELECTABLE 选项提供者工具类
  * <p>
- * 两类选项：其一，各 Widget 变量绑定字段的候选变量名（按 {@link VariableType} 过滤，
- * 见 {@link #getVariableOptions(VariableType...)} 及其一组薄包装）；其二，按已选变量
+ * 两类选项：其一，各 Widget 变量绑定字段的候选变量（按 {@link VariableType} 过滤，
+ * 见 {@link #getVariableOptions(VariableType...)} 与返回 {@link PluginExtraProps.FieldRefConfig}
+ * 的一组薄包装——字段由此获得「配置」跳转 creator）；其二，按已选变量
  * 级联出的属性列表（见 {@link #getObjectPropertyOptions(String, OntologyPluginMeta)}）。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/11
  */
 public class WidgetOptionHelper {
+
+    private static final Logger logger = LoggerFactory.getLogger(WidgetOptionHelper.class);
 
     /**
      * UploadPluginMeta 额外参数键：Workshop Module 名称
@@ -239,72 +249,114 @@ public class WidgetOptionHelper {
      * {@code ObjectSetVariable#resolveDataSourceBinding} 抛 illegal type。此方法把这类变量
      * 从「数据源」下拉里排除，同时保留在 {@code activeObjectVar} / {@code selectedObjectsVar}
      * 的候选里（那些字段正是要写外部值）。
+     *
+     * <p>creator 候选与 {@link #getObjectSetVariableOptions()} 一致（均为 OBJECT_SET
+     * 类型的变量插件），差异只在选项过滤：数据源排除「外部写入」型变量。
      */
-    public static List<IdentityName> getObjectSetSourceVariableOptions() {
-//        List<WorkshopVariable> variables = loadCurrentModuleVariables();
-//        if (variables == null) {
-//            return Collections.emptyList();
-//        }
-//        return variables.stream()
-//                .filter(v -> v.getVariableType() == VariableType.OBJECT_SET)
-//                .filter(v -> v.getDefinitionConfig() instanceof ObjectSetDefinitionConfig)
-//                .map(v -> IdentityName.create(v.getName()))
-//                .collect(Collectors.toList());
-        return getVariableOptions((var) -> var.getDefinitionConfig() instanceof ObjectSetDefinitionConfig
+    public static PluginExtraProps.FieldRefConfig getObjectSetSourceVariableOptions() {
+        return getFieldRefConfig((var) -> var.getDefinitionConfig() instanceof ObjectSetDefinitionConfig
                 , VariableType.OBJECT_SET);
     }
 
     /**
      * 对象集合：ObjectTableWidget / ObjectListWidget 的 objectSetVar，ChartLayer.dataSourceVar
      */
-    public static List<IdentityName> getObjectSetVariableOptions() {
-        return getVariableOptions(VariableType.OBJECT_SET);
+    public static PluginExtraProps.FieldRefConfig getObjectSetVariableOptions() {
+        return getFieldRefConfig(VariableType.OBJECT_SET);
+    }
+
+    private static PluginExtraProps.FieldRefConfig getFieldRefConfig(final VariableType... types) {
+        return getFieldRefConfig((var) -> true, types);
+    }
+
+    /**
+     * 构建变量绑定字段的 {@link PluginExtraProps.FieldRefConfig}：creator（「配置」hyperlink，
+     * 候选为 accepted 类型对应的变量插件）与选项（按 predicate + types 过滤的现有变量）
+     * 都<b>惰性</b>构建 —— descriptor 构造期（如单测里直接 new、插件扫描期）零重逻辑，
+     * 首次访问（表单元数据下发，运行期）才触发 TIS 描述符扫描与变量加载。
+     *
+     * @param predicate 选项级变量过滤（如「数据源」下拉要排除「外部写入」型变量）
+     * @param types    creator 候选与选项共用的变量类型集合；传多个表示「任意其一」
+     */
+    private static PluginExtraProps.FieldRefConfig getFieldRefConfig(
+            Predicate<WorkshopVariable> predicate, final VariableType... types) {
+        if (types == null || types.length == 0) {
+            throw new IllegalArgumentException("param types can not be empty");
+        }
+        Set<VariableType> accepted = EnumSet.noneOf(VariableType.class);
+        Collections.addAll(accepted, types);
+        return PluginExtraProps.FieldRefConfig.lazy(() -> createVariableCreator(accepted)
+                , () -> getVariableOptions(predicate, types));
+    }
+
+    /**
+     * 按 accepted 类型集收集变量插件候选。「配置」hyperlink 跳转到对应变量插件的
+     * 创建页，故凡类型匹配的 {@link WorkshopVariable.BasicDescriptor} 都进候选。
+     */
+    private static PluginExtraProps.FieldRefCreator createVariableCreator(Set<VariableType> accepted) {
+        PluginExtraProps.FieldRefCreator creator = new PluginExtraProps.FieldRefCreator();
+        creator.setLabel("配置");
+        creator.setAssistType(PluginExtraProps.RouterAssistType.paramCfg);
+
+        DescriptorExtensionList<WorkshopVariable, Descriptor<WorkshopVariable>> variableDesc
+                = TIS.get().getDescriptorList(WorkshopVariable.class);
+        for (Descriptor<WorkshopVariable> d : variableDesc) {
+            if (!(d instanceof WorkshopVariable.BasicDescriptor desc)) {
+                throw new IllegalStateException("variable desc must be " + WorkshopVariable.BasicDescriptor.class);
+            }
+            if (accepted.contains(desc.getVariableType())) {
+                creator.addCandidatePlugin(new PluginExtraProps.CandidatePlugin(
+                        desc.getDisplayName(), Optional.empty(), WorkshopVariable.workshopVariable.identity));
+            }
+        }
+        return creator;
     }
 
 
     /**
      * 字符串：HeaderTextWidget.textVariable、TextInputWidget 的两个绑定、MarkdownWidget.contentVar
      */
-    public static List<IdentityName> getStringVariableOptions() {
-        return getVariableOptions(VariableType.STRING);
+    public static PluginExtraProps.FieldRefConfig getStringVariableOptions() {
+        return getFieldRefConfig(VariableType.STRING);
     }
 
     /**
-     * 数值：MetricCardWidget.valueVar
+     * 数值型变量。当前无调用方 —— 数值绑定走 {@code MetricConfig.valueVariable} 的
+     * STRING+NUMERIC 组合注册；保留以维持变量类型包装族的完整性。
      */
-    public static List<IdentityName> getNumericVariableOptions() {
-        return getVariableOptions(VariableType.NUMERIC);
+    public static PluginExtraProps.FieldRefConfig getNumericVariableOptions() {
+        return getFieldRefConfig(VariableType.NUMERIC);
     }
 
     /**
      * 布尔：CheckboxWidget.checkedVar
      */
-    public static List<IdentityName> getBooleanVariableOptions() {
-        return getVariableOptions(VariableType.BOOLEAN);
+    public static PluginExtraProps.FieldRefConfig getBooleanVariableOptions() {
+        return getFieldRefConfig(VariableType.BOOLEAN);
     }
 
     /**
-     * 日期 / 时间戳：DateTimePickerWidget.dateValueVar。
+     * 日期 / 时间戳：DateTimePickerWidget.dateValueVar、DateInputWidget 的两个绑定。
      *
      * <p>同时接受两种类型 —— 该 Widget 的 {@code variableKind}（iso / timestamp）只决定
      * <b>写出的值</b>的格式，不决定目标变量应有的类型，故两者都列出由使用者自行选择。
      */
-    public static List<IdentityName> getDateTimeVariableOptions() {
-        return getVariableOptions(VariableType.DATE, VariableType.TIMESTAMP);
+    public static PluginExtraProps.FieldRefConfig getDateTimeVariableOptions() {
+        return getFieldRefConfig(VariableType.DATE, VariableType.TIMESTAMP);
     }
 
     /**
-     * 对象集合过滤器：FilterListWidget.filterOutputVar
+     * 对象集合过滤器：FilterListWidget.filterOutputVar、ObjectSetDefinitionConfig.filterVar
      */
-    public static List<IdentityName> getObjectSetFilterVariableOptions() {
-        return getVariableOptions(VariableType.OBJECT_SET_FILTER);
+    public static PluginExtraProps.FieldRefConfig getObjectSetFilterVariableOptions() {
+        return getFieldRefConfig(VariableType.OBJECT_SET_FILTER);
     }
 
     /**
      * 时间序列集合：TimelineWidget.dataSourceVar
      */
-    public static List<IdentityName> getTimeSeriesSetVariableOptions() {
-        return getVariableOptions(VariableType.TIME_SERIES_SET);
+    public static PluginExtraProps.FieldRefConfig getTimeSeriesSetVariableOptions() {
+        return getFieldRefConfig(VariableType.TIME_SERIES_SET);
     }
 
     /**
@@ -459,13 +511,13 @@ public class WidgetOptionHelper {
             return objType.getColOpts();
 
         } catch (Exception e) {
-            // 任何加载异常静默返回空列表
+            // 任何加载异常静默返回空列表（渲染期降级，不阻断表单）
             //
-            // 注意：这里的宽 catch 会让 FunctionConfig 型（以及任何取不到 schema 的）变量静默降级为空候选，
-            // 与 getObjectPropertyMetas 对同类变量抛 IllegalStateException 的口径不一致。
-            // 于是 ObjectListWidget 上同一个变量、同一个 descriptor 里，titleProperty 静默为空而
-            // cardFields 直接报错。本次不动这里的行为（改动面会扩散到 Pivot/Gantt/ChartPie 等调用方），
-            // 只在此说明；彻底的「选择性重抛」留作后续项。
+            // 口径与 getObjectPropertyMetas 现在一致：后者对「取不到 schema」的变量
+            // （ExternalInput / FunctionConfig）同样降级为空候选，只对「不是对象集合变量」
+            // 这种真正的配置错误抛。于是同一个 descriptor 里 titleProperty 与 cardFields
+            // 不会再一个静默为空、一个直接 500。区别只在因果粒度：这里是宽 catch
+            // （连磁盘加载失败也吞），那里只兜 getColsMeta 抛出的 schema 缺失。
             return Collections.emptyList();
         }
     }
@@ -479,10 +531,32 @@ public class WidgetOptionHelper {
      * ——列配置还需要 description 与类型枚举。也正因此<b>没有</b>把前者重构为调用本方法：
      * 前者为渲染期降级而宽 catch，会把这里要对用户暴露的错误吞掉。
      *
+     * <h3>取不到 schema 时降级为空候选，<b>不抛</b></h3>
+     * 本方法的两个调用方都是<b>渲染候选</b>（{@code valueChangePipe} 的 render，与
+     * {@code WidgetColumnConfig.DftDescriptor#getEnumableCandidateSet}）。渲染期抛异常会被
+     * {@code RootFormProperties#getInstancePropsJson} 包成 {@code RuntimeException}，
+     * 结果是<b>整个模块 GET 500、widget 配置表单打不开</b>。
+     *
+     * <p>而「取不到 schema」是<b>正常配置</b>而非错误：只有 {@code ObjectSetDefinitionConfig}
+     * 才有属性清单；{@code ExternalInputConfig}（外部写入，接收行选中项的典型载体）与
+     * {@code FunctionConfig}（输出 schema 未建模）都会让
+     * {@link ObjectSetVariable#getColsMeta()} 抛 {@code IllegalStateException}。
+     * 用户把这类变量填进「对象集变量」下拉是完全合法的（下拉本身就是全部 OBJECT_SET）。
+     *
+     * <p>因此这里**不按子类硬编码**（{@code instanceof ExternalInputConfig} 这种写法在下一个
+     * 新增定义方式时会静默复发），而是按「有没有 schema」这一唯一判据降级：
+     * <pre>
+     * try { return objSetVar.getColsMeta(); }
+     * catch (IllegalStateException e) { logger.warn(...); return emptyList(); }
+     * </pre>
+     *
+     * <p>⚠️ {@code ObjectSetVariable#getColsMeta()} 本身**保持抛**（取数路径
+     * {@code resolveDataSourceBinding} 需要可执行的错误），降级只发生在渲染候选这一层。
+     *
      * @param objectSetVarName 用户选中的对象集合变量名，可能为 null / 空
-     * @return 属性列表；变量名为空或变量已不存在时返回空列表（软失败，表单仍能打开）
-     * @throws IllegalStateException 变量存在但不是对象集合变量，或对象集由 FunctionConfig 定义
-     *                               （取不到 schema，见 {@code ObjectSetVariable.getColsMeta()}）
+     * @return 属性列表；变量名为空、变量已不存在、或该变量取不到 schema 时返回空列表
+     * （软失败，表单仍能打开，属性行由用户手填）
+     * @throws IllegalStateException 变量存在但类型不是对象集合变量（真正的配置错误）
      */
     public static List<OntologyProperty> getObjectPropertyMetas(String objectSetVarName) {
         if (StringUtils.isEmpty(objectSetVarName)) {
@@ -496,8 +570,14 @@ public class WidgetOptionHelper {
             throw new IllegalStateException("变量 '" + objectSetVarName + "' 的类型为 "
                     + variable.getClass().getSimpleName() + "，不是对象集合变量，无法推导列定义");
         }
-        // FunctionConfig 的情形由 getColsMeta 抛出可执行的 IllegalStateException
-        return objSetVar.getColsMeta();
+        try {
+            return objSetVar.getColsMeta();
+        } catch (IllegalStateException e) {
+            // 外部写入 / 函数计算型对象集没有属性清单：候选为空，属性行由用户手填。
+            // 降级而不是抛出，理由见方法注释（渲染期抛出 = 整个表单 500）。
+            logger.warn("对象集合变量 '{}' 无法推导属性清单，候选降级为空：{}", objectSetVarName, e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     // ===============================================================

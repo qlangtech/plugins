@@ -9,17 +9,22 @@ import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.OntologyValueType;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopCptParentId;
+import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopPage;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopSection;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.definition.StaticConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.header.CollapsibleConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.model.header.VerticalOrientation;
 import com.qlangtech.tis.plugin.ontology.workshop.model.page.PageTemplate;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.StringVariable;
+import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopHeaderStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopPageStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopSectionStore;
 import com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopWidgetStore;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.TextInputWidget;
+import com.qlangtech.tis.plugin.utils.InputColor;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.util.XStream2;
@@ -35,6 +40,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -257,6 +263,143 @@ public class WorkshopModuleReloadTest {
     }
 
     /**
+     * 页头 widget 的落盘往返：写进 {@code widgets/} 后必须能回填到 {@code module.headerWidgets}。
+     *
+     * <p>页头 widget 用 {@link WorkshopWidget#HEADER_SECTION_ID} 这个哨兵当 {@code sectionId}。
+     * 三处会静默吃掉它们，全由本用例钉住：
+     * <ol>
+     *   <li>{@code loadLayout} 里「sectionId 查不到就丢弃」那个分支 —— 表现是刷新后页头导航条
+     *       整条消失，且没有任何日志；</li>
+     *   <li>回填时误把页头 widget 也挂进某个 section（重复归属）；</li>
+     *   <li>原地 {@code add} 而非整体赋值 —— 反复重建会让列表线性增长。</li>
+     * </ol>
+     */
+    @Test
+    public void testHeaderWidgetsSurviveReload() {
+        String pageId = UUID.randomUUID().toString();
+        String sectionId = UUID.randomUUID().toString();
+        persistLayout(pageId, sectionId);
+
+        WorkshopWidgetStore widgetStore = WorkshopWidgetStore.create(domain, moduleName);
+        // 故意「后写先序」：回填必须按 sortOrder 排序，不能按文件名/写入顺序
+        widgetStore.save(PLUGIN_CONTEXT, Optional.empty(),
+                headerWidget("Header Widget B", 1));
+        widgetStore.save(PLUGIN_CONTEXT, Optional.empty(),
+                headerWidget("Header Widget A", 0));
+
+        WorkshopModule module = newModule();
+        module.ensureWorkshopData(domain, moduleName);
+
+        Assert.assertEquals("页头 widget 必须从 widgets/ 目录回填进 module.headerWidgets"
+                        + "（落进「未知 section 丢弃」分支的表现是这里恒为 0，刷新后页头导航条消失）",
+                2, module.headerWidgets.size());
+        Assert.assertEquals("应按 sortOrder 升序", "Header Widget A",
+                module.headerWidgets.get(0).identityValue());
+        Assert.assertEquals("Header Widget B", module.headerWidgets.get(1).identityValue());
+        for (WorkshopWidget headerWidget : module.headerWidgets) {
+            Assert.assertEquals("页头归属由哨兵 sectionId 表达",
+                    WorkshopWidget.HEADER_SECTION_ID, headerWidget.sectionId);
+        }
+
+        // 页头 widget 不得同时挂进页面 section（重复归属会让同一实例被两处渲染）
+        WorkshopSection section = findSection(page(module, pageId), sectionId);
+        Assert.assertNotNull(section);
+        Assert.assertEquals("section 内应只剩本来那 1 个 widget",
+                1, section.widgets.size());
+        Assert.assertEquals("Widget 1", section.widgets.get(0).identityValue());
+
+        // 反复重建保持幂等（旧实现会重复 append）
+        for (int i = 0; i < 5; i++) {
+            WorkshopModule.invalidateWorkshopData(domain, moduleName);
+            module.ensureWorkshopData(domain, moduleName);
+            Assert.assertEquals(2, module.headerWidgets.size());
+        }
+
+        // 删除一个 → 文件消失、列表收缩
+        widgetStore.delete(PLUGIN_CONTEXT, Optional.empty(), "Header Widget A");
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertEquals(1, module.headerWidgets.size());
+        Assert.assertEquals("Header Widget B", module.headerWidgets.get(0).identityValue());
+        Assert.assertFalse("删除后文件必须真的没了",
+                widgetStore.getEntityFile("Header Widget A").isFile());
+
+        // 全部删除 → 空列表（整体赋值，不是保留旧引用）
+        widgetStore.delete(PLUGIN_CONTEXT, Optional.empty(), "Header Widget B");
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertTrue("页头 widget 全部删除后列表应清空", module.headerWidgets.isEmpty());
+    }
+
+    /**
+     * 页头配置是 1:1 且独立落盘：未配置时回落 {@code visible = true} 的默认 header，
+     * 而不是 null —— 前端两个容器都要求非空才渲染页头。
+     */
+    @Test
+    public void testHeaderFallsBackToVisibleDefault() {
+        WorkshopModule module = newModule();
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertNotNull("未配置过的模块也必须拿到 header（null 会让页头整块不渲染）",
+                module.header);
+        Assert.assertEquals("新建模块的页头默认可见（与 Palantir 行为一致）",
+                Boolean.TRUE, module.header.visible);
+        Assert.assertEquals("header 的 identity 恒为模块名", moduleName, module.header.identityValue());
+    }
+
+    /**
+     * 页头配置真的落盘到 {@code header/{moduleName}.xml}，且模块快照随之重建。
+     *
+     * <p>这条钉的是「页头配置面板改了不生效/刷新就丢」那类静默失效：写路径没接上时
+     * 保存接口返回成功、配置文件根本不存在，前端下一次 GET 拿到的还是默认页头。
+     */
+    @Test
+    public void testHeaderSavePersistsAndReloads() {
+        WorkshopModule module = newModule();
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertEquals(Boolean.TRUE, module.header.visible);
+
+        WorkshopHeader header = module.header;
+        header.visible = false;
+        header.title = "销售看板";
+        header.backgroundColor = new InputColor("#1677ff");
+        VerticalOrientation vertical = new VerticalOrientation();
+        vertical.width = 240;
+        CollapsibleConfig collapse = new CollapsibleConfig();
+        collapse.collapsedByDefault = true;
+        // 折叠配置已迁入垂直方向的载荷（WorkshopHeader 顶层的 collapseConfig 已删）
+        vertical.collapseConfig = collapse;
+        header.orientation = vertical;
+
+        WorkshopHeader.save(PLUGIN_CONTEXT, Optional.empty(), domain, moduleName, header);
+
+        File headerFile = WorkshopHeaderStore.create(domain, moduleName).getHeaderFile();
+        Assert.assertTrue("header 应落在 " + headerFile.getAbsolutePath(), headerFile.isFile());
+
+        // 同一模块实例：写侧 invalidate 之后必须重建，否则配置面板读到的是旧对象
+        module.ensureWorkshopData(domain, moduleName);
+        Assert.assertEquals("保存后模块快照必须重建", Boolean.FALSE, module.header.visible);
+        Assert.assertEquals("销售看板", module.header.title);
+
+        // 全新实例：从磁盘读回，多态子类与载荷都不能丢（XStream 不走字段初始化器）
+        WorkshopModule fresh = newModule();
+        fresh.ensureWorkshopData(domain, moduleName);
+        Assert.assertEquals(Boolean.FALSE, fresh.header.visible);
+        Assert.assertEquals("销售看板", fresh.header.title);
+        Assert.assertEquals("#1677ff", fresh.header.backgroundColor.getValue());
+        Assert.assertEquals("方向子类必须按 FQCN 落盘/读回",
+                VerticalOrientation.class, fresh.header.orientation.getClass());
+        Assert.assertEquals(Integer.valueOf(240),
+                ((VerticalOrientation) fresh.header.orientation).width);
+        // 折叠配置随垂直方向的载荷一起落盘/读回（三层嵌套 XStream 同样不能丢）
+        VerticalOrientation freshVertical = (VerticalOrientation) fresh.header.orientation;
+        Assert.assertEquals(CollapsibleConfig.class, freshVertical.collapseConfig.getClass());
+        Assert.assertTrue(((CollapsibleConfig) freshVertical.collapseConfig).collapsedByDefault);
+
+        // 1:1 覆盖写：不存在第二个文件，且 id 恒为模块名（不采信表单里的值）
+        File[] files = Objects.requireNonNull(headerFile.getParentFile().listFiles());
+        Assert.assertEquals("header 是 1:1 存储，只应有一个文件", 1, files.length);
+        Assert.assertEquals(moduleName, fresh.header.identityValue());
+    }
+
+    /**
      * 有 domain 时 unmarshal 即回填（readResolve 被 XStream 调用）。
      * <p>
      * 依赖 TIS 运行期（子实体 store 走 {@code TIS.getPluginStore}），环境不具备时跳过。
@@ -353,6 +496,16 @@ public class WorkshopModuleReloadTest {
         widget.id = id;
         widget.title = id;
         widget.sectionId = sectionId;
+        return widget;
+    }
+
+    /** 页头 widget：sectionId 取哨兵，序号由调用方指定（用于验证回填时的排序） */
+    private static WorkshopWidget headerWidget(String id, int sortOrder) {
+        TextInputWidget widget = new TextInputWidget();
+        widget.id = id;
+        widget.title = id;
+        widget.sectionId = WorkshopWidget.HEADER_SECTION_ID;
+        widget.sortOrder = sortOrder;
         return widget;
     }
 

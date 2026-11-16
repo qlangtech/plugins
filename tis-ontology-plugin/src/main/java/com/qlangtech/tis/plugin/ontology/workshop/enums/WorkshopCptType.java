@@ -7,5 +7,5 @@ package com.qlangtech.tis.plugin.ontology.workshop.enums;
  * @date 2026/11/1
  */
 public enum WorkshopCptType {
-    Section, Widget, Overlay, Variable, WidgetDisplayConfig, Page
+    Section, Widget, Overlay, Variable, WidgetDisplayConfig, Header, Page
 }

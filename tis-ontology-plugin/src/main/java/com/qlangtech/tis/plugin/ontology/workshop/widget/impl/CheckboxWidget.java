@@ -53,7 +53,7 @@ public class CheckboxWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_CHECKED_VAR, WidgetOptionHelper::getBooleanVariableOptions);
+            this.registerSelectOptions(KEY_CHECKED_VAR, WidgetOptionHelper.getBooleanVariableOptions());
         }
 
         @Override

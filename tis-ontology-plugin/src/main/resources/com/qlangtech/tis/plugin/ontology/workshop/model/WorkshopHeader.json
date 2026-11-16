@@ -15,13 +15,12 @@
   },
   "orientation": {
     "label": "方向",
-    "help": "头部的排布方向：水平顶栏、垂直侧栏。各自的高度/宽度在选中后于下方出现",
+    "help": "头部的排布方向：水平顶栏、垂直侧栏。各自的载荷（高度/宽度/折叠配置）在选中后于下方出现",
     "dftVal": "Horizontal"
   },
-  "collapseConfig": {
-    "label": "折叠配置",
-    "help": "头部是否可折叠；选择「off」表示不可折叠",
-    "dftVal": "off"
+  "logoConfig": {
+    "label": "应用 Logo",
+    "help": "页头显示的应用 Logo：图标 / 图片二选一；不选择表示不显示"
   },
   "backgroundColor": {
     "label": "背景颜色",

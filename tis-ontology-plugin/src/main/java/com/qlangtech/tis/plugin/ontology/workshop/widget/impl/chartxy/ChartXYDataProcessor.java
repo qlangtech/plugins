@@ -8,7 +8,6 @@ import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationNotSupportedException;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
-import com.qlangtech.tis.plugin.ontology.aggregation.TimeGranularity;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilders;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig;
@@ -18,13 +17,11 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.SeriesConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.TemporalBucketing;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.XAxisBucketing;
+import com.qlangtech.tis.plugin.ontology.workshop.model.XAxisBucketing.BucketKey;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.ChartXYWidget;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -65,12 +62,15 @@ import java.util.Objects;
  *       "type": "bar" | "line" | "scatter",
  *       "truncated": false,
  *       "series": [
- *         {"name": "系列名", "points": [{"x": "2026-10-01T00:00:00", "y": 12, "segment": null}]}
+ *         {"name": "系列名", "points": [{"x": "2026-10-01", "y": 12, "segment": null}]}
  *       ]
  *     }
  *   ]
  * }
  * </pre>
+ * 时间桶的 {@code x} 是<b>标签</b>，精度跟随分桶粒度（{@link TemporalBucketing#format}）：
+ * 天粒度是 {@code 2026-10-01}、月粒度是 {@code 2026-10}、季度是 {@code 2026-Q4}；
+ * 前端把它当不透明类目字符串直显，不做日期解析。
  * {@code truncated=true} 表示<b>分组数</b>超过上限、只返回了前 {@link #MAX_AGGREGATED_GROUPS} 组，
  * 前端应显式提示 —— 静默截断会让图表看起来「数据就这么点」。
  *
@@ -86,14 +86,6 @@ public final class ChartXYDataProcessor {
      * 桶数（{@link XAxisBucketing#MAX_LIMIT}），同时把内存 / 传输量稳稳压在数 MB 量级。
      */
     public static final int MAX_AGGREGATED_GROUPS = AggregationCriteria.DEFAULT_MAX_GROUPS;
-
-    /** 按天分桶的对齐基准（只用于还原桶起点）。 */
-    private static final LocalDateTime DAY_EPOCH = LocalDate.of(1970, 1, 1).atStartOfDay();
-
-    /** 按周分桶的对齐基准，取 1970-01-05（周一），与 SQL 侧的 {@code DATEDIFF(c, '1970-01-05')} 一致。 */
-    private static final LocalDateTime WEEK_EPOCH = LocalDate.of(1970, 1, 5).atStartOfDay();
-
-    private static final DateTimeFormatter TIME_LABEL = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     private ChartXYDataProcessor() {
     }
@@ -182,22 +174,22 @@ public final class ChartXYDataProcessor {
     static JSONArray assemble(AxisConfig xAxis, ChartLayer layer, List<SeriesConfig> seriesList,
                               List<ShapeRows> shapeRows) {
         // 每个 series 一份「x 桶 -> (segment -> 聚合值)」，按 series 原始下标存放
-        List<Map<XKey, Map<String, Object>>> allSeriesValues = new ArrayList<>(seriesList.size());
+        List<Map<BucketKey, Map<String, Object>>> allSeriesValues = new ArrayList<>(seriesList.size());
         for (int i = 0; i < seriesList.size(); i++) {
             allSeriesValues.add(new LinkedHashMap<>());
         }
         // x 桶的首次出现顺序，仅用于稳定遍历；真正顺序由 orderKeys 决定
-        Map<XKey, XKey> allKeys = new LinkedHashMap<>();
+        Map<BucketKey, BucketKey> allKeys = new LinkedHashMap<>();
         // 分类轴按值排序时的依据：同一 x 上所有 series 的绘制值之和（百分比归一之前）
-        Map<XKey, Double> xTotals = new HashMap<>();
+        Map<BucketKey, Double> xTotals = new HashMap<>();
 
         for (ShapeRows shapeRow : shapeRows) {
             AggregationPushdownPlanner.Shape shape = shapeRow.shape();
             for (AggregationPushdownPlanner.SeriesPlan plan : shape.seriesPlans()) {
-                Map<XKey, Map<String, Object>> seriesValues =
+                Map<BucketKey, Map<String, Object>> seriesValues =
                         toSeriesValues(layer, shape, plan, shapeRow.rows());
                 allSeriesValues.set(plan.seriesIndex(), seriesValues);
-                for (Map.Entry<XKey, Map<String, Object>> entry : seriesValues.entrySet()) {
+                for (Map.Entry<BucketKey, Map<String, Object>> entry : seriesValues.entrySet()) {
                     allKeys.putIfAbsent(entry.getKey(), entry.getKey());
                     xTotals.merge(entry.getKey(), totalOf(entry.getValue()), Double::sum);
                 }
@@ -207,7 +199,7 @@ public final class ChartXYDataProcessor {
             }
         }
 
-        List<XKey> orderedKeys = orderKeys(new ArrayList<>(allKeys.keySet()), xAxis, xTotals);
+        List<BucketKey> orderedKeys = orderKeys(new ArrayList<>(allKeys.keySet()), xAxis, xTotals);
         int limit = resolveLimit(layer.xAxisBucketing);
         if (orderedKeys.size() > limit) {
             orderedKeys = orderedKeys.subList(0, limit);
@@ -273,14 +265,14 @@ public final class ChartXYDataProcessor {
     // 聚合结果 → 每个 series 的 (x 桶 -> (segment -> 值))
     // ------------------------------------------------------------------
 
-    private static Map<XKey, Map<String, Object>> toSeriesValues(ChartLayer layer,
-                                                                AggregationPushdownPlanner.Shape shape,
-                                                                AggregationPushdownPlanner.SeriesPlan plan,
-                                                                List<RowMap> rows) {
+    private static Map<BucketKey, Map<String, Object>> toSeriesValues(ChartLayer layer,
+                                                                      AggregationPushdownPlanner.Shape shape,
+                                                                      AggregationPushdownPlanner.SeriesPlan plan,
+                                                                      List<RowMap> rows) {
         final String metricAlias = AggregationCriteria.metricAlias(plan.metricSlot());
-        Map<XKey, Map<String, Object>> seriesValues = new LinkedHashMap<>();
+        Map<BucketKey, Map<String, Object>> seriesValues = new LinkedHashMap<>();
         for (RowMap row : rows) {
-            XKey xKey = resolveXKey(layer, row.get(AggregationCriteria.GROUP_ALIAS));
+            BucketKey xKey = resolveXKey(layer, row.get(AggregationCriteria.GROUP_ALIAS));
             if (xKey == null) {
                 continue;
             }
@@ -293,55 +285,18 @@ public final class ChartXYDataProcessor {
     }
 
     /**
-     * 分桶键。{@code label} 是输出到前端的 x 值，同时是相等判据；{@code time} 非 null 时
-     * 表示这是时间桶，按它升序排。
-     */
-    private record XKey(String label, LocalDateTime time) {
-    }
-
-    /**
      * 聚合结果的分组值 → X 桶。
      *
-     * <p>时间分桶时 SQL 返回的是<b>对齐后的整数序号</b>，不是时间戳；这里用
-     * {@link #bucketStart} 还原桶起点。绝不能把序号交给「按 epoch 毫秒解析」的逻辑，
-     * 否则 20000 天会被解释成 1970-01-01 00:00:20。
+     * <p>分组值翻译成标签/排序键的规则，完全由分桶方式自己的
+     * {@link XAxisBucketing#format} 多态实现决定：时间分桶拿到的是对齐后的整数序号，
+     * 分类分桶拿到的是原始分组值，本方法只负责 null 兜底 —— null 分组是「缺口」，
+     * 跳过它保证不会画出 1970 的空桶。
      */
-    private static XKey resolveXKey(ChartLayer layer, Object rawGroup) {
+    private static BucketKey resolveXKey(ChartLayer layer, Object rawGroup) {
         if (rawGroup == null) {
             return null;
         }
-        if (layer.xAxisBucketing instanceof TemporalBucketing temporal) {
-            TimeGranularity granularity = temporal.granularity == null ? TimeGranularity.DAY : temporal.granularity;
-            int unitValue = temporal.unitValue == null || temporal.unitValue < 1 ? 1 : temporal.unitValue;
-            long alignedIndex = Math.floorDiv(((Number) rawGroup).longValue(), unitValue) * unitValue;
-            LocalDateTime bucket = bucketStart(granularity, alignedIndex);
-            return new XKey(bucket.format(TIME_LABEL), bucket);
-        }
-        return new XKey(stringify(rawGroup), null);
-    }
-
-    /**
-     * 由 SQL 返回的桶序号还原桶起点。
-     *
-     * <p>序号公式见 {@code MySqlAggregationSqlBuilder#renderGroupKey}：SQL 只返回
-     * {@code FLOOR(index/unit)*unit}，本方法负责把它翻译回日期。两边必须成对修改。
-     *
-     * <p>包级可见<b>为了可测</b>：这是 SQL 与 Java 之间唯一的语义接缝，
-     * 单测用黄金日期断言，不依赖旧的截断算法。
-     */
-    static LocalDateTime bucketStart(TimeGranularity granularity, long index) {
-        return switch (granularity) {
-            case YEAR -> LocalDateTime.of(Math.toIntExact(index), 1, 1, 0, 0);
-            case QUARTER -> LocalDateTime.of(Math.toIntExact(Math.floorDiv(index, 4)),
-                    Math.toIntExact(Math.floorMod(index, 4)) * 3 + 1, 1, 0, 0);
-            case MONTH -> LocalDateTime.of(Math.toIntExact(Math.floorDiv(index, 12)),
-                    Math.toIntExact(Math.floorMod(index, 12)) + 1, 1, 0, 0);
-            case WEEK -> WEEK_EPOCH.plusWeeks(index);
-            case DAY -> DAY_EPOCH.plusDays(index);
-            case HOUR -> DAY_EPOCH.plusHours(index);
-            case MINUTE -> DAY_EPOCH.plusMinutes(index);
-            case SECOND -> DAY_EPOCH.plusSeconds(index);
-        };
+        return layer.xAxisBucketing.format(rawGroup);
     }
 
     /**
@@ -374,10 +329,10 @@ public final class ChartXYDataProcessor {
     // 排序 / 百分比 / 输出
     // ------------------------------------------------------------------
 
-    private static List<XKey> orderKeys(List<XKey> keys, AxisConfig xAxis, Map<XKey, Double> xTotals) {
+    private static List<BucketKey> orderKeys(List<BucketKey> keys, AxisConfig xAxis, Map<BucketKey, Double> xTotals) {
         boolean temporal = keys.stream().anyMatch(k -> k.time() != null);
         if (temporal) {
-            keys.sort(Comparator.comparing(XKey::time));
+            keys.sort(Comparator.comparing(BucketKey::time));
             return keys;
         }
         CategoricalAxisConfig.CategoricalSortBy sortBy = resolveSortBy(xAxis);
@@ -385,12 +340,12 @@ public final class ChartXYDataProcessor {
             // 排序键相同时按 label 字典序兜底：多个 shape 的返回顺序不保证一致，
             // 没有 tie-break 时同值桶的相对顺序会随查询结果抖动。
             case VALUE_ASCENDING -> keys.sort(Comparator
-                    .comparingDouble((XKey k) -> xTotals.getOrDefault(k, 0d))
-                    .thenComparing(XKey::label));
+                    .comparingDouble((BucketKey k) -> xTotals.getOrDefault(k, 0d))
+                    .thenComparing(BucketKey::label));
             case VALUE_DESCENDING -> keys.sort(Comparator
-                    .comparingDouble((XKey k) -> xTotals.getOrDefault(k, 0d)).reversed()
-                    .thenComparing(XKey::label));
-            case KEY_ASCENDING -> keys.sort(Comparator.comparing(XKey::label));
+                    .comparingDouble((BucketKey k) -> xTotals.getOrDefault(k, 0d)).reversed()
+                    .thenComparing(BucketKey::label));
+            case KEY_ASCENDING -> keys.sort(Comparator.comparing(BucketKey::label));
             default -> throw new IllegalStateException("illegal categorical sortBy:" + sortBy);
         }
         return keys;
@@ -412,14 +367,14 @@ public final class ChartXYDataProcessor {
     }
 
     private static JSONArray toJSON(List<SeriesConfig> seriesList,
-                                    List<Map<XKey, Map<String, Object>>> allSeriesValues,
-                                    List<XKey> orderedKeys) {
+                                    List<Map<BucketKey, Map<String, Object>>> allSeriesValues,
+                                    List<BucketKey> orderedKeys) {
         JSONArray result = new JSONArray();
         for (int i = 0; i < seriesList.size(); i++) {
             SeriesConfig series = seriesList.get(i);
-            Map<XKey, Map<String, Object>> seriesValues = allSeriesValues.get(i);
+            Map<BucketKey, Map<String, Object>> seriesValues = allSeriesValues.get(i);
             JSONArray points = new JSONArray();
-            for (XKey key : orderedKeys) {
+            for (BucketKey key : orderedKeys) {
                 Map<String, Object> segmentValues = seriesValues.get(key);
                 if (segmentValues == null) {
                     continue;
@@ -448,7 +403,7 @@ public final class ChartXYDataProcessor {
      * <p>除数为 0 时输出 {@code null} 而不是 {@code NaN} —— JSON 没有 NaN，
      * fastjson 会把它写成 null 或抛错，取决于版本，都不该由前端去猜。
      */
-    private static void applyPercentage(Map<XKey, Map<String, Object>> seriesValues) {
+    private static void applyPercentage(Map<BucketKey, Map<String, Object>> seriesValues) {
         for (Map<String, Object> segmentValues : seriesValues.values()) {
             double sum = 0d;
             boolean hasValue = false;

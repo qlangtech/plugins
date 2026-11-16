@@ -61,7 +61,7 @@ public class DefaultObjectSelection extends ObjectSelection {
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
         }
 
         @Override

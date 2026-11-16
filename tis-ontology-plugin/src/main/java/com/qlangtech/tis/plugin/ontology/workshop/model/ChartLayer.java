@@ -201,7 +201,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
             // 候选值：当前 Module 中「对象集合定义」型的变量名（ExternalInput 型没有查询语义）
             // 先例：ObjectTableWidget.objectSetVar 注册的是同一个供给方
             this.registerSelectOptions(KEY_DATA_SOURCE_VAR,
-                    WidgetOptionHelper::getObjectSetSourceVariableOptions);
+                    WidgetOptionHelper.getObjectSetSourceVariableOptions());
 
             // 级联属性字段：初始为空（未选 dataSourceVar 时无候选）。
             // 必须注册：SELECTABLE 字段未注册会让 DescriptorsJSON.getSelectOptions 直接抛异常，
@@ -233,7 +233,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
             // 候选值：当前 Module 中类型为「对象集合过滤器」的变量名
             // 先例：FilterListWidget.filterOutputVar 注册的是同一个供给方
             this.registerSelectOptions(KEY_SELECTION_AS_FILTER_VAR,
-                    WidgetOptionHelper::getObjectSetFilterVariableOptions);
+                    WidgetOptionHelper.getObjectSetFilterVariableOptions());
         }
 
         @Override

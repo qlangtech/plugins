@@ -72,8 +72,14 @@ public class ConditionalVisibility extends ConditionalVisibilityConfig {
      * {@code button-group.component.ts} 已在读的 {@code stateIfFalse} 逐字一致。
      * 反转型配置无任何使用方（{@code hideWhenFalse=false} 在全仓无赋值点），故直接移除。
      *
-     * <p>对 Section / Widget 这类没有「禁用」形态的宿主，{@link StateIfFalse#disabled}
-     * 一律按 {@link StateIfFalse#hidden} 处理。
+     * <p>两种呈现都由<b>前端</b>实现，后端不参与求值：
+     * <ul>
+     *   <li>Widget —— 由投放区的条件可见性闸门统一处理（{@code widget-visibility-gate}）：
+     *       {@code hidden} 整个不渲染，{@code disabled} 渲染但加 {@code inert} + 变暗；</li>
+     *   <li>Section —— 没有「禁用」形态，{@link StateIfFalse#disabled} 按
+     *       {@link StateIfFalse#hidden} 之外处理（即仍然显示）。分区若置灰，用户就没有入口
+     *       去改它的条件，故两侧口径**有意不一致**。</li>
+     * </ul>
      */
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public StateIfFalse stateIfFalse = StateIfFalse.hidden;

@@ -238,7 +238,7 @@ public class EnableChatBI extends OntologyDomainManipulate implements ChatBIServ
     public static final class DftDesc extends OntologyDomainManipulate.BasicDesc implements DescriptorUseableShortComment {
         public DftDesc() {
             super();
-            this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider::getExistProviders);
+            this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider.getExistProviders());
         }
 
         @Override

@@ -64,7 +64,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,6 +91,7 @@ import static com.qlangtech.tis.plugin.ontology.OntologyDomain.getOntologyDomain
  * @see WorkshopWidget
  * @see WorkshopOverlay
  * @see WorkshopVariable
+ * @see WorkshopHeader
  */
 @SuppressWarnings("all")
 public final class WorkshopModule extends OntologyDomainManipulate implements IManipulateStatus //
@@ -139,11 +142,24 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
     public transient List<WorkshopVariable> variables = new ArrayList<>();
 
     /**
+     * 页头里的 widget（页头导航条 / 页头文字 / 页头按钮等）。
+     *
+     * <p>与 {@link #pages} 同为 {@code transient}：widget 实体本身落盘在
+     * {@code widgets/{id}.xml}，页头归属由 {@code sectionId = WorkshopWidget.HEADER_SECTION_ID}
+     * 这个哨兵表达，加载时由 {@code loadLayout} 过滤出来整体赋给本字段。
+     *
+     * <p><b>绝不放进 {@code header.vals}</b>：{@code header-update} 的 {@code toPostBody}
+     * 会把数组误包成 {@code {_primaryVal: [...]}}，还会连带把标题 / 背景色写坏
+     * （见 {@code models/module.model.ts} 的同名注释）。
+     */
+    public transient List<WorkshopWidget> headerWidgets = new ArrayList<>();
+
+    /**
      * 模块级页头配置（标题 / 方向 / 折叠等）。
      * <p>
-     * 与 module 是 1:1，由 { WorkshopHeaderStore} 独立落盘
-     * （{@code ontology/{domain}/workshop_headers/{moduleName}.xml}），
-     * 不随模块 XML 走，理由见 { WorkshopHeaderStore} 类注释。
+     * 与 module 是 1:1，由 {@link com.qlangtech.tis.plugin.ontology.workshop.store.WorkshopHeaderStore}
+     * 独立落盘（{@code ontology/{domain}/workshop/{moduleName}/header/{moduleName}.xml}），
+     * 不随模块 XML 走，理由见该类的类注释。
      * 前端配置入口在 Workshop 编辑器的 Layout 面板（对标 Palantir 的 Header 面板）。
      */
     public transient WorkshopHeader header;
@@ -379,28 +395,37 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             }
         }
 
-        // widget 同样先按 sectionId 归到本地桶，再整体赋给 section.widgets
+        // widget 同样先按 sectionId 归到本地桶，再整体赋给 section.widgets。
+        // 页头 widget 的 sectionId 是哨兵（不属于任何 section），单独收进 headerWidgets ——
+        // 不能落进下面「未知 section 丢弃」那个分支，否则刷新后页头 widget 全部消失。
         Map<String, List<WorkshopWidget>> widgetsBySectionId = new LinkedHashMap<>();
+        List<WorkshopWidget> headerWidgets = new ArrayList<>();
         for (WorkshopWidget widget : WorkshopWidgetStore.create(ontologyDomain, moduleName).listAll()) {
+            if (WorkshopWidget.HEADER_SECTION_ID.equals(widget.sectionId)) {
+                headerWidgets.add(widget);
+                continue;
+            }
             if (widget.sectionId == null || !sectionsById.containsKey(widget.sectionId)) {
                 continue;
             }
             widgetsBySectionId.computeIfAbsent(widget.sectionId, k -> new ArrayList<>()).add(widget);
         }
+        headerWidgets.sort(Comparator.comparingInt(w -> w.sortOrder == null ? 0 : w.sortOrder));
 
         // 显示配置是独立实体（widgets/{id}_display.xml）：一次性扫目录建索引再按 widgetId 挂回去，
         // 避免逐 widget 一次文件存在性检查 + 解析。没配置过的 widget 对应 null。
         // 索引键是显示配置实例上的 widgetId（identity），与 widget 侧的 identityValue 同一口径。
         Map<String, AbstractWidgetDisplayConfig> displaysByWidgetId =
                 WorkshopWidgetDisplayStore.create(ontologyDomain, moduleName).listAllByWidgetId();
-        for (List<WorkshopWidget> sectionWidgets : widgetsBySectionId.values()) {
-            for (WorkshopWidget widget : sectionWidgets) {
-                AbstractWidgetDisplayConfig loaded = displaysByWidgetId.get(widget.identityValue());
-                // configClazzOf 要查一次 descriptor，没配过 Display 的 widget 不必查
-                if (loaded != null) {
-                    widget.display = reconcileDisplay(
-                            AbstractWidgetDisplayConfig.configClazzOf(widget), loaded);
-                }
+        // 页头 widget 与 section 内 widget 走同一套显示配置回填
+        List<WorkshopWidget> allWidgets = new ArrayList<>(headerWidgets);
+        widgetsBySectionId.values().forEach(allWidgets::addAll);
+        for (WorkshopWidget widget : allWidgets) {
+            AbstractWidgetDisplayConfig loaded = displaysByWidgetId.get(widget.identityValue());
+            // configClazzOf 要查一次 descriptor，没配过 Display 的 widget 不必查
+            if (loaded != null) {
+                widget.display = reconcileDisplay(
+                        AbstractWidgetDisplayConfig.configClazzOf(widget), loaded);
             }
         }
 
@@ -436,6 +461,10 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             overlay.sections = sectionsByOverlayId.getOrDefault(overlay.identityValue(), new ArrayList<>());
             overlay.normalizeSectionOrder();
         }
+
+        normalizeWidgetConditionalVisibility(headerWidgets);
+        // 同样整体赋值：headerWidgets 与 pages/overlays 一样是加载期回填的内存视图
+        module.headerWidgets = headerWidgets;
     }
 
     private static void normalizeSections(List<WorkshopSection> sections, WorkshopCptParentId parent) {
@@ -658,6 +687,18 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
      * 快照里的 widget 数组键名
      */
     public static final String KEY_WIDGETS = "widgets";
+    /**
+     * 快照里的<b>页头</b> widget 数组键名。
+     *
+     * <p>单独成段而不是并进 {@link #KEY_WIDGETS}：页头 widget 的 {@code sectionId} 是哨兵
+     * （{@link WorkshopWidget#HEADER_SECTION_ID}），与 section 内 widget 的归属校验规则不同
+     * （{@code parseWidgets} 要求 sectionId 是已知 section）。分成两段，两条解析路径各自
+     * 只做自己能做的校验，不用在一个方法里分支。
+     *
+     * <p>实体本身依旧落在 {@code widgets/{id}.xml}，两段的 id 在同一个命名空间里（
+     * {@code knownWidgetIds} 覆盖两者），因此不可能出现「同一 id 既属于页头又属于某 section」。
+     */
+    public static final String KEY_HEADER_WIDGETS = "headerWidgets";
     public static final String KEY_WIDGETS_DESC = "widgetsDesc";
     /**
      * section 的父容器信封字段（不是 {@code @FormField}，故与 {@code vals} 平级）
@@ -777,18 +818,22 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
      * 无需改动 tis-console 抽象层的 OntologyAction。
      * <p>
      * 支持的 type 值：get | list | update | delete | module-apply | module-save |
-     * page-get | page-list | header-get | header-update
+     * page-get | page-list | header-get | header-update |
+     * variable_get | variable_list | variable_delete
+     * <p>
+     * 注意模块族操作（get / list / update / delete / page-* / header-* / module-*）
+     * 读模块名的参数键是 {@code name}；变量族操作（variable-*）沿用
+     * {@link WorkshopVariable#PARAM_MODULE_NAME}（键为 {@code workshop}）。
      * <p>
      * 使用方式（前端 URL）：
      * <pre>
      * POST /coredefine/corenodemanage.ajax
      *   ?event_submit_do_description_process=y
      *   &amp;action=plugin_action
-     *   &amp;impl=com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopModuleOperationDesc$DftDesc
-     *   &amp;type=create | get | list | update | delete
+     *   &amp;impl=com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule
+     *   &amp;type=get | list | update | delete | page-get | ... | variable_list | ...
      *   &amp;ontologyDomainId={domainId}
      *   &amp;name={moduleName}
-     *   &amp;description={description}
      * </pre>
      *
      * @see com.qlangtech.tis.extension.Descriptor#httpProcess(IControlMsgHandler, IPluginContext, Context)
@@ -855,6 +900,16 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                         break;
                     case "header-update":
                         doHeaderUpdate(msgHandler, pluginContext, context);
+                        break;
+                    // 变量端点：自 WorkshopVariableOperation.DefaultDescriptor 迁入，type 加 variable_ 前缀
+                    case "variable_get":
+                        doVariableGet(msgHandler, pluginContext, context);
+                        break;
+                    case "variable_list":
+                        doVariableList(msgHandler, pluginContext, context);
+                        break;
+                    case "variable_delete":
+                        doVariableDelete(msgHandler, pluginContext, context);
                         break;
                     default:
                         pluginContext.addErrorMessage(context, "Unsupported workshop module operation type: " + type);
@@ -1024,6 +1079,15 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             }
             moduleJson.put(KEY_SECTIONS, sectionsJson);
             moduleJson.put(KEY_WIDGETS, widgetsJson);
+
+            // 页头 widget 单独成段（信封 sectionId 是哨兵）。漏下发的话前端拿不到它们，
+            // 下一次保存时 headerWidgets 段为空，等于把用户的页头导航条静默删掉。
+            // 它们的 descriptor 并入同一个 KEY_WIDGETS_DESC —— 前端只维护一份「类型 → 完整表单定义」。
+            JSONArray headerWidgetsJson = new JSONArray();
+            appendWidgetListJSON(module.headerWidgets, WorkshopWidget.HEADER_SECTION_ID,
+                    headerWidgetsJson, widgetDescs);
+            moduleJson.put(KEY_HEADER_WIDGETS, headerWidgetsJson);
+
             if (!widgetDescs.isEmpty()) {
                 moduleJson.put(KEY_WIDGETS_DESC,
                         new DefaultDescriptorsJSON(Lists.newArrayList(widgetDescs)).getDescriptorsJSON());
@@ -1041,7 +1105,23 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             if (section.widgets == null) {
                 return;
             }
-            for (WorkshopWidget widget : section.widgets) {
+            appendWidgetListJSON(section.widgets, section.identityValue(), widgetsJson, widgetDescs);
+        }
+
+        /**
+         * 把一批 widget 投影成 GET 形态 JSON —— section 内与页头共用（差别只有信封
+         * {@code sectionId}：前者是 section 自己的 id，后者是哨兵）。
+         *
+         * @param envelopeSectionId 写进信封 {@link #KEY_SECTION_ID} 的值
+         * @param widgetDescs       顺带收集这些 widget 用到的 descriptor，供 {@link #KEY_WIDGETS_DESC} 下发
+         */
+        private static void appendWidgetListJSON(List<WorkshopWidget> widgets, String envelopeSectionId,
+                                                 JSONArray widgetsJson, Set<Descriptor> widgetDescs)
+                throws Exception {
+            if (widgets == null) {
+                return;
+            }
+            for (WorkshopWidget widget : widgets) {
                 JSONObject widgetJson = widgetToJSON(widget);
                 // getDescriptor() 找不到时返回 null（插件被卸载/迁移的存量 widget）。
                 // 收集进来会让 DefaultDescriptorsJSON 在构造时 NPE，整个模块 GET 直接 500 ——
@@ -1050,7 +1130,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                 if (widgetDesc != null) {
                     widgetDescs.add(widgetDesc);
                 }
-                widgetJson.put(KEY_SECTION_ID, widget.sectionId);
+                // 归属以「实际挂载位置」为准，不采信 widget.sectionId：两者在正常数据上一致，
+                // 而信封写错了会让前端把 widget 挂到错误的父容器下（且下一次保存原样回传）。
+                widgetJson.put(KEY_SECTION_ID, envelopeSectionId);
                 if (widget.display != null) {
                     // ⚠️ 这段**不是**上一行 `widgetToJSON()` 的重复：那行只序列化 widget 的
                     // `@FormField`（id / title / conditionalVisibility + 各子类字段），而显示
@@ -1288,6 +1370,11 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                     snapshot.getJSONArray(KEY_WIDGETS), collectSectionIds(sections), false);
             normalizeWidgetOrder(widgets);
 
+            // 页头段：sectionId 一律归一成哨兵。数组顺序即页头内顺序。
+            List<WorkshopWidget> headerWidgets = parseHeaderWidgets(msgHandler, context,
+                    snapshot.getJSONArray(KEY_HEADER_WIDGETS));
+            normalizeWidgetOrder(headerWidgets);
+
             // ---- 写盘 ----
             WorkshopPageStore pageStore = WorkshopPageStore.create(ontologyDomainId, moduleName);
             Set<String> removedPages = pageStore.replaceAll(pluginContext, Optional.of(context), pages);
@@ -1304,12 +1391,17 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                     .deleteNotIn(identities(sections));
 
             persistEntities(widgets, selfManagementMeta, pluginContext, context);
+            persistEntities(headerWidgets, selfManagementMeta, pluginContext, context);
+            // 差集删除必须按「section 内 + 页头」的并集算：只传 widgets 会把页头 widget 全删掉
+            Set<String> allWidgetIds = new HashSet<>(identities(widgets));
+            allWidgetIds.addAll(identities(headerWidgets));
             Set<String> removedWidgets = WorkshopWidgetStore.create(ontologyDomainId, moduleName)
-                    .deleteNotIn(identities(widgets));
+                    .deleteNotIn(allWidgetIds);
 
             // 显示配置是独立实体：先写本轮带了 displayConfig 的，再把随 widget 一起消失的清掉
             WorkshopWidgetDisplayStore displayStore = WorkshopWidgetDisplayStore.create(ontologyDomainId, moduleName);
             persistWidgetDisplays(displayStore, pluginContext, context, widgets);
+            persistWidgetDisplays(displayStore, pluginContext, context, headerWidgets);
             for (String removedWidgetId : removedWidgets) {
                 displayStore.delete(pluginContext, Optional.of(context), removedWidgetId);
             }
@@ -1326,6 +1418,7 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             result.put(KEY_OVERLAYS + "Count", overlays.size());
             result.put(KEY_SECTIONS + "Count", sections.size());
             result.put(KEY_WIDGETS + "Count", widgets.size());
+            result.put(KEY_HEADER_WIDGETS + "Count", headerWidgets.size());
             result.put("removed" + StringUtils.capitalize(KEY_OVERLAYS), removedOverlays.size());
             result.put("removed" + StringUtils.capitalize(KEY_SECTIONS), removedSections.size());
             result.put("removed" + StringUtils.capitalize(KEY_WIDGETS), removedWidgets.size());
@@ -1396,11 +1489,22 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                     readUpserts(widgetsDelta), knownSectionIds, true);
             Set<String> widgetDeletes = readDeletes(widgetsDelta);
 
+            // 页头段：与 section 内 widget 共用同一个 widget id 命名空间（knownWidgetIds），
+            // 因此页头段的 upserts / deletes 直接并进上面那两套校验，不另设 known 集合。
+            JSONObject headerWidgetsDelta = delta.getJSONObject(KEY_HEADER_WIDGETS);
+            List<WorkshopWidget> headerWidgetUpserts = parseHeaderWidgets(msgHandler, context,
+                    readUpserts(headerWidgetsDelta));
+            Set<String> headerWidgetDeletes = readDeletes(headerWidgetsDelta);
+
             // ---- 校验（全部在写盘之前） ----
             Set<String> pageUpsertIds = identities(pageUpserts);
             Set<String> overlayUpsertIds = identities(overlayUpserts);
             Set<String> sectionUpsertIds = identities(sectionUpserts);
             Set<String> widgetUpsertIds = identities(widgetUpserts);
+            widgetUpsertIds.addAll(identities(headerWidgetUpserts));
+            // 两段的 deletes 各自校验之后合并，避免「同一 id 在两段里各删一次」
+            Set<String> allWidgetDeletes = new HashSet<>(widgetDeletes);
+            allWidgetDeletes.addAll(headerWidgetDeletes);
 
             assertUpsertsKnown(pageUpsertIds, knownPageIds, "page");
             assertUpsertsKnown(overlayUpsertIds, knownOverlayIds, "overlay");
@@ -1410,7 +1514,11 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             assertDeletesValid(pageDeletes, pageUpsertIds, knownPageIds, "page");
             assertDeletesValid(overlayDeletes, overlayUpsertIds, knownOverlayIds, "overlay");
             assertDeletesValid(sectionDeletes, sectionUpsertIds, knownSectionIds, "section");
-            assertDeletesValid(widgetDeletes, widgetUpsertIds, knownWidgetIds, "widget");
+            assertDeletesValid(allWidgetDeletes, widgetUpsertIds, knownWidgetIds, "widget");
+
+            // routeId 是 URL 里的页面段，必须模块内唯一。增量只带 upserts，未变的页面不在
+            // 数组里，所以这里要并上磁盘存量再查（见 assertUniqueRouteIdsAfterApply 的注释）。
+            assertUniqueRouteIdsAfterApply(ontologyDomainId, moduleName, pageUpserts, pageDeletes);
 
             // 子分区随父 section 落盘：它们的 id 也必须在 knownSectionIds 里，
             // 否则该父 section 下的 widget 归属会悬空。
@@ -1442,15 +1550,15 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             for (String sectionId : sectionDeletes) {
                 sectionStore.getEntityFile(sectionId);
             }
-            for (String widgetId : widgetDeletes) {
+            for (String widgetId : allWidgetDeletes) {
                 widgetStore.getEntityFile(widgetId);
             }
 
             // 只有发生删除时才做孤儿检查：把「客户端漏发子实体 delete」暴露在写入之前。
             if (!pageDeletes.isEmpty() || !overlayDeletes.isEmpty()
-                    || !sectionDeletes.isEmpty() || !widgetDeletes.isEmpty()) {
+                    || !sectionDeletes.isEmpty() || !allWidgetDeletes.isEmpty()) {
                 assertNoOrphans(ontologyDomainId, moduleName, pageDeletes, overlayDeletes,
-                        sectionDeletes, widgetDeletes, sectionUpserts);
+                        sectionDeletes, allWidgetDeletes, sectionUpserts);
             }
 
             // ---- 写入：先 upsert（父 → 子），再 delete（子 → 父） ----
@@ -1463,12 +1571,14 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             persistEntities(overlayUpserts, selfManagementMeta, pluginContext, context);
             persistEntities(sectionUpserts, selfManagementMeta, pluginContext, context);
             persistEntities(widgetUpserts, selfManagementMeta, pluginContext, context);
+            persistEntities(headerWidgetUpserts, selfManagementMeta, pluginContext, context);
 
             // 显示配置是独立实体：只写本轮带了 displayConfig 的那些（未带 = 该 widget 没配过 Display）
             WorkshopWidgetDisplayStore displayStore = WorkshopWidgetDisplayStore.create(ontologyDomainId, moduleName);
             persistWidgetDisplays(displayStore, pluginContext, context, widgetUpserts);
+            persistWidgetDisplays(displayStore, pluginContext, context, headerWidgetUpserts);
 
-            for (String widgetId : widgetDeletes) {
+            for (String widgetId : allWidgetDeletes) {
                 // 先删子实体（display）再删父实体（widget），避免留下孤儿显示配置
                 displayStore.delete(pluginContext, Optional.of(context), widgetId);
                 widgetStore.delete(pluginContext, Optional.of(context), widgetId);
@@ -1489,9 +1599,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             JSONObject result = new JSONObject();
             result.put(IAjaxResult.KEY_SUCCESS, true);
             result.put("upserted", counts(pageUpserts.size(), overlayUpserts.size(),
-                    sectionUpserts.size(), widgetUpserts.size()));
+                    sectionUpserts.size(), widgetUpserts.size() + headerWidgetUpserts.size()));
             result.put("deleted", counts(pageDeletes.size(), overlayDeletes.size(),
-                    sectionDeletes.size(), widgetDeletes.size()));
+                    sectionDeletes.size(), allWidgetDeletes.size()));
             pluginContext.setBizResult(context, result);
         }
 
@@ -1889,6 +1999,44 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
         }
 
         /**
+         * 解析页头段的 widget —— 与 {@link #parseWidgets} 同形，差别只有归属：
+         * 页头 widget 不属于任何 section，{@code sectionId} 一律覆写成
+         * {@link WorkshopWidget#HEADER_SECTION_ID}，不采信前端传来的值。
+         *
+         * <p>前端可能压根不传 {@code sectionId}（页头 widget 在模型上没有 section 归属），
+         * 因此这里<b>不</b>做「空则抛」的检查 —— 空与哨兵等价，都归一成哨兵。
+         * 传了别的值则说明前后端契约错位，直接抛：静默覆写会把一个本该报错的缺陷
+         * 变成「widget 存到了意想不到的位置」。
+         */
+        private static List<WorkshopWidget> parseHeaderWidgets(IControlMsgHandler msgHandler, Context context,
+                                                               JSONArray widgetsJson) throws WorkshopFormParserException {
+            List<WorkshopWidget> widgets = new ArrayList<>();
+            if (widgetsJson == null) {
+                return widgets;
+            }
+            Set<String> names = new HashSet<>();
+            for (int i = 0; i < widgetsJson.size(); i++) {
+                JSONObject itemJson = widgetsJson.getJSONObject(i);
+                WorkshopWidget widget = parseEntity(msgHandler, context,
+                        itemJson, "headerWidget[" + i + "]", WorkshopWidget.class);
+                widget.sortOrder = readEnvelopeSortOrder(itemJson,
+                        "headerWidget[" + widget.identityValue() + "]");
+                String sectionId = StringUtils.trimToNull(itemJson.getString(KEY_SECTION_ID));
+                if (sectionId != null && !WorkshopWidget.HEADER_SECTION_ID.equals(sectionId)) {
+                    throw new IllegalStateException("headerWidget[" + widget.identityValue()
+                            + "] must not belong to section: " + sectionId);
+                }
+                widget.sectionId = WorkshopWidget.HEADER_SECTION_ID;
+                widget.display = parseWidgetDisplay(msgHandler, context, itemJson, widget);
+                if (!names.add(widget.identityValue())) {
+                    throw new IllegalStateException("duplicate header widget id: " + widget.identityValue());
+                }
+                widgets.add(widget);
+            }
+            return widgets;
+        }
+
+        /**
          * 解析 widget 信封里的显示配置；没带该键 ⇒ 返回 {@code null}（= 本次不改 Display）。
          *
          * <p>{@code impl} 由服务端算出（{@link AbstractWidgetDisplayConfig#configClazzOf}），
@@ -1984,14 +2132,74 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                         : readEnvelopeSortOrder(pageJson, "page[" + page.identityValue() + "]");
                 pages.add(page);
             }
+            // 本批内部先查一次：快照路径到此为止（全量）；
+            // delta 路径还要在 doApplyModule 里并上磁盘存量后再查（见该方法）。
+            assertUniqueRouteIds(pages);
             return pages;
+        }
+
+        /**
+         * {@code routeId} 在模块内必须唯一 —— 它是 URL 里的页面段，重号会让同一个链接
+         * 指向两页，且前端按首个匹配渲染，另一页永远打不开。
+         *
+         * <p>空值不参与（{@code routeId} 是可选字段）。框架的 {@code Validator} 只做单实例校验，
+         * 管不到跨实例冲突，因此两条保存路径都要各自调用本方法：
+         * <ul>
+         *   <li>快照路径（{@code module-save}）：数组即全量，{@link #parsePages} 里一次查完；</li>
+         *   <li>增量路径（{@code module-apply}）：数组只有 upserts，必须先并上磁盘存量再查。</li>
+         * </ul>
+         */
+        private static void assertUniqueRouteIds(Collection<WorkshopPage> pages) {
+            Map<String, String> routeIdByPageId = new LinkedHashMap<>();
+            for (WorkshopPage page : pages) {
+                routeIdByPageId.put(page.identityValue(), StringUtils.trimToNull(page.routeId));
+            }
+            assertNoDuplicateRouteIds(routeIdByPageId);
+        }
+
+        /**
+         * 增量路径的 routeId 唯一性校验：并上「磁盘存量 − 本轮删除 + 本轮 upsert」再查。
+         *
+         * <p>为什么不能只看 {@code pageUpserts}：{@code module-apply} 只提交变过的页面，
+         * 未变的页面根本不在数组里 —— 只查 upserts 会让「把第 2 页改成和第 1 页同一个
+         * routeId」静默通过，之后同一个 URL 段指向两页，前端按首个匹配渲染，另一页永远打不开。
+         */
+        private static void assertUniqueRouteIdsAfterApply(String ontologyDomainId, String moduleName,
+                                                           List<WorkshopPage> pageUpserts,
+                                                           Set<String> pageDeletes) {
+            Map<String, String> routeIdByPageId = new LinkedHashMap<>();
+            for (WorkshopPage existing : WorkshopPageStore.create(ontologyDomainId, moduleName).listAll()) {
+                if (pageDeletes.contains(existing.identityValue())) {
+                    continue;
+                }
+                routeIdByPageId.put(existing.identityValue(), StringUtils.trimToNull(existing.routeId));
+            }
+            // 按 pageId 覆盖：同页改掉 / 清空 routeId 时旧值随之消失，不会误判成重号
+            for (WorkshopPage upsert : pageUpserts) {
+                routeIdByPageId.put(upsert.identityValue(), StringUtils.trimToNull(upsert.routeId));
+            }
+            assertNoDuplicateRouteIds(routeIdByPageId);
+        }
+
+        /** @param routeIdByPageId pageId → routeId（可为 null，表示该页没有 URL 标识） */
+        private static void assertNoDuplicateRouteIds(Map<String, String> routeIdByPageId) {
+            Set<String> seen = new HashSet<>();
+            for (String routeId : routeIdByPageId.values()) {
+                if (routeId == null) {
+                    continue;
+                }
+                if (!seen.add(routeId)) {
+                    throw new IllegalStateException("duplicate page routeId '" + routeId
+                            + "' —— 页面 URL 标识在模块内必须唯一");
+                }
+            }
         }
 
         // ==================================================================
         //  WorkshopHeader（模块页头）
         //
         //  与 module 是 1:1，由 WorkshopHeaderStore 独立落盘
-        //  （ontology/{domain}/workshop_headers/{moduleName}.xml）。
+        //  （ontology/{domain}/workshop/{moduleName}/header/{moduleName}.xml）。
         //  前端配置入口在 Workshop 编辑器的 Layout 面板。
         // ==================================================================
 
@@ -2020,8 +2228,8 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
          * header-update: 覆盖式更新页头配置。
          *
          * <p>提交的是<b>整份</b> header 实例（{@code {impl, vals}} 形态），而不是字段 patch。
-         * 这不是偏好问题：{@code orientation} / {@code collapseConfig} 是聚合属性字段，
-         * 切换方向意味着换一个<b>子类</b>（丢掉 {@code HeightOrientation.height}、
+         * 这不是偏好问题：{@code orientation}（载荷里含折叠配置）等是聚合属性字段，
+         * 切换方向意味着换一个<b>子类</b>（丢掉 {@code HorizontalOrientation.height}、
          * 带上 {@code VerticalOrientation.width}），逐字段 patch 表达不了「换子类」这件事。
          *
          * <p>解析、校验与实例化统一交给 {@link WorkshopFormParser}（{@code AttrValMap} +
@@ -2081,6 +2289,9 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
             // 表现为「选的模板永远不生效」且不报任何错。
             pj.put("template", templateToJSON(page.template));
             pj.put("sortOrder", page.sortOrder != null ? page.sortOrder : 0);
+            // routeId 是 URL 寻址键（可选）。GET 响应是手写 JSON、不走 DescribableJSON，
+            // 漏写不会报错，只会让前端永远拿不到 —— 表现为「填了 URL 标识但链接仍是 UUID」。
+            pj.put("routeId", page.routeId);
             return pj;
         }
 
@@ -2094,6 +2305,100 @@ public final class WorkshopModule extends OntologyDomainManipulate implements IM
                 throw new RuntimeException("fail to serialize page template:"
                         + template.getClass().getName(), e);
             }
+        }
+
+        // ==================================================================
+        //  变量端点（自 WorkshopVariableOperation.DefaultDescriptor 迁入，type 加 variable_ 前缀）
+        // ==================================================================
+
+        /**
+         * 查询单个变量（type = variable_get）。
+         *
+         * <p>变量族的模块名参数键沿用 {@link WorkshopVariable#PARAM_MODULE_NAME}
+         * （键 {@code workshop}），与模块族操作读 {@code name} 不同。
+         */
+        private void doVariableGet(IControlMsgHandler msgHandler,
+                                   IPluginContext pluginContext,
+                                   Context context) throws Exception {
+            String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
+            String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
+            String variableName = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_NAME);
+
+            WorkshopVariable variable = createModuleService().getVariable(ontologyDomainId, moduleName, variableName);
+
+            JSONObject result = new JSONObject();
+            result.put(IAjaxResult.KEY_SUCCESS, true);
+            // service 层 getVariable 目前是无持久化的空壳（恒返回 null），不能让
+            // toVariableJSON(null) 抛 NPE——与前端 res.bizresult?.variable 的空值分支对齐
+            result.put("variable", variable == null ? null : WorkshopVariable.toVariableJSON(variable));
+            pluginContext.setBizResult(context, result);
+        }
+
+        /**
+         * 列出模块下的全部变量（type = variable_list）。
+         *
+         * <p>本端点现在<b>只服务「变量保存 / 删除之后的刷新」</b>：模块初始化时的变量列表
+         * 由模块 GET 一起下发（{@link #doGet}），面板不再单独请求一次。
+         * 两条链路共用 {@link WorkshopVariable#toVariableJSON}，故这里的逐项形态与模块
+         * payload 里的 {@code variables} 必须保持一致（含信封字段 {@code moduleId}）。
+         */
+        private void doVariableList(IControlMsgHandler msgHandler,
+                                    IPluginContext pluginContext,
+                                    Context context) throws Exception {
+            String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
+            String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
+
+            WorkshopModuleService svc = createModuleService();
+            List<WorkshopVariable> variables = svc.listVariables(ontologyDomainId, moduleName);
+
+            JSONArray variablesJson = new JSONArray();
+            if (!variables.isEmpty()) {
+                WorkshopModule module = svc.getModule(ontologyDomainId, moduleName);
+                // 与模块 GET 一致：信封里带的是模块的 UUID 主键，不是 moduleName。
+                // 只在确有变量时才加载模块 —— 空列表没有任何条目需要这个信封字段。
+                String moduleId = module == null ? null : module.getId();
+                for (WorkshopVariable variable : variables) {
+                    JSONObject vj = WorkshopVariable.toVariableJSON(variable);
+                    vj.put("moduleId", moduleId);
+                    variablesJson.add(vj);
+                }
+            }
+
+            JSONObject result = new JSONObject();
+            result.put(IAjaxResult.KEY_SUCCESS, true);
+            result.put("variables", variablesJson);
+            pluginContext.setBizResult(context, result);
+        }
+
+        /**
+         * 删除变量（type = variable_delete）。
+         *
+         * <p>落盘委托 {@link WorkshopModuleService#deleteVariable}：删除前先做存在性校验与
+         * 引用校验（被页面 / 浮层 / 页头组件 / 其他变量的配置引用时抛
+         * {@code IllegalStateException}，消息里列出全部引用位置，前端删除确认处展示）。
+         */
+        private void doVariableDelete(IControlMsgHandler msgHandler,
+                                      IPluginContext pluginContext,
+                                      Context context) throws Exception {
+            String ontologyDomainId = requireParam(msgHandler, WorkshopVariable.PARAM_ONTOLOGY_DOMAIN_ID);
+            String moduleName = requireParam(msgHandler, WorkshopVariable.PARAM_MODULE_NAME);
+            String variableName = requireParam(msgHandler, WorkshopVariable.PARAM_VARIABLE_NAME);
+
+            createModuleService().deleteVariable(pluginContext, Optional.of(context),
+                    ontologyDomainId, moduleName, variableName);
+
+            JSONObject result = new JSONObject();
+            result.put(IAjaxResult.KEY_SUCCESS, true);
+            result.put("message", "Workshop Variable 已删除");
+            pluginContext.setBizResult(context, result);
+        }
+
+        private static String requireParam(IControlMsgHandler msgHandler, String paramName) {
+            String val = msgHandler.getString(paramName);
+            if (StringUtils.isEmpty(val)) {
+                throw new IllegalStateException("param '" + paramName + "' can not be empty");
+            }
+            return val;
         }
 
         // ==================================================================

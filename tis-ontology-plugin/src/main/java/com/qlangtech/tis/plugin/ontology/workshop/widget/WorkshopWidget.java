@@ -108,6 +108,25 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, I
     protected static final String FIELD_CONDITIONAL_VISIBILITY = "conditionalVisibility";
 
     /**
+     * 页头 widget 的哨兵 {@link #sectionId}。
+     *
+     * <p>页头 widget 不属于任何 section，但 {@link #sectionId} 是必填的（
+     * {@link #beforeSaved} 空则抛，{@code WorkshopModule.parseWidgets} 也要求它是已知 section），
+     * 且加载时 {@code loadLayout} 会把 sectionId 查不到的 widget 静默丢弃。给页头一个显式哨兵
+     * 让同一个「子侧外键」机制原样承载页头归属，实体仍落在现有的 {@code widgets/{id}.xml}，
+     * 不新增目录也不新增 store。
+     *
+     * <p>不能改成「把页头 widget 塞进 {@code header.vals}」：{@code updateHeader} 的
+     * {@code toPostBody} 会把数组误包成 {@code {_primaryVal: [...]}}，还会连带搞坏
+     * 标题 / 背景色（见 {@code models/module.model.ts} 里 headerWidgets 的注释）。
+     *
+     * <p>取值带双下划线前缀，不会与任何 {@code Validator.identity} 允许的 UUID 撞车 ——
+     * 页面/分区 id 是前端生成的 UUID，用户自填的名称走 {@code pattern_identity}
+     * （不允许以 {@code _} 开头之外的字符集差异也保证了这一点）。
+     */
+    public static final String HEADER_SECTION_ID = "__header__";
+
+    /**
      * 组件 UUID（identity 字段），由前端创建 widget 时生成（{@code crypto.randomUUID()}），
      * <b>生命周期内不可变</b>；后端把它当不透明值原样持久化。表单里以 {@code readonly} 展示。
      *
@@ -155,6 +174,10 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, I
      * <p>
      * <b>XStream 不走字段初始化器</b>：旧 XML 没有该元素时反序列化出来是 {@code null}，
      * 由 {@code WorkshopModule.normalizeConditionalVisibility} 在加载后补 {@code off}。
+     * <p>
+     * 两种「条件为假」的呈现<b>都由前端实现</b>（后端不参与求值）：
+     * {@code hidden} 由投放区的条件可见性闸门整个不渲染，{@code disabled} 由同一道闸门加
+     * {@code inert} + 变暗（{@code widget-visibility-gate.component.ts}）。
      */
     @FormField(ordinal = 2, validate = {Validator.require})
     public ConditionalVisibilityConfig conditionalVisibility = new ConditionalVisibilityOff();
@@ -182,6 +205,9 @@ public abstract class WorkshopWidget implements IWorkshopWidget, Serializable, I
      * <p><b>不是表单字段</b>（没有 {@code @FormField}）：归属关系由服务端在保存 widget 时
      * 从请求参数赋值，不由用户编辑；XStream 会照常持久化普通字段。
      * 前端模型 {@code WorkshopWidget.sectionId} 与本字段逐字对应。
+     *
+     * <p>页头 widget 用哨兵值 {@link #HEADER_SECTION_ID} 表达归属 —— 它确实不属于任何
+     * section，但本字段又必填，哨兵让「同一套子侧外键机制」原样承载页头归属。
      */
     public String sectionId;
 

@@ -72,7 +72,7 @@ public class OntologyActionClickAction extends WidgetClickAction {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_ACTION_ID, WidgetOptionHelper::getOntologyActionOptions);
-            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_SELECTED_OBJECTS_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
         }
 
         @Override

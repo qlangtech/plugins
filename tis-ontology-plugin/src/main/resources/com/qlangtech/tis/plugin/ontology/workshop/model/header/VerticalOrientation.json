@@ -3,5 +3,10 @@
     "label": "宽度（像素）",
     "help": "侧栏的宽度，单位像素",
     "dftVal": 200
+  },
+  "collapseConfig": {
+    "label": "折叠配置",
+    "help": "侧栏是否可折叠；选择「off」表示不可折叠",
+    "dftVal": "off"
   }
 }

@@ -34,17 +34,23 @@ import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Selectable;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.qlangtech.tis.extension.Descriptor.getPluginFileName;
+import static com.qlangtech.tis.plugin.ontology.Ontology.ONTOLOGY;
+import static com.qlangtech.tis.plugin.ontology.OntologyDomain.NAME_ONTOLOGY_DOMAIN;
+import static com.qlangtech.tis.plugin.ontology.OntologyValueType.KEY_START_PERSISTENCE;
 import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper.KEY_WORKSHOP_MODULE_NAME;
 
 /**
@@ -108,10 +114,10 @@ import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptio
  * 文件里记录的是<b>具体子类</b>的类名，因此重命名或移动子类会让旧文件被静默跳过。
  *
  * <h3>变量自己的 HTTP 路由</h3>
- * CRUD 由 //{ com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc}
- * 承担。基类抽象之后不再有以 {@code WorkshopVariable} 为 {@code clazz} 的 descriptor
- * （{@code Descriptor.getId()} 返回的正是 {@code clazz} 的 FQCN），因此端点不能挂在本类的
- * descriptor 上，改为独立的一个描述符类，前端用它的 FQCN 作 {@code impl} 参数寻址。
+ * CRUD 收编在 {@code WorkshopModule.DefaultDescriptor.httpProcess}（本工程
+ * {@code ...workshop.WorkshopModule}），type 加 {@code variable_} 前缀
+ * （variable_get / variable_list / variable_delete），模块名参数键是
+ * {@link #PARAM_MODULE_NAME}（键 {@code workshop}）。
  *
  * @see com.qlangtech.tis.plugin.ontology.workshop.model.variable.StringVariable
  * @see BasicDescriptor
@@ -152,8 +158,8 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
             WorkshopVariable.class, //
             "workshop_variable", "workshop variablies", Selectable.Multi, false) {
         @Override
-        public Optional<IPluginStore<WorkshopVariable>> pluginStore( //
-                                                                     IPluginContext pluginContext, UploadPluginMeta pluginMeta, List<Descriptor.ParseDescribable<?>> dlist) {
+        public Optional<IPluginStore<WorkshopVariable>> pluginStore(
+                IPluginContext pluginContext, UploadPluginMeta pluginMeta, List<Descriptor.ParseDescribable<?>> dlist) {
 
 
             for (Descriptor.ParseDescribable<?> d : dlist) {
@@ -185,10 +191,6 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      * 叫 id 会与「存的是 UUID」这一读法冲突，故改名。
      */
     public static final String PARAM_VARIABLE_NAME = "variableName";
-    /**
-     * 变量实例本体，{@code {impl, vals}} 结构的 JSON 字符串（即前端 {@code Item.project()} 的输出）
-     */
-    public static final String PARAM_VARIABLE = "variable";
 
     public static final String KEY_NAME = "name";
     public static final String KEY_DEFINITION_CONFIG = "definitionConfig";
@@ -339,7 +341,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      * 多一个并非字段的键会被当成未知表单项。
      *
      * <p>模块侧下发变量列表（{@code WorkshopModule} 的 module payload）与
-     * {@code WorkshopVariableOperation} 的 CRUD 端点共用本方法，保证两处 JSON 形态一致。
+     * {@code variable_list} 端点分支共用本方法，保证两处 JSON 形态一致。
      */
     public static JSONObject toVariableJSON(WorkshopVariable variable) throws Exception {
         JSONObject itemJson = new DescribableJSON<>(variable).getItemJson();
@@ -359,10 +361,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
      * <p>存储位置由插件元数据的 extraParam 显式传入（{@code ontologyDomainId} / {@code moduleName}）：
      * 本类不是 {@code OntologyDomainManipulate.BasicDesc} 的子类，
      * 没有可从元数据推断 domain 的上下文。是新建还是更新由 {@code pluginMeta.isUpdate()}
-     * （即 extraParam {@code update_true}）决定，两者最终都路由到 {@link #persistVariable}，
-     * 与变量自己的自定义端点共用同一份业务规则（模块内变量名唯一等），避免两份实现漂移。
-     * <p>
-     * //@see com.qlangtech.tis.plugin.ontology.workshop.desc.WorkshopVariableOperationDesc
+     * （即 extraParam {@code update_true}）决定，两者最终都路由到 {@link #persistVariable}。
      */
     @Override
     public void manipuldateProcess(IPluginContext pluginContext, UploadPluginMeta pluginMeta,
@@ -418,11 +417,9 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
     }
 
     /**
-     * 变量落盘，供 {@code WorkshopVariableOperationDesc} 的 create / update 与
-     * {@link #manipuldateProcess} 共用。
+     * 变量落盘，供 {@link #manipuldateProcess}（标准 plugin_action 链路）使用。
      *
-     * <p>「变量类型 ↔ 定义方式」的落盘守卫也收敛在此：标准链路不经过
-     * {@code WorkshopVariableOperationDesc#parseVariable}，校验放在这里两条路才都绕不过去。
+     * <p>「变量类型 ↔ 定义方式」的落盘守卫也收敛在此：校验放在写入路径上才绕不过去。
      */
     public static void persistVariable(IPluginContext pluginContext, Optional<Context> context,
                                        String ontologyDomainId, String moduleName,
@@ -439,6 +436,53 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         }
         // 变量同样挂在模块实例上（WorkshopModule#variables），写后让下一次读取整体重建
         WorkshopModule.invalidateWorkshopData(ontologyDomainId, moduleName);
+    }
+
+    /**
+     * 删除变量的落盘文件
+     * （{@code ontology/{domain}/workshop/{moduleName}/{@value #VARIABLE_DIR_NAME}/{name}.xml}）。
+     *
+     * <p>与 {@link #persistVariable} 同一套存储约定：文件名取 {@link #normalizeName(String)}
+     * 归一化后的 name（写入路径做了归一化，删除路径必须做同样的归一化才能命中同一个文件）；
+     * 文件名编码与 {@code BaiscAssistStoreGetter.getPluginStore} 里 {@code Key.getStoreFile()}
+     * 的 {@code getPluginFileName(name)} 形态逐字对齐。KeyedPluginStore 没有删除 API
+     * （{@code AbstractWorkshopEntityStore#delete} 也是直接删文件的同一做法），所以收尾三件事：
+     * 删文件、{@link IPluginStore#cleanPlugins()} 清掉进程内插件缓存（KeyedPluginStore 按 Key
+     * 缓存在 TIS 中，不清的话后续 {@code getPlugin()} 还会返回已删除的实例）、
+     * {@link WorkshopModule#invalidateWorkshopData} 让模块快照整体重建。
+     * 为了命中同一个缓存实例，这里构造的 meta 与 {@code BaiscAssistStoreGetter#load} 逐字一致。
+     *
+     * <p>删除前的引用校验不在这里 —— 见 {@code WorkshopModuleService#deleteVariable}。
+     *
+     * @return 是否真的删除了文件；{@code false} 表示该变量本就不存在
+     */
+    public static boolean deleteStored(String ontologyDomainId, String moduleName, String variableName) {
+        if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(moduleName)) {
+            throw new IllegalArgumentException("param ontologyDomainId and moduleName can not be empty");
+        }
+        if (StringUtils.isEmpty(variableName)) {
+            throw new IllegalArgumentException("param variableName can not be empty");
+        }
+        String pluginIdVal = normalizeName(variableName);
+        File variableFile = new File(storeGetter.getAssistRootDir(ontologyDomainId, Optional.of(moduleName)),
+                getPluginFileName(pluginIdVal));
+        boolean deleted = false;
+        if (variableFile.isFile()) {
+            try {
+                FileUtils.forceDelete(variableFile);
+                deleted = true;
+            } catch (IOException e) {
+                throw new IllegalStateException("delete file:" + variableFile.getAbsolutePath() + " faild", e);
+            }
+        }
+        UploadPluginMeta pluginMeta = UploadPluginMeta.create(ONTOLOGY) //
+                .putExtraParams(KEY_START_PERSISTENCE, Boolean.TRUE.toString()) //
+                .putExtraParams(NAME_ONTOLOGY_DOMAIN, ontologyDomainId) //
+                .putExtraParams(IdentityName.PLUGIN_IDENTITY_NAME, pluginIdVal);
+        storeGetter.getPluginStore(OntologyPluginMeta.createPluginMeta(pluginMeta), Optional.of(moduleName))
+                .unsaveCast().cleanPlugins();
+        WorkshopModule.invalidateWorkshopData(ontologyDomainId, moduleName);
+        return deleted;
     }
 
     /**

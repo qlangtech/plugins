@@ -254,7 +254,8 @@ public class WidgetColumnConfig implements Describable<WidgetColumnConfig>, IPlu
             Set<String> selected = currentCols == null
                     ? Collections.<String>emptySet()
                     : currentCols.stream().map(WidgetColumnConfig::identityValue).collect(Collectors.toSet());
-            // getObjectPropertyMetas 对 FunctionConfig 型对象集会抛出可执行错误，此处不吞
+            // 取不到 schema 的变量（外部写入 / 函数计算型对象集）由 getObjectPropertyMetas
+            // 降级为空候选并 warn —— 渲染期抛出会让整个 widget 配置表单 500，见该方法注释。
             for (WidgetColumnConfig cfg : WidgetColumnConfig.createFrom(
                     WidgetOptionHelper.getObjectPropertyMetas(host.getBoundObjectSetVar()))) {
                 target.add(Pair.of(new Option(cfg.identityValue()).setChecked(selected.contains(cfg.identityValue())), cfg));

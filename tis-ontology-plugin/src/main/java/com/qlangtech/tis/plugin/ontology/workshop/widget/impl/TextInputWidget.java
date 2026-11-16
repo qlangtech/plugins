@@ -32,8 +32,8 @@ public class TextInputWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_INITIAL_VALUE_VAR, WidgetOptionHelper::getStringVariableOptions);
-            this.registerSelectOptions(KEY_VALUE_VAR, WidgetOptionHelper::getStringVariableOptions);
+            this.registerSelectOptions(KEY_INITIAL_VALUE_VAR, WidgetOptionHelper.getStringVariableOptions());
+            this.registerSelectOptions(KEY_VALUE_VAR, WidgetOptionHelper.getStringVariableOptions());
         }
 
         @Override

@@ -75,7 +75,7 @@ public class PropertyListWidget extends WorkshopWidget implements IWidgetColumnH
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_OBJECT_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
 
             // === 级联管道：objectVar 变化时，按该对象集变量的属性自动生成候选属性行 ===
             this.valueChangePipe(KEY_OBJECT_VAR, KEY_PROPERTIES).render((pluginMeta, param) ->

@@ -1,0 +1,12 @@
+{
+  "icon": {
+    "label": "图标",
+    "help": "Ant Design 图标名；页头折叠时若未另配折叠图标，直接复用此图标",
+    "enumMode": "model_assist"
+  },
+  "iconColor": {
+    "label": "图标颜色",
+    "help": "图标的颜色（十六进制，如 #1677ff）；留空用主题默认",
+    "placeholder": "#1677ff"
+  }
+}

@@ -238,6 +238,17 @@ public class ObjectSetVariable extends WorkshopVariable {
         return names;
     }
 
+    /**
+     * 属性清单（schema）。<b>本方法保持抛错</b>：取数路径（{@link #resolveDataSourceBinding}）
+     * 与过滤列白名单需要一个可执行的错误，静默的空列清单会让那边表现成「查了但什么都没过滤」。
+     *
+     * <p>但<b>渲染候选</b>那条链路不该抛 —— 用户在「对象集变量」下拉里选中一个外部写入型变量
+     * 是完全合法的配置，抛出会让整个 widget 配置表单 500。那一层的降级在
+     * {@code WidgetOptionHelper#getObjectPropertyMetas}。
+     *
+     * @throws IllegalStateException 定义方式取不到 schema（{@code FunctionConfig} /
+     *                               {@code ExternalInputConfig} 等）
+     */
     public List<OntologyProperty> getColsMeta() {
 
         if (this.definitionConfig instanceof ObjectSetDefinitionConfig objSetCfg) {

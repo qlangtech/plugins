@@ -1,0 +1,17 @@
+{
+  "url": {
+    "label": "图片地址",
+    "help": "Logo 图片的 URL",
+    "placeholder": "https://example.com/logo.png"
+  },
+  "height": {
+    "label": "高度（像素）",
+    "help": "图片的显示高度，宽度按比例缩放",
+    "dftVal": 24
+  },
+  "position": {
+    "label": "停靠位置",
+    "help": "图片在页头里的停靠位置：水平顶栏用 left/center/right，垂直侧栏用 top/bottom",
+    "dftVal": "left"
+  }
+}

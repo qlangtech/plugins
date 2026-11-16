@@ -83,6 +83,29 @@ public class WorkshopPage implements Describable<WorkshopPage>, Serializable, Id
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER)
     public Integer sortOrder = 0;
 
+    /**
+     * 页面在 URL 里的标识（可选），对标 Palantir Workshop 页面配置卡的
+     * {@code PAGE ID (OPTIONAL)}（见 {@code 05-app-config/routing.md}）。
+     *
+     * <p><b>只用于 URL 寻址</b>：模块内一切实体引用（{@code SwitchToPageConfig.pageId}、
+     * {@code WidgetTabConfig.targetPage}、{@code PageRoutingConfig.targetPage}、
+     * {@code page-get} 的寻址参数、{@code module-apply} / {@code module-save} 的写入键）
+     * 仍然<b>一律用 {@link #id}</b>。这两条边界不能混：routeId 是用户可改的，
+     * 拿它存引用会让改一次 URL 标识就把所有跳页 / Tab 目标弄成悬空。
+     *
+     * <p>可选字段：{@link Validator#identity} 的 {@code ValidateRule} 带
+     * {@code guardNotBlank=true}（见 {@code Validator.validatePattern}），
+     * <b>空值直接通过</b>，只有填了才校验字符集与「不能以数字开头」。
+     *
+     * <p>用 {@code identity} 而不是 {@code identity_strict}：后者不允许减号，
+     * 而 {@code case-detail} 这类带连字符的标识是常见需求。
+     *
+     * <p>模块内唯一性不是单实例校验能覆盖的，由 {@code WorkshopModule.parsePages}
+     * （快照路径）与 {@code doApplyModule}（增量路径，需并上磁盘存量）共同保证。
+     */
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
+    public String routeId;
+
     // @FormField(ordinal = 10, type = FormFieldType.MULTI_SELECTABLE)
     public transient List<WorkshopSection> sections = new ArrayList<>();
 

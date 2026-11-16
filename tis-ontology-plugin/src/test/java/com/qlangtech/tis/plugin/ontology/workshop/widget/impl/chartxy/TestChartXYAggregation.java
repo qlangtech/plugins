@@ -143,9 +143,9 @@ public class TestChartXYAggregation {
                 group(dayIndex(2026, 1, 1), 2L), group(dayIndex(2026, 1, 2), 1L));
 
         Assert.assertEquals("同一天的两行在库里已经是同一组", 2L,
-                pointsOf(points, "s", "2026-01-01T00:00:00").getJSONObject(0).getLongValue("y"));
+                pointsOf(points, "s", "2026-01-01").getJSONObject(0).getLongValue("y"));
         Assert.assertEquals(1L,
-                pointsOf(points, "s", "2026-01-02T00:00:00").getJSONObject(0).getLongValue("y"));
+                pointsOf(points, "s", "2026-01-02").getJSONObject(0).getLongValue("y"));
     }
 
     @Test
@@ -162,9 +162,9 @@ public class TestChartXYAggregation {
                 group(monthIndex(2026, 4), 1L));
 
         Assert.assertEquals(2L,
-                pointsOf(points, "s", "2026-01-01T00:00:00").getJSONObject(0).getLongValue("y"));
+                pointsOf(points, "s", "2026-01").getJSONObject(0).getLongValue("y"));
         Assert.assertEquals(1L,
-                pointsOf(points, "s", "2026-04-01T00:00:00").getJSONObject(0).getLongValue("y"));
+                pointsOf(points, "s", "2026-04").getJSONObject(0).getLongValue("y"));
     }
 
     @Test
@@ -286,7 +286,7 @@ public class TestChartXYAggregation {
                 group(dayIndex(2026, 3, 1), 1L), group(dayIndex(2026, 1, 1), 1L));
 
         Assert.assertEquals("时间桶必须按时间升序（乱序折线图会自我交叉）",
-                Arrays.asList("2026-01-01T00:00:00", "2026-03-01T00:00:00"), keysOf(points, "s"));
+                Arrays.asList("2026-01-01", "2026-03-01"), keysOf(points, "s"));
     }
 
     @Test

@@ -28,6 +28,8 @@ import java.io.Serializable;
  *
  * <p><b>单选始终可用</b>：无论哪个子类，点击对象都会写回宿主的 {@code activeObjectVar}。
  * 本族描述的只是「是否额外支持多选」，开启态必须绑定一个写回变量 —— 否则勾了也白勾。
+ * 正因如此 {@code activeObjectVar} 留在宿主（{@code ObjectListWidget}）上，不下沉进
+ * {@link NoObjectSelection}；详细理由见该类注释的「为什么 activeObjectVar 不搬到这里」。
  *
  * <p>为什么是多态而不是原先的「{@code enableMultiSelect} + {@code selectedObjectsVar}」两个字段：
  * 那两者能拼出自相矛盾的状态（开了多选却没绑变量、绑了变量却没开开关），多态把「带哪些载荷」

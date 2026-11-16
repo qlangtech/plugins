@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.ontology.workshop.service;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.ontology.workshop.WorkshopModule;
 import com.qlangtech.tis.plugin.ontology.workshop.exception.VariableNotFoundException;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopHeader;
@@ -12,9 +13,11 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Workshop Module 业务逻辑服务
@@ -266,42 +269,76 @@ public class WorkshopModuleService {
     }
 
     /**
-     * 删除变量
+     * 删除变量（真实落盘删除）。
+     *
+     * <p>删除前两道闸：
+     * <ol>
+     *   <li>存在性：按归一化名（{@link WorkshopVariable#normalizeName}）在模块变量列表里找不到
+     *       即抛 {@link VariableNotFoundException}；</li>
+     *   <li>引用校验：{@link VariableReferenceScanner} 扫描模块布局树（页面 / 浮层 / 页头组件 /
+     *       routingConfig …）与其余变量的配置子树，发现任何一处引用即抛
+     *       {@link IllegalStateException}，消息里列出全部引用位置（形如
+     *       {@code 页面「首页」> 分区「销售」> 组件「KPI 表格」 : objectSetVar}），
+     *       前端 {@code variable-manager} 的删除确认会把它作为错误提示展示。</li>
+     * </ol>
+     * 两道闸都过了才真正删文件（{@link WorkshopVariable#deleteStored}，内部含进程内插件缓存
+     * 清理与 {@code WorkshopModule} 快照失效）。
      */
     public void deleteVariable(IPluginContext pluginContext, Optional<Context> context,
                                String ontologyDomainId, String moduleName, String variableName) {
         if (StringUtils.isEmpty(variableName)) {
             throw new IllegalArgumentException("param variableName can not be empty");
         }
-//        WorkshopVariableStore store = getVariableStore(ontologyDomainId, moduleName);
-//        if (!store.delete(pluginContext, context, variableId)) {
-//            throw new VariableNotFoundException("Variable not found: " + variableId
-//                    + " in module '" + moduleName + "'");
-//        }
-//        logger.info("Workshop Variable '{}' deleted from module '{}'", variableId, moduleName);
+        if (StringUtils.isEmpty(ontologyDomainId) || StringUtils.isEmpty(moduleName)) {
+            throw new IllegalArgumentException("param ontologyDomainId and moduleName can not be empty");
+        }
+        String normalizedName = WorkshopVariable.normalizeName(variableName);
+
+        WorkshopModule module = getModule(ontologyDomainId, moduleName);
+        if (module == null) {
+            throw new VariableNotFoundException("Workshop Module not found: " + moduleName
+                    + " in domain '" + ontologyDomainId + "'");
+        }
+        boolean exists = safeVariables(module).stream()
+                .anyMatch((v) -> v != null && normalizedName.equals(WorkshopVariable.normalizeName(v.getName())));
+        if (!exists) {
+            throw new VariableNotFoundException("Variable not found: " + variableName
+                    + " in module '" + moduleName + "'");
+        }
+
+        List<String> references = VariableReferenceScanner.scan(module, normalizedName);
+        if (!references.isEmpty()) {
+            throw TisException.create("Variable '" + variableName + "' 正在被以下 "
+                    + references.size() + " 处引用，无法删除：\n"
+                    + references.stream().map((r) -> "・" + r).collect(Collectors.joining("\n")));
+        }
+
+        if (!WorkshopVariable.deleteStored(ontologyDomainId, moduleName, variableName)) {
+            // 变量列表里有、文件却没了：数据不一致，按不存在处理
+            throw new VariableNotFoundException("Variable not found: " + variableName
+                    + " in module '" + moduleName + "'");
+        }
+        logger.info("Workshop Variable '{}' deleted from module '{}'", variableName, moduleName);
+    }
+
+    private static List<WorkshopVariable> safeVariables(WorkshopModule module) {
+        return module.variables == null ? Collections.emptyList() : module.variables;
     }
 
     // ==================================================================
     //  Header 存储
     //
     //  header 同样不走模块 XML（WorkshopModule.header 是 transient），由
-    //  WorkshopHeaderStore 独立落盘（ontology/{domain}/workshop_headers/{moduleName}.xml）。
+    //  WorkshopHeaderStore 独立落盘
+    //  （ontology/{domain}/workshop/{moduleName}/header/{moduleName}.xml）。
     //  与页面/变量的区别在于 header 与 module 是 1:1，故既无 list 也无 delete。
     // ==================================================================
-
-//    /**
-//     * 取得某个 domain 下的 header 存储
-//     */
-//    public WorkshopHeaderStore getHeaderStore(String ontologyDomainId) {
-//        return WorkshopHeaderStore.create(ontologyDomainId);
-//    }
 
     /**
      * 读取模块的 header，尚未配置过返回默认值（visible = true）
      */
     public WorkshopHeader getHeader(String ontologyDomainId, String moduleName) {
-        // return getHeaderStore(ontologyDomainId).loadOrDefault(moduleName);
-        return null;
+        return WorkshopHeader.loadOrDefault(ontologyDomainId, moduleName);
     }
 
     /**
@@ -310,11 +347,9 @@ public class WorkshopModuleService {
     public WorkshopHeader saveHeader(IPluginContext pluginContext, Optional<Context> context,
                                      String ontologyDomainId, String moduleName, WorkshopHeader header) {
         Objects.requireNonNull(header, "param header can not be null");
-        // id 恒等于 moduleName，以 URL 参数为准，避免表单里的 id 被改动后写到别的文件上
-        header.id = moduleName;
-        // getHeaderStore(ontologyDomainId).save(pluginContext, context, moduleName, header, true);
+        WorkshopHeader saved = WorkshopHeader.save(pluginContext, context, ontologyDomainId, moduleName, header);
         logger.info("Workshop Header of module '{}' updated", moduleName);
-        return header;
+        return saved;
     }
 
     /**

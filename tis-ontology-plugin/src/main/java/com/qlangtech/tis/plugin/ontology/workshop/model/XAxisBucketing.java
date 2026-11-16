@@ -9,6 +9,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * X 轴分桶方式（抽象基类）
@@ -85,6 +86,31 @@ public abstract class XAxisBucketing implements Describable<XAxisBucketing>, Ser
      */
     @FormField(ordinal = 99, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer limit = MAX_LIMIT;
+
+    /**
+     * 分桶键。
+     *
+     * <p>{@code label} 是输出到前端的 x 值，同时是相等判据 —— 跨 shape 的桶去重、
+     * 前端的跨图层标签对齐都靠它；{@code time} 非 null 时表示这是时间桶，按它升序排。
+     * 前端把 label 当不透明类目字符串直显，不做日期解析。
+     */
+    public record BucketKey(String label, LocalDateTime time) {
+    }
+
+    /**
+     * 数据库 GROUP BY 返回的分组值 → 分桶键。
+     *
+     * <p>输入的形态随分桶方式而异：时间分桶（{@link TemporalBucketing}）拿到的是<b>对齐后的
+     * 整数序号</b>而不是时间戳，分类分桶（{@link CategoricalBucketing}）拿到的是原始分组值
+     * —— 正是这种形态差异让本方法是抽象的、由各子类完全负责自己「序号/值 → 标签」的翻译。
+     *
+     * <p>标签精度同样由子类决定：时间桶的标签精度跟随分桶粒度，天粒度的桶不应拖着一串
+     * {@code T00:00:00} 出现在坐标轴上。同一粒度下不同桶起点的标签必须互异（桶起点已按
+     * 粒度对齐，天然成立），否则跨 shape 去重会把不同的桶合并掉。
+     *
+     * @param rawGroup 数据库 GROUP BY 返回的分组值，绝不为 null（null 分组由调用方跳过）
+     */
+    public abstract BucketKey format(Object rawGroup);
 
     /**
      * 分桶方式 descriptor 基类。

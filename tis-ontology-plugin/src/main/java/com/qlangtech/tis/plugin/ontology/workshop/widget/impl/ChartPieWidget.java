@@ -79,7 +79,7 @@ public class ChartPieWidget extends WorkshopWidget {
             super();
             // 数据源只列「对象集合定义」的变量：本 widget 的 get_data 按对象集变量名取行，
             // 「函数计算 / 外部写入」定义的对象集没有可查询的 schema，取数时会抛 illegal type。
-            this.registerSelectOptions(KEY_DATA_SOURCE_VAR, WidgetOptionHelper::getObjectSetSourceVariableOptions);
+            this.registerSelectOptions(KEY_DATA_SOURCE_VAR, WidgetOptionHelper.getObjectSetSourceVariableOptions());
 
             // === 级联属性字段：初始为空（未选 dataSourceVar 时无选项）===
             this.registerSelectOptions(KEY_LABEL_PROPERTY, Collections::emptyList);

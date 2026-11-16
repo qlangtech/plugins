@@ -405,7 +405,7 @@ public class InferOntologyFromLLMStep1 extends OneStepOfMultiSteps {
     public static final class DftDesc extends OneStepOfMultiSteps.BasicDesc implements FormFieldType.IMultiSelectValidator {
         public DftDesc() {
             super();
-            this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider::getExistProviders);
+            this.registerSelectOptions(KEY_FIELD_LLM_NAME, LLMProvider.getExistProviders());
         }
 
         @Override

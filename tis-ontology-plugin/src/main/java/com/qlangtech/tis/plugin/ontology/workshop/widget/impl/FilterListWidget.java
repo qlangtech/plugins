@@ -153,9 +153,9 @@ public class FilterListWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper::getObjectSetVariableOptions);
+            this.registerSelectOptions(KEY_OBJECT_SET_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
             this.registerSelectOptions(KEY_FILTER_OUTPUT_VAR,
-                    WidgetOptionHelper::getObjectSetFilterVariableOptions);
+                    WidgetOptionHelper.getObjectSetFilterVariableOptions());
 
             // === 级联管道：objectSetVar 变化时，逐行刷新过滤项的属性候选 ===
             // 落点写成 "filters[].property"：[] 是「作用于列表每一行」的约定标记，

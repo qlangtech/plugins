@@ -51,6 +51,16 @@ public class CategoricalBucketing extends XAxisBucketing {
     }
 
     /**
+     * 原始分组值 → 分桶键：值即标签。分类属性没有「序号还原 / 精度取舍」可言，
+     * 但键统一 {@code String.valueOf} 必须与时间分桶走同一条通道 —— 不这样做，
+     * 驱动返回 {@code Integer} 与字符串 {@code "1"} 会落在两个桶里。
+     */
+    @Override
+    public BucketKey format(Object rawGroup) {
+        return new BucketKey(String.valueOf(rawGroup), null);
+    }
+
+    /**
      * 取值方式。
      *
      * <p>{@link #shortComment()} 只作为选项的说明文案下发；选项显示 label 来自

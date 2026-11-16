@@ -101,8 +101,8 @@ public class DateInputWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_START_VAR, WidgetOptionHelper::getDateTimeVariableOptions);
-            this.registerSelectOptions(KEY_END_VAR, WidgetOptionHelper::getDateTimeVariableOptions);
+            this.registerSelectOptions(KEY_START_VAR, WidgetOptionHelper.getDateTimeVariableOptions());
+            this.registerSelectOptions(KEY_END_VAR, WidgetOptionHelper.getDateTimeVariableOptions());
         }
 
         @Override

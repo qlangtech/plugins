@@ -110,7 +110,7 @@ public class DateTimePickerWidget extends WorkshopWidget {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_DATE_VALUE_VAR, WidgetOptionHelper::getDateTimeVariableOptions);
+            this.registerSelectOptions(KEY_DATE_VALUE_VAR, WidgetOptionHelper.getDateTimeVariableOptions());
         }
 
         @Override

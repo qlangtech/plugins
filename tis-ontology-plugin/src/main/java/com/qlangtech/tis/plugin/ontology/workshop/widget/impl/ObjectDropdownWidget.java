@@ -14,8 +14,8 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariab
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 
 import java.util.List;
 
@@ -64,9 +64,9 @@ public class ObjectDropdownWidget extends WorkshopWidget {
             switch (methodType) {
                 case "get_data": {
                     JSONObject postContent = pluginContext.getJSONPostContent();
-                    AttrValMap.RelevantFieldsContextAttrValMap<ObjectDropdownWidget> attrs
-                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                            (desc) -> Lists.newArrayList(KEY_OBJECT_SET_VAR));
+                    RelevantFieldsContextAttrValMap<ObjectDropdownWidget> attrs
+                            = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_OBJECT_SET_VAR));
                     if (!attrs.validate().isValid()) {
                         return;
                     }

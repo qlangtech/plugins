@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -31,6 +32,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -91,7 +93,7 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
     }
 
     @TISExtension
-    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<PropertyMappingConfig> {
+    public static class DftDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<PropertyMappingConfig> {
 
         @Override
         public String getDisplayName() {
@@ -113,8 +115,8 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
 //        }
 
         @Override
-        protected RelevantFieldKeys createRelevantFieldKeysCreator(String toPropertyKey) {
-            return new RelevantFieldKeys(toPropertyKey) {
+        protected RelevantFieldsContextAttrValMap.RelevantFieldKeys createRelevantFieldKeysCreator(String toPropertyKey) {
+            return new RelevantFieldsContextAttrValMap.RelevantFieldKeys(toPropertyKey) {
                 private Descriptor descriptor;
 
                 @Override

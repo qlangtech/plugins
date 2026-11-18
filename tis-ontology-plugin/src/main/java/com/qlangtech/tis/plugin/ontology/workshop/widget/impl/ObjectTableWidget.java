@@ -7,6 +7,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.koubei.web.tag.pager.Pager;
 import com.koubei.web.tag.pager.PaginationResult;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -16,15 +17,15 @@ import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.NoPagenator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.Pagenator;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetColumnConfig;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -171,13 +172,17 @@ public class ObjectTableWidget extends WorkshopWidget implements IWidgetColumnHo
                 case "get_data": {
                     JSONObject postContent = pluginContext.getJSONPostContent();
                     List<String> relevantFields = Lists.newArrayList(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR);
-                    AttrValMap.RelevantFieldsContextAttrValMap<ObjectTableWidget> relevantFieldsContextAttrs
-                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent, (desc) -> {
-                        // ⚠️ 这个白名单是**唯一**决定字段能不能被读到的开关：AdapterPluginFormProperties
-                        // 只放行这里列出的 key，漏掉哪个，那个字段在下面就是 null，且不报错。
-                        // （本改动之前 pageSize 就不在其中，所以旧的「每页显示条数」对服务端一直是个静默 no-op。）
-                        return relevantFields;// List.of(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR, KEY_PAGENATOR);
-                    });
+                    RelevantFieldsContextAttrValMap<ObjectTableWidget> relevantFieldsContextAttrs
+                            = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_OBJECT_SET_VAR) {
+                                @Override
+                                protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                                    // ⚠️ 这个白名单是**唯一**决定字段能不能被读到的开关：AdapterPluginFormProperties
+                                    // 只放行这里列出的 key，漏掉哪个，那个字段在下面就是 null，且不报错。
+                                    // （本改动之前 pageSize 就不在其中，所以旧的「每页显示条数」对服务端一直是个静默 no-op。）
+                                    return relevantFields;// List.of(KEY_OBJECT_SET_VAR, KEY_COLUMS_VAR, KEY_PAGENATOR);
+                                }
+                            });
 
                     if (!relevantFieldsContextAttrs.validate().isValid()) {
                         return;

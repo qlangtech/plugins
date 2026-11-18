@@ -21,11 +21,10 @@ package com.qlangtech.tis.plugin.ontology.impl.action;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -33,20 +32,18 @@ import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.lang.model.SourceVersion;
-import java.io.File;
 import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -276,7 +273,7 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
     }
 
     @TISExtension
-    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<ActionParameterConfig> {
+    public static class DftDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<ActionParameterConfig> {
 
         @Override
         public String getDisplayName() {
@@ -311,12 +308,22 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
             if (!(action instanceof DefaultOntologyAction ontologyAction)) {
                 throw new IllegalStateException("action must be type:" + DefaultOntologyAction.class);
             }
-            // 因为 EnumableSetCfg(true, 1) 设置了跳过 1 层，所以这里拿到的是 ObjectActionType
-            ActionType actionType = ontologyAction.getActionType();
+            // 参数池由全部规则共同推导：一个 Action 可以组合多条规则（如「创建对象」+「创建链接」），
+            // 每条规则各自贡献自己引用的参数。候选按 parameterId 去重 —— 多条规则引用同一个参数
+            // （例如同一个对象 RID）时只应出现一行，后出现的规则保留先出现那一行的勾选态。
+            //
+            // 某条规则还处于半配置状态时（如链接类型未选）其 getEnumableCandidateSet 会主动返回空列表，
+            // 因此这里不需要为「坏规则」做额外容错。
+            Map<String, Pair<Option, ActionParameterConfig>> merged = new LinkedHashMap<>();
+            ActionParameters previewInstance = describable.getInstance();
+            for (ActionType actionType : ontologyAction.getActionTypes()) {
+                for (Pair<Option, ActionParameterConfig> candidate : actionType.getEnumableCandidateSet(previewInstance)) {
+                    ActionParameterConfig config = candidate.getRight();
+                    merged.putIfAbsent(config.identityValue(), candidate);
+                }
+            }
 
-            List<Pair<Option, ActionParameterConfig>> enumsCandidateSet = actionType.getEnumableCandidateSet(describable.getInstance());
-
-            return enumsCandidateSet.stream()
+            return merged.values().stream()
                     .map((p) -> Pair.of(p.getLeft(), (IPluginStore.MultiDescribleElement) p.getRight())).toList();
             // ObjectActionType actionType = describable.getInstance();
         }
@@ -324,7 +331,7 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
         @Override
         public List<ColConfig> colsConfig() {
             // Table 视图要求至少有一列被标记为 clickable，否则 getExtractProps 抛异常
-            // （IPluginStore.MultiDescribleElementDescriptor#getExtractProps）。
+            // （MultiDescribleElementSetSelector.MultiDescribleElementDescriptor#getExtractProps）。
             // 列出的键必须都是本类上真实存在的 @FormField。
             return Lists.newArrayList( //
                     new ColConfig("parameterId", 15).setClickable()

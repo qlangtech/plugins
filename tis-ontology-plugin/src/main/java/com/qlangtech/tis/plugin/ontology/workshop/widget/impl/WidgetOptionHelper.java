@@ -52,33 +52,28 @@ public class WidgetOptionHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(WidgetOptionHelper.class);
 
-    /**
-     * UploadPluginMeta 额外参数键：Workshop Module 名称
-     * 前端在请求 Widget 配置表单时需要传入此参数以定位当前 Module 上下文
-     */
-    public static final String KEY_WORKSHOP_MODULE_NAME = "workshopModuleName";
-
     private WidgetOptionHelper() {
     }
 
     // ===============================================================
-    //  当前表单上下文 —— 两套 extraParam 键的容错读取
+    //  当前表单上下文 —— extraParam 读取
     // ===============================================================
 
     /**
      * 当前插件表单上下文中的 ontology domain id，取不到返回 null。
      *
-     * <h3>为什么两组键都认</h3>
-     * 同一个 domain 在不同表单里用的 extraParam 键不同（已在前端逐一核实）：
+     * <h3>domain 键的两组容错</h3>
+     * 同一个 domain 在不同表单里用的 extraParam 键不同：
      * <table>
      *   <tr><th>链路</th><th>domain 键</th><th>module 键</th></tr>
      *   <tr><td>Widget 配置表单</td><td>{@code ontology_<x>}</td>
-     *       <td>{@code workshopModuleName_<y>}</td></tr>
+     *       <td>{@code workshop_<y>}</td></tr>
      *   <tr><td>变量配置表单（{@code variable-manager.component.ts} 的
      *       {@code createPluginType()}）</td><td>{@code ontologyDomainId_<x>}</td>
-     *       <td>{@code moduleName_<y>}</td></tr>
+     *       <td>{@code workshop_<y>}</td></tr>
      * </table>
-     * 本方法两组都试，故两种调用方都能用。
+     * module 键已统一为 {@link OntologyDomain#KEY_WORKSHOP}（{@code workshop}），
+     * 只有 domain 键仍需两组都试。
      *
      * <h3>为什么取不到时返回 null 而不是抛异常</h3>
      * {@link #loadCurrentModuleVariables()} 在 domain/module 为空时直接
@@ -100,19 +95,14 @@ public class WidgetOptionHelper {
     }
 
     /**
-     * 当前插件表单上下文中的 Workshop Module 名称，取不到返回 null。两组键的说明同
-     * {@link #getCurrentOntologyDomainId()}。
+     * 当前插件表单上下文中的 Workshop Module 名称，取不到返回 null。
      */
     public static String getCurrentWorkshopModuleName() {
         UploadPluginMeta pluginMeta = currentPluginMeta();
         if (pluginMeta == null) {
             return null;
         }
-        String moduleName = pluginMeta.getExtraParam(WorkshopVariable.PARAM_MODULE_NAME);
-        if (StringUtils.isEmpty(moduleName)) {
-            moduleName = pluginMeta.getExtraParam(KEY_WORKSHOP_MODULE_NAME);
-        }
-        return moduleName;
+        return pluginMeta.getExtraParam(OntologyDomain.KEY_WORKSHOP);
     }
 
     private static UploadPluginMeta currentPluginMeta() {
@@ -276,7 +266,7 @@ public class WidgetOptionHelper {
      * 首次访问（表单元数据下发，运行期）才触发 TIS 描述符扫描与变量加载。
      *
      * @param predicate 选项级变量过滤（如「数据源」下拉要排除「外部写入」型变量）
-     * @param types    creator 候选与选项共用的变量类型集合；传多个表示「任意其一」
+     * @param types     creator 候选与选项共用的变量类型集合；传多个表示「任意其一」
      */
     private static PluginExtraProps.FieldRefConfig getFieldRefConfig(
             Predicate<WorkshopVariable> predicate, final VariableType... types) {
@@ -298,15 +288,25 @@ public class WidgetOptionHelper {
         creator.setLabel("配置");
         creator.setAssistType(PluginExtraProps.RouterAssistType.paramCfg);
 
+
         DescriptorExtensionList<WorkshopVariable, Descriptor<WorkshopVariable>> variableDesc
                 = TIS.get().getDescriptorList(WorkshopVariable.class);
+        OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta();
         for (Descriptor<WorkshopVariable> d : variableDesc) {
             if (!(d instanceof WorkshopVariable.BasicDescriptor desc)) {
                 throw new IllegalStateException("variable desc must be " + WorkshopVariable.BasicDescriptor.class);
             }
             if (accepted.contains(desc.getVariableType())) {
-                creator.addCandidatePlugin(new PluginExtraProps.CandidatePlugin(
-                        desc.getDisplayName(), Optional.empty(), WorkshopVariable.workshopVariable.identity));
+                PluginExtraProps.CandidatePlugin candidatePlugin = new PluginExtraProps.CandidatePlugin(
+                        desc.getDisplayName(), Optional.empty(), WorkshopVariable.workshopVariable.identity);
+                if (StringUtils.isEmpty(meta.getDomain())) {
+                    throw new IllegalStateException("domain can not be empty");
+                }
+                if (StringUtils.isEmpty(meta.getDelegate().getExtraParam(OntologyDomain.KEY_WORKSHOP))) {
+                    throw new IllegalStateException("workshop can not be empty");
+                }
+                candidatePlugin.setExtraParam(meta.getDelegate().serialExtraParams());
+                creator.addCandidatePlugin(candidatePlugin);
             }
         }
         return creator;
@@ -479,7 +479,7 @@ public class WidgetOptionHelper {
         }
 
         String domain = pluginMeta.getDomain();
-        String moduleName = pluginMeta.getDelegate().getExtraParam(KEY_WORKSHOP_MODULE_NAME);
+        String moduleName = pluginMeta.getDelegate().getExtraParam(OntologyDomain.KEY_WORKSHOP);
         if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(moduleName)) {
             return Collections.emptyList();
         }
@@ -495,11 +495,11 @@ public class WidgetOptionHelper {
             }
 
             VariableDefinitionConfig defConfig = variable.getDefinitionConfig();
-            if (!(defConfig instanceof ObjectSetDefinitionConfig)) {
+            if (!(defConfig instanceof ObjectSetDefinitionConfig objSetDef)) {
                 return Collections.emptyList();
             }
 
-            String objectTypeName = ((ObjectSetDefinitionConfig) defConfig).objectType;
+            String objectTypeName = objSetDef.objectType;
             if (StringUtils.isEmpty(objectTypeName)) {
                 return Collections.emptyList();
             }
@@ -595,7 +595,7 @@ public class WidgetOptionHelper {
         // try {
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         String domain = meta.getDomain();
-        String moduleName = meta.getDelegate().getExtraParam(KEY_WORKSHOP_MODULE_NAME);
+        String moduleName = meta.getDelegate().getExtraParam(OntologyDomain.KEY_WORKSHOP);
         if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(moduleName)) {
             throw new IllegalStateException("param domain or moduleName can not be null");
         }

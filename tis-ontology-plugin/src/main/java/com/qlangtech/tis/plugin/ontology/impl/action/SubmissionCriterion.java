@@ -27,6 +27,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -156,7 +157,7 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
      * {@code comment()} 分组角标正是这条路径承载的。
      *
      * <p>两条渲染路径下都能拿到完整的候选集：向导首次渲染第 4 步时，第 3 步的
-     * {@code processPreSaved} 已顺手把第 2 步也发布了（见 {@link ActionParameters#processPreSaved}）；
+     * {@code processPreSaved} 已顺手把第 2 步也发布了（见 {@link ActionParameters}）；
      * 编辑已保存 Action 时走 {@code getInstancePropsJson()}，所有步骤依次发布自己。
      *
      * @see com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference#getObjectTypeOpts()
@@ -203,7 +204,7 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
     }
 
     @TISExtension
-    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<SubmissionCriterion> {
+    public static class DftDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<SubmissionCriterion> {
 
         @Override
         public String getDisplayName() {

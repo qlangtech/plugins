@@ -23,6 +23,7 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -156,7 +157,7 @@ public class WidgetButtonConfig implements Describable<WidgetButtonConfig>, Seri
     }
 
     @TISExtension
-    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<WidgetButtonConfig> {
+    public static class DftDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<WidgetButtonConfig> {
         @Override
         public String getDisplayName() {
             return "Button";

@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.model;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
@@ -105,13 +106,13 @@ public class TestWorkshopSectionChildSections {
 
         Descriptor<?> desc = TisPluginFormTestSupport.descriptorOf(SectionChild.class);
         Assert.assertTrue("SectionChild 的 descriptor 应是 MultiDescribleElementDescriptor",
-                desc instanceof IPluginStore.MultiDescribleElementDescriptor);
+                desc instanceof MultiDescribleElementSetSelector.MultiDescribleElementDescriptor);
 
-        IPluginStore.MultiDescribleElementDescriptor<?> md =
-                (IPluginStore.MultiDescribleElementDescriptor<?>) desc;
+        MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?> md =
+                (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>) desc;
        // Assert.assertFalse("子分区是开放集合（自由添加），isEnumableSet() 应为 false", md.isEnumableSet());
         Assert.assertEquals("子分区默认 List 视图",
-                IPluginStore.MultiDescribleElementDescriptor.ViewStyle.List, md.viewStyle());
+                MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ViewStyle.List, md.viewStyle());
     }
 
     // ===================================================================

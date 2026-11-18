@@ -1,7 +1,6 @@
 {
-  "actionType": {
-    "label": "Action Type",
-    "help": "选择 Action 的类型：对象操作、链接操作、函数操作、副作用操作、调度操作或场景合并",
-    "multiSubPluginSwitchStyle": "tabs"
+  "actionTypes": {
+    "label": "执行规则",
+    "help": "配置该 Action 执行的规则，可组合多条：对象操作、链接操作、函数操作、副作用操作、调度操作或场景合并。列表顺序即执行顺序。函数规则必须单独使用。"
   }
 }

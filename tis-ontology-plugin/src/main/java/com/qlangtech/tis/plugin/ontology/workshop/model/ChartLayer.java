@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -194,7 +195,7 @@ public class ChartLayer implements Describable<ChartLayer>, Serializable, IPlugi
     }
 
     @TISExtension
-    public static class DescriptorImpl extends IPluginStore.MultiDescribleElementDescriptor<ChartLayer> {
+    public static class DescriptorImpl extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<ChartLayer> {
 
         public DescriptorImpl() {
             super();

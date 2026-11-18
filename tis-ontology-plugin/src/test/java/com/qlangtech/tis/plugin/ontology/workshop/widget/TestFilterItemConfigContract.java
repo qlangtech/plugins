@@ -5,11 +5,12 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.ValueChangePipe;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.WidgetOptionConfig;
-import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.FilterOperator;
+import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.AbstractOpsSource;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.AbstractSelectComponent;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.component.DatePickerComponent;
@@ -111,22 +112,22 @@ public class TestFilterItemConfigContract {
         Class<?> descriptorClass = FilterItemConfig.DftDescriptor.class;
         Assert.assertTrue("descriptor 必须 extends MultiDescribleElementDescriptor"
                         + "（否则前端拿不到 viewStyle/colsCfg/maxHeight，子表格静默退化）",
-                IPluginStore.MultiDescribleElementDescriptor.class.isAssignableFrom(descriptorClass));
+                MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.class.isAssignableFrom(descriptorClass));
 
-        IPluginStore.MultiDescribleElementDescriptor<?> descriptor =
-                (IPluginStore.MultiDescribleElementDescriptor<?>) descriptorClass.getDeclaredConstructor().newInstance();
+        MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?> descriptor =
+                (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>) descriptorClass.getDeclaredConstructor().newInstance();
 
         Assert.assertEquals("应采用表格形态（字段值都短）",
-                IPluginStore.MultiDescribleElementDescriptor.ViewStyle.Table, descriptor.viewStyle());
+                MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ViewStyle.Table, descriptor.viewStyle());
 
-        List<IPluginStore.MultiDescribleElementDescriptor.ColConfig> cols = descriptor.colsConfig();
+        List<MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig> cols = descriptor.colsConfig();
         Assert.assertNotNull("Table 视图必须给出列配置", cols);
         Assert.assertFalse("Table 视图至少要有一列", cols.isEmpty());
         Assert.assertTrue("Table 视图至少要有一列 clickable（否则用户无法打开行编辑面板）",
                 cols.stream().anyMatch(c -> Boolean.TRUE.equals(c.getClickable())));
 
         // 列出的键必须都是元素类上真实存在的 @FormField，写错只会渲染出空列
-        for (IPluginStore.MultiDescribleElementDescriptor.ColConfig col : cols) {
+        for (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig col : cols) {
             Field field = declaredFormField(FilterItemConfig.class, col.getTitleKey());
             Assert.assertNotNull("列 " + col.getTitleKey() + " 在 FilterItemConfig 上没有对应字段", field);
             Assert.assertFalse("列 " + col.getTitleKey() + " 是 Describable 字段："

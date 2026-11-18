@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -39,7 +40,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * 这条路（如 {@code EnumWidget.options}）还要求元素类可赋值给 {@code MultiDescribleElement}，
  * 否则 {@code PropertyType} 构造期就抛 IllegalStateException。
  *
- * <p>同理，descriptor 也必须继承 {@link IPluginStore.MultiDescribleElementDescriptor}：子列表的展现形态
+ * <p>同理，descriptor 也必须继承 {@link MultiDescribleElementSetSelector.MultiDescribleElementDescriptor}：子列表的展现形态
  * （{@code viewStyle} / {@code colsCfg} / {@code maxHeight}）是由<b>元素自己的</b> descriptor 在
  * {@code getExtractProps} 里下发的，而这个方法只在该基类上实现 —— 挂一个普通 {@code Descriptor} 编译期不报错，
  * 但前端拿不到这三项，子表格按默认形态渲染（列标题、列宽全丢）。
@@ -67,7 +68,7 @@ public class WidgetOptionConfig implements Describable<WidgetOptionConfig>, IPlu
     }
 
     @TISExtension
-    public static class DftDescriptor extends IPluginStore.MultiDescribleElementDescriptor<WidgetOptionConfig> {
+    public static class DftDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<WidgetOptionConfig> {
 
         @Override
         public String getDisplayName() {

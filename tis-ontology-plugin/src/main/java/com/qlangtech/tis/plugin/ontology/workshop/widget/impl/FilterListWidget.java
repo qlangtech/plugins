@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -13,9 +14,9 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.FilterItemConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 
 import java.util.Collections;
 import java.util.List;
@@ -200,9 +201,14 @@ public class FilterListWidget extends WorkshopWidget {
             // 这里列出的 key，漏掉 filters，下面拿到的 widget.filters 就是 null，且不报错。
             // objectSetVar 本身不参与候选项解析（候选项来源自带变量绑定），但它是本 Widget 的必填字段，
             // 漏掉它会让 validate() 直接不过；直方图载荷同样要靠它定位对象集变量，也不能漏。
-            AttrValMap.RelevantFieldsContextAttrValMap<FilterListWidget> attrs
-                    = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                    (desc) -> List.of(KEY_OBJECT_SET_VAR, KEY_FILTERS));
+            RelevantFieldsContextAttrValMap<FilterListWidget> attrs
+                    = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_OBJECT_SET_VAR) {
+                        @Override
+                        protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                            return List.of(KEY_OBJECT_SET_VAR, KEY_FILTERS);
+                        }
+                    });
             if (!attrs.validate().isValid()) {
                 // 校验失败的字段级错误已经写进 context，前端按 errorfields 内联成红字
                 return;

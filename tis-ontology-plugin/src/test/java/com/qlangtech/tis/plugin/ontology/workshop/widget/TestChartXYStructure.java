@@ -9,6 +9,7 @@ import com.qlangtech.tis.extension.DescriptorExtensionList;
 import com.qlangtech.tis.extension.ValueChangePipe;
 import com.qlangtech.tis.extension.impl.PropValRewrite;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.workshop.model.AxisConfig;
@@ -184,7 +185,7 @@ public class TestChartXYStructure {
    * </ul>
    *
    * <p>这里只断言<b>结构</b>（字段形态 + pipe 注册），不触发选项求值 —— 后者需要 TIS 运行期
-   * 上下文（{@code ontology_<domain>} / {@code workshopModuleName_<module>} 等 extraParam）。
+   * 上下文（{@code ontology_<domain>} / {@code workshop_<module>} 等 extraParam）。
    */
   @Test
   public void xAxisPropertyCascadesFromDataSourceVar() {
@@ -1036,28 +1037,28 @@ public class TestChartXYStructure {
       Assert.assertNotNull(clazz.getSimpleName() + " 应有嵌套 descriptor", descriptorClass);
       Assert.assertTrue(clazz.getSimpleName() + " 的 descriptor 必须 extends MultiDescribleElementDescriptor"
           + "（否则前端拿不到 viewStyle/colsCfg/maxHeight，子表格静默退化）",
-        com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.class
+        com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.class
           .isAssignableFrom(descriptorClass));
 
-      com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor<?> descriptor;
+      com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?> descriptor;
       try {
-        descriptor = (com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor<?>)
+        descriptor = (com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>)
           descriptorClass.getDeclaredConstructor().newInstance();
       } catch (ReflectiveOperationException e) {
         throw new AssertionError(clazz.getSimpleName() + " 的 descriptor 应可无参实例化", e);
       }
 
       Assert.assertEquals(clazz.getSimpleName() + " 应采用表格形态",
-        com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.ViewStyle.Table, descriptor.viewStyle());
+        com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ViewStyle.Table, descriptor.viewStyle());
 
-      List<com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.ColConfig> cols = descriptor.colsConfig();
+      List<com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig> cols = descriptor.colsConfig();
       Assert.assertFalse(clazz.getSimpleName() + " 的 colsConfig 不应为空", cols.isEmpty());
       Assert.assertTrue(clazz.getSimpleName() + " 的 colsConfig 至少要有一列 clickable"
           + "（否则无法打开编辑面板）",
         cols.stream().anyMatch(col -> Boolean.TRUE.equals(col.getClickable())));
 
       Set<String> formFields = declaredFormFields(clazz);
-      for (com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.ColConfig col : cols) {
+      for (com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig col : cols) {
         Assert.assertTrue(clazz.getSimpleName() + " 的列 " + col + " 不是真实的 @FormField"
             + "（列名写错时表格该列静默为空）", formFields.contains(col.getTitleKey()));
       }
@@ -1299,9 +1300,9 @@ public class TestChartXYStructure {
     // 图层与系列都是 MULTI_DESCRIBLE_PLUGIN 的元素，descriptor 必须是 MultiDescribleElementDescriptor
     // （只 extends 普通 Descriptor 时前端拿不到 viewStyle/colsCfg/maxHeight，子表格静默退化）
     assertIsExtensionDescriptor(ChartLayer.DescriptorImpl.class,
-      com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.class);
+      com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.class);
     assertIsExtensionDescriptor(SeriesConfig.DefaultDescriptor.class,
-      com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor.class);
+      com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.class);
     assertIsExtensionDescriptor(ChartXYWidget.DescriptorImpl.class, Descriptor.class);
     assertIsExtensionDescriptor(CategoricalAxisConfig.DefaultDescriptor.class,
       AxisConfig.BasicDescriptor.class);

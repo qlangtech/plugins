@@ -23,8 +23,8 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.LineLayerT
 import com.qlangtech.tis.plugin.ontology.workshop.widget.impl.chartxy.ScatterLayerType;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -419,9 +419,14 @@ public class ChartXYWidget extends WorkshopWidget {
             // ⚠️ 白名单是唯一决定字段能不能被读到的开关：漏掉 layers，widget.layers 恒为 null 且不报错。
             // 嵌套的 layerType / xAxisBucketing / aggregation 由 createDescribable 递归解析，不必逐一列出。
             // orientation 必须列在这里，否则 ChartXYDataProcessor 里的横向约束校验只能看到字段初值。
-            AttrValMap.RelevantFieldsContextAttrValMap<ChartXYWidget> attrs
-                    = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                    (desc) -> List.of("layers", "xAxis", "yAxis", "orientation", FIELD_CONDITIONAL_VISIBILITY));
+            RelevantFieldsContextAttrValMap<ChartXYWidget> attrs
+                    = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys("layers") {
+                        @Override
+                        protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                            return List.of("layers", "xAxis", "yAxis", "orientation", FIELD_CONDITIONAL_VISIBILITY);
+                        }
+                    });
             if (!attrs.validate().isValid()) {
                 return;
             }

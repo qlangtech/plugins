@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.koubei.web.tag.pager.Pager;
 import com.koubei.web.tag.pager.PaginationResult;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.manage.common.Option;
@@ -17,14 +18,8 @@ import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import com.qlangtech.tis.plugin.ontology.workshop.model.WorkshopVariable;
 import com.qlangtech.tis.plugin.ontology.workshop.model.event.EventConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariable;
-import com.qlangtech.tis.plugin.ontology.workshop.widget.DefaultObjectSelection;
-import com.qlangtech.tis.runtime.module.action.IParamGetter;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.util.AttrValMap;
-import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.DefaultListSorting;
+import com.qlangtech.tis.plugin.ontology.workshop.widget.DefaultObjectSelection;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.IWidgetColumnHost;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.ListSorting;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.NoListSorting;
@@ -35,6 +30,12 @@ import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetActionConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WidgetColumnConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
+import com.qlangtech.tis.runtime.module.action.IParamGetter;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -338,11 +339,15 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
                 case "get_data": {
                     JSONObject postContent = pluginContext.getJSONPostContent();
                     List<String> relevantFields = Lists.newArrayList(KEY_OBJECT_SET_VAR, KEY_TITLE_PROPERTY, KEY_CARD_FIELDS);
-                    AttrValMap.RelevantFieldsContextAttrValMap<ObjectListWidget> relevantFieldsContextAttrs
-                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent, (desc) -> {
-                        // ⚠️ 漏列某个字段 = 它在下面恒为 null，且不报错（见 AttrValMap 的契约）
-                        return relevantFields;
-                    });
+                    RelevantFieldsContextAttrValMap<ObjectListWidget> relevantFieldsContextAttrs
+                            = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_OBJECT_SET_VAR) {
+                                @Override
+                                protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                                    // ⚠️ 漏列某个字段 = 它在下面恒为 null，且不报错（见 RelevantFieldsContextAttrValMap 的契约）
+                                    return relevantFields;
+                                }
+                            });
 
                     if (!relevantFieldsContextAttrs.validate().isValid()) {
                         return;

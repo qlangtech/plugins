@@ -5,6 +5,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -118,7 +119,7 @@ public class MetricConfig implements Describable<MetricConfig>, Serializable,
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends IPluginStore.MultiDescribleElementDescriptor<MetricConfig> {
+    public static class DefaultDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<MetricConfig> {
 
         public DefaultDescriptor() {
             super();

@@ -18,10 +18,15 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
@@ -43,12 +48,40 @@ import java.util.List;
  * - ScheduleActionType: 数据构建
  * - ApplyScenarioActionType: 场景合并
  *
+ * <p><b>一个 Action 可以组合多条规则</b>（Palantir: "Action types can include combinations of
+ * Ontology rules."），因此本类按 {@code MULTI_DESCRIBLE_PLUGIN} 的元素类来建模：
+ * 由 {@code ActionRuleSetter#actionTypes} 的列表渲染成一张表，<b>列表顺序即规则执行顺序</b>。
+ * 唯一例外是函数规则 —— 存在时不允许配置任何其它规则（组合约束见
+ * {@code RuleCombinationValidator}）。
+ *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/7
  * @see RuleType
  * @see RuleGroup
  */
-public abstract class ActionType implements Describable<ActionType> {
+public abstract class ActionType implements Describable<ActionType>, IPluginStore.MultiDescribleElement {
+
+    /**
+     * 本行的标识字段名（同时是前端 {@code descVal.vals} 的 key）。
+     */
+    public static final String KEY_RULE_NAME = "ruleName";
+
+    /**
+     * 规则名称，本行的记录键（identity）。
+     *
+     * <p>为什么必须让用户手填而不是自动生成：前端以 identity 字段的<b>值</b>作
+     * {@code descVal.vals} 的 key（tis-console 的 {@code tis.plugin.ts} 里
+     * {@code descVal.vals[pk.primary] = item}），同值即<b>静默覆盖</b>；而自动生成
+     * （构造期 {@code System.currentTimeMillis()}）在「服务端反序列化 / 前端新增行」两条链路
+     * 上都拿不到稳定值 —— 新增行的初值只认 json 的 {@code dftVal}，所有行会拿到同一个值。
+     *
+     * <p>刻意不加 {@code Validator.identity}：该校验器只允许 {@code [A-Z\da-z_\-]+}，
+     * 会拒绝「创建工单」这种天然是中文的规则名。
+     *
+     * <p>{@code ordinal = -1}：排在各子类自己的字段（0 起）之前，避免与子类 ordinal 撞区间。
+     */
+    @FormField(identity = true, ordinal = -1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String ruleName;
 
     public static List<BaseActionTypeDescriptor> descFilter(List<BaseActionTypeDescriptor> descs, String ruleType) {
         final RuleGroup ruleGroup = RuleGroup.valueOf(ruleType);
@@ -65,6 +98,11 @@ public abstract class ActionType implements Describable<ActionType> {
         return descs.stream().filter((desc) -> {
             return RuleGroup.OFF == desc.getRuleGroup() || ruleTypeFilter.equals(desc.getRuleTypeFilter());
         }).toList();
+    }
+
+    @Override
+    public String identityValue() {
+        return this.ruleName;
     }
 
     /**
@@ -116,9 +154,13 @@ public abstract class ActionType implements Describable<ActionType> {
 
     /**
      * ActionType 基础 Descriptor
+     *
+     * <p>继承 {@link MultiDescribleElementSetSelector.MultiDescribleElementDescriptor} 而不是裸 {@link Descriptor}：
+     * 作为 {@code MULTI_DESCRIBLE_PLUGIN} 的元素类，框架在表单初始化时会强制校验这一点
+     * （见 {@code PropertyType#createFieldListElementClazz}），写错只会在运行期抛。
      */
-    public static abstract class BaseActionTypeDescriptor extends Descriptor<ActionType>
-            implements DescriptorUseableShortComment {
+    public static abstract class BaseActionTypeDescriptor
+            extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<ActionType> {
 
         /**
          * 获取该 ActionType 所属的规则类别
@@ -141,6 +183,27 @@ public abstract class ActionType implements Describable<ActionType> {
         @Override
         public final String shortComment() {
             return getRuleGroup().getDescription();
+        }
+
+        @Override
+        public ViewStyle viewStyle() {
+            return ViewStyle.Table;
+        }
+
+        /**
+         * 规则表格只列「规则名称」一列：其余字段都是各子类自己的多态载荷
+         * （{@code objectRule} / {@code linkRule} / ...），{@code cellText} 读不到嵌套值，
+         * 列出来只会是永远空白的列。列名必须是本类（含父类）上真实存在的
+         * {@code @FormField} 字段名，并且至少一列 clickable，否则 {@code getExtractProps} 抛异常。
+         */
+        @Override
+        public List<ColConfig> colsConfig() {
+            return Lists.newArrayList(new ColConfig(KEY_RULE_NAME).setClickable());
+        }
+
+        @Override
+        public int maxHeight() {
+            return 300;
         }
     }
 }

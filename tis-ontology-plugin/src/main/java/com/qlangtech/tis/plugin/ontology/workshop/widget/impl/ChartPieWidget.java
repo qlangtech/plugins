@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.ibatis.RowMap;
@@ -16,8 +17,8 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariab
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -111,10 +112,15 @@ public class ChartPieWidget extends WorkshopWidget {
             switch (methodType) {
                 case "get_data": {
                     JSONObject postContent = pluginContext.getJSONPostContent();
-                    // ⚠️ 白名单漏列某个字段 = 它恒为 null 且不报错（见 AttrValMap 的契约）
-                    AttrValMap.RelevantFieldsContextAttrValMap<ChartPieWidget> attrs
-                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                            (desc) -> Lists.newArrayList(KEY_DATA_SOURCE_VAR, KEY_LABEL_PROPERTY, KEY_VALUE_PROPERTY));
+                    // ⚠️ 白名单漏列某个字段 = 它恒为 null 且不报错（见 RelevantFieldsContextAttrValMap 的契约）
+                    RelevantFieldsContextAttrValMap<ChartPieWidget> attrs
+                            = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_DATA_SOURCE_VAR) {
+                                @Override
+                                protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                                    return Lists.newArrayList(KEY_DATA_SOURCE_VAR, KEY_LABEL_PROPERTY, KEY_VALUE_PROPERTY);
+                                }
+                            });
                     if (!attrs.validate().isValid()) {
                         return;
                     }

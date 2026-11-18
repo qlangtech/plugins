@@ -1,0 +1,7 @@
+{
+  "ruleName": {
+    "label": "规则名称",
+    "help": "在本 Action 内唯一，用于在规则列表中标识这一行",
+    "placeholder": "如：创建工单"
+  }
+}

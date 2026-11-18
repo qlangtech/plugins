@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class SectionChild extends AbstractWorkshopSection
         implements Describable<SectionChild>, IPluginStore.MultiDescribleElement {
 
     @TISExtension
-    public static class DefaultDescriptor extends IPluginStore.MultiDescribleElementDescriptor<SectionChild> {
+    public static class DefaultDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<SectionChild> {
 
         @Override
         public String shortComment() {

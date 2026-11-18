@@ -5,6 +5,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -194,7 +195,7 @@ public class SeriesConfig implements Describable<SeriesConfig>, Serializable, IP
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends IPluginStore.MultiDescribleElementDescriptor<SeriesConfig> {
+    public static class DefaultDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<SeriesConfig> {
 
         public DefaultDescriptor() {
             super();

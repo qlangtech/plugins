@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.widget.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -34,11 +35,11 @@ import com.qlangtech.tis.plugin.ontology.workshop.model.variable.ObjectSetVariab
 import com.qlangtech.tis.plugin.ontology.workshop.widget.WorkshopWidget;
 import com.qlangtech.tis.plugin.workshop.widget.IWorkshopWidget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.lang3.StringUtils;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -161,10 +162,18 @@ public class PivotTableWidget extends WorkshopWidget {
             switch (methodType) {
                 case "get_data": {
                     JSONObject postContent = pluginContext.getJSONPostContent();
-                    AttrValMap.RelevantFieldsContextAttrValMap<PivotTableWidget> attrs
-                            = AttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
-                            (desc) -> Lists.newArrayList(KEY_OBJECT_SET_VAR, KEY_ROW_PROPERTY
-                                    , KEY_COLUMN_PROPERTY, KEY_MEASURE_PROPERTY, KEY_AGGREGATION));
+                    // 本 widget 取数需要读全部 5 个字段，且不走「先校验级联主字段、再补目标字段」的两阶段流程，
+                    // 故直接在校验阶段把它们一次性放进白名单（validate 与 createPluginInstance 共用这份名单）。
+                    // 构造参数 toPropertyKey 只用于默认的级联推断，这里已完全覆盖，仅作为语义锚点填 objectSetVar。
+                    RelevantFieldsContextAttrValMap<PivotTableWidget> attrs
+                            = RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, postContent,
+                            new RelevantFieldsContextAttrValMap.RelevantFieldKeys(KEY_OBJECT_SET_VAR) {
+                                @Override
+                                protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                                    return Lists.newArrayList(KEY_OBJECT_SET_VAR, KEY_ROW_PROPERTY,
+                                            KEY_COLUMN_PROPERTY, KEY_MEASURE_PROPERTY, KEY_AGGREGATION);
+                                }
+                            });
                     if (!attrs.validate().isValid()) {
                         return;
                     }

@@ -50,8 +50,8 @@ import java.util.stream.Collectors;
 import static com.qlangtech.tis.extension.Descriptor.getPluginFileName;
 import static com.qlangtech.tis.plugin.ontology.Ontology.ONTOLOGY;
 import static com.qlangtech.tis.plugin.ontology.OntologyDomain.NAME_ONTOLOGY_DOMAIN;
+import static com.qlangtech.tis.plugin.ontology.OntologyDomain.KEY_WORKSHOP;
 import static com.qlangtech.tis.plugin.ontology.OntologyValueType.KEY_START_PERSISTENCE;
-import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper.KEY_WORKSHOP_MODULE_NAME;
 
 /**
  * Workshop Variable 实体 —— Workshop 的模块级变量定义，也是整个 Workshop 的数据流引擎。
@@ -143,7 +143,7 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
 
         OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginContext.getContext());
         String domain = meta.getDomain();
-        String workshop = meta.getDelegate().getExtraParam(KEY_WORKSHOP_MODULE_NAME);
+        String workshop = meta.getDelegate().getExtraParam(KEY_WORKSHOP);
         if (StringUtils.isEmpty(domain) || StringUtils.isEmpty(workshop)) {
             throw new IllegalStateException("param domain or moduleName can not be null");
         }
@@ -160,8 +160,6 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         @Override
         public Optional<IPluginStore<WorkshopVariable>> pluginStore(
                 IPluginContext pluginContext, UploadPluginMeta pluginMeta, List<Descriptor.ParseDescribable<?>> dlist) {
-
-
             for (Descriptor.ParseDescribable<?> d : dlist) {
                 if (d.getInstance() instanceof IdentityName idInstant) {
                     OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(pluginMeta);
@@ -175,7 +173,8 @@ public abstract class WorkshopVariable implements Describable<WorkshopVariable>,
         public IPluginStore<WorkshopVariable> getPluginStore(IPluginContext pluginContext, UploadPluginMeta pluginMeta) {
             //return IPluginStore.noSaveStore(pluginMeta);
             return Objects.requireNonNull(storeGetter.getPluginStore(
-                            new OntologyPluginMeta(pluginMeta).setPersistence(), Optional.of(pluginMeta.getExtraParam(OntologyDomain.KEY_WORKSHOP)))
+                            new OntologyPluginMeta(pluginMeta).setPersistence()
+                            , Optional.of(pluginMeta.getExtraParam(OntologyDomain.KEY_WORKSHOP)))
                     , "pluginStore can not be null");
         }
     };

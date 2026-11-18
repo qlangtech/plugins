@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -174,7 +175,7 @@ public class ConditionalFormatRule implements Describable<ConditionalFormatRule>
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends IPluginStore.MultiDescribleElementDescriptor<ConditionalFormatRule> {
+    public static class DefaultDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<ConditionalFormatRule> {
 
         @Override
         public String getDisplayName() {

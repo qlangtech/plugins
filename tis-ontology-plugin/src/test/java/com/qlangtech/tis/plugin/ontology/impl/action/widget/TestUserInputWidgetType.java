@@ -3,11 +3,11 @@ package com.qlangtech.tis.plugin.ontology.impl.action.widget;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.ontology.impl.action.PrimitiveDataType;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.InputTextWidget;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
@@ -173,7 +173,7 @@ public class TestUserInputWidgetType {
 
     /**
      * {@code WidgetOptionConfig} 的 descriptor 必须是
-     * {@link com.qlangtech.tis.plugin.IPluginStore.MultiDescribleElementDescriptor}。
+     * {@link com.qlangtech.tis.plugin.MultiDescribleElementSetSelector.MultiDescribleElementDescriptor}。
      *
      * <p>{@code EnumWidget.options} 走 {@code MULTI_DESCRIBLE_PLUGIN} 收集元素，而这种子列表的展现形态
      * （{@code viewStyle} / {@code colsCfg} / {@code maxHeight}）只在
@@ -190,7 +190,7 @@ public class TestUserInputWidgetType {
         Assert.assertTrue("WidgetOptionConfig.DftDescriptor 必须继承 MultiDescribleElementDescriptor"
                         + "（否则子表格拿不到 viewStyle/colsCfg/maxHeight），实际是 "
                         + desc.getClass().getSuperclass().getName(),
-                desc instanceof IPluginStore.MultiDescribleElementDescriptor);
+                desc instanceof MultiDescribleElementSetSelector.MultiDescribleElementDescriptor);
 
         org.junit.Assume.assumeTrue("当前环境未初始化 TIS，跳过 extractProps 检查",
                 descriptorScanReachable());
@@ -200,7 +200,7 @@ public class TestUserInputWidgetType {
         Assert.assertNotNull("extractProps 必须带 colsCfg", props.get("colsCfg"));
         Assert.assertNotNull("extractProps 必须带 maxHeight", props.get("maxHeight"));
         Assert.assertFalse("shortComment 不得为空（列表里只显示短注释，空着等于没说明）",
-                ((IPluginStore.MultiDescribleElementDescriptor<?>) desc).shortComment().isEmpty());
+                ((MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>) desc).shortComment().isEmpty());
     }
 
     /**

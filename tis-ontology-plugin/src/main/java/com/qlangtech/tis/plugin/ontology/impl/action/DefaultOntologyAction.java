@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.MultiStepsSupportHostDescriptor;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
@@ -34,6 +35,7 @@ import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.LinkActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
@@ -44,6 +46,7 @@ import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -101,11 +104,35 @@ public class DefaultOntologyAction extends OntologyAction {
     }
 
     /**
-     * 获取所有配置的 ActionType 列表（委托给 ActionRuleSetter）
+     * 该 Action 配置的全部规则，顺序即执行顺序。
+     */
+    public List<ActionType> getActionTypes() {
+        return getRuleSetter().getActionTypes();
+    }
+
+    /**
+     * 主规则（列表第一条）。
+     *
+     * <p>仅保留给「只能表达一条规则语义」的旧调用点（如 {@link #getLiteria()} 的展示）。
+     * 涉及执行与对象定位的逻辑必须遍历 {@link #getActionTypes()}，否则组合里的
+     * 第二条及之后的规则会被静默忽略。
      */
     public ActionType getActionType() {
-        ActionRuleSetter ruleSetter = getRuleSetter();
-        return ruleSetter.actionType;
+        return getActionTypes().stream().findFirst().orElse(null);
+    }
+
+    /**
+     * 第一个「修改 / 删除对象」类规则。这类规则需要对象身份参数来定位目标对象。
+     */
+    private Optional<ObjectActionType> findObjectRuleOfIdentity() {
+        for (ActionType actionType : getActionTypes()) {
+            if (actionType instanceof ObjectActionType objectActionType
+                    && (objectActionType.getRule() instanceof ModifyObjectRule
+                    || objectActionType.getRule() instanceof DeleteObjectRule)) {
+                return Optional.of(objectActionType);
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -114,19 +141,22 @@ public class DefaultOntologyAction extends OntologyAction {
      * 分支回传字段名给前端预填，执行期仍由 {@code ObjectActionType#resolveRowIdentity} 精确解析。
      */
     public String resolveObjectIdentityParam(OntologyPluginMeta meta) {
-        ActionType actionType = getActionType();
-        OntologyActionRule rule = actionType.getRule();
-        if (actionType instanceof ObjectActionType objectActionType) {
-            if (rule instanceof ModifyObjectRule modifyRule) {
-                return ObjectActionType.resolveIdentityParameterName(
-                        objectActionType.loadObjectType(meta.getDomain()), modifyRule.ridParameterName);
-            }
-            if (rule instanceof DeleteObjectRule deleteRule) {
-                return ObjectActionType.resolveIdentityParameterName(
-                        objectActionType.loadObjectType(meta.getDomain()), deleteRule.ridParameterName);
-            }
-        }
-        return null;
+        return findObjectRuleOfIdentity()
+                .map((objectActionType) -> ObjectActionType.resolveIdentityParameterName(
+                        objectActionType.loadObjectType(meta.getDomain()),
+                        ridParameterNameOf(objectActionType)))
+                .orElse(null);
+    }
+
+    /**
+     * 修改 / 删除对象规则上配置的「哪个参数携带目标对象标识」。
+     *
+     * <p>调用前必须已用 {@link #findObjectRuleOfIdentity()} 限定过规则类型。
+     */
+    private static String ridParameterNameOf(ObjectActionType objectActionType) {
+        return objectActionType.getRule() instanceof ModifyObjectRule modifyRule
+                ? modifyRule.ridParameterName
+                : ((DeleteObjectRule) objectActionType.getRule()).ridParameterName;
     }
 
     /**
@@ -141,18 +171,10 @@ public class DefaultOntologyAction extends OntologyAction {
      * @return 对象属性 → 值；不适用或没有匹配行时返回 null
      */
     public Map<String, Object> loadObjectByRid(OntologyPluginMeta meta, String rid) {
-        ActionType actionType = getActionType();
-        if (!(actionType instanceof ObjectActionType objectActionType)) {
-            return null;
-        }
-        OntologyActionRule rule = actionType.getRule();
-        if (rule instanceof ModifyObjectRule modifyRule) {
-            return objectActionType.loadObjectByRid(meta.getDomain(), modifyRule.ridParameterName, rid);
-        }
-        if (rule instanceof DeleteObjectRule deleteRule) {
-            return objectActionType.loadObjectByRid(meta.getDomain(), deleteRule.ridParameterName, rid);
-        }
-        return null;
+        return findObjectRuleOfIdentity()
+                .map((objectActionType) -> objectActionType.loadObjectByRid(
+                        meta.getDomain(), ridParameterNameOf(objectActionType), rid))
+                .orElse(null);
     }
 
 //    /**
@@ -227,9 +249,11 @@ public class DefaultOntologyAction extends OntologyAction {
         literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Name", getName()));
         literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Display Name", getDisplayName()));
         //literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Target Object Type", getTargetObjectType()));
-        ActionType actionType = getActionType();
-
-        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Action Type", actionType.getRuleGroup().getDisplayName()));
+        // 一个 Action 可以组合多条规则，这里按配置顺序全部列出，用 " → " 表示执行次序
+        String ruleGroups = getActionTypes().stream()
+                .map((actionType) -> actionType.getRuleGroup().getDisplayName())
+                .collect(java.util.stream.Collectors.joining(" → "));
+        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Action Type", ruleGroups));
 
         return literia;
     }
@@ -299,7 +323,8 @@ public class DefaultOntologyAction extends OntologyAction {
             if (!(action instanceof DefaultOntologyAction defaultAction)) {
                 throw new IllegalStateException("Action must be instance of DefaultOntologyAction");
             }
-            ActionType actionType = Objects.requireNonNull(defaultAction.getActionType()
+            List<ActionType> actionTypes = defaultAction.getActionTypes();
+            ActionType actionType = Objects.requireNonNull(actionTypes.stream().findFirst().orElse(null)
                     , "actionName:" + actionName + " relevant action type can not be null");
             OntologyPluginMeta paramMeta = OntologyPluginMeta.create(Ontology.OntologyEnum.Action, ontologyName)
                     .setPluginIdVal(actionName)
@@ -329,10 +354,15 @@ public class DefaultOntologyAction extends OntologyAction {
                 case "resolveActionForm" -> {
                     JSONObject post = pluginContext.getJSONPostContent();
                     // whitelist 必须是全部字段名（parameters / submitButton / successMessage），
-                    // 否则没进 whitelist 的字段会静默读成 null（见 AttrValMap.createRelevantFieldsContext）。
-                    AttrValMap.RelevantFieldsContextAttrValMap<ActionParameters> attrs =
-                            AttrValMap.createRelevantFieldsContext(paramGetter, context, post,
-                                    (desc) -> new ArrayList<>(desc.getPropertyTypes().keySet()));
+                    // 否则没进 whitelist 的字段会静默读成 null（见 RelevantFieldsContextAttrValMap）。
+                    RelevantFieldsContextAttrValMap<ActionParameters> attrs =
+                            RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, post,
+                                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys(ActionParameters.KEY_PARAMETERS) {
+                                        @Override
+                                        protected List<String> toFieldValiateRelevantKeysCreator(Descriptor descriptor) {
+                                            return new ArrayList<>(descriptor.getPropertyTypes().keySet());
+                                        }
+                                    });
                     if (!attrs.validate().isValid()) {
                         return;
                     }
@@ -361,9 +391,9 @@ public class DefaultOntologyAction extends OntologyAction {
                     JSONObject paramsItem = Objects.requireNonNull(
                             post.getJSONObject("paramsItem"), "paramsItem can not be null");
 
-                    AttrValMap.RelevantFieldsContextAttrValMap<ActionParameters> attrs =
-                            AttrValMap.createRelevantFieldsContext(paramGetter, context, paramsItem,
-                                    (desc) -> Lists.newArrayList(ActionParameters.KEY_PARAMETERS));
+                    RelevantFieldsContextAttrValMap<ActionParameters> attrs =
+                            RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, paramsItem,
+                                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys(ActionParameters.KEY_PARAMETERS));
 
                     if (!attrs.validate().isValid()) {
                         throw new IllegalStateException("attrs.validate() must be vaild");
@@ -375,7 +405,7 @@ public class DefaultOntologyAction extends OntologyAction {
                         return;
                     }
                     // 详情页预览不接删除确认：删除只能从 Workshop 模态框的危险按钮发起
-                    executePreviewForm(actionType, paramMeta, paramPool, previewForm, false, paramGetter, context);
+                    executePreviewForm(actionTypes, paramMeta, paramPool, previewForm, false, paramGetter, context);
                 }
                 case "executeAction" -> {
                     // workshop 按钮组提交运行时表单执行。与 executeActionRule 分支的差异：
@@ -392,16 +422,19 @@ public class DefaultOntologyAction extends OntologyAction {
                         paramGetter.addErrorMessage(context, "Action '" + actionName + "' 尚未配置参数池");
                         return;
                     }
-                    executePreviewForm(actionType, paramMeta, paramPool, previewForm, deleteConfirmed,
+                    executePreviewForm(actionTypes, paramMeta, paramPool, previewForm, deleteConfirmed,
                             paramGetter, context);
                 }
                 case "resolveLinkTargets" -> {
                     // 链接 Action 的目标对象下拉候选：按 targetObjectType 现查一批行。
                     // 参数走 query string（只两个标量），不投影 Action 树。
-                    if (!(actionType instanceof LinkActionType linkActionType)) {
-                        throw new IllegalStateException("Action '" + actionName
-                                + "' 的 ActionType 不是 LinkActionType，无法解析链接目标");
-                    }
+                    // 多规则下取列表里第一条链接规则：链接目标选择器只服务一条链接边。
+                    LinkActionType linkActionType = actionTypes.stream()
+                            .filter(LinkActionType.class::isInstance)
+                            .map(LinkActionType.class::cast)
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("Action '" + actionName
+                                    + "' 未配置链接规则，无法解析链接目标"));
                     ActionParameters targetParamPool = ActionParameters.loadParameters(paramMeta);
                     // limit 缺失/非法交给 resolveTargetOptions 走默认值（夹取而非报错）
                     int limit = NumberUtils.toInt(paramGetter.getString("limit"), ObjectSetRowQuery.DEFAULT_MAX_ROWS);
@@ -417,15 +450,21 @@ public class DefaultOntologyAction extends OntologyAction {
                     result.put("previewDescriptors",
                             paramPool == null ? null : ActionFormDescriptorBuilder.build(paramMeta, paramPool));
                     result.put("ridFieldName", defaultAction.resolveObjectIdentityParam(paramMeta));
-                    // 规则类型决定前端模态框的提交语义：DELETE_OBJECT 时换成危险按钮并携带
-                    // deleteConfirmed，其余规则保持普通「提交」
-                    OntologyActionRule rule = actionType.getRule();
+                    // 规则类型决定前端模态框的提交语义：DELETE_OBJECT / DELETE_LINK 时换成危险按钮
+                    // 并携带 deleteConfirmed，其余规则保持普通「提交」。
+                    // 多规则下取「最能代表本次提交危险程度」的那条，见 resolveDrivingRule。
+                    OntologyActionRule rule = resolveDrivingRule(actionTypes).getRule();
                     result.put("ruleType", rule == null ? null : rule.getRuleType().name());
 
                     // 链接类 Action：回传源/目标对象类型与两个 RID 字段名，前端据此预填源对象、
                     // 渲染目标对象选择器。配置不完整（缺参数 / 链接类型坏）时只回传错误，
-                    // 不能连坐整个表单的加载。
-                    if (actionType instanceof LinkActionType linkActionType) {
+                    // 不能连坐整个表单的加载。链接选择器只服务一条链接边，取第一条链接规则。
+                    LinkActionType linkActionType = actionTypes.stream()
+                            .filter(LinkActionType.class::isInstance)
+                            .map(LinkActionType.class::cast)
+                            .findFirst()
+                            .orElse(null);
+                    if (linkActionType != null) {
                         try {
                             result.put("linkInfo",
                                     linkActionType.resolveLinkMetadata(ontologyName, paramPool));
@@ -614,11 +653,49 @@ public class DefaultOntologyAction extends OntologyAction {
 //            return DATA_TYPE_PRIMITIVE;
 //        }
         /**
+         * 从规则列表里挑出决定「前端提交语义」的那一条。
+         *
+         * <p>前端 {@code action-form-modal.component.ts} 只有三个语义开关，都是从单条
+         * {@code ruleType} 推出来的：{@code DELETE_OBJECT}（危险按钮 + deleteConfirmed）、
+         * {@code DELETE_LINK}（同上，且按链接处理）、{@code CREATE_LINK}（按链接处理）。
+         * 多规则下按危险程度降序取第一条匹配：
+         * 删除 &gt; 链接 &gt; 其余，同等危险时取列表靠前的。
+         * 链接规则优先于非链接规则，因为链接语义还带着 linkInfo 预填。
+         */
+        private static ActionType resolveDrivingRule(List<ActionType> actionTypes) {
+            ActionType deleteRule = null;
+            ActionType linkRule = null;
+            for (ActionType actionType : actionTypes) {
+                OntologyActionRule rule = actionType.getRule();
+                RuleType ruleType = rule == null ? null : rule.getRuleType();
+                if (ruleType == RuleType.DELETE_OBJECT || ruleType == RuleType.DELETE_LINK) {
+                    deleteRule = actionType;
+                    break;
+                }
+                if (linkRule == null && (actionType instanceof LinkActionType
+                        || ruleType == RuleType.CREATE_LINK)) {
+                    linkRule = actionType;
+                }
+            }
+            if (deleteRule != null) {
+                return deleteRule;
+            }
+            if (linkRule != null) {
+                return linkRule;
+            }
+            return actionTypes.get(0);
+        }
+
+        /**
          * 把前端 {@code Item.project()} 投影（{@code {impl, vals}}）经参数池现场生成的 descriptor
          * 解析、校验并执行。{@code executeActionRule} / {@code executeAction} 两分支共用，
          * 差异只在参数池来源（详情页编辑 vs 磁盘落盘），此处只做「参数池已就绪」之后的事。
+         *
+         * <p>按列表顺序逐条执行：前面规则的副作用（如创建对象）必须先于后面规则的写操作落地。
+         * 任一条失败即中断，并保留后面的规则不再执行 —— 与 Palantir「按顺序编译成一次编辑」的
+         * 语义一致：无法回滚已提交的部分，故宁可停在明确的失败点上。
          */
-        private static void executePreviewForm(ActionType actionType, OntologyPluginMeta paramMeta,
+        private static void executePreviewForm(List<ActionType> actionTypes, OntologyPluginMeta paramMeta,
                                                ActionParameters paramPool, JSONObject previewForm,
                                                boolean deleteConfirmed,
                                                IControlMsgHandler paramGetter, Context context) {
@@ -638,7 +715,12 @@ public class DefaultOntologyAction extends OntologyAction {
             if (!validateResult.isValid()) {
                 return;
             }
-            actionType.executeActionRule(validateResult.newInstance(), deleteConfirmed);
+            // 一次性解析出表单实例，各条规则共用：ActionFormPreview 是运行时临时对象，
+            // 但每条规则都会各自遍历其属性，重复 newInstance 代价高且可能不一致。
+            Describable<?> previewInstance = validateResult.newInstance();
+            for (ActionType actionType : actionTypes) {
+                actionType.executeActionRule(previewInstance, deleteConfirmed);
+            }
         }
 
         @Override

@@ -19,6 +19,7 @@ package com.qlangtech.tis.plugin.ontology.workshop.model.event;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -101,10 +102,10 @@ public abstract class EventConfig implements Describable<EventConfig>, Serializa
      * <p>之所以继承 {@code MultiDescribleElementDescriptor} 而非普通的 {@code Descriptor}：本类作为
      * {@code MULTI_DESCRIBLE_PLUGIN} 字段（{@code EventClickAction.events}、{@code DropHandlingDefault.onDropEvents}）
      * 的 {@code desClazz} 元素，其 descriptor 必须提供 {@code viewStyle}/{@code colsConfig}/{@code maxHeight}
-     * 等列表展现代价（见 {@code IPluginStore.MultiDescribleElementDescriptor#getExtractProps}），
+     * 等列表展现代价（见 {@code MultiDescribleElementSetSelector.MultiDescribleElementDescriptor#getExtractProps}），
      * 否则前端 {@code MultiChildViewDescriptor} 读不到这些提取属性、列表渲染降级。缺省即开放集合
      * （{@code isEnumableSet()=false}）+ List 视图。
      */
-    public abstract static class BasicDescriptor extends IPluginStore.MultiDescribleElementDescriptor<EventConfig> {
+    public abstract static class BasicDescriptor extends MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<EventConfig> {
     }
 }

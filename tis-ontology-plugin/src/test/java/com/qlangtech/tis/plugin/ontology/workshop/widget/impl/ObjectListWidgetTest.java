@@ -10,8 +10,8 @@ import com.qlangtech.tis.util.UploadPluginMeta;
 import org.junit.Before;
 import org.junit.Test;
 
+import static com.qlangtech.tis.plugin.ontology.OntologyDomain.KEY_WORKSHOP;
 import static com.qlangtech.tis.plugin.ontology.OntologyDomain.NAME_ONTOLOGY_DOMAIN;
-import static com.qlangtech.tis.plugin.ontology.workshop.widget.impl.WidgetOptionHelper.KEY_WORKSHOP_MODULE_NAME;
 
 /**
  *
@@ -24,7 +24,7 @@ public class ObjectListWidgetTest {
         PartialSettedPluginContext pluginContext = new PartialSettedPluginContext();
         DefaultContext context = new DefaultContext();
         // 级联管道读 UploadPluginMeta.createPluginMeta(context)；没有它就是 NPE（无降级分支）
-        UploadPluginMeta.putPluginMeta(context, UploadPluginMeta.parse("widget:require," + NAME_ONTOLOGY_DOMAIN + "_test," + KEY_WORKSHOP_MODULE_NAME + "_test"));
+        UploadPluginMeta.putPluginMeta(context, UploadPluginMeta.parse("widget:require," + NAME_ONTOLOGY_DOMAIN + "_test," + KEY_WORKSHOP + "_test"));
         pluginContext.setContext(context);
         IPluginContext.setPluginContext(pluginContext);
 

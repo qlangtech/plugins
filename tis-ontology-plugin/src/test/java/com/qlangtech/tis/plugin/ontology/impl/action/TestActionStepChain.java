@@ -6,6 +6,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.HttpHeaderConfig;
@@ -226,9 +227,9 @@ public class TestActionStepChain {
                     isBlank(desc.getDisplayName()));
             Assert.assertFalse(name + " 的 descriptor.shortComment() 不得为空"
                             + "（列表里只显示短注释，空着等于没说明）",
-                    isBlank(((IPluginStore.MultiDescribleElementDescriptor<?>) desc).shortComment()));
+                    isBlank(((MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>) desc).shortComment()));
 
-            assertColsConfigIsUsable(clazz, (IPluginStore.MultiDescribleElementDescriptor<?>) desc);
+            assertColsConfigIsUsable(clazz, (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?>) desc);
         }
     }
 
@@ -240,15 +241,15 @@ public class TestActionStepChain {
      * 打不开）；列名写错时前端那一列取不到值，表现为空白列，不报错。
      */
     private static void assertColsConfigIsUsable(Class<?> clazz,
-                                                 IPluginStore.MultiDescribleElementDescriptor<?> desc) {
+                                                 MultiDescribleElementSetSelector.MultiDescribleElementDescriptor<?> desc) {
         String name = clazz.getSimpleName();
-        List<IPluginStore.MultiDescribleElementDescriptor.ColConfig> cols = desc.colsConfig();
+        List<MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig> cols = desc.colsConfig();
         Assert.assertNotNull(name + ".colsConfig() 不得为 null", cols);
         Assert.assertFalse(name + ".colsConfig() 不得为空", cols.isEmpty());
 
         Set<String> formFieldNames = fieldNamesOf(clazz);
         boolean anyClickable = false;
-        for (IPluginStore.MultiDescribleElementDescriptor.ColConfig col : cols) {
+        for (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig col : cols) {
             if (Boolean.TRUE.equals(col.getClickable())) {
                 anyClickable = true;
             }

@@ -133,6 +133,21 @@ public abstract class ActionType implements Describable<ActionType>, IPluginStor
     }
 
     /**
+     * 带「本 Action 全部对象规则引用的对象类型」的候选集推导。
+     *
+     * <p>参数池是全 Action 共用的，而对象规则的参数按属性名生成。当同一个 Action 里的规则
+     * 指向<b>不同的对象类型</b>时，两者会生成同名参数（例如都叫 {@code id}），在参数池里被
+     * 合并成一行、执行时互相覆盖。默认实现原样委派，只有对象规则需要据此加命名空间前缀，
+     * 见 {@code ObjectActionType#getEnumableCandidateSet(ActionParameters, List)}。
+     *
+     * @param objectTypeRefs 见 {@code ObjectActionType#objectTypeReferences(List)}
+     */
+    public List<Pair<Option, ActionParameterConfig>> getEnumableCandidateSet(ActionParameters actParams,
+                                                                             List<String> objectTypeRefs) {
+        return getEnumableCandidateSet(actParams);
+    }
+
+    /**
      * 执行用户提交的运行时表单。未实现的动作类别在调用时显式报错，
      * 与相邻的 {@link #getEnumableCandidateSet(ActionParameters)} 同风格。
      */
@@ -150,6 +165,17 @@ public abstract class ActionType implements Describable<ActionType>, IPluginStor
      */
     public void executeActionRule(Describable<?> plugin, boolean deleteConfirmed) {
         executeActionRule(plugin);
+    }
+
+    /**
+     * 执行运行时表单，额外携带本 Action 全部对象类型引用（用于还原参数命名空间）。
+     *
+     * <p>多对象类型 Action 的表单字段名做了 {@code <objectTypeReference>_} 前缀隔离，
+     * 见 {@code ObjectActionType#namespacePrefix(String, List)}；不关心该上下文的规则类别
+     * 原样委派即可。
+     */
+    public void executeActionRule(Describable<?> plugin, boolean deleteConfirmed, List<String> objectTypeRefs) {
+        executeActionRule(plugin, deleteConfirmed);
     }
 
     /**

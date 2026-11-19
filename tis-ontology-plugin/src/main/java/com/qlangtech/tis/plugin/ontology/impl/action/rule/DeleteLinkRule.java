@@ -23,6 +23,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.Collections;
+
 /**
  * 删除链接规则
  * <p>
@@ -45,10 +47,10 @@ public class DeleteLinkRule extends OntologyActionRule {
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
     public String linkTypeName;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String sourceObjectRidParam = "sourceRid";
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String targetObjectRidParam = "targetRid";
 
     /**
@@ -76,6 +78,14 @@ public class DeleteLinkRule extends OntologyActionRule {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseRuleDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            // SELECTABLE 必须在 descriptor 上登记候选来源，否则 DescriptorsJSON#getSelectOptions 直接抛异常、
+            // 整张表单打不开。登记空列表作兜底：真实候选由 LinkActionType 的级联管道在渲染期回填。
+            this.registerSelectOptions("sourceObjectRidParam", Collections::emptyList);
+            this.registerSelectOptions("targetObjectRidParam", Collections::emptyList);
+        }
 
         @Override
         public RuleType getRuleType() {

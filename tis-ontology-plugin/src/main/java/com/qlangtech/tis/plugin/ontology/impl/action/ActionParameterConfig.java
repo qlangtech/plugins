@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
+import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -316,11 +317,21 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
             // 因此这里不需要为「坏规则」做额外容错。
             Map<String, Pair<Option, ActionParameterConfig>> merged = new LinkedHashMap<>();
             ActionParameters previewInstance = describable.getInstance();
+            // 规则可能指向不同的对象类型；多于一个时对象规则的参数名按 <对象类型>_<属性名> 隔离，
+            // 否则两个对象类型都有的同名列会在参数池里被 putIfAbsent 合并成一行、执行时互相覆盖
+            List<String> objectTypeRefs = ObjectActionType.objectTypeReferences(ontologyAction.getActionTypes());
             for (ActionType actionType : ontologyAction.getActionTypes()) {
-                for (Pair<Option, ActionParameterConfig> candidate : actionType.getEnumableCandidateSet(previewInstance)) {
+                for (Pair<Option, ActionParameterConfig> candidate
+                        : actionType.getEnumableCandidateSet(previewInstance, objectTypeRefs)) {
                     ActionParameterConfig config = candidate.getRight();
                     merged.putIfAbsent(config.identityValue(), candidate);
                 }
+            }
+            // 各规则只知道自己内部的 0..n 序号，合并后重新按出现顺序排列，
+            // 保证运行时表单的字段顺序与参数池表格一致
+            int order = 0;
+            for (Pair<Option, ActionParameterConfig> candidate : merged.values()) {
+                candidate.getRight().order = order++;
             }
 
             return merged.values().stream()

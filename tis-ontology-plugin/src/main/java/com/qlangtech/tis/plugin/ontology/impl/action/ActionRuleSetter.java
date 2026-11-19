@@ -19,15 +19,22 @@
 package com.qlangtech.tis.plugin.ontology.impl.action;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyAction;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +64,35 @@ public class ActionRuleSetter extends OneStepOfMultiSteps {
             desClazz = ActionType.class, validate = {Validator.require})
     public List<ActionType> actionTypes;
 
+    /**
+     * 读取本 Action 已持久化的规则列表。
+     *
+     * <p>与 {@link ActionParameters#loadParameters(OntologyPluginMeta)} 同一套调用约定
+     * （{@code pluginIdVal} 非空的 meta、不去线程上下文取），但落盘位置不同：规则是
+     * {@link com.qlangtech.tis.plugin.ontology.impl.action.DefaultOntologyAction} 向导的
+     * <b>第二步</b>，与 Metadata 一起落在
+     * {@code <cfgRoot>/ontology/<domain>/action-type/<pluginIdVal>.xml} 里，
+     * 没有独立的 params 目录，所以只能整体加载 Action 再从步骤数组里取。
+     *
+     * <p>返回的是「拷贝出来的一个实例」而非磁盘上那个对象：详情页只读展示，
+     * 调用方后续若拿去编辑/提交也不会改到缓存里的 Action 配置。
+     *
+     * @return 规则配置；Action 不存在或仍是两步向导之外的存量配置（没有 Rules 步骤）时返回
+     * {@code null}，由调用方决定降级渲染
+     */
+    public static ActionRuleSetter loadRules(OntologyPluginMeta pluginMeta) {
+//        OntologyAction action = Ontology.loadActionDetail(pluginMeta.getDomain(), pluginMeta.getPluginIdVal());
+//        if (!(action instanceof DefaultOntologyAction defaultAction)) {
+//            throw new IllegalStateException("must be type of " + DefaultOntologyAction.class.getSimpleName());
+//        }
+
+        DefaultOntologyAction defaultAction = DefaultOntologyAction.load(pluginMeta);
+
+        ActionRuleSetter ruleSetter = new ActionRuleSetter();
+        ruleSetter.actionTypes = new ArrayList<>(defaultAction.getActionTypes());
+        return ruleSetter;
+    }
+
 
     /**
      * 规则列表，永不为 null。
@@ -65,12 +101,43 @@ public class ActionRuleSetter extends OneStepOfMultiSteps {
         return this.actionTypes == null ? Collections.emptyList() : this.actionTypes;
     }
 
+    /**
+     *
+     * @param pluginContext       插件上下文
+     * @param currentCtx          当前上下文
+     * @param preSavedStepPlugins 前置步骤插件实例数组
+     */
     @Override
     public void processPreSaved(IPluginContext pluginContext, Context currentCtx,
                                 OneStepOfMultiSteps[] preSavedStepPlugins) {
         // 保存当前步骤数据到上下文
         currentCtx.put(ActionRuleSetter.class.getName(), this);
         super.processPreSaved(pluginContext, currentCtx, preSavedStepPlugins);
+
+        if (ArrayUtils.isEmpty(preSavedStepPlugins)) {
+            synchronized (DefaultOntologyAction.class) {
+                /**
+                 * 说明在单独开启 {@link ActionRuleSetter} 插件的编辑操作
+                 */
+                OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
+                DefaultOntologyAction defaultAction = DefaultOntologyAction.load(pluginMeta);
+                defaultAction.setRuleSetter(this);
+
+                // 规则整体落在 Action 的 XML 里（action-type/<pluginIdVal>.xml），没有独立的 rules 目录，
+                // 故这里必须把「整个 Action」按同一 identity 覆盖写回：setPlugins 按 identity 替换
+                // 已有条目并落盘，不会产生重复文件。
+                OntologyPluginMeta saveMeta = OntologyPluginMeta.create(Ontology.OntologyEnum.Action, pluginMeta.getDomain())
+                        .setPluginIdVal(pluginMeta.getPluginIdVal())
+                        .setPersistence();
+                // OntologyEnum.getPluginStore 的返回类型被擦成了 IPluginStore<Ontology>（见该枚举 line 390
+                // 的实现），这里按 storeKeyGetter 的实际泛型回投
+                @SuppressWarnings("unchecked")
+                IPluginStore<OntologyAction> actionStore
+                        = (IPluginStore<OntologyAction>) (IPluginStore<?>) Ontology.OntologyEnum.Action.getPluginStore(saveMeta);
+                actionStore.setPlugins(pluginContext, Optional.of(currentCtx),
+                        Collections.singletonList(new Descriptor.ParseDescribable<>(defaultAction)), true);
+            }
+        }
     }
 
     @TISExtension
@@ -88,13 +155,12 @@ public class ActionRuleSetter extends OneStepOfMultiSteps {
 
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
-            // 第二步完成后不再有下一步，直接结束向导
-            return Optional.empty();
+            return Optional.of(new ActionParameters.Desc());
         }
 
         @Override
         public boolean isFinalStep() {
-            return true;
+            return false;
         }
 
         @Override

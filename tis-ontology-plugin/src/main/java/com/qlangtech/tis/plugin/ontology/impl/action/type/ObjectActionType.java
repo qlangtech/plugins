@@ -47,9 +47,11 @@ import com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
+import com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.DataSourceBinding;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.PreparedStatement;
@@ -65,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +86,12 @@ public class ObjectActionType extends ActionType {
     public static final String KEY_OBJECT_TYPE_REFERENCE = "objectTypeReference";
     public static final String KEY_OBJECT_RULE = "objectRule";
 
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    /**
+     * 参数命名空间的分隔符。多对象类型 Action 里参数名形如 {@code user_id}。
+     */
+    public static final char NAMESPACE_SEPARATOR = '_';
+
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String objectTypeReference;
 
     /**
@@ -110,16 +118,29 @@ public class ObjectActionType extends ActionType {
 
     @Override
     public void executeActionRule(Describable<?> plugin) {
-        executeActionRule(loadObjectType(), plugin, false);
+        executeActionRule(loadObjectType(), plugin, false, List.of());
     }
 
     @Override
     public void executeActionRule(Describable<?> plugin, boolean deleteConfirmed) {
-        executeActionRule(loadObjectType(), plugin, deleteConfirmed);
+        executeActionRule(loadObjectType(), plugin, deleteConfirmed, List.of());
+    }
+
+    /**
+     * 带上「本 Action 全部对象规则引用的对象类型」执行。
+     *
+     * <p>多于一个对象类型时，参数池按 {@code <objectTypeReference>_<属性名>} 做了命名空间隔离
+     * （见 {@link #getEnumableCandidateSet(ActionParameters, List)}），执行期必须把自己命名空间下的
+     * 字段还原成属性名，否则 UPDATE/INSERT 会拿 {@code user_id} 当列名。单对象类型时本方法
+     * 的行为与只带 {@code plugin} 的旧入口完全一致（不入命名空间）。
+     */
+    @Override
+    public void executeActionRule(Describable<?> plugin, boolean deleteConfirmed, List<String> objectTypeRefs) {
+        executeActionRule(loadObjectType(), plugin, deleteConfirmed, objectTypeRefs);
     }
 
     private void executeActionRule(OntologyObjectType objectType, Describable<?> plugin,
-                                   boolean deleteConfirmed) {
+                                   boolean deleteConfirmed, List<String> objectTypeRefs) {
         ObjectTypeBinding dataSourceBinding = objectType.getDataSourceBinding();
         if (!dataSourceBinding.hasBound()) {
             throw new IllegalStateException("objectType:" + objectType.getName() + " has not bind dataSource");
@@ -130,13 +151,15 @@ public class ObjectActionType extends ActionType {
         final String physicalTableName = dataSourceBinding instanceof DataSourceBinding binding
                 ? binding.resolvePhysicalTableName(objectType.getName())
                 : objectType.getName();
+        // 表单只读一次：三条规则分支共用同一份「属性名 → 值」，且已经把别的对象类型的字段摘掉
+        final Map<String, Object> values = scopedPropertyVals(plugin, objectType, objectTypeRefs);
 
         dataSource.visitFirstConnection((conn) -> {
             objectRule.accept(new AdapterRuleVisitor(true) {
                 @Override
                 public void visit(CreateObjectRule rule) {
 
-                    insertObject(conn, dataSource, physicalTableName, getPluginPropertyVals(plugin));
+                    insertObject(conn, dataSource, physicalTableName, values);
 
                 }
 
@@ -144,7 +167,7 @@ public class ObjectActionType extends ActionType {
                 public void visit(ModifyObjectRule rule) {
                     try {
                         updateObject(conn, dataSource, physicalTableName, objectType
-                                , getPluginPropertyVals(plugin), rule.ridParameterName);
+                                , values, rule.ridParameterName);
                     } catch (SQLException e) {
                         throw new RuntimeException("failed to modify object in table:" + physicalTableName, e);
                     }
@@ -152,7 +175,6 @@ public class ObjectActionType extends ActionType {
 
                 @Override
                 public void visit(DeleteObjectRule rule) {
-                    Map<String, Object> values = getPluginPropertyVals(plugin);
                     // 确认标记有两个来源：Workshop 模态框的危险按钮（deleteConfirmed 参数），
                     // 以及历史上可能混进参数池的同名表单字段，任一为 true 即视为已确认
                     boolean confirmed = deleteConfirmed
@@ -192,6 +214,19 @@ public class ObjectActionType extends ActionType {
      * @return 对象属性 → 值；没有匹配行时返回 null
      */
     public Map<String, Object> loadObjectByRid(String domain, String ridParameterName, Object rid) {
+        return loadObjectByRid(domain, ridParameterName, rid, "");
+    }
+
+    /**
+     * 带参数命名空间的版本。
+     *
+     * <p>返回的 key 必须与运行时表单的字段名一致，否则前端预填不上：多对象类型 Action 的
+     * 字段名是 {@code <objectTypeReference>_<属性名>}，故这里把 key 一并加上前缀。
+     *
+     * @param namespacePrefix 见 {@link #namespacePrefix(String, List)}，空串表示不进命名空间
+     */
+    public Map<String, Object> loadObjectByRid(String domain, String ridParameterName, Object rid,
+                                               String namespacePrefix) {
         OntologyObjectType objectType = loadObjectType(domain);
         ObjectTypeBinding dataSourceBinding = objectType.getDataSourceBinding();
         if (dataSourceBinding == null || !dataSourceBinding.hasBound()) {
@@ -222,7 +257,8 @@ public class ObjectActionType extends ActionType {
                     if (rs.next()) {
                         RowMap row = new RowMap();
                         for (String col : cols) {
-                            row.put(col, normalizeJdbcValue(rs.getObject(col)));
+                            String key = StringUtils.isEmpty(namespacePrefix) ? col : namespacePrefix + col;
+                            row.put(key, normalizeJdbcValue(rs.getObject(col)));
                         }
                         result[0] = row;
                     }
@@ -260,7 +296,7 @@ public class ObjectActionType extends ActionType {
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     /**
-     * 「需二次确认」参数名，与 {@link DeleteObjectRule#execute} 的约定保持一致。
+     * 「需二次确认」参数名，与 {@link DeleteObjectRule} 的约定保持一致。
      */
     private static final String KEY_DELETE_CONFIRMED = "deleteConfirmed";
 
@@ -286,6 +322,114 @@ public class ObjectActionType extends ActionType {
             return pk.get().getName();
         }
         return Objects.requireNonNull(ridParameterName, "ridParameterName can not be null");
+    }
+
+    /**
+     * 带命名空间的版本：多对象类型 Action 里表单字段名是 {@code <objectTypeReference>_<属性名>}。
+     *
+     * @param namespacePrefix {@link #namespacePrefix(String, List)} 的结果，空表示本 Action 只有
+     *                        一个对象类型，字段名原样返回
+     */
+    public static String resolveIdentityParameterName(OntologyObjectType objectType, String ridParameterName,
+                                                      String namespacePrefix) {
+        String name = resolveIdentityParameterName(objectType, ridParameterName);
+        return StringUtils.isEmpty(namespacePrefix) ? name : namespacePrefix + name;
+    }
+
+    /**
+     * 本 Action 里出现过的全部对象类型引用（去重、保序、忽略空值）。
+     */
+    public static List<String> objectTypeReferences(List<? extends ActionType> actionTypes) {
+        if (CollectionUtils.isEmpty(actionTypes)) {
+            return List.of();
+        }
+        return actionTypes.stream()
+                .filter(ObjectActionType.class::isInstance)
+                .map(ObjectActionType.class::cast)
+                .map((objectRule) -> objectRule.objectTypeReference)
+                .filter(StringUtils::isNotEmpty)
+                .distinct()
+                .toList();
+    }
+
+    /**
+     * 本规则在参数池 / 运行时表单里的命名空间前缀（含分隔符），单对象类型 Action 返回空串。
+     *
+     * <p>Palantir 允许一个 Action 组合指向不同对象类型的规则；这些规则共用一个参数池，
+     * 而参数名同时是生成的表单字段名和 SQL 列名。两个对象类型都有 {@code id} 时参数池会
+     * 撞成一行、执行时会互相写对方的列，因此<b>只有多于一个对象类型</b>时才加前缀
+     * {@code <objectTypeReference>_}；只有一个对象类型时保持原样，存量 Action 的参数池、
+     * 生成的 groovy 与落盘文件逐字节不变。
+     */
+    public String namespacePrefix(List<String> allObjectTypeRefs) {
+        return namespacePrefix(this.objectTypeReference, allObjectTypeRefs);
+    }
+
+    /**
+     * @param objectTypeRef  规则引用的对象类型
+     * @param allObjectTypeRefs 本 Action 全部对象规则引用的对象类型，见 {@link #objectTypeReferences(List)}
+     */
+    public static String namespacePrefix(String objectTypeRef, List<String> allObjectTypeRefs) {
+        if (StringUtils.isEmpty(objectTypeRef) || allObjectTypeRefs == null || allObjectTypeRefs.size() <= 1) {
+            return "";
+        }
+        return qualifyPrefix(objectTypeRef);
+    }
+
+    /**
+     * 对象类型名 → 合法标识符前缀。对象类型名可以含中文/连字符，而前缀要与属性名拼成
+     * groovy 字段名（受 {@code identity_strict} 与 Java 标识符规则约束）。
+     */
+    static String qualifyPrefix(String objectTypeRef) {
+        String sanitized = objectTypeRef.replaceAll("[^_A-Za-z0-9]", "_");
+        if (sanitized.isEmpty() || Character.isDigit(sanitized.charAt(0))) {
+            sanitized = "_" + sanitized;
+        }
+        return sanitized + NAMESPACE_SEPARATOR;
+    }
+
+    /**
+     * 把运行时表单里属于本规则的字段还原成「属性名 → 值」。
+     *
+     * <p>单对象类型 Action 直接返回全部字段（存量行为）；多对象类型时只保留
+     * {@code <本规则前缀><属性名>} 的字段并去掉前缀，从而：
+     * <ul>
+     *   <li>不会拿别的对象类型的字段当本表列名（否则 INSERT/UPDATE 直接报未知列）；</li>
+     *   <li>只写对象类型上真实存在的属性，参数池里混入的别类参数（链接 RID 等）不会进 SQL。</li>
+     * </ul>
+     */
+    Map<String, Object> scopedPropertyVals(Describable<?> plugin, OntologyObjectType objectType,
+                                           List<String> allObjectTypeRefs) {
+        Set<String> cols = objectType.getCols().stream()
+                .map(OntologyProperty::getName)
+                .collect(Collectors.toSet());
+        return scopeValues(getPluginPropertyVals(plugin), cols, allObjectTypeRefs);
+    }
+
+    /**
+     * {@link #scopedPropertyVals} 的纯函数内核（与表单 / 对象类型解耦，便于单测）。
+     *
+     * @param allValues      运行期表单的「字段名 → 值」
+     * @param cols           本对象类型的属性名集合
+     * @param allObjectTypeRefs 本 Action 全部对象类型引用，见 {@link #objectTypeReferences(List)}
+     */
+    Map<String, Object> scopeValues(Map<String, Object> allValues, Set<String> cols,
+                                    List<String> allObjectTypeRefs) {
+        String prefix = namespacePrefix(this.objectTypeReference, allObjectTypeRefs);
+        if (StringUtils.isEmpty(prefix)) {
+            return allValues;
+        }
+        Map<String, Object> scoped = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : allValues.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(prefix)) {
+                String prop = key.substring(prefix.length());
+                if (cols.contains(prop)) {
+                    scoped.put(prop, entry.getValue());
+                }
+            }
+        }
+        return scoped;
     }
 
     /**
@@ -426,23 +570,26 @@ public class ObjectActionType extends ActionType {
 
     @Override
     public List<Pair<Option, ActionParameterConfig>> getEnumableCandidateSet(ActionParameters actionParams) {
+        return getEnumableCandidateSet(actionParams, List.of());
+    }
+
+    /**
+     * @param allObjectTypeRefs 本 Action 全部对象规则引用的对象类型，见 {@link #objectTypeReferences(List)}。
+     *                          多于一个时本规则产出的参数名带 {@code <objectTypeReference>_} 前缀（见
+     *                          {@link #namespacePrefix(String, List)}），否则与旧行为逐字一致。
+     */
+    @Override
+    public List<Pair<Option, ActionParameterConfig>> getEnumableCandidateSet(ActionParameters actionParams,
+                                                                             List<String> allObjectTypeRefs) {
         List<Pair<Option, ActionParameterConfig>> result = Lists.newArrayList();
         // 加载对象类型及其属性列表
         OntologyObjectType objectType = this.loadObjectType();
         List<OntologyProperty> cols = objectType.getCols();
+        final String prefix = namespacePrefix(this.objectTypeReference, allObjectTypeRefs);
 
-        // 提取当前已选中的 target 集合
-        // OntologyActionRule rule = objectRule;
-        java.util.Set<String> selected = new java.util.HashSet<>();
-        // List<PropertyMappingConfig> existingMappings = null;
+        // 提取当前参数池里已选中的 id 集合
+        Set<String> selected = new java.util.HashSet<>();
         List<ActionParameterConfig> parameters = actionParams.parameters;
-
-//        if (rule instanceof CreateObjectRule) {
-//            existingMappings = ((CreateObjectRule) rule).propertyMappings;
-//        } else if (rule instanceof ModifyObjectRule) {
-//            existingMappings = ((ModifyObjectRule) rule).propertyMappings;
-//        }
-
         if (CollectionUtils.isNotEmpty(parameters)) {
             selected = parameters.stream()
                     .map(ActionParameterConfig::identityValue)
@@ -455,9 +602,16 @@ public class ObjectActionType extends ActionType {
         int order = 0;
         for (OntologyProperty col : cols) {
             ActionParameterConfig config = ActionParameterMapper.create(col, valueTypes);
+            if (StringUtils.isNotEmpty(prefix)) {
+                // 参数名即表单字段名，多对象类型时必须带命名空间前缀；displayName 留空，
+                // 由 ActionParameterConfig#label() 回落到带前缀的 parameterId，避免两个对象类型的
+                // 同名属性在参数池表格里显示成两行一模一样的「id」
+                config.parameterId = prefix + col.getName();
+                config.displayName = null;
+            }
             config.order = order++;
             result.add(Pair.of(
-                    new Option(col.getName()).setChecked(selected.contains(col.getName())),
+                    new Option(col.getName()).setChecked(selected.contains(config.parameterId)),
                     config
             ));
         }
@@ -488,6 +642,28 @@ public class ObjectActionType extends ActionType {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseActionTypeDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            this.registerSelectOptions(KEY_OBJECT_TYPE_REFERENCE, LinkReference::getObjectTypeOpts);
+            // 选中对象类型后，规则里的「RID 参数名」候选 = 该对象类型的全部属性（主键带注释）
+            this.valueChangePipe(KEY_OBJECT_TYPE_REFERENCE, KEY_OBJECT_RULE + "." + ModifyObjectRule.KEY_RID_PARAMETER_NAME)
+                    .render((meta, params) -> {
+                        String objType = params.getString(KEY_OBJECT_TYPE_REFERENCE);
+                        if (StringUtils.isEmpty(objType)) {
+                            return List.of();
+                        }
+                        try {
+                            OntologyObjectType objectType = Ontology.loadObjectTypeDetail(
+                                    OntologyPluginMeta.createPluginMeta(meta).getDomain(), objType);
+                            return objectType == null ? List.of() : objectType.getColOpts();
+                        } catch (RuntimeException e) {
+                            // 渲染期取不到只丢这一组候选，绝不能让整张表单打不开：
+                            // RootFormProperties#getInstancePropsJson 会把这里的异常包成 RuntimeException 抛给请求
+                            return List.of();
+                        }
+                    });
+        }
 
         @Override
         public RuleGroup getRuleGroup() {

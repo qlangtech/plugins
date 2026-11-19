@@ -23,6 +23,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.Collections;
+
 import java.util.List;
 
 /**
@@ -35,6 +37,8 @@ import java.util.List;
  */
 public class ModifyObjectRule extends OntologyActionRule {
 
+    public static final String KEY_RID_PARAMETER_NAME = "ridParameterName";
+
     /**
      * 对象属性 ← 取值来源的映射行。
      *
@@ -44,7 +48,7 @@ public class ModifyObjectRule extends OntologyActionRule {
 //            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
     public List<PropertyMappingConfig> propertyMappings;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String ridParameterName = "rid";
 
     @Override
@@ -65,6 +69,13 @@ public class ModifyObjectRule extends OntologyActionRule {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseRuleDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            // SELECTABLE 必须在 descriptor 上登记候选来源，否则 DescriptorsJSON#getSelectOptions 直接抛异常、
+            // 整张表单打不开。登记空列表作兜底：真实候选由宿主 ActionType 的级联管道在渲染期回填。
+            this.registerSelectOptions("ridParameterName", Collections::emptyList);
+        }
 
         @Override
         public RuleType getRuleType() {

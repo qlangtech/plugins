@@ -23,6 +23,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.Collections;
+
 /**
  * 删除对象规则
  * <p>
@@ -33,7 +35,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  */
 public class DeleteObjectRule extends OntologyActionRule {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String ridParameterName = "rid";
 
     // @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
@@ -60,6 +62,13 @@ public class DeleteObjectRule extends OntologyActionRule {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseRuleDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            // SELECTABLE 必须在 descriptor 上登记候选来源，否则 DescriptorsJSON#getSelectOptions 直接抛异常、
+            // 整张表单打不开。登记空列表作兜底：真实候选由宿主 ActionType 的级联管道在渲染期回填。
+            this.registerSelectOptions(ModifyObjectRule.KEY_RID_PARAMETER_NAME, Collections::emptyList);
+        }
 
         @Override
         public RuleType getRuleType() {

@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyLinker;
@@ -55,7 +56,9 @@ import com.qlangtech.tis.plugin.ontology.impl.linker.RelationshipTypeObjectTypeF
 import com.qlangtech.tis.plugin.ontology.impl.objtype.DataSourceBinding;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectSetRowQuery;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
+import com.qlangtech.tis.runtime.module.action.IParamGetter;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -65,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -125,7 +129,21 @@ public class LinkActionType extends ActionType {
     }
 
     public LinkDefinition loadDefinition(String domain, OntologyActionRule rule) {
-        String linkTypeId = resolveLinkTypeId(this.linkTypeReference, rule);
+        return resolveDefinition(domain, resolveLinkTypeId(this.linkTypeReference, rule));
+    }
+
+    /**
+     * 只凭 Action 级 {@code linkTypeReference} 解析链接定义，不依赖规则实例。
+     *
+     * <p>用于表单项级联渲染：管道渲染期拿不到 {@code linkRule}（可描述字段不能作为 pipe source），
+     * 但源/目标对象类型只由链接类型决定，因此这里走与执行链路同一套解析逻辑。
+     */
+    static LinkDefinition loadDefinitionByLinkType(String domain, String linkTypeReference) {
+        // 规则传 null ⇒ 不会去读 legacy linkTypeName；Action 级为空时直接抛「未配置链接类型」，由调用方吞掉
+        return resolveDefinition(domain, resolveLinkTypeId(linkTypeReference, null));
+    }
+
+    private static LinkDefinition resolveDefinition(String domain, String linkTypeId) {
         OntologyLinker linker = OntologyLinker.load(domain, linkTypeId);
         if (linker == null) {
             throw new IllegalStateException("link type not found: '" + linkTypeId + "' (ontology:" + domain + ")");
@@ -570,6 +588,35 @@ public class LinkActionType extends ActionType {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseActionTypeDescriptor {
+
+        public DefaultDescriptor() {
+            super();
+            // 选中链接类型后，两个 RID 参数名的候选分别来自链接两端对象类型的属性：
+            // 两端通常不是同一个对象类型，所以不能广播 render，必须逐字段渲染。
+            // toField 数组必须字典序：Descriptor#getValueChangeFromFieldKeys 用 Arrays.binarySearch 查找。
+            this.valueChangePipe("linkTypeReference",
+                            "linkRule.sourceObjectRidParam", "linkRule.targetObjectRidParam")
+                    .render("linkRule.sourceObjectRidParam", (meta, params) ->
+                            colOptsOf(meta, params, LinkDefinition::source))
+                    .render("linkRule.targetObjectRidParam", (meta, params) ->
+                            colOptsOf(meta, params, LinkDefinition::target));
+        }
+
+        private static List<? extends IdentityName> colOptsOf(UploadPluginMeta meta, IParamGetter params,
+                                                              Function<LinkDefinition, TableRef> end) {
+            String linkType = params.getString("linkTypeReference");
+            if (StringUtils.isEmpty(linkType)) {
+                return List.of();
+            }
+            try {
+                LinkDefinition definition = loadDefinitionByLinkType(
+                        OntologyPluginMeta.createPluginMeta(meta).getDomain(), linkType);
+                return end.apply(definition).ontologyObjectType().getColOpts();
+            } catch (RuntimeException e) {
+                // 同上：渲染期解析失败只丢这一组候选，避免整张表单打不开
+                return List.of();
+            }
+        }
 
         @Override
         public RuleGroup getRuleGroup() {

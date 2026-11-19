@@ -10,9 +10,5 @@
   "description": {
     "label": "描述",
     "help": "详细描述此 Action 的用途和功能"
-  },
-  "targetObjectType": {
-    "label": "目标对象类型",
-    "help": "此 Action 操作的目标对象类型，从本体域中的 ObjectType 列表选择"
   }
 }

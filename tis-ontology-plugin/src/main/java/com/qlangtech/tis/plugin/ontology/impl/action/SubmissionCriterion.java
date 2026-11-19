@@ -31,12 +31,18 @@ import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
+import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 /**
  * 提交条件中的一行，供 {@code MULTI_DESCRIBLE_PLUGIN} 子表单渲染。
- *
+ *<a href="https://gitee.com/qlangtech/palantir-study/blob/master/foundry/ontology/action-types/detail/00-overview/submission-criteria.md">...</a>
  * <p>多条条件之间是「且(AND)」关系；整个列表为空表示不限制提交。
  *
  * @author 百岁 (baisui@qlangtech.com)
@@ -165,37 +171,44 @@ public class SubmissionCriterion implements Describable<SubmissionCriterion>,
     public static List<OptionWithEndType> availableSubjects() {
         List<OptionWithEndType> result = Lists.newArrayList();
 
-        // ① Action 参数池
-        ActionParameters params = null; // ActionParameters OneStepOfMultiSteps.getPreviousStepInstance(ActionParameters.class, false);
-        if (params != null) {
-            for (ActionParameterConfig p : params.getParameters()) {
-                result.add(new OptionWithEndType(p.displayName, p.parameterId,
-                        IEndTypeGetter.EndType.OntologyObjectType)
-                        .setComment(new Option.OptionComment(Option.OptionCommentColor.Blue, "Action 参数")));
+        // ① Action 参数池（第 3 步）。向导保存第 3 步时它已把自己发布进上下文；
+        //    编辑已保存 Action 时由 MultiStepsHostPluginFormProperties#getInstancePropsJson()
+        //    逐个步骤 processCurrentStep 发布。
+        try {
+            ActionParameters params = OneStepOfMultiSteps.getPreviousStepInstance(ActionParameters.class, false);
+            if (params != null) {
+                for (ActionParameterConfig p : params.getParameters()) {
+                    result.add(new OptionWithEndType(p.displayName, p.parameterId,
+                            IEndTypeGetter.EndType.OntologyObjectType)
+                            .setComment(new Option.OptionComment(Option.OptionCommentColor.Blue, "Action 参数")));
+                }
             }
+        } catch (Exception e) {
+            // 渲染期没有线程上下文（例如脱离表单的单测/预览）时只丢这一组候选
         }
 
-        // ② 目标对象类型的属性 —— 取自第 2 步 ObjectActionType.objectTypeReference
+        // ② 目标对象类型的属性 —— 取自第 2 步 ObjectActionType.objectTypeReference。
+        //    ActionParameters#processPreSaved 会顺手把第 2 步也发布进上下文，否则向导首渲染
+        //    第 4 步时这里只有参数池、没有对象属性。
         try {
             ActionRuleSetter setter = OneStepOfMultiSteps.getPreviousStepInstance(ActionRuleSetter.class, false);
-
-//            String objTypeName = setter == null ? null : setter.getActionTypes().stream()
-//                    .filter(ObjectActionType.class::isInstance)
-//                    .map(ObjectActionType.class::cast)
-//                    .map((t) -> t.objectTypeReference)
-//                    .filter(StringUtils::isNotEmpty)
-//                    .findFirst().orElse(null);
-//            if (StringUtils.isNotEmpty(objTypeName)) {
-//                OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(
-//                        IPluginContext.getThreadLocalInstance().getContext());
-//                OntologyObjectType objType = Ontology.loadObjectTypeDetail(meta.getDomain(), objTypeName);
-//                if (objType != null) {
-//                    for (OptionWithEndType col : objType.getColOpts()) {
-//                        result.add(col.setComment(
-//                                new Option.OptionComment(Option.OptionCommentColor.Geekblue, "对象属性")));
-//                    }
-//                }
-//            }
+            String objTypeName = setter == null ? null : setter.getActionTypes().stream()
+                    .filter(ObjectActionType.class::isInstance)
+                    .map(ObjectActionType.class::cast)
+                    .map((t) -> t.objectTypeReference)
+                    .filter(StringUtils::isNotEmpty)
+                    .findFirst().orElse(null);
+            if (StringUtils.isNotEmpty(objTypeName)) {
+                OntologyPluginMeta meta = OntologyPluginMeta.createPluginMeta(
+                        IPluginContext.getThreadLocalInstance().getContext());
+                OntologyObjectType objType = Ontology.loadObjectTypeDetail(meta.getDomain(), objTypeName);
+                if (objType != null) {
+                    for (OptionWithEndType col : objType.getColOpts()) {
+                        result.add(col.setComment(
+                                new Option.OptionComment(Option.OptionCommentColor.Geekblue, "对象属性")));
+                    }
+                }
+            }
         } catch (Exception e) {
             // 渲染期降级：本体域/对象类型取不到时只丢这一组候选，不能让整张表单打不开。
             // 与 LinkReference#getObjectTypeOpts 的宽 catch 是同一取舍。

@@ -5,7 +5,8 @@
   },
   "ridParameterName": {
     "label": "RID 参数名",
-    "help": "指定哪个 Action 参数携带目标对象的 RID",
-    "placeholder": "rid"
+    "help": "该参数携带目标对象的 RID（真正的定位列由对象类型的主键定义决定）。候选来自所选对象类型的属性，可自行输入",
+    "placeholder": "rid",
+    "allow_custom_input": true
   }
 }

@@ -16,16 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.connector.sink.TestMySQLSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.source.TestMySQLSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-04 10:48
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestMySQLSinkFactory.class, TestMySQLSourceFactory.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

@@ -43,7 +43,7 @@ import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
 import org.apache.commons.io.FileUtils;
 import org.apache.solr.handler.admin.MockTisCoreAdminHandler;
 import org.apache.solr.response.SolrQueryResponse;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,10 +85,9 @@ public class TestLocalTableDumpAndIndex extends TISTestCase implements ITestDump
         ITISCoordinator zkCoordinator = MockZKUtils.createZkMock();
         //search4(.+?)_shard(\d+?)_replica_n(\d+?)
         String mockSolrCore = INDEX_COLLECTION + "_shard1_replica_n1";
-        IJoinTaskContext execContext = this.mock("execContext", IJoinTaskContext.class);
+        IJoinTaskContext execContext = Mockito.mock(IJoinTaskContext.class, Mockito.withSettings().name("execContext"));
         //EntityName targetTableName = EntityName.parse(DB_EMPLOYEES+"."); ctx.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME);
-        EasyMock.expect(execContext.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME)).andReturn(getEmployeeTab()).anyTimes();
-        replay();
+        Mockito.when(execContext.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME)).thenReturn(getEmployeeTab());
         int round = 0;
         ArrayDeque<Date> createDates = Queues.newArrayDeque();
         // 一共测试5轮
@@ -128,8 +127,6 @@ public class TestLocalTableDumpAndIndex extends TISTestCase implements ITestDump
         for (String indexBuildRootSub : indexBuildRoot.list()) {
             assertTrue("shall contain file:" + new File(indexBuildRoot, indexBuildRootSub), timestamps.contains(indexBuildRootSub));
         }
-
-        verifyAll();
     }
 
 

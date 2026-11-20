@@ -27,6 +27,9 @@ import com.qlangtech.tis.plugin.BaiscPluginTest;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.junit.Before;
 /**
  * 跑这个单元测试需要事先部署k8s集群
  *
@@ -38,14 +41,14 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
     private static final String s4totalpay = "search4totalpay";
     private IncrStreamFactory incrFactory;
 
-    @Override
-    public void setUp() throws Exception {
+    @Before public void setUp() throws Exception {
         //super.setUp();
         IPluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
         incrFactory = s4totalpayIncr.getPlugin();
         assertNotNull(incrFactory);
     }
 
+    @Test
     public void testCreateIncrDeployment() throws Exception {
 
         IRCController incr = getIncrSync();
@@ -71,6 +74,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
     }
 
 
+    @Test
     public void testDeleteIncrDeployment() throws Exception {
         try {
             getIncrSync().removeInstance(new TargetResName(s4totalpay));

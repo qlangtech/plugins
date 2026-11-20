@@ -18,15 +18,13 @@
 
 package com.qlangtech.tis.plugin.datax.mongo;
 
-import junit.framework.TestCase;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 
 /**
  * https://www.mongodb.com/docs/atlas/data-federation/query/sql/drivers/jdbc/connect/
  */
-public class ReadMongoDBSchemaByJDBC extends TestCase {
+public class ReadMongoDBSchemaByJDBC {
 
 //    public void testRead() throws Exception {
 //       // String mongoDBUrl = "jdbc:mongodb://admin:123456@192.168.28.201:27017/?authSource=admin";

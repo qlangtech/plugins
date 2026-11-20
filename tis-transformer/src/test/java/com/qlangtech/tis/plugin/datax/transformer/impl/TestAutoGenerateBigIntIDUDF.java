@@ -27,8 +27,8 @@ import com.qlangtech.tis.plugin.datax.transformer.impl.AutoGenerateBigIntIDUDF.G
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.collections.CollectionUtils;
-import org.easymock.EasyMock;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,15 +65,12 @@ public class TestAutoGenerateBigIntIDUDF extends BasicUDFDefinitionTest<AutoGene
     public void testEvaluate() {
         AutoGenerateBigIntIDUDF autoGenUDF = this.createTransformerUDF();
 
-        Record record = mock("record", Record.class);
-        // Column usrIdCol = mock("userIdCol", Column.class);
-        // EasyMock.expect(record.getColumn(userId)).andReturn(usrIdCol);
-        record.setColumn(EasyMock.eq(addedField), EasyMock.anyLong());
-        EasyMock.expectLastCall().times(1);
-        this.replay();
+        Record record = Mockito.mock(Record.class, Mockito.withSettings().name("record"));
+        // Column usrIdCol = Mockito.mock(Column.class, Mockito.withSettings().name("userIdCol"));
+        // Mockito.when(record.getColumn(userId)).thenReturn(usrIdCol);
         autoGenUDF.evaluate(record);
 
-        this.verifyAll();
+        Mockito.verify(record, Mockito.times(1)).setColumn(Mockito.eq(addedField), Mockito.anyLong());
     }
 
     @Override

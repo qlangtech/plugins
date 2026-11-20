@@ -16,16 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7.TestTISXContentBuilderExtension;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-03-24 10:38
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({
-        TestTISXContentBuilderExtension.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

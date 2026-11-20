@@ -54,7 +54,6 @@ import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.types.RowKind;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -63,6 +62,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 import org.testcontainers.containers.ClickHouseContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -154,7 +154,7 @@ public class TestChunjunClickhouseSinkFactory
                     , IOUtils.loadResourceFromClasspath(
                             TestChunjunClickhouseSinkFactory.class, "totalpay-create-ddl.sql"), TisUTF8.get());
 
-            EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+            Mockito.when(dataxProcessor.getDataxCreateDDLDir(null)).thenReturn(ddlDir);
 
             IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
 
@@ -168,8 +168,8 @@ public class TestChunjunClickhouseSinkFactory
             // replaceMode.updateKey = Collections.singletonList(colId);
             InsertType insertType = new InsertType();
             sinkExt.incrMode = insertType;
-            EasyMock.expect(totalpayinfo.getIncrSinkProps()).andReturn(sinkExt);
-            EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).anyTimes();
+            Mockito.when(totalpayinfo.getIncrSinkProps()).thenReturn(sinkExt);
+            Mockito.when(totalpayinfo.getName()).thenReturn(tableName);
             List<CMeta> cols = Lists.newArrayList();
             CMeta cm = new CMeta();
             cm.setName(colEntityId);
@@ -192,11 +192,11 @@ public class TestChunjunClickhouseSinkFactory
             cm.setType(DataType.getType(JDBCTypes.BIGINT));
             cols.add(cm);
 
-            EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();
+            Mockito.when(totalpayinfo.getCols()).thenReturn(cols);
             selectedTabs.add(totalpayinfo);
-            EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(1);
+            Mockito.when(dataxReader.getSelectedTabs()).thenReturn(selectedTabs);
 
-            EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
+            Mockito.when(dataxProcessor.getReader(null)).thenReturn(dataxReader);
 
 
             //mock("dataXWriter", DataXClickhouseWriter.class);
@@ -216,9 +216,9 @@ public class TestChunjunClickhouseSinkFactory
             dataXWriter.autoCreateTable = AutoCreateTable.dft();
             ;
 
-            //EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
+            //Mockito.when(dataXWriter.getDataSourceFactory()).thenReturn(sourceFactory);
 
-            EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
+            Mockito.when(dataxProcessor.getWriter(null)).thenReturn(dataXWriter);
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
             };
@@ -226,9 +226,7 @@ public class TestChunjunClickhouseSinkFactory
             Map<String, TableAlias> aliasMap = new HashMap<>();
             TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
-
-            this.replay();
+            Mockito.when(dataxProcessor.getTabAlias()).thenReturn(new TableAliasMapper(aliasMap));
 
             ChunjunClickhouseSinkFactory clickHouseSinkFactory = new ChunjunClickhouseSinkFactory();
             clickHouseSinkFactory.batchSize = 100;
@@ -304,7 +302,8 @@ public class TestChunjunClickhouseSinkFactory
                 throw new RuntimeException(e);
             }
 
-            this.verifyAll();
+            Mockito.verify(dataxReader, Mockito.times(1)).getSelectedTabs();
+            Mockito.verify(dataxProcessor).getWriter(null);
 
         }
     }

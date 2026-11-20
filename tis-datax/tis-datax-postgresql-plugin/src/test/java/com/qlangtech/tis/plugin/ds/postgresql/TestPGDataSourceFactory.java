@@ -18,19 +18,19 @@
 
 package com.qlangtech.tis.plugin.ds.postgresql;
 
-import junit.framework.TestCase;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Time;
 import java.util.stream.Collectors;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-22 14:15
  **/
-public class TestPGDataSourceFactory extends TestCase {
+public class TestPGDataSourceFactory {
+    @Test
     public void testShowTables() {
 
         // String createSQL = IOUtils.loadResourceFromClasspath(TestPGDataSourceFactory.class, "create-sql-instancedetail.sql");

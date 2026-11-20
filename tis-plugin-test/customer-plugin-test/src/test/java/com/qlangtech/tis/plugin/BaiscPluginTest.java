@@ -20,17 +20,15 @@ package com.qlangtech.tis.plugin;
 
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import junit.framework.TestCase;
-
+import org.junit.Before;
 /**
  * @author: baisui 百岁
  * @create: 2020-05-03 11:14
  **/
-public class BaiscPluginTest extends TestCase {
+public class BaiscPluginTest {
 
 
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         HttpUtils.addMockGlobalParametersConfig();
         // Config.setNotFetchFromCenterRepository();
         CenterResource.setNotFetchFromCenterRepository();

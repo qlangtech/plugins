@@ -46,12 +46,12 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
-import org.easymock.EasyMock;
 import org.elasticsearch.client.Client;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+import org.mockito.Mockito;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -95,7 +95,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
         List<ISelectedTab> selectedTabs = Lists.newArrayList();
         ISelectedTab totalpayinfo = mock(tableName, ISelectedTab.class);
-        EasyMock.expect(totalpayinfo.getName()).andReturn(tableName);
+        Mockito.when(totalpayinfo.getName()).thenReturn(tableName);
         List<CMeta> cols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
@@ -118,21 +118,21 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         cm.setType(DataType.getType(JDBCTypes.BIGINT));
         cols.add(cm);
 
-        EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();
+        Mockito.when(totalpayinfo.getCols()).thenReturn(cols);
         selectedTabs.add(totalpayinfo);
-        EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs);
+        Mockito.when(dataxReader.getSelectedTabs()).thenReturn(selectedTabs);
 
-        EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader);
+        Mockito.when(dataxProcessor.getReader(null)).thenReturn(dataxReader);
 
 
         DataXElasticsearchWriter dataXWriter = mock("dataXWriter", DataXElasticsearchWriter.class);
-        EasyMock.expect(dataXWriter.getIndexName()).andReturn(tableName);
+        Mockito.when(dataXWriter.getIndexName()).thenReturn(tableName);
 
         ElasticEndpoint endpoint = new ElasticEndpoint();
         endpoint.endpoint = "http://192.168.28.201:9200";
         endpoint.authToken = new NoneToken();
 
-        EasyMock.expect(dataXWriter.getToken()).andReturn(endpoint);
+        Mockito.when(dataXWriter.getToken()).thenReturn(endpoint);
 
         //  ESTableAlias esTableAlias = new ESTableAlias();
 
@@ -152,18 +152,16 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
             return esCol;
         }).collect(Collectors.toList());
 
-        EasyMock.expect(dataXWriter.initialIndex(esTableAlias)).andReturn(esCols);
+        Mockito.when(dataXWriter.initialIndex(esTableAlias)).thenReturn(esCols);
 
 
-        EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
+        Mockito.when(dataxProcessor.getWriter(null)).thenReturn(dataXWriter);
 
 
 //        Map<String, TableAlias> aliasMap = new HashMap<>();
 //
 //        aliasMap.put(tableName, esTableAlias);
-       // EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(new TableAliasMapper(aliasMap));
-
-        this.replay();
+       // Mockito.when(dataxProcessor.getTabAlias(null)).thenReturn(new TableAliasMapper(aliasMap));
 
         IFlinkColCreator flinkColCreator = null;
 
@@ -198,7 +196,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         Thread.sleep(5000);
 
-        this.verifyAll();
+        Mockito.verify(dataxProcessor).getWriter(null);
         // Client client = getClient();
     }
 

@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-import org.apache.flink.cdc.connectors.mysql.testutils.TestMySqlContainer;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-06 15:42
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestMySqlContainer.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-08-06 13:21
@@ -60,6 +61,7 @@ public class TestTotalpayProducter extends BasicProducer {
                 , "", "");
     }
 
+    @Test
     public void testProduce() throws Exception {
         //Instantiate with a producer group name.
         DefaultMQProducer producter = createProducter();

@@ -20,14 +20,11 @@ package com.qlangtech.tis.plugin.test;
 
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import junit.framework.TestCase;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-14 10:15
  **/
-public abstract class BasicTest extends TestCase
-{
+public abstract class BasicTest {
 
     public static final String testDataXName = "dataxname";
 

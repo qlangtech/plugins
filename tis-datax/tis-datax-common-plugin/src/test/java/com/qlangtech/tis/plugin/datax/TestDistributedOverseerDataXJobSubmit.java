@@ -30,23 +30,25 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-07 13:58
  **/
-public class TestDistributedOverseerDataXJobSubmit extends TestCase {
+public class TestDistributedOverseerDataXJobSubmit {
 
     public static final String DATAX_NAME = "baisuitest";
     public static final Integer DATAX_TASK_ID = 123;
     public static final String DUMP_TABLE = "customer_order_relation";
     public static final String DATAX_JOB_FILE_NAME = DUMP_TABLE + "_1.json";
 
+    @Test
     public void testPushMsgToDistributeQueue() {
 
         DataXJobWorker dataxJobWorker = DataXJobWorker.getJobWorker(TargetResName.K8S_DATAX_INSTANCE_NAME);
@@ -54,19 +56,19 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
 //        assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 
 
-        IDataxProcessor dataxProcessor = EasyMock.createMock("dataXProcessor", IDataxProcessor.class); //IAppSource.load(DATAX_NAME);
+        IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataXProcessor")); //IAppSource.load(DATAX_NAME);
         assertNotNull(dataxProcessor);
 
-        //IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
-        // EasyMock.expect(dataxProcessor.getDataxCfgDir()).andReturn();
+        //IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        // Mockito.when(dataxProcessor.getDataxCfgDir()).thenReturn();
 
-        IExecChainContext taskContext = EasyMock.createMock("taskContext", IExecChainContext.class);
-        ISelectedTab selectTab = EasyMock.createMock("selectTab", ISelectedTab.class);
+        IExecChainContext taskContext = Mockito.mock(IExecChainContext.class, Mockito.withSettings().name("taskContext"));
+        ISelectedTab selectTab = Mockito.mock(ISelectedTab.class, Mockito.withSettings().name("selectTab"));
 
-        // EasyMock.expect(taskContext.getIndexName()).andReturn(DATAX_NAME);
-        //  EasyMock.expect(taskContext.getTaskId()).andReturn(DATAX_TASK_ID);
-        IAppSourcePipelineController pipelineController = EasyMock.createMock("appSourcePipelineController", IAppSourcePipelineController.class);
-        EasyMock.expect(taskContext.getPipelineController()).andReturn(pipelineController);
+        // Mockito.when(taskContext.getIndexName()).thenReturn(DATAX_NAME);
+        //  Mockito.when(taskContext.getTaskId()).thenReturn(DATAX_TASK_ID);
+        IAppSourcePipelineController pipelineController = Mockito.mock(IAppSourcePipelineController.class, Mockito.withSettings().name("appSourcePipelineController"));
+        Mockito.when(taskContext.getPipelineController()).thenReturn(pipelineController);
 
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
         ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
@@ -78,14 +80,13 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         DataXJobSubmit submit = jobSubmit.get();
 
         DataXJobSubmit.IDataXJobContext jobContext = submit.createJobContext(taskContext);
-        EasyMock.replay(taskContext, selectTab, dataxProcessor, pipelineController);
 
         DataXJobSubmit.TableDataXEntity tableEntity
                 = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(DATAX_JOB_FILE_NAME, DUMP_TABLE);
 
         IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, tableEntity);
         dataXJob.run();
-        EasyMock.verify(taskContext, selectTab, dataxProcessor, pipelineController);
+        Mockito.verify(taskContext).getPipelineController();
     }
 
 

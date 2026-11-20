@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.mq;
 
-import junit.framework.TestCase;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -27,12 +26,14 @@ import org.apache.rocketmq.common.message.MessageExt;
 
 import java.util.List;
 
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-08-06 14:53
  **/
-public class TestConsumer extends TestCase {
+public class TestConsumer {
 
+    @Test
     public void testConsume() throws Exception {
         // Instantiate with specified consumer group name.
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(TestTotalpayProducter.topic + "_consume1");

@@ -48,14 +48,12 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.BsonType;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.util.List;
@@ -63,11 +61,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
+public class TestDataXMongodbReader {
 
     private static final String DOC_TYPE_SPLIT_FIELD1 = "doc_type_split_field1";
     private static final String DOC_TYPE_SPLIT_FIELD2 = "doc_type_split_field2";
@@ -80,17 +80,13 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
     private List<String> assertColsWithoutDocTypeField //
             = Lists.newArrayList("col1", "col2", "col3", DOC_TYPE_SPLIT_FIELD1, DOC_TYPE_SPLIT_FIELD2);
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        this.clearMocks();
-    }
-
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXMongodbReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testGetSubTasks() {
         DataXMongodbReader mongodbReader = createMongodbReader();
         try (IGroupChildTaskIterator subTasks = mongodbReader.getSubTasks((tab) -> true)) {
@@ -137,6 +133,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
     }
 
+    @Test
     public void testGetSelectedTabs() throws Exception {
         List<SelectedTab> tabs = this.getSelectedTabs();
         Assert.assertEquals(1, tabs.size());
@@ -165,40 +162,40 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
     }
 
 
+    @Test
     public void testValidateSubForm() {
         DataXMongodbReader reader = new DataXMongodbReader();
         DataXMongodbReader.DefaultDescriptor descriptor = (DataXMongodbReader.DefaultDescriptor) reader.getDescriptor();
         List<SelectedTab> tabs = this.getSelectedTabs();
         Assert.assertEquals(1, tabs.size());
 
-        IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
+        IControlMsgHandler msgHandler = Mockito.mock(IControlMsgHandler.class, Mockito.withSettings().name("msgHandler"));
 
-        Context context = mock("context", Context.class);
-        EasyMock.expect(context.hasErrors()).andReturn(false);
-        this.replay();
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
+        Mockito.when(context.hasErrors()).thenReturn(false);
         SelectedTab selectedTab = tabs.get(0);
         Assert.assertTrue(descriptor.validateSubForm(msgHandler, context, selectedTab));
 
         selectedTab.getCols();
 
-        this.verifyAll();
+        Mockito.verify(context).hasErrors();
     }
 
 
+    @Test
     public void testParseColsHtmlPost() {
 
         ElementCreatorFactory mongoElementCreator = new MongoCMetaCreatorFactory();
-        IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
-        Context context = mock("context", Context.class);
+        IControlMsgHandler msgHandler = Mockito.mock(IControlMsgHandler.class, Mockito.withSettings().name("msgHandler"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
 
         // 执行validateSubForm 时会用到
         msgHandler.addFieldError(context, TestMongoCMetaCreatorFactory.createTestJsonPathFieldKey(), ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
-        EasyMock.expect(context.hasErrors()).andReturn(true);
+        Mockito.when(context.hasErrors()).thenReturn(true);
 
         JSONArray colsJson = JSONArray.parseArray(IOUtils.loadResourceFromClasspath(TestDataXMongodbReader.class
                 , "mongo_reader_mulit_select_cols_with_docfield_split_metas_jsonpath_empty.json"));
 
-        this.replay();
         CMeta.ParsePostMCols<CMeta> parsePostMCols
                 = mongoElementCreator.parsePostMCols(null, msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
         Assert.assertNotNull(parsePostMCols);
@@ -219,7 +216,8 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
         Assert.assertFalse("validate shall be faild"
                 , mongoReaderDescriptor.validateSubForm(msgHandler, context, tab));
 
-        this.verifyAll();
+        Mockito.verify(msgHandler).addFieldError(context, TestMongoCMetaCreatorFactory.createTestJsonPathFieldKey(), ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
+        Mockito.verify(context).hasErrors();
     }
 
 
@@ -285,11 +283,13 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
         tab.setSourceProps(sourceExtend);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXMongodbReader.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXMongodbReader reader = new DataXMongodbReader();
         DescriptorsJSON descJson = new DefaultDescriptorsJSON(reader.getDescriptor());
@@ -301,6 +301,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
         String dataXName = "testDataXName";
         //MangoDBDataSourceFactory dsFactory = TestMangoDBDataSourceFactory.createMangoDBDS();// getDataSourceFactory();
@@ -312,6 +313,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
     }
 
 
+    @Test
     public void testGetTableMetadata() throws Exception {
         DataXMongodbReader reader = createMongodbReader();
         EntityName tab = EntityName.parse("user");

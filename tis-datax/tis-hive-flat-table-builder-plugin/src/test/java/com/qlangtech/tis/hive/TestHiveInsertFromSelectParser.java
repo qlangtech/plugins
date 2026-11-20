@@ -32,23 +32,25 @@ import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.ISqlTask.RewriteSql;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-06-03 13:57
  **/
-public class TestHiveInsertFromSelectParser extends TestCase {
+public class TestHiveInsertFromSelectParser {
     private static ColumnMetaData createCol(int index, String name, DataType type) {
         ColumnMetaData col = new ColumnMetaData(index, name, type, false, true);
         return col;
     }
 
+    @Test
     public void testSqlParse() throws Exception {
 
         List<ColumnMetaData> cols = createPayInfoCols();

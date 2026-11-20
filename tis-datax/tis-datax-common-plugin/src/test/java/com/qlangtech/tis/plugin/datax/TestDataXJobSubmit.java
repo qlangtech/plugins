@@ -21,13 +21,14 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.ExtensionList;
-import junit.framework.TestCase;
-
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-27 21:48
  **/
-public class TestDataXJobSubmit extends TestCase {
+public class TestDataXJobSubmit {
+    @Test
     public void testTwoInstanceGetter() {
         ExtensionList<DataXJobSubmit> extensionList = TIS.get().getExtensionList(DataXJobSubmit.class);
         assertNotNull(extensionList);

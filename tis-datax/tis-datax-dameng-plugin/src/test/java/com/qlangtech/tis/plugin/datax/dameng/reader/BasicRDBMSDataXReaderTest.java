@@ -27,7 +27,7 @@ import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -80,12 +80,12 @@ public abstract class BasicRDBMSDataXReaderTest
         SelectedTab tab =
                 TestSelectedTab.load(folder, BasicRDBMSDataXReaderTest.class, "datax-reader-cfg-selected-tabs-full-types.xml");
         EntityName sinkTab = EntityName.parse(tab.getName());
-        DataxProcessor processor = EasyMock.createMock("processor", DataxProcessor.class);
+        DataxProcessor processor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("processor"));
 
-        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader).times(2);
+        Mockito.when(processor.getReader(null)).thenReturn(dataxReader);
 
         final File ddlDir = folder.newFolder("ddlDir");
-        EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+        Mockito.when(processor.getDataxCreateDDLDir(null)).thenReturn(ddlDir);
         SourceColMetaGetter colMetaGetter = new SourceColMetaGetter(dataxReader, true);
         AbstractCreateTableSqlBuilder.CreateDDL createDDL
                 = this.dataXWriter.generateCreateDDL(colMetaGetter, new IDataxProcessor.TableMap(tab), Optional.empty());
@@ -94,7 +94,6 @@ public abstract class BasicRDBMSDataXReaderTest
                 , tab.getName() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX), createDDL.getDDLScript());
 
 
-        EasyMock.replay(processor);
 
         dsFactory.visitAllConnection((conn) -> {
 
@@ -126,7 +125,7 @@ public abstract class BasicRDBMSDataXReaderTest
         });
 
 
-        // DataxProcessor dataxProcessor = EasyMock.createMock("dataXProcessor", DataxProcessor.class);
+        // DataxProcessor dataxProcessor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
         DataxProcessor.processorGetter = (name) -> processor;
 
         dataxReader.template = dataXReaderConfig;
@@ -142,7 +141,8 @@ public abstract class BasicRDBMSDataXReaderTest
         ReaderTemplate.realExecute(TestDataXDaMengReaderReal.dataXName, readerConf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
 
-        EasyMock.verify(processor);
+        Mockito.verify(processor, Mockito.times(2)).getReader(null);
+        Mockito.verify(processor).getDataxCreateDDLDir(null);
 
     }
 

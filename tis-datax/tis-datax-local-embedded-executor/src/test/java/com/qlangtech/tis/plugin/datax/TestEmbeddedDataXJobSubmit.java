@@ -21,15 +21,16 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-22 09:48
  **/
-public class TestEmbeddedDataXJobSubmit extends TestCase {
+public class TestEmbeddedDataXJobSubmit {
 
+    @Test
     public void testPreviewRowsData() {
         EmbeddedDataXJobSubmit embeddedDataXJobSubmit = new EmbeddedDataXJobSubmit();
         int pageSize = 10;

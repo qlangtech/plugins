@@ -22,7 +22,7 @@ import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -52,7 +52,7 @@ public class TestDataXDaMengReader {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXDaMengReader.class);
         assertTrue("DataXDaMengReader extraProps shall exist", extraProps.isPresent());
 
-        DaMengDataSourceFactory datasource = EasyMock.createMock("damengDSFactory", DaMengDataSourceFactory.class);
+        DaMengDataSourceFactory datasource = Mockito.mock(DaMengDataSourceFactory.class, Mockito.withSettings().name("damengDSFactory"));
         datasource.splitTableStrategy = new NoneSplitTableStrategy();
         datasource.name = "dameng_ds";
 
@@ -61,28 +61,25 @@ public class TestDataXDaMengReader {
         tabsInDB.add(TestDataXDaMengWriter.damengJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataXDaMengWriter.damengJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
         datasource.fillTableInDB(tabsInDB);
-        EasyMock.expect(datasource.createTableInDB()).andReturn(tabsInDB).times(1);
-        // EasyMock.expect(datasource.getTablesInDB()).andReturn(tabsInDB).times(1);
+        Mockito.when(datasource.createTableInDB()).thenReturn(tabsInDB);
+        // Mockito.when(datasource.getTablesInDB()).thenReturn(tabsInDB);
 
-        EasyMock.expect(datasource.getPassword()).andReturn(password).anyTimes();
-        EasyMock.expect(datasource.getUserName()).andReturn(userName).anyTimes();
-        IDataSourceDumper dataDumper = EasyMock.createMock(TestSelectedTabs.tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
-        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataXDaMengWriter.damengJdbcUrl).anyTimes();
+        Mockito.when(datasource.getPassword()).thenReturn(password);
+        Mockito.when(datasource.getUserName()).thenReturn(userName);
+        IDataSourceDumper dataDumper = Mockito.mock(IDataSourceDumper.class
+                , Mockito.withSettings().name(TestSelectedTabs.tabNameOrderDetail + "TableDumper"));
+        Mockito.when(dataDumper.getDbHost()).thenReturn(TestDataXDaMengWriter.damengJdbcUrl);
 // int index, String key, int type, boolean pk
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
         IPluginContext pluginContext = IPluginContext.namedContext("test");
-        EasyMock.expect(datasource.getTableMetadata(false, pluginContext, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
-                .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
+        Mockito.when(datasource.getTableMetadata(false, pluginContext, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+                .thenReturn(TestSelectedTabs.tabColsMetaOrderDetail);
 
-        EasyMock.expect(datasource.getDataDumpers(targetTable)).andDelegateTo(new DaMengDataSourceFactory() {
-            @Override
-            public DataDumpers getDataDumpers(TISTable table) {
-                return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());
-            }
-        }).anyTimes();
+        Mockito.when(datasource.getDataDumpers(targetTable)).thenAnswer(
+                (inv) -> new DataDumpers(1, Collections.singletonList(dataDumper).iterator()));
 
-        EasyMock.replay(datasource, dataDumper);
+
 
 
         DataXDaMengReader damengReader = new DataXDaMengReader() {
@@ -116,7 +113,8 @@ public class TestDataXDaMengReader {
         datasource.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         ReaderTemplate.validateDataXReader("dameng-datax-reader-assert-split-tabs.json", BasicRDBMSDataXReaderTest.dataXName, damengReader);
 
-        EasyMock.verify(datasource, dataDumper);
+        Mockito.verify(datasource).fillTableInDB(tabsInDB);
+        Mockito.verify(datasource, Mockito.times(1)).createTableInDB();
     }
 
 

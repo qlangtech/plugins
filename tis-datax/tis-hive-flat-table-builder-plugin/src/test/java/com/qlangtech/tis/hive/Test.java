@@ -18,13 +18,14 @@
 
 package com.qlangtech.tis.hive;
 
-import junit.framework.TestCase;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-08 12:00
  **/
-public class Test extends TestCase {
+public class Test {
+    @Test
     public void test1() throws Exception {
 //        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("javax/xml/parsers/DocumentBuilderFactory.class");
 //        while (resources.hasMoreElements()) {

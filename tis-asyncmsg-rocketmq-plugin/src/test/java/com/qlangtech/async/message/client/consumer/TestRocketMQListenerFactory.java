@@ -23,15 +23,16 @@ import com.qlangtech.tis.async.message.client.consumer.IMQConsumerStatusFactory;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
-import junit.framework.TestCase;
-
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-08-29 17:38
  **/
-public class TestRocketMQListenerFactory extends TestCase {
+public class TestRocketMQListenerFactory {
     private static final String collection = "search4totalpay";
 
+    @Test
     public void testCreateConsumerStatus() {
 
         IPluginStore<MQListenerFactory> mqListenerFactory = TIS.getPluginStore(collection, MQListenerFactory.class);

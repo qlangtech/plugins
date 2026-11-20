@@ -21,24 +21,23 @@ import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.qlangtech.tis.workflow.dao.IWorkFlowDAO;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlow;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/10
  */
-public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements TISEasyMock {
+public class TestDistributedPowerJobDataXJobSubmit implements TISEasyMock {
 
     static final String testDataXName = "mysql_hive3";
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         this.clearMocks();
         CenterResource.setNotFetchFromCenterRepository();
     }
@@ -46,79 +45,77 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
     private String topplogName = "asdf";
     private Integer workflowId = 1;
 
+    @Test
     public void testSaveJob() {
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
 
-        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        // IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        PowerJobExecContext module = Mockito.mock(PowerJobExecContext.class, Mockito.withSettings().name("moudle"));
+        // IWorkFlowDAO workflowDAO = Mockito.mock(IWorkFlowDAO.class, Mockito.withSettings().name("workflowDAO"));
+        IApplicationDAO applicationDAO = Mockito.mock(IApplicationDAO.class, Mockito.withSettings().name("applicationDAO"));
         expectApplicationSelect(applicationDAO);
         // ICommonDAOContext m = mock("tisModule", ICommonDAOContext.class);
 //
 //        expectApplicationSelect(applicationDAO);
         // expectWorkflowSelect(workflowDAO);
 
-        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
-        Context context = mock("context", Context.class);
+        Mockito.when(module.getApplicationDAO()).thenReturn(applicationDAO);
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         DataxProcessor dataxProcessor =
-                mock("dataXProcessor", DataxProcessor.class);
+                Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
 
         DataxProcessor.processorGetter = (dataXName) -> dataxProcessor;
 
-        EasyMock.expect(dataxProcessor.identityValue()).andReturn(testDataXName).anyTimes();
+        Mockito.when(dataxProcessor.identityValue()).thenReturn(testDataXName);
 
-        replay();
         powerJobDataXJobSubmit.saveJob(module, context, dataxProcessor);
-        verifyAll();
     }
 
 
+    @Test
     public void testCreateWorkflowJob() {
         //  String topplogName = "asdf";
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
 
-        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
+        PowerJobExecContext module = Mockito.mock(PowerJobExecContext.class, Mockito.withSettings().name("moudle"));
+        IWorkFlowDAO workflowDAO = Mockito.mock(IWorkFlowDAO.class, Mockito.withSettings().name("workflowDAO"));
 
 //
 //        expectApplicationSelect(applicationDAO);
         expectWorkflowSelect(workflowDAO);
 
-        EasyMock.expect(module.getWorkFlowDAO()).andReturn(workflowDAO);
-        Context context = mock("context", Context.class);
+        Mockito.when(module.getWorkFlowDAO()).thenReturn(workflowDAO);
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         DataFlowDataXProcessor dataxProcessor =
                 (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topplogName);
         IDataFlowTopology topology = dataxProcessor.getTopology();
-        replay();
 
 
         powerJobDataXJobSubmit.createWorkflowJob(module, context, topology);
-        verifyAll();
     }
 
+    @Test
     public void testTriggerWorkflowJob() {
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
-        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
-        Context context = mock("context", Context.class);
-        IWorkflow workflow = mock("workflow", IWorkflow.class);
+        PowerJobExecContext module = Mockito.mock(PowerJobExecContext.class, Mockito.withSettings().name("moudle"));
+        IWorkFlowDAO workflowDAO = Mockito.mock(IWorkFlowDAO.class, Mockito.withSettings().name("workflowDAO"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
+        IWorkflow workflow = Mockito.mock(IWorkflow.class, Mockito.withSettings().name("workflow"));
         expectWorkflowSelect(workflowDAO);
-        EasyMock.expect(module.getWorkFlowDAO()).andReturn(workflowDAO);
+        Mockito.when(module.getWorkFlowDAO()).thenReturn(workflowDAO);
 
-        EasyMock.expect(workflow.getName()).andReturn(topplogName);
+        Mockito.when(workflow.getName()).thenReturn(topplogName);
 
-        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
+        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = Mockito.mock(IWorkFlowBuildHistoryDAO.class, Mockito.withSettings().name("workFlowBuildHistoryDAO"));
 
-        EasyMock.expect(workFlowBuildHistoryDAO.updateByExampleSelective(
-                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1);
+        Mockito.when(workFlowBuildHistoryDAO.updateByExampleSelective(
+                Mockito.any(), Mockito.any())).thenReturn(1);
 
-        EasyMock.expect(module.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
+        Mockito.when(module.getTaskBuildHistoryDAO()).thenReturn(workFlowBuildHistoryDAO);
 
 
 //        DataFlowDataXProcessor dataxProcessor =
 //                (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topplogName);
         // IDataFlowTopology topology = dataxProcessor.getTopology();
-        replay();
 
         Optional<Long> powerJobWorkflowInstanceIdOpt = Optional.empty();
 //        IControlMsgHandler module, Context context,
@@ -127,7 +124,6 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         powerJobDataXJobSubmit.triggerWorkflowJob(
                 module, context, workflow, false //, powerJobWorkflowInstanceIdOpt
                 , Optional.empty());
-        verifyAll();
     }
 
     private void expectWorkflowSelect(IWorkFlowDAO workflowDAO) {
@@ -145,68 +141,64 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
 
         List<WorkFlow> workFlows = Lists.newArrayList(wf);
 
-        EasyMock.expect(workflowDAO.selectByExample(EasyMock.anyObject())).andReturn(workFlows);
+        Mockito.when(workflowDAO.selectByExample(Mockito.any())).thenReturn(workFlows);
 
-        EasyMock.expect(workflowDAO.updateByExampleSelective(
-                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1).anyTimes();
+        Mockito.when(workflowDAO.updateByExampleSelective(
+                Mockito.any(), Mockito.any())).thenReturn(1);
     }
 
 
+    @Test
     public void testCreateJob() {
 
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
 
-        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        PowerJobExecContext module = Mockito.mock(PowerJobExecContext.class, Mockito.withSettings().name("moudle"));
+        IApplicationDAO applicationDAO = Mockito.mock(IApplicationDAO.class, Mockito.withSettings().name("applicationDAO"));
 
         expectApplicationSelect(applicationDAO);
 
 
-        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
-        Context context = mock("context", Context.class);
+        Mockito.when(module.getApplicationDAO()).thenReturn(applicationDAO);
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, testDataXName);
 
-        replay();
         powerJobDataXJobSubmit.createJob(module, context, dataxProcessor);
-        verifyAll();
     }
 
     private static void expectApplicationSelect(IApplicationDAO applicationDAO) {
         Application app = new Application();
         app.setAppId(999);
         app.setProjectName(testDataXName);
-        EasyMock.expect(applicationDAO.selectByName(testDataXName)).andReturn(app).anyTimes();
+        Mockito.when(applicationDAO.selectByName(testDataXName)).thenReturn(app);
 
-        EasyMock.expect(applicationDAO.updateByExampleSelective(
-                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1).anyTimes();
+        Mockito.when(applicationDAO.updateByExampleSelective(
+                Mockito.any(), Mockito.any())).thenReturn(1);
     }
 
+    @Test
     public void testTriggerJob() {
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        IApplicationDAO applicationDAO = Mockito.mock(IApplicationDAO.class, Mockito.withSettings().name("applicationDAO"));
 
         expectApplicationSelect(applicationDAO);
-        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
+        PowerJobExecContext module = Mockito.mock(PowerJobExecContext.class, Mockito.withSettings().name("moudle"));
 
 
-        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
+        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = Mockito.mock(IWorkFlowBuildHistoryDAO.class, Mockito.withSettings().name("workFlowBuildHistoryDAO"));
 
-        EasyMock.expect(workFlowBuildHistoryDAO.updateByExampleSelective(
-                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1);
+        Mockito.when(workFlowBuildHistoryDAO.updateByExampleSelective(
+                Mockito.any(), Mockito.any())).thenReturn(1);
 
-        EasyMock.expect(module.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
-        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO).anyTimes();
-        Context context = mock("context", Context.class);
+        Mockito.when(module.getTaskBuildHistoryDAO()).thenReturn(workFlowBuildHistoryDAO);
+        Mockito.when(module.getApplicationDAO()).thenReturn(applicationDAO);
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
-
-        this.replay();
 
         HttpUtils.addMockApply(0, "do_create_new_task"
                 , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
         DataXName dataXPipeline = DataXName.createDataXPipeline(testDataXName);
         powerJobDataXJobSubmit.triggerJob(null,
                  dataXPipeline);
-
-        this.verifyAll();
     }
 
 

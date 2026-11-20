@@ -27,8 +27,8 @@ import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.collections.CollectionUtils;
-import org.easymock.EasyMock;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.List;
@@ -72,20 +72,16 @@ public class TestDataMaskingUDF extends BasicUDFDefinitionTest<DataMaskingUDF> {
     public void testEvaluate() {
         DataMaskingUDF transformerUDF = this.createTransformerUDF();
         DataMaskingUDF transformerUDFInfinit = this.createDataMaskingUDF(1,999999);
-        Record record = mock("record", Record.class);
+        Record record = Mockito.mock(Record.class, Mockito.withSettings().name("record"));
 
-        EasyMock.expect(record.getString(userName)).andReturn("baisuibaisui").times(2);
-        record.setString(addedField, "b**suibaisui");
-        EasyMock.expectLastCall().times(1);
-
-        record.setString(addedField, "b***********");
-        EasyMock.expectLastCall().times(1);
-        this.replay();
+        Mockito.when(record.getString(userName)).thenReturn("baisuibaisui");
 
         transformerUDF.evaluate(record);
         transformerUDFInfinit.evaluate(record);
 
-        this.verifyAll();
+        Mockito.verify(record, Mockito.times(2)).getString(userName);
+        Mockito.verify(record, Mockito.times(1)).setString(addedField, "b**suibaisui");
+        Mockito.verify(record, Mockito.times(1)).setString(addedField, "b***********");
     }
 
     @Override

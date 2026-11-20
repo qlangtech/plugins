@@ -29,27 +29,30 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsMeta;
 import com.qlangtech.tis.util.UploadPluginMeta;
-import junit.framework.TestCase;
-
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXCassandraReader extends TestCase {
+public class TestDataXCassandraReader {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXCassandraReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
 
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXCassandraReader.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXCassandraReader reader = new DataXCassandraReader();
         DescriptorsJSON descJson = new DescriptorsJSON(reader.getDescriptor());
@@ -73,6 +76,7 @@ public class TestDataXCassandraReader extends TestCase {
     }
 
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
         CassandraDatasourceFactory dsFactory = TestCassandraDatasourceFactory.getDS();

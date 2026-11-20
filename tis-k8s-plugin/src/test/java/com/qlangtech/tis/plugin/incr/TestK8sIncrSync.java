@@ -22,15 +22,16 @@ import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.Config;
-import junit.framework.TestCase;
-
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-09-02 15:06
  **/
-public class TestK8sIncrSync extends TestCase {
+public class TestK8sIncrSync {
 
 
+    @Test
     public void testGetRCDeployment() {
         IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
         IDeploymentDetail rcDeployment = incrSync.getRCDeployment(new TargetResName(TestDefaultIncrK8sConfig.totalpay));
@@ -38,12 +39,14 @@ public class TestK8sIncrSync extends TestCase {
     }
 
 
+    @Test
     public void testDeleteDeployment() throws Exception {
         IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
 
         incrSync.removeInstance(new TargetResName(Config.S4TOTALPAY));
     }
 
+    @Test
     public void testLaunchIncrProcess() throws Exception {
         IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
 

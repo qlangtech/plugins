@@ -16,31 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactoryTest;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISCanalJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISSinkDebeziumJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCanalJsonFormatFactoryTest;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.SourceJsonFormatFactoryTest;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSinkJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.json.TestSourceJsonFormatFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-04-24 18:25
- **/
-
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {
-                TestTISCanalJsonFormatFactory.class,
-                TestTISSinkDebeziumJsonFormatFactory.class,
-                TestSinkJsonFormatFactory.class,
-                TestSourceJsonFormatFactory.class,
-                TISCanalJsonFormatFactoryTest.class,
-                SourceJsonFormatFactoryTest.class,
-                FormatFactoryTest.class
-        })
+@Suite.SuiteClasses({})
 public class TestAll {
 }

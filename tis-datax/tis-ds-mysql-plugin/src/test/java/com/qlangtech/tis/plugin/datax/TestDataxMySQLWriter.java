@@ -50,7 +50,7 @@ import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -63,6 +63,7 @@ import java.util.function.Predicate;
 
 import static com.qlangtech.tis.extension.util.PluginExtraProps.KEY_CREATOR_ASSIST_TYPE;
 
+import static org.junit.Assert.*;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-15 16:10
@@ -176,9 +177,9 @@ public class TestDataxMySQLWriter extends BasicTest {
     public void testTempateGenerate() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
         Assert.assertTrue("DataxMySQLWriter extraProps shall exist", extraProps.isPresent());
-        IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
-        Context context = EasyMock.createMock("context", Context.class);
-        EasyMock.expect(context.hasErrors()).andReturn(false);
+        IPluginContext pluginContext = Mockito.mock(IPluginContext.class, Mockito.withSettings().name("pluginContext"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
+        Mockito.when(context.hasErrors()).thenReturn(false);
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
 //            @Override
 //            public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
@@ -194,7 +195,6 @@ public class TestDataxMySQLWriter extends BasicTest {
         mysqlDs.nodeDesc = "192.168.28.200";
         Descriptor.ParseDescribable<DataSourceFactory> desc = new Descriptor.ParseDescribable<>(mysqlDs);
         pluginContext.addDb(desc, dbWriterName, context, true);
-        EasyMock.replay(pluginContext, context);
 
         DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(dbWriterName));
 
@@ -243,15 +243,14 @@ public class TestDataxMySQLWriter extends BasicTest {
         Assert.assertEquals("orderinfo_new", mySQLDataxContext.tabName);
         Assert.assertEquals("root", mySQLDataxContext.getUsername());
 
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
-        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+        IDataxProcessor processor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        IDataxGlobalCfg dataxGlobalCfg = Mockito.mock(IDataxGlobalCfg.class, Mockito.withSettings().name("dataxGlobalCfg"));
 
-        IDataxReader dataxReader = EasyMock.mock("dataxReader", IDataxReader.class);
+        IDataxReader dataxReader = Mockito.mock(IDataxReader.class, Mockito.withSettings().name("dataxReader"));
 
-        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
-        EasyMock.expect(processor.getWriter(null)).andReturn(mySQLWriter);
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
-        EasyMock.replay(processor, dataxGlobalCfg, dataxReader);
+        Mockito.when(processor.getReader(null)).thenReturn(dataxReader);
+        Mockito.when(processor.getWriter(null)).thenReturn(mySQLWriter);
+        Mockito.when(processor.getDataXGlobalCfg()).thenReturn(dataxGlobalCfg);
 
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
@@ -262,7 +261,8 @@ public class TestDataxMySQLWriter extends BasicTest {
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             Assert.assertEquals(m, e, a);
         });
-        EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
+        Mockito.verify(processor).getWriter(null);
+        Mockito.verify(processor).getDataXGlobalCfg();
     }
 
 

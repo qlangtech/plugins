@@ -45,7 +45,6 @@ import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
@@ -60,7 +59,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-08-20 09:00
  **/
-public class TestDataXHiveReaderRealDump extends TestCase {
+public class TestDataXHiveReaderRealDump {
 
     private static String dataXName = "test";
     // private static final String NAME_TAB = "instancedetail";

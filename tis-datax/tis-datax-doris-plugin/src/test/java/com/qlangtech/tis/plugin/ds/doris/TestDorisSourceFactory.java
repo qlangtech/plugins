@@ -26,26 +26,25 @@ import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.ds.impl.CatalogSpecific;
-import junit.framework.TestCase;
-
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 14:01
  **/
-public class TestDorisSourceFactory extends TestCase {
+public class TestDorisSourceFactory {
 
     private static final String DB_ORDER = "order1";
     private static final String empNo = "emp_no";
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
         HttpUtils.addMockGlobalParametersConfig();
     }
+    @Test
     public void testGetValidatorDisableRequireValidatorByJsonConfig() {
         Map<String, /*** fieldname */IPropertyType> props
                 = PropertyType.buildPropertyTypes(Optional.empty(), DorisSourceFactory.class);
@@ -63,6 +62,7 @@ public class TestDorisSourceFactory extends TestCase {
         Assert.assertFalse("shall not containRequire", containRequire);
     }
 
+    @Test
     public void testDataDumpers() throws Exception {
         DorisSourceFactory dataSourceFactory = getDorisSourceFactory();
 

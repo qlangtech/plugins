@@ -74,7 +74,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.test.util.AbstractTestBase;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -83,6 +82,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -356,20 +356,20 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             Map<String, TableAlias> mapper = Maps.newHashMap();
             mapper.put(tableName, new TableAlias(tableName));
             // TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
-            //EasyMock.expect(dataxProcessor.getTabAlias(null, true)).andReturn(aliasMapper).anyTimes();
-            //EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMapper).anyTimes();
-            EasyMock.expect(dataxProcessor.identityValue()).andReturn(dataXName).anyTimes();
+            //Mockito.when(dataxProcessor.getTabAlias(null, true)).thenReturn(aliasMapper);
+            //Mockito.when(dataxProcessor.getTabAlias()).thenReturn(aliasMapper);
+            Mockito.when(dataxProcessor.identityValue()).thenReturn(dataXName);
 
-            EasyMock.expect(dataxProcessor.getDataXName())
-                    .andReturn(DataXName.createDataXPipeline(dataXName)).anyTimes();
+            Mockito.when(dataxProcessor.getDataXName())
+                    .thenReturn(DataXName.createDataXPipeline(dataXName));
 
             File ddlDir = folder.newFolder("ddl");
             String tabSql = tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
 
 
-            EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir).anyTimes();
-            EasyMock.expect(dataxProcessor.getRecordTransformerRulesAndPluginStore(EasyMock.anyObject(IPluginContext.class), EasyMock.eq(tableName)))
-                    .andReturn(Pair.of(Collections.emptyList(), null)).anyTimes();
+            Mockito.when(dataxProcessor.getDataxCreateDDLDir(null)).thenReturn(ddlDir);
+            Mockito.when(dataxProcessor.getRecordTransformerRulesAndPluginStore(Mockito.any(IPluginContext.class), Mockito.eq(tableName)))
+                    .thenReturn(Pair.of(Collections.emptyList(), null));
 
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
@@ -393,11 +393,11 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
 
 
-            //            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
+            //            Mockito.when(sinkExt.getCols()).thenReturn(metaCols);
             selectedTabs.add(totalpayInfo);
-            EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
+            Mockito.when(dataxReader.getSelectedTabs()).thenReturn(selectedTabs);
 
-            EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
+            Mockito.when(dataxProcessor.getReader(null)).thenReturn(dataxReader);
 
             // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName
             // (dataXName), MYSQL_CONTAINER);
@@ -425,12 +425,12 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
             }
-            // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
+            // Mockito.when(dataXWriter.getDataSourceFactory()).thenReturn(sourceFactory);
 
             //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28
             //   .201:9030/tis"));
 
-            EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter).anyTimes();
+            Mockito.when(dataxProcessor.getWriter(null)).thenReturn(dataXWriter);
 // ChunjunSinkFactory
             SINK_FACTORY sinkFactory = getSinkFactory();
             sinkFactory.setKey(new KeyedPluginStore.Key(null, dataXName, null));
@@ -444,8 +444,6 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
 //            aliasMap.put(tableName, tab);
 //            TableAliasMapper tableAliasMapper = new TableAliasMapper(aliasMap);
 
-
-            this.replay();
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
             env.setParallelism(1);
@@ -470,7 +468,6 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
             }
 
 
-            this.verifyAll();
         } catch (Throwable e) {
             //  Thread.sleep(4000);
             throw new RuntimeException(e);
@@ -652,11 +649,11 @@ public abstract class TestFlinkSinkExecutor<SINK_FACTORY extends BasicTISSinkFac
         sinkExt.tabName = tableName;
 
 
-        //  EasyMock.expect(sinkExt.tabName).andReturn(tableName).times(2);
+        //  Mockito.when(sinkExt.tabName).thenReturn(tableName);
         //InsertType updateMode = new InsertType();
 
         UpdateMode updateMode = createIncrMode();
-        // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
+        // Mockito.when(sinkExt.getIncrMode()).thenReturn(updateMode);
         sinkExt.incrMode = updateMode;
         // sinkExt.uniqueKey =
         List<CMeta> metaCols = Lists.newArrayList();

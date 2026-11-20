@@ -19,7 +19,6 @@
 package com.qlangtech.tis.mq;
 
 import com.qlangtech.tis.manage.common.TisUTF8;
-import junit.framework.TestCase;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.Message;
 
@@ -27,7 +26,7 @@ import org.apache.rocketmq.common.message.Message;
  * @author: baisui 百岁
  * @create: 2020-11-02 10:13
  **/
-public class BasicProducer extends TestCase {
+public class BasicProducer {
     public static final String nameAddress = "192.168.28.201:9876";
     public static final String topic = "baisui-test";
 

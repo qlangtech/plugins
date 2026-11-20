@@ -38,7 +38,6 @@ import com.qlangtech.tis.util.DescriptorsJSON;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;

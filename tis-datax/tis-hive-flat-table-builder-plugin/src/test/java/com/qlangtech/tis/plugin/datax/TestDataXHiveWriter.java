@@ -37,29 +37,34 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsMeta;
 import org.apache.commons.lang.StringUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-27 15:17
  **/
 public class TestDataXHiveWriter extends BasicTest {
 
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXHiveWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXHiveWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXHiveWriter writer = new DataXHiveWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
@@ -74,6 +79,7 @@ public class TestDataXHiveWriter extends BasicTest {
 
     final static String mysql2hiveDataXName = "mysql2hive";
 
+    @Test
     public void testConfigGenerate() throws Exception {
 
 
@@ -108,14 +114,15 @@ public class TestDataXHiveWriter extends BasicTest {
 
     }
 
+    @Test
     public void testGenerateCreateDDL() {
 
-        FileSystemFactory fsFactory = EasyMock.createMock("fsFactory", FileSystemFactory.class);
+        FileSystemFactory fsFactory = Mockito.mock(FileSystemFactory.class, Mockito.withSettings().name("fsFactory"));
 
 
-        ITISFileSystem fs = EasyMock.createMock("fs", ITISFileSystem.class);
-        EasyMock.expect(fs.getRootDir()).andReturn(new HdfsPath("/user/admin"));
-        EasyMock.expect(fsFactory.getFileSystem()).andReturn(fs);
+        ITISFileSystem fs = Mockito.mock(ITISFileSystem.class, Mockito.withSettings().name("fs"));
+        Mockito.when(fs.getRootDir()).thenReturn(new HdfsPath("/user/admin"));
+        Mockito.when(fsFactory.getFileSystem()).thenReturn(fs);
 
         DataXHiveWriter writer = new DataXHiveWriter() {
             @Override
@@ -132,7 +139,6 @@ public class TestDataXHiveWriter extends BasicTest {
         txtFormat.fieldDelimiter = Delimiter.Char001.token;
         writer.fileType = txtFormat;
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
-        EasyMock.replay(fsFactory, fs);
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), getApplicationTab(), Optional.empty());
 
         assertNotNull(ddl);
@@ -141,7 +147,8 @@ public class TestDataXHiveWriter extends BasicTest {
                 StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "create-application-ddl.sql"))
                 , ddl.getDDLScript());
 
-        EasyMock.verify(fsFactory, fs);
+        Mockito.verify(fsFactory).getFileSystem();
+        Mockito.verify(fs).getRootDir();
     }
 
     public static IDataxProcessor.TableMap getApplicationTab() {

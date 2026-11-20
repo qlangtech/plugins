@@ -16,35 +16,17 @@
  * limitations under the License.
  */
 
-import com.google.common.collect.Lists;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-04 10:19
- **/
-public class TestAll extends TestCase {
-
-    public void testA() {
-//        List<String> list = Lists.newArrayListWithCapacity(2);
-//        list.set(0, "hello");
-        String[] array = new String[2];
-        array[1] = "hello";
-        ArrayList<String> strings = Lists.newArrayList(array);
-        for (String v : strings) {
-            System.out.println(v);
-        }
-    }
-
-    public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite();
-        // suite.addTestSuite(TestDataxExecutor.class);
-        // suite.addTestSuite(TestDataxExecutorSynRes.class);
-        return suite;
-    }
+ * 该模块可离线运行的单元测试聚合套件(由测试验证脚本自动整理生成)。
+ * 依赖数据库/本地文件/内网服务/Testcontainers 的用例见 TEST_SKIP_REPORT.md。
+ */
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+    com.qlangtech.tis.datax.TestDataXJobConsumer.class,
+    com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessorTest.class,
+})
+public class TestAll {
 }

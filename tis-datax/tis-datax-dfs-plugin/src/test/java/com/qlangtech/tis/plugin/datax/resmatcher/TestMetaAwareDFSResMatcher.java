@@ -33,10 +33,10 @@ import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.io.IOUtils;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -62,7 +62,7 @@ public class TestMetaAwareDFSResMatcher implements TISEasyMock {
     public void testGetTableMetadata() throws Exception {
         MetaAwareDFSResMatcher resMatcher = new MetaAwareDFSResMatcher();
 
-        IDFSReader dfsReader = mock("dfsReader", IDFSReader.class);
+        IDFSReader dfsReader = Mockito.mock(IDFSReader.class, Mockito.withSettings().name("dfsReader"));
         testGetTableMetadataWithRootPath(rootPath, resMatcher, dfsReader);
     }
 
@@ -78,21 +78,18 @@ public class TestMetaAwareDFSResMatcher implements TISEasyMock {
     public void testGetTableMetadataByPathWithTabName() throws Exception {
         MetaAwareDFSResMatcher resMatcher = new MetaAwareDFSResMatcher();
 
-        IDFSReader dfsReader = mock("dfsReader", IDFSReader.class);
+        IDFSReader dfsReader = Mockito.mock(IDFSReader.class, Mockito.withSettings().name("dfsReader"));
         testGetTableMetadataWithRootPath(rootPathWithTabName, resMatcher, dfsReader);
     }
 
     private void testGetTableMetadataWithRootPath(String rootPath, MetaAwareDFSResMatcher resMatcher, IDFSReader dfsReader) throws TableNotFoundException {
         TDFSLinker dfsLinker = new MockTDFSLinker(rootPath);
 
-        EasyMock.expect(dfsReader.getDfsLinker()).andReturn(dfsLinker).anyTimes();
+        Mockito.when(dfsReader.getDfsLinker()).thenReturn(dfsLinker);
 
-
-        this.replay();
         List<ColumnMetaData> cols = resMatcher.getTableMetadata(dfsReader, TableMap.create(table.getTabName(), Lists.newArrayList()));
         Assert.assertNotNull("cols can not be null", cols);
         Assert.assertEquals(59, cols.size());
-        this.verifyAll();
     }
 
 

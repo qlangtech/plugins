@@ -7,7 +7,6 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.util.IPluginContext;
-import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -15,17 +14,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.junit.Test;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/20
  */
-public class TestDataxPrePostConsumer extends TestCase {
+public class TestDataxPrePostConsumer {
 
     String tableName = "totalpayinfo";
     Integer taskId = 1;
     String dataXName = "mysql_hive3";
     Long currentTimeStamp = TimeFormat.getCurrentTimeStamp();
 
+    @Test
     public void testConsumePreExecMessage() throws Exception {
 
 
@@ -80,6 +81,7 @@ public class TestDataxPrePostConsumer extends TestCase {
         return DataXLifecycleHookMsg.createDataXLifecycleHookMsg(processor, tableName, taskId, LifeCycleHook.Prep.getToken() + tableName, currentTimeStamp, lifeCycleHook, false);
     }
 
+    @Test
     public void testConsumePostExecMessage() throws Exception {
         DataxPrePostConsumer prePostConsumer = new DataxPrePostConsumer();
 

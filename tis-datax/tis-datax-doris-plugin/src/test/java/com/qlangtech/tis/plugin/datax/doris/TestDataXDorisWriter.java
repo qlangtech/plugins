@@ -43,10 +43,9 @@ import com.qlangtech.tis.plugin.ds.doris.TestDorisSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.util.List;
@@ -54,29 +53,32 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 12:04
  **/
-public class TestDataXDorisWriter extends TestCase {
+public class TestDataXDorisWriter {
 //    public void testGenDesc() {
 //        ContextDesc.descBuild(DataXDorisWriter.class, false);
 //    }
 
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
     private static final String DataXName = "mysql_doris";
 
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXDorisWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testGenerateCreateDDL() {
         DataXDorisWriter writer = new DataXDorisWriter();
         writer.autoCreateTable = AutoCreateTable.dft();
@@ -115,6 +117,7 @@ public class TestDataXDorisWriter extends TestCase {
                 , ddl.toString());
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXDorisWriter.class);
         assertTrue(extraProps.isPresent());
@@ -126,8 +129,9 @@ public class TestDataXDorisWriter extends TestCase {
 
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
-        DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
+        DataxReader dataxReader = Mockito.mock(DataxReader.class, Mockito.withSettings().name("dataxReader"));
 
         List<ISelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1).stream().map((t) -> t).collect(Collectors.toList());
 
@@ -136,9 +140,8 @@ public class TestDataXDorisWriter extends TestCase {
                 cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
-        //  EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
+        //  Mockito.when(dataxReader.getSelectedTabs()).thenReturn(selectedTabs);
         DataxReader.dataxReaderThreadLocal.set(dataxReader);
-        EasyMock.replay(dataxReader);
         DataXDorisWriter writer = new DataXDorisWriter();
 
         DescriptorsJSON descJson = new DefaultDescriptorsJSON(writer.getDescriptor());
@@ -152,9 +155,9 @@ public class TestDataXDorisWriter extends TestCase {
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
-        EasyMock.verify(dataxReader);
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
 
@@ -207,6 +210,7 @@ public class TestDataXDorisWriter extends TestCase {
         return tableMap;
     }
 
+    @Test
     public void testRealDump() throws Exception {
 
         String targetTableName = "customer_order_relation";
@@ -220,7 +224,7 @@ public class TestDataXDorisWriter extends TestCase {
         createDorisWriter.writer.autoCreateTable = AutoCreateTable.dft();
         ;
 
-        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
+        DataxProcessor dataXProcessor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
         File createDDLDir = new File(".");
         File createDDLFile = null;
         try {
@@ -229,7 +233,7 @@ public class TestDataXDorisWriter extends TestCase {
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(
                             DataXDorisWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
-            EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
+            Mockito.when(dataXProcessor.getDataxCreateDDLDir(null)).thenReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
                 return createDorisWriter.writer;
             };
@@ -237,13 +241,12 @@ public class TestDataXDorisWriter extends TestCase {
                 assertEquals(testDataXName, dataXName);
                 return dataXProcessor;
             };
-            EasyMock.replay(dataXProcessor);
             //DataXDorisWriter writer = new DataXDorisWriter();
             WriterTemplate.realExecuteDump(testDataXName
                     , DataXCfgJson.path(TestDataXDorisWriter.class, "doris_writer_real_dump.json")
                     , createDorisWriter.writer);
 
-            EasyMock.verify(dataXProcessor);
+            Mockito.verify(dataXProcessor).getDataxCreateDDLDir(null);
         } finally {
             FileUtils.deleteQuietly(createDDLFile);
         }

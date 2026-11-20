@@ -22,16 +22,17 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-11-24 17:50
  **/
-public class TestHdfsFileSystemFactory extends TestCase {
+public class TestHdfsFileSystemFactory {
+    @Test
     public void testPluginGet() {
         List<Descriptor<FileSystemFactory>> descList
                 = TIS.get().getDescriptorList(FileSystemFactory.class);

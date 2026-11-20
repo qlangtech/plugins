@@ -21,17 +21,17 @@ package com.qlangtech.tis.plugin.datax.elastic;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.net.URL;
 import java.util.Enumeration;
 
+import static org.junit.Assert.*;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-31 10:45
  **/
-public class TestElasticEndpoint extends TestCase {
+public class TestElasticEndpoint {
 
    // @Test
     public void testxxxx() throws Exception {
@@ -41,6 +41,7 @@ public class TestElasticEndpoint extends TestCase {
         }
     }
 
+    @Test
     public void testDescJsonGenerate() {
 
         ElasticEndpoint endpoint = new ElasticEndpoint();

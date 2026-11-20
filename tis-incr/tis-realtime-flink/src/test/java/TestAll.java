@@ -16,28 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
-import com.qlangtech.plugins.incr.flink.cdc.TestSourceChannel;
-import com.qlangtech.plugins.incr.flink.common.TestFlinkCluster;
-import com.qlangtech.plugins.incr.flink.launch.TestFlinkIncrJobStatus;
-import com.qlangtech.plugins.incr.flink.launch.TestFlinkTaskNodeController;
-import com.qlangtech.plugins.incr.flink.launch.TestTISFlinkCDCStreamFactory;
-import com.qlangtech.plugins.incr.flink.launch.ckpt.TestCheckpointFactory;
-import com.qlangtech.tis.plugins.flink.client.TestFlinkClient;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-05 14:46
- **/
-
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestFlinkCol.class, TestFlinkCluster.class,
-        TestTISFlinkCDCStreamFactory.class,
-        TestFlinkIncrJobStatus.class
-        , TestFlinkTaskNodeController.class
-        , TestFlinkClient.class
-        , TestCheckpointFactory.class,TestFlinkCol.class, TestSourceChannel.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

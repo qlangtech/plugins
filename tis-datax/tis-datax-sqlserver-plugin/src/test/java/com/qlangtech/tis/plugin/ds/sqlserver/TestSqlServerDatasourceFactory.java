@@ -21,14 +21,14 @@ package com.qlangtech.tis.plugin.ds.sqlserver;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
-
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-23 17:46
  **/
-public class TestSqlServerDatasourceFactory extends TestCase {
+public class TestSqlServerDatasourceFactory {
 
+    @Test
     public void testDescriptorDescGenerate() throws Exception {
 
         PluginDesc.testDescGenerate(SqlServerDatasourceFactory.class, "sqlserver-datax-ds-factory-descriptor.json");

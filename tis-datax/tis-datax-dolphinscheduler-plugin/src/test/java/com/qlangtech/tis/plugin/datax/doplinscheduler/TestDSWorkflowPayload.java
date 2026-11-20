@@ -36,21 +36,20 @@ import com.qlangtech.tis.plugin.datax.WorkflowSPIInitializer;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.DolphinSchedulerEndpoint;
 import com.qlangtech.tis.plugin.datax.doplinscheduler.export.ExportTISPipelineToDolphinscheduler;
 import com.qlangtech.tis.realtime.yarn.rpc.SynResTarget;
-import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
 import java.util.Optional;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-16 22:29
  **/
-public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
+public class TestDSWorkflowPayload {
 
     private static final String appName = "mysql";
 
@@ -66,6 +65,10 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 
     private static DolphinSchedulerEndpoint dsEndpoint;
 
+    private ICommonDAOContext commonDAOContext;
+    private IApplicationDAO applicationDAO;
+    private IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO;
+
     static {
         dsEndpoint = new DolphinSchedulerEndpoint();
         dsEndpoint.serverPath = "http://192.168.28.201:12345/dolphinscheduler";
@@ -73,13 +76,6 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         dsEndpoint.name = "test";
     }
 
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        clearMocks();
-
-    }
 
 //    public void testScheduler() throws Exception {
 //        ExecutorService scheduledExecutorService = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -108,6 +104,7 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 //        System.out.println( (new JSONArray()).toJSONString());
 //    }
 
+    @Test
     public void testTriggerWorkflow() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
         DSWorkflowPayload dsWorkflowPayload = createTriggerDsWorkflowPayload();
@@ -116,10 +113,14 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         DistributeJobTriggerBuildResult triggerBuildResult = dsWorkflowPayload.triggerWorkflow(execChainContext, AssembleSvcCompsite.statusRpc);
         Assert.assertNotNull("triggerBuildResult can not be null", triggerBuildResult);
         Thread.sleep(900000);
-        verifyAll();
+        Mockito.verify(applicationDAO, Mockito.times(1)).selectByName(appName);
+        Mockito.verify(commonDAOContext).createNewDataXTask(matchSPIExecContext(), Mockito.eq(TriggerType.CRONTAB));
+        Mockito.verify(commonDAOContext).getLatestSuccessWorkflowHistory(matchSynResTarget(SynResTarget.pipeline(appName)));
+        Mockito.verify(workFlowBuildHistoryDAO).updateByExampleSelective(Mockito.any(), Mockito.any());
     }
 
 
+    @Test
     public void testInitializeDoplinSchedulerProcessor() {
 
         HttpUtils.addMockApply(0, "process-definition", "process-definition-response.json", TestDSWorkflowPayload.class);
@@ -130,7 +131,9 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 
         DSWorkflowInstance wfInstance = workflowSPIInitializer.initialize();
         Assert.assertNotNull("wfInstance can not be null", wfInstance);
-        verifyAll();
+        Mockito.verify(applicationDAO, Mockito.times(2)).selectByName(appName);
+        Mockito.verify(applicationDAO).updateByExampleSelective(matchPropExpectAppFullBuildCronTime(exceptAppPayloadContent)
+                , Mockito.any(ApplicationCriteria.class));
     }
 
 
@@ -143,21 +146,20 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, appName);
         DolphinschedulerDistributedSPIDataXJobSubmit submit = new DolphinschedulerDistributedSPIDataXJobSubmit();
 
-        ICommonDAOContext commonDAOContext = mock("commonDAOContext", ICommonDAOContext.class);
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
-        EasyMock.expect(commonDAOContext.getApplicationDAO()).andReturn(applicationDAO);
+        commonDAOContext = Mockito.mock(ICommonDAOContext.class, Mockito.withSettings().name("commonDAOContext"));
+        applicationDAO = Mockito.mock(IApplicationDAO.class, Mockito.withSettings().name("applicationDAO"));
+        Mockito.when(commonDAOContext.getApplicationDAO()).thenReturn(applicationDAO);
 
         Application mysqlPipeline = new Application();
         mysqlPipeline.setAppId(999);
         mysqlPipeline.setProjectName(appName);
 
-        EasyMock.expect(applicationDAO.selectByName(appName)).andReturn(mysqlPipeline).times(2);
+        Mockito.when(applicationDAO.selectByName(appName)).thenReturn(mysqlPipeline);
 
-        EasyMock.expect(applicationDAO
+        Mockito.when(applicationDAO
                 .updateByExampleSelective(matchPropExpectAppFullBuildCronTime(exceptAppPayloadContent)
-                        , EasyMock.anyObject(ApplicationCriteria.class))).andReturn(1);
+                        , Mockito.any(ApplicationCriteria.class))).thenReturn(1);
 
-        replay();
         ExportTISPipelineToDolphinscheduler exportCfg = null;
         DSWorkflowPayload workflowPayload = new DSWorkflowPayload(exportCfg, dataxProcessor, commonDAOContext, submit);
         return workflowPayload;
@@ -174,38 +176,37 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
 
         // commonDAOContext.createNewDataXTask(com.qlangtech.tis.plugin.datax.SPIExecContext@6b6776cb, CRONTAB):
 
-        ICommonDAOContext commonDAOContext = mock("commonDAOContext", ICommonDAOContext.class);
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        commonDAOContext = Mockito.mock(ICommonDAOContext.class, Mockito.withSettings().name("commonDAOContext"));
+        applicationDAO = Mockito.mock(IApplicationDAO.class, Mockito.withSettings().name("applicationDAO"));
 
-        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO
-                = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
-        EasyMock.expect(workFlowBuildHistoryDAO
-                        .updateByExampleSelective(EasyMock.anyObject(), EasyMock.anyObject()))
-                .andReturn(1);
+        workFlowBuildHistoryDAO = Mockito.mock(IWorkFlowBuildHistoryDAO.class
+                , Mockito.withSettings().name("workFlowBuildHistoryDAO"));
+        Mockito.when(workFlowBuildHistoryDAO
+                        .updateByExampleSelective(Mockito.any(), Mockito.any()))
+                .thenReturn(1);
 
-        EasyMock.expect(commonDAOContext.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
-        EasyMock.expect(commonDAOContext.getApplicationDAO()).andReturn(applicationDAO);
+        Mockito.when(commonDAOContext.getTaskBuildHistoryDAO()).thenReturn(workFlowBuildHistoryDAO);
+        Mockito.when(commonDAOContext.getApplicationDAO()).thenReturn(applicationDAO);
 
-        EasyMock.expect(commonDAOContext
+        Mockito.when(commonDAOContext
                         .getLatestSuccessWorkflowHistory(matchSynResTarget(SynResTarget.pipeline(appName))))
-                .andReturn(null);
+                .thenReturn(null);
 
         Application mysqlPipeline = new Application();
         mysqlPipeline.setAppId(999);
         mysqlPipeline.setProjectName(appName);
         mysqlPipeline.setFullBuildCronTime(exceptAppPayloadContent);
 
-        EasyMock.expect(applicationDAO.selectByName(appName)).andReturn(mysqlPipeline).times(1);
+        Mockito.when(applicationDAO.selectByName(appName)).thenReturn(mysqlPipeline);
 
         CreateNewTaskResult newTaskResult = new CreateNewTaskResult();
         newTaskResult.setTaskid(888);
         newTaskResult.setApp(mysqlPipeline);
-        EasyMock.expect(commonDAOContext.createNewDataXTask(matchSPIExecContext(), EasyMock.eq(TriggerType.CRONTAB))).andReturn(newTaskResult);
+        Mockito.when(commonDAOContext.createNewDataXTask(matchSPIExecContext(), Mockito.eq(TriggerType.CRONTAB))).thenReturn(newTaskResult);
 
-//        EasyMock.expect(applicationDAO
-//                .updateByExampleSelective(matchPropExpectAppFullBuildCronTime(), EasyMock.anyObject(ApplicationCriteria.class))).andReturn(1);
+//        Mockito.when(applicationDAO
+//                .updateByExampleSelective(matchPropExpectAppFullBuildCronTime(), Mockito.any(ApplicationCriteria.class))).thenReturn(1);
 
-        replay();
         ExportTISPipelineToDolphinscheduler exportCfg = createExportTISPipelineToDolphinscheduler();
         return new DSWorkflowPayload(exportCfg, dataxProcessor, commonDAOContext, submit);
 
@@ -223,18 +224,15 @@ public class TestDSWorkflowPayload extends TestCase implements TISEasyMock {
     }
 
     private static SynResTarget matchSynResTarget(SynResTarget expect) {
-        EasyMock.reportMatcher(new SynResTargetMatcher(expect));
-        return null;
+        return Mockito.argThat(new SynResTargetMatcher(expect));
     }
 
     private static SPIExecContext matchSPIExecContext() {
-        EasyMock.reportMatcher(new TriggerWorkflowSPIExecContext());
-        return null;
+        return Mockito.argThat(new TriggerWorkflowSPIExecContext());
     }
 
     private static Application matchPropExpectAppFullBuildCronTime(String propExpectAppFullBuildCronTime) {
-        EasyMock.reportMatcher(new ApplicationMatcher(propExpectAppFullBuildCronTime));
-        return null;
+        return Mockito.argThat(new ApplicationMatcher(propExpectAppFullBuildCronTime));
     }
 
 }

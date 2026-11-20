@@ -23,18 +23,19 @@ import com.alibaba.datax.plugin.rdbms.reader.util.QuerySql;
 import com.alibaba.datax.plugin.rdbms.util.DBUtil;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
-import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-05-08 10:41
  **/
-public class TestMySQLV5DataSourceReader extends TestCase {
+public class TestMySQLV5DataSourceReader {
+    @Test
     public void testReader() {
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
         dataSourceFactory.useCompression = false;

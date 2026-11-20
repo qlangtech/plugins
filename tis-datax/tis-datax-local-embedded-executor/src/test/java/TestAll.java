@@ -16,19 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestEmbeddedDataXJobSubmit;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-23 09:55
- **/
-public class TestAll extends TestCase {
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestEmbeddedDataXJobSubmit.class);
-        return suite;
-    }
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
+@RunWith(Suite.class)
+@Suite.SuiteClasses({})
+public class TestAll {
 }

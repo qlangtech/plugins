@@ -17,15 +17,13 @@
  */
 package com.qlangtech.tis.component;
 
-import junit.framework.TestCase;
-
 /*
  * @create: 2020-02-05 11:38
  *
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class BaseTestCase extends TestCase {
+public class BaseTestCase {
 
 //    static {
 //        System.setProperty("data.dir", "./test_sources");

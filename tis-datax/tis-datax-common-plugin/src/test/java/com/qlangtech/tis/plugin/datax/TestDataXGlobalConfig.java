@@ -25,17 +25,18 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
-
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-21 10:37
  **/
-public class TestDataXGlobalConfig extends TestCase {
+public class TestDataXGlobalConfig {
 
+    @Test
     public void testDescriptJSONGenerate() {
 
         DataXGlobalConfig globalConfig = new DataXGlobalConfig();

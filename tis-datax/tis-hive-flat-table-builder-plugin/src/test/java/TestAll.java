@@ -16,39 +16,13 @@
  * limitations under the License.
  */
 
-import com.alibaba.datax.plugin.unstructuredstorage.reader.TestTEXTFormat;
-import com.qlangtech.tis.dump.hive.TestHiveDBUtils;
-import com.qlangtech.tis.dump.hive.TestHiveRemoveHistoryDataTask;
-import com.qlangtech.tis.dump.hive.TestHiveTableBuilder;
-import com.qlangtech.tis.hive.TestDefaultHiveConnGetter;
-import com.qlangtech.tis.hive.TestHiveInsertFromSelectParser;
-import com.qlangtech.tis.plugin.datax.TestDataXHiveWriter;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
- * @author: baisui 百岁
- * @create: 2020-06-03 14:09
- **/
-public class TestAll extends TestCase {
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        // suite.addTestSuite(TestHdfsFileSystemFactory.class);
-        suite.addTestSuite(TestDefaultHiveConnGetter.class);
-        suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
-//        suite.addTestSuite(TestDataXHdfsReader.class);
-//        suite.addTestSuite(TestDataXHdfsWriter.class);
-        suite.addTestSuite(TestDataXHiveWriter.class);
-        suite.addTestSuite(TestHiveInsertFromSelectParser.class);
-        suite.addTestSuite(TestHiveDBUtils.class);
-        suite.addTestSuite(TestHiveTableBuilder.class);
-        suite.addTestSuite(TestTEXTFormat.class);
-
-       // suite.addTestSuite(com.qlangtech.tis.plugin.datax.TestDataXHiveWriterDump.class);
-       // suite.addTestSuite(TestDefaultHiveConnGetter.class);
-        // suite.addTestSuite(TestYarnTableDumpFactory.class);
-        return suite;
-    }
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
+@RunWith(Suite.class)
+@Suite.SuiteClasses({})
+public class TestAll {
 }

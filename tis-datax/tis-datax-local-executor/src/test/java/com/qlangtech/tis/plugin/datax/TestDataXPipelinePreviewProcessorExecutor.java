@@ -22,14 +22,15 @@ import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.DataXName;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-07-25 14:29
  **/
-public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
+public class TestDataXPipelinePreviewProcessorExecutor {
+    @Test
     public void testPreviewRowsData() {
         final DataXName dataXName = DataXName.createDataXPipeline("dfs_mysql2");
 
@@ -49,6 +50,7 @@ public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
         Assert.assertNotNull(previewRowsData);
     }
 
+    @Test
     public void testPreviewRowsDataForDameng() {
 
         final String dataXName = "dameng_mysql";

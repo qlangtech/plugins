@@ -17,16 +17,17 @@
  */
 
 import com.qlangtech.tis.TIS;
-import junit.framework.TestCase;
-
 import java.io.InputStream;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-07-14 19:21
  **/
-public class TestResourceLoad extends TestCase {
+public class TestResourceLoad {
 
+    @Test
     public void testLoad() {
         // hadoop-common 包中的一个资源文件
         String respath = "common-version-info.properties";

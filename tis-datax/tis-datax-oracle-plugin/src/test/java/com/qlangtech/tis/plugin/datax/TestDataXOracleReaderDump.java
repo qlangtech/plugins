@@ -32,7 +32,7 @@ import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -67,22 +67,21 @@ public class TestDataXOracleReaderDump {
     @Test
     public void testRealDump() throws Exception {
         String dataXName = OracleDSFactoryContainer.dataName.getName();
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
-        IDataxWriter dataxWriter = EasyMock.mock("dataXWriter", IDataxWriter.class);
-        // IDataxReaderContext dataXContext = EasyMock.mock("dataxContext", IDataxReaderContext.class);
+        IDataxProcessor processor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        IDataxWriter dataxWriter = Mockito.mock(IDataxWriter.class, Mockito.withSettings().name("dataXWriter"));
+        // IDataxReaderContext dataXContext = Mockito.mock(IDataxReaderContext.class, Mockito.withSettings().name("dataxContext"));
 
         SelectedTab stab = TestSelectedTab.createSelectedTab(EntityName.parse(OracleDSFactoryContainer.tab_full_types), dsFactory);
         //IDataxProcessor.TableMap tab = new IDataxProcessor.TableMap(stab);
-        // EasyMock.expect(dataxWriter.getSubTask(Optional.of(tab))).andReturn(dataXContext);
+        // Mockito.when(dataxWriter.getSubTask(Optional.of(tab))).thenReturn(dataXContext);
 
-        IDataxGlobalCfg globalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+        IDataxGlobalCfg globalCfg = Mockito.mock(IDataxGlobalCfg.class, Mockito.withSettings().name("dataxGlobalCfg"));
 
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(globalCfg);
+        Mockito.when(processor.getDataXGlobalCfg()).thenReturn(globalCfg);
 
         /**============================================
          * replay
          ============================================*/
-        EasyMock.replay(processor, dataxWriter, globalCfg);
 //        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, dataXName, processor) {
 //            @Override
 //            public String getTemplateContent() {
@@ -124,7 +123,7 @@ public class TestDataXOracleReaderDump {
                         TestDataXOracleReaderDump.class, "oracle_full_types_read_expect.txt")
                 , content);
 
-        EasyMock.verify(processor, dataxWriter, globalCfg);
+        Mockito.verify(processor).getDataXGlobalCfg();
     }
 
     protected DataXOracleReader createReader(String dataXName, SelectedTab stab) {

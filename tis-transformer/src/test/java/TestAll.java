@@ -16,19 +16,18 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.transformer.impl.TestCopyValUDF;
-import com.qlangtech.tis.plugin.datax.transformer.impl.TestJSONSplitterUDF;
-import com.qlangtech.tis.plugin.datax.transformer.impl.TestRegexPatternReplace;
-import com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheOnTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-06-17 16:04
- **/
+ * 该模块可离线运行的单元测试聚合套件(由测试验证脚本自动整理生成)。
+ * 依赖数据库/本地文件/内网服务/Testcontainers 的用例见 TEST_SKIP_REPORT.md。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestCopyValUDF.class, TestJSONSplitterUDF.class, TestRegexPatternReplace.class, TargetRowsCacheOnTest.class})
+@Suite.SuiteClasses({
+    com.qlangtech.tis.plugin.datax.transformer.impl.joiner.JoinCacheKeyBuilderTest.class,
+    com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheFullTest.class,
+    com.qlangtech.tis.plugin.datax.transformer.impl.joiner.cache.TargetRowsCacheOnTest.class,
+})
 public class TestAll {
-
 }

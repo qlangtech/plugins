@@ -20,21 +20,23 @@ package com.qlangtech.tis.plugin.ds.clickhouse;
 
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.TableInDB;
-import junit.framework.TestCase;
-
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-18 09:34
  **/
-public class TestClickHouseDataSourceFactory extends TestCase {
+public class TestClickHouseDataSourceFactory {
 
+    @Test
     public void testDescGenerate() {
 
         PluginDesc.testDescGenerate(ClickHouseDataSourceFactory.class, "ClickHouseDataSourceFactory-desc.json");
     }
 
+    @Test
     public void testGetTablesInDB() {
         ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();
         dsFactory.nodeDesc = "192.168.28.201";

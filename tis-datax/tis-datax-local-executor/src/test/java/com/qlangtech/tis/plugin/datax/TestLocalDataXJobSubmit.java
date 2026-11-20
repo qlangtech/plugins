@@ -38,21 +38,21 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import junit.framework.Assert;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.Optional;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-21 16:39
  **/
-public class TestLocalDataXJobSubmit extends TestCase {
+public class TestLocalDataXJobSubmit {
 
-    public void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         HttpUtils.addMockGlobalParametersConfig();
         // Config.setNotFetchFromCenterRepository();
         CenterResource.setNotFetchFromCenterRepository();
@@ -96,6 +96,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
 //    }
 
 
+    @Test
     public void testPreviewRowsData() throws Exception {
 
 //        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("com/google/common/base/Verify.class");
@@ -117,6 +118,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
         Thread.sleep(99999999);
     }
 
+    @Test
     public void testCreateDataXJob() throws Exception {
 
 
@@ -135,14 +137,14 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         ITISCoordinator.disableRemoteServer();
         RpcServiceReference statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
-        DataXJobSubmit.IDataXJobContext dataXJobContext = EasyMock.createMock("dataXJobContext", DataXJobSubmit.IDataXJobContext.class);
+        DataXJobSubmit.IDataXJobContext dataXJobContext = Mockito.mock(DataXJobSubmit.IDataXJobContext.class, Mockito.withSettings().name("dataXJobContext"));
 
 
-        IExecChainContext taskContext = EasyMock.createMock("taskContext", IExecChainContext.class);
-        EasyMock.expect(dataXJobContext.getTaskContext()).andReturn(taskContext).anyTimes();
-        IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
-        EasyMock.expect(taskContext.getIndexName()).andReturn(dataXName).anyTimes();
-        EasyMock.expect(taskContext.getTaskId()).andReturn(TaskId).anyTimes();
+        IExecChainContext taskContext = Mockito.mock(IExecChainContext.class, Mockito.withSettings().name("taskContext"));
+        Mockito.when(dataXJobContext.getTaskContext()).thenReturn(taskContext);
+        IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        Mockito.when(taskContext.getIndexName()).thenReturn(dataXName);
+        Mockito.when(taskContext.getTaskId()).thenReturn(TaskId);
 
         int preSuccessTaskId = 99;
         PhaseStatusCollection preSuccessTask
@@ -155,19 +157,18 @@ public class TestLocalDataXJobSubmit extends TestCase {
         preSuccessTask.setDumpPhase(preDumpStatus);
        // EasyMock.expect(taskContext.loadPhaseStatusFromLatest()).andReturn(preSuccessTask).times(3);
 
-        ITISCoordinator zkClient = EasyMock.createMock("TisZkClient", ITISCoordinator.class);
+        ITISCoordinator zkClient = Mockito.mock(ITISCoordinator.class, Mockito.withSettings().name("TisZkClient"));
 
         String zkSubPath = "nodes0000000020";
-        EasyMock.expect(zkClient.getChildren(
+        Mockito.when(zkClient.getChildren(
                         ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, true))
-                .andReturn(Collections.singletonList(zkSubPath)).times(3);
-        EasyMock.expect(zkClient.getData(EasyMock.eq(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath)
-                        , EasyMock.eq(true)))
-                .andReturn(statusCollectorHost.getBytes(TisUTF8.get())).times(3);
+                .thenReturn(Collections.singletonList(zkSubPath));
+        Mockito.when(zkClient.getData(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath
+                        , true))
+                .thenReturn(statusCollectorHost.getBytes(TisUTF8.get()));
 
-        EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();
+        Mockito.when(taskContext.getZkClient()).thenReturn(zkClient);
 
-        EasyMock.replay(taskContext, dataxProcessor, zkClient, dataXJobContext);
 //        DataXJobSubmit.IDataXJobContext taskContext
 //         RpcServiceReference statusRpc
 //           IDataxProcessor dataxProcessor
@@ -206,7 +207,8 @@ public class TestLocalDataXJobSubmit extends TestCase {
 //        assertFalse("shall faild", running.isSuccess());
 //        assertTrue("shall complete", running.isComplete());
 
-        EasyMock.verify(taskContext, dataxProcessor, zkClient);
+        Mockito.verify(zkClient, Mockito.times(3)).getChildren(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, true);
+        Mockito.verify(zkClient, Mockito.times(3)).getData(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath, true);
     }
 
 //    protected RunningStatus getRunningStatus(IRemoteTaskTrigger dataXJob) {

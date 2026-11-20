@@ -20,12 +20,11 @@ package com.qlangtech.tis.hive;
 
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestDefaultHiveConnGetter extends TestCase {
+public class TestDefaultHiveConnGetter {
     static final String replacePt = "2023110305";
 
     @Test

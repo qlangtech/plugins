@@ -29,25 +29,31 @@ import com.qlangtech.tis.plugin.test.BasicTest;
 import java.io.File;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 20:48
  **/
 public class TestDataXTiDBReader extends BasicTest {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXTiDBReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXTiDBReader.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         PluginDesc.testDescGenerate(DataXTiDBReader.class, "tidb-datax-reader-descriptor.json");
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
         final String dataXName = "dataXName";
@@ -73,12 +79,14 @@ public class TestDataXTiDBReader extends BasicTest {
     }
 
 
+    @Test
     public void testRealDumpEmployees() throws Exception {
         DataXTiDBReader dataxReader = new DataXTiDBReader();
         File cf = new File("tidb-datax-reader-content.txt");
         ReaderTemplate.realExecute("tidb-datax-reader-template-assert.json", cf, dataxReader);
     }
 
+    @Test
     public void testRealDumpTable1() throws Exception {
         DataXTiDBReader dataxReader = new DataXTiDBReader();
         File cf = new File("tidb-datax-reader-content.txt");

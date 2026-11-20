@@ -29,27 +29,30 @@ import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import com.qlangtech.tis.plugin.ds.cassandra.TestCassandraDatasourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXCassandraWriter extends TestCase {
+public class TestDataXCassandraWriter {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXCassandraWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXCassandraWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXCassandraWriter writer = new DataXCassandraWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
@@ -60,6 +63,7 @@ public class TestDataXCassandraWriter extends TestCase {
                 });
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
         CassandraDatasourceFactory dsFactory = TestCassandraDatasourceFactory.getDS();
         DataXCassandraWriter writer = new DataXCassandraWriter() {

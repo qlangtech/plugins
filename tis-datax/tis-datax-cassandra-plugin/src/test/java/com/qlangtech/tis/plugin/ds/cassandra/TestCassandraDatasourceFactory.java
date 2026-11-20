@@ -22,17 +22,18 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-21 13:14
  **/
-public class TestCassandraDatasourceFactory extends TestCase {
+public class TestCassandraDatasourceFactory {
 
+    @Test
     public void testGetTablesInDB() {
         CassandraDatasourceFactory dsFactory = getDS();
         // dsFactory.useSSL = true;
@@ -51,6 +52,7 @@ public class TestCassandraDatasourceFactory extends TestCase {
         return dsFactory;
     }
 
+    @Test
     public void testGetTableMetadata() {
         Set<String> keys = Sets.newHashSet("city", "user_id", "user_name");
         CassandraDatasourceFactory ds = getDS();

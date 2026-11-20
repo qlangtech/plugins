@@ -45,17 +45,20 @@ import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
 public class TestDataXElasticsearchWriter extends BasicTest {
 
+    @Test
     public void testInitialIndex() {
         final DataXElasticsearchWriter esWriter = new DataXElasticsearchWriter() {
             @Override
@@ -76,6 +79,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     }
 
 
+    @Test
     public void testDescriptorsJSONGenerate() {
 
 
@@ -89,19 +93,22 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     }
 
 
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXElasticsearchWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXElasticsearchWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
-        DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
+        DataxReader dataxReader = Mockito.mock(DataxReader.class, Mockito.withSettings().name("dataxReader"));
 
         final TestAliyunToken token = new TestAliyunToken("xxxxxxxxxxx", "accessKeykkkkkkkkkkkkkk");
 
@@ -121,7 +128,6 @@ public class TestDataXElasticsearchWriter extends BasicTest {
                 return DataXElasticsearchWriter.class;
             }
         };
-        EasyMock.replay(dataxReader);
         dataXWriter.endpoint = "aliyun-bj-endpoint";
         dataXWriter.alias = "application2";
         dataXWriter.index = "application";
@@ -154,16 +160,15 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
         WriterTemplate.valiateCfgGenerate("es-datax-writer-assert-without-option.json"
                 , dataXWriter, new IDataxProcessor.TableMap(Optional.empty(), tableMap));
-
-
-        EasyMock.verify(dataxReader);
     }
 
+    @Test
     public void testRealDump() throws Exception {
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
         WriterTemplate.realExecuteDump(DataXCfgJson.path(DataXElasticsearchWriter.class, "es-datax-writer-real-dump.json"), dataXWriter);
     }
 
+    @Test
     public void testMergeFromStupidModel() {
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
 
@@ -196,6 +201,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
                 });
     }
 
+    @Test
     public void testProjectionFromExpertModel() {
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
 
@@ -234,11 +240,12 @@ public class TestDataXElasticsearchWriter extends BasicTest {
                 });
     }
 
+    @Test
     public void testInitSchemaMetaContent() {
 
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
         IPluginContext pluginContext = IPluginContext.namedContext("testDataX");
-        ISelectedTab selectedTab = EasyMock.createMock("selectedTab", ISelectedTab.class);
+        ISelectedTab selectedTab = Mockito.mock(ISelectedTab.class, Mockito.withSettings().name("selectedTab"));
         // ISelectedTab
         List<CMeta> cols = Lists.newArrayList();
         CMeta col = null;
@@ -250,9 +257,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         col.setName(null);
         col.setType(DataXReaderColType.Long.dataType);
         cols.add(col);
-        EasyMock.expect(selectedTab.getCols()).andReturn(cols);
-
-        EasyMock.replay(selectedTab);
+        Mockito.when(selectedTab.getCols()).thenReturn(cols);
 
         SchemaMetaContent metaContent = dataXWriter.initSchemaMetaContent(pluginContext, selectedTab);
 
@@ -260,7 +265,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         JsonUtil.assertJSONEqual(DataXElasticsearchWriter.class, "initSchemaMetaContent_assert.json", metaContent.toJSON(), (m, e, a) -> {
             assertEquals(m, e, a);
         });
-        EasyMock.verify(selectedTab);
+        Mockito.verify(selectedTab).getCols();
 
     }
 

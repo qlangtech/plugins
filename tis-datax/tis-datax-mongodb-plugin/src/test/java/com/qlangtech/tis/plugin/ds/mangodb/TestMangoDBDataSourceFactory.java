@@ -9,7 +9,6 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.test.TISEasyMock;
-import junit.framework.TestCase;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -18,11 +17,13 @@ import org.junit.Assert;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Test;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/8/30
  */
-public class TestMangoDBDataSourceFactory extends TestCase implements TISEasyMock {
+public class TestMangoDBDataSourceFactory implements TISEasyMock {
+    @Test
     public void testMangoConnect() throws Exception {
         MangoDBDataSourceFactory mongoDS = createMangoDBDS();
 

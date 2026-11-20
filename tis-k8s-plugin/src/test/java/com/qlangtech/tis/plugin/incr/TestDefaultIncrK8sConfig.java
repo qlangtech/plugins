@@ -24,16 +24,16 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-08-17 11:22
  **/
-public class TestDefaultIncrK8sConfig extends TestCase {
+public class TestDefaultIncrK8sConfig {
     public static final String totalpay = "search4totalpay";
 //    public void testDefaultIncrK8sConfig() throws Exception {
 //        DefaultIncrK8sConfig incrK8sCfg = new DefaultIncrK8sConfig();
@@ -44,6 +44,7 @@ public class TestDefaultIncrK8sConfig extends TestCase {
 //        incrK8sCfg.getIncrSync().removeInstance("search4totalpay");
 //    }
 
+    @Test
     public void testlistPodsAndWatchLog() throws Exception {
         IRCController incrSync = getIncrSync();
         String podName = "podname";

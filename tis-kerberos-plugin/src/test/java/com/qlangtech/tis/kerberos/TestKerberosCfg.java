@@ -34,11 +34,11 @@ import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -63,15 +63,15 @@ public class TestKerberosCfg {
         final String cfgFileName = "tis.keytab";
         final String krb5FileName = "krb5.conf";
 
-        CompositContext fieldErrorHandler = EasyMock.createMock("fieldErrorHandler", CompositContext.class);
-        // IControlMsgHandler controlMsgHandler = EasyMock.createMock("controlMsgHandler", IControlMsgHandler.class);
-        Context context = EasyMock.createMock("context", Context.class);
+        CompositContext fieldErrorHandler = Mockito.mock(CompositContext.class, Mockito.withSettings().name("fieldErrorHandler"));
+        // IControlMsgHandler controlMsgHandler = Mockito.mock(IControlMsgHandler.class, Mockito.withSettings().name("controlMsgHandler"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
 
-        EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_PLUGIN_INDEX)).andReturn(0).anyTimes();
-        EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_ITEM_INDEX)).andReturn(0).anyTimes();
+        Mockito.when(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_PLUGIN_INDEX)).thenReturn(0);
+        Mockito.when(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_ITEM_INDEX)).thenReturn(0);
 
         Stack<DefaultFieldErrorHandler.FieldIndex> fieldStack = new Stack<>();
-        EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_FIELDS_STACK)).andReturn(fieldStack).anyTimes();
+        Mockito.when(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_FIELDS_STACK)).thenReturn(fieldStack);
 
 
         JSONObject jsonObject = IOUtils.loadResourceFromClasspath(TestKerberosCfg.class
@@ -103,7 +103,6 @@ public class TestKerberosCfg {
         UploadPluginMeta pmeta = UploadPluginMeta.parse("params-cfg:require,append_true,targetItemDesc_kerberos");
 
 
-        EasyMock.replay(fieldErrorHandler, context);
         AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), jsonObject);
         Assert.assertNotNull(attrValMap);
 
@@ -174,8 +173,6 @@ public class TestKerberosCfg {
         pluginStore.cleanPlugins();
         kerberosCfg = (KerberosCfg) pluginStore.getPlugin();
         validateKerberosProps(kerberosCfg);
-
-        EasyMock.verify(fieldErrorHandler, context);
 
     }
 

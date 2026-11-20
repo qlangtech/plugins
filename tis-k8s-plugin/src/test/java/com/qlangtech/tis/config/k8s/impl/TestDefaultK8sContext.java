@@ -18,20 +18,20 @@
 package com.qlangtech.tis.config.k8s.impl;
 
 import com.qlangtech.tis.plugin.common.PluginDesc;
-import junit.framework.TestCase;
-
+import org.junit.Test;
 /*
  * @create: 2020-02-10 14:19
  *
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class TestDefaultK8sContext extends TestCase {
+public class TestDefaultK8sContext {
 
 //    public void testValidate() {
 //    }
 
 
+    @Test
     public void testPluginDescGenerate() {
         PluginDesc.testDescGenerate(DefaultK8sContext.class, "DefaultK8sContext-desc.json");
     }

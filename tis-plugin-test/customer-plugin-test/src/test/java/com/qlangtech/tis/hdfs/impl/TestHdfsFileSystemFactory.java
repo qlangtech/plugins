@@ -28,6 +28,8 @@ import com.qlangtech.tis.plugin.PluginStore;
 
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /*
  * @create: 2020-04-11 19:11
  *
@@ -36,6 +38,7 @@ import java.util.List;
  */
 public class TestHdfsFileSystemFactory extends BaiscPluginTest {
 
+    @Test
     public void testCreate() {
         IPluginStore<FileSystemFactory> pluginStore = TIS.getPluginStore(FileSystemFactory.class);
         assertNotNull(pluginStore);

@@ -16,32 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataxMySQLReader;
-import com.qlangtech.tis.plugin.datax.TestDataxMySQLReaderDump;
-import com.qlangtech.tis.plugin.datax.TestDataxMySQLWriter;
-import com.qlangtech.tis.plugin.ds.mysql.TestMySQLDataSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: baisui 百岁
- * @create: 2021-01-07 18:52
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({
-        TestMySQLDataSourceFactory.class //
-        , TestDataxMySQLReader.class //
-        , TestDataxMySQLWriter.class //
-        , TestDataxMySQLReaderDump.class
-})
-public class TestAll  //extends TestCase
-{
-
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestMySQLDataSourceFactory.class);
-//        suite.addTestSuite(TestDataxMySQLReader.class);
-//        suite.addTestSuite(TestDataxMySQLWriter.class);
-//        return suite;
-//    }
+@Suite.SuiteClasses({})
+public class TestAll {
 }

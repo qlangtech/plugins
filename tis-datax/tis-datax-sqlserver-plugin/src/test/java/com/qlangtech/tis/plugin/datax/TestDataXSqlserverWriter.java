@@ -26,31 +26,35 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.AutoCreateTable;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
-import junit.framework.TestCase;
-
 import java.sql.Driver;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXSqlserverWriter extends TestCase {
+public class TestDataXSqlserverWriter {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXSqlserverWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXSqlserverWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
 
+    @Test
     public void testDescGenerate() {
         PluginDesc.testDescGenerate(DataXSqlserverWriter.class, "sqlserver-datax-writer-descriptor.json");
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
 
@@ -87,6 +91,7 @@ public class TestDataXSqlserverWriter extends TestCase {
         return writer;
     }
 
+    @Test
     public void testGenerateCreateDDL() {
 
         DataXSqlserverWriter writer = getDataXSqlserverWriter();

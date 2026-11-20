@@ -20,17 +20,18 @@ package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.web.start.TisAppLaunch;
-import junit.framework.TestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-25 15:04
  **/
-public class TestTisFlumeLogstashV1Appender extends TestCase {
+public class TestTisFlumeLogstashV1Appender {
     private static final Logger logger = LoggerFactory.getLogger(TestTisFlumeLogstashV1Appender.class);
 
+    @Test
     public void testSendMsg() throws Exception {
         TisAppLaunch.setTest(false);
 //        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(999));

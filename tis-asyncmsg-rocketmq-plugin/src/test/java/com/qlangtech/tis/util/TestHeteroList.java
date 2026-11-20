@@ -19,20 +19,21 @@ package com.qlangtech.tis.util;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import junit.framework.TestCase;
-
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /*
  * @create: 2020-02-08 16:23
  *
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class TestHeteroList extends TestCase {
+public class TestHeteroList {
 
     private static final String caption = "test-caption";
 
+    @Test
     public void testReflectAllMethod() {
 
         List<MQListenerFactory> items = Lists.newArrayList();

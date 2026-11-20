@@ -9,7 +9,6 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
-import junit.framework.TestCase;
 import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.Document;
@@ -24,7 +23,7 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/9/3
  */
-public class TestMongoColumnMetaData extends TestCase {
+public class TestMongoColumnMetaData {
     @Test
     public void testParseMongoDocTypes() {
 

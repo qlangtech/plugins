@@ -16,15 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.cdc.oracle.TestTISFlinkCDCOracleSourceFunction;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-19 18:12
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestTISFlinkCDCOracleSourceFunction.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

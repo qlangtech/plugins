@@ -20,7 +20,7 @@ package com.qlangtech.tis.datax;
 import com.alibaba.datax.core.util.container.JarLoader;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -48,12 +48,12 @@ public class TestDataxExecutor extends BasicDataXExecutorTestCase {
     public void testDataxJobMysql2Hdfs() throws Exception {
 
         DBIdentity dbFactoryId = DBIdentity.parseId("");
-        IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
+        IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
         String dataxNameMysql2hdfs = "mysql2hdfs";
         final DataXJobInfo jobName = DataXJobInfo.create("datax_cfg.json", dbFactoryId, Collections.emptyList());
 
         File path = new File("/opt/data/tis/cfg_repo/tis_plugin_config/ap/" + dataxNameMysql2hdfs + "/dataxCfg");
-        EasyMock.expect(dataxProcessor.getDataxCfgDir(null)).andReturn(path);
+        Mockito.when(dataxProcessor.getDataxCfgDir(null)).thenReturn(path);
 
 
         Integer jobId = 1;
@@ -61,10 +61,9 @@ public class TestDataxExecutor extends BasicDataXExecutorTestCase {
         DataxExecutor.DataXJobArgs jobArgs = DataxExecutor.DataXJobArgs.createJobArgs(dataxProcessor, jobId, jobName, 0, TimeFormat.getCurrentTimeStamp());
 
         final JarLoader uberClassLoader = getJarLoader();
-        EasyMock.replay(dataxProcessor);
         executor.startWork(jobName, dataxProcessor, uberClassLoader, jobArgs);
 
-        EasyMock.verify(dataxProcessor);
+        Mockito.verify(dataxProcessor).getDataxCfgDir(null);
     }
 
     private JarLoader getJarLoader() {
@@ -91,17 +90,16 @@ public class TestDataxExecutor extends BasicDataXExecutorTestCase {
 
         final DataXJobInfo jobName = DataXJobInfo.create("datax_cfg.json", dbId, Collections.emptyList());
         Path path = Paths.get("/opt/data/tis/cfg_repo/tis_plugin_config/ap/" + dataxNameMysql2hive + "/dataxCfg");
-        IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
-        EasyMock.expect(dataxProcessor.getDataxCfgDir(null)).andReturn(path.toFile());
+        IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        Mockito.when(dataxProcessor.getDataxCfgDir(null)).thenReturn(path.toFile());
 // tring dataxName, Integer jobId, String jobName, String jobPath
         Integer jobId = 1;
 
-        EasyMock.replay(dataxProcessor);
 
         DataxExecutor.DataXJobArgs jobArgs = DataxExecutor.DataXJobArgs.createJobArgs(dataxProcessor, jobId, jobName, 0, TimeFormat.getCurrentTimeStamp());
         executor.startWork(jobName, dataxProcessor, getJarLoader(), jobArgs);
 
-        EasyMock.verify(dataxProcessor);
+        Mockito.verify(dataxProcessor).getDataxCfgDir(null);
     }
 
     public void testDataxJobLaunch() throws Exception {
@@ -118,17 +116,16 @@ public class TestDataxExecutor extends BasicDataXExecutorTestCase {
                 = DataXJobInfo.create("customer_order_relation_1.json", dbId, Collections.emptyList());
         Path path = Paths.get("/opt/data/tis/cfg_repo/tis_plugin_config/ap/baisuitestTestcase/dataxCfg");
 
-        IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
-        EasyMock.expect(dataxProcessor.getDataxCfgDir(null)).andReturn(path.toFile());
+        IDataxProcessor dataxProcessor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        Mockito.when(dataxProcessor.getDataxCfgDir(null)).thenReturn(path.toFile());
 // tring dataxName, Integer jobId, String jobName, String jobPath
         Integer jobId = 1;
-        EasyMock.replay(dataxProcessor);
 
         DataxExecutor.DataXJobArgs jobArgs
                 = DataxExecutor.DataXJobArgs.createJobArgs(dataxProcessor, jobId, jobName, 0, TimeFormat.getCurrentTimeStamp());
 
         executor.startWork(jobName, dataxProcessor, getJarLoader(), jobArgs);
-        EasyMock.verify(dataxProcessor);
+        Mockito.verify(dataxProcessor).getDataxCfgDir(null);
     }
 
 

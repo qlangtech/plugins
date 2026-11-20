@@ -9,9 +9,9 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.canaljson.TISCa
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.TestChujunKafkaSinkFactoryIntegration;
 import org.apache.flink.cdc.common.event.Event;
 import org.apache.flink.cdc.common.pipeline.SchemaChangeBehavior;
-import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  *
@@ -28,8 +28,8 @@ public class TestKafkaPipelineSinkFactory extends TestFlinkSinkExecutor<KafkaPip
     @Test
     public void testKafkaWriter() throws Exception {
         IncrStreamFactory streamFactory = mock("streamFactory", IncrStreamFactory.class);
-        //EasyMock.expect(streamFactory.supportRateLimiter()).andReturn(false);
-        EasyMock.expect(streamFactory.getParallelism()).andReturn(1);
+        //Mockito.when(streamFactory.supportRateLimiter()).thenReturn(false);
+        Mockito.when(streamFactory.getParallelism()).thenReturn(1);
         IncrStreamFactory.stubStreamFactory = (dataXName) -> {
             return streamFactory;
         };

@@ -22,7 +22,6 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
-import junit.framework.TestCase;
 import org.junit.Ignore;
 
 import java.sql.Connection;
@@ -30,11 +29,14 @@ import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-12-30 10:56
  **/
-public class TestMySQLV5DataSourceFactory extends TestCase {
+public class TestMySQLV5DataSourceFactory {
+    @Test
     public void testGetTableMetadata() {
         IPluginContext pluginContext = IPluginContext.namedContext("test");
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
@@ -57,6 +59,7 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
                 });
     }
 
+    @Test
     public void testSplitTables() {
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
         dataSourceFactory.splitTableStrategy = null;
@@ -64,6 +67,7 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
 
 
     @Ignore
+    @Test
     public void testAliyunAdsSource() {
         MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
         dataSourceFactory.useCompression = false;

@@ -16,25 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlReader;
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlWriter;
-import com.qlangtech.tis.plugin.ds.postgresql.TestPGDataSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestDataXPostgresqlReader.class, TestDataXPostgresqlWriter.class, TestPGDataSourceFactory.class})
-public class TestAll  //extends TestCase
-{
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXPostgresqlReader.class);
-//        suite.addTestSuite(TestDataXPostgresqlWriter.class);
-//        suite.addTestSuite(TestPGDataSourceFactory.class);
-//        return suite;
-//    }
+@Suite.SuiteClasses({})
+public class TestAll {
 }

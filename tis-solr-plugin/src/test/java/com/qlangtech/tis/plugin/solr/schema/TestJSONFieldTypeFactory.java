@@ -23,20 +23,22 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2021-02-06 10:41
  **/
-public class TestJSONFieldTypeFactory extends TestCase {
+public class TestJSONFieldTypeFactory {
     /**
      * 表单生成
      */
+    @Test
     public void testFormCreate() throws Exception {
         List<Descriptor<FieldTypeFactory>> descriptors = TIS.get().getDescriptorList(FieldTypeFactory.class);
         assertNotNull(descriptors);

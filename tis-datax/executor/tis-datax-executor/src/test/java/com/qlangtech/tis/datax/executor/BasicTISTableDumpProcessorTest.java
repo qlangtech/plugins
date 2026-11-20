@@ -48,7 +48,7 @@ import com.qlangtech.tis.powerjob.SelectedTabTriggers.PowerJobRemoteTaskTrigger;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.tuple.Pair;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,9 +74,9 @@ public class BasicTISTableDumpProcessorTest implements TISEasyMock {
     @Test
     public void createExecContext() {
         CenterResource.setNotFetchFromCenterRepository();
-        ITaskExecutorContext context = mock("context", ITaskExecutorContext.class);
-        EasyMock.expect(context.getSpecifiedLocalLoggerPath()).andReturn(new File("/opt/data/logs"));
-        EasyMock.expect(context.isDisableGrpcRemoteServerConnect()).andReturn(true);
+        ITaskExecutorContext context = Mockito.mock(ITaskExecutorContext.class, Mockito.withSettings().name("context"));
+        Mockito.when(context.getSpecifiedLocalLoggerPath()).thenReturn(new File("/opt/data/logs"));
+        Mockito.when(context.isDisableGrpcRemoteServerConnect()).thenReturn(true);
         String pipeName = "pipename";
         Integer taskId = 999;
         StoreResourceType type = StoreResourceType.DataApp;
@@ -94,10 +94,10 @@ public class BasicTISTableDumpProcessorTest implements TISEasyMock {
 //        instanceParams.put(PluginAndCfgsSnapshotUtils.KEY_PLUGIN_CFGS_METAS, "{}");
         //instanceParams.put(DataxUtils., DataxUtils.currentTimeStamp());
         ISelectedTab tab = new DefaultTab("base");
-        IDataxProcessor appSource = mock("appSource", IDataxProcessor.class);
+        IDataxProcessor appSource = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("appSource"));
 //        EasyMock.expect(appSource.getResType()).andReturn(type);
 //        EasyMock.expect(appSource.createNode()).andReturn(IDataxProcessor.createNode(pipeName, type));
-        EasyMock.expect(context.getInstanceParams()).andReturn(instanceParams);
+        Mockito.when(context.getInstanceParams()).thenReturn(instanceParams);
 
         SelectedTabTriggers tabTriggers = new SelectedTabTriggers(tab, mockApp);
         DataXJobInfo dataXJobInfo = DataXJobInfo.parse("base_1.json/base_01,base_02");
@@ -114,14 +114,12 @@ public class BasicTISTableDumpProcessorTest implements TISEasyMock {
 
         instanceParams.put(JobParams.KEY_TASK_ID, taskId);
 
-        replay();
 //        Triple<AbstractExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> result
 //                = BasicTISTableDumpProcessor.createExecContext(context, ExecPhase.Reduce);
 
 //        AbstractExecContext execContext = result.getLeft();
 //        Assert.assertEquals(taskId, (Integer) execContext.getTaskId());
 
-        verifyAll();
     }
 
     private IDataxWriter mockWriter() {

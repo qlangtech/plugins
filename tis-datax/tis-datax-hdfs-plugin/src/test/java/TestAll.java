@@ -16,33 +16,13 @@
  * limitations under the License.
  */
 
-//import com.qlangtech.tis.kerberos.TestKerberosCfg;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-//import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
-//import com.qlangtech.tis.plugin.datax.TestDataXHdfsWriter;
-
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-22 16:19
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-//@Suite.SuiteClasses({TestKerberosCfg.class})
+@Suite.SuiteClasses({})
 public class TestAll {
-
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestHdfsFileSystemFactory.class);
-
-
-        //suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
-//        suite.addTestSuite(TestDataXHdfsReader.class);
-//        suite.addTestSuite(TestDataXHdfsWriter.class);
-
-//        suite.addTestSuite(TestHiveInsertFromSelectParser.class);
-//        suite.addTestSuite(TestHiveDBUtils.class);
-        // suite.addTestSuite(TestYarnTableDumpFactory.class);
-//        return suite;
-//    }
 }

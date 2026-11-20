@@ -25,17 +25,17 @@ import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.Optional;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-12-22 12:23
  **/
-public class TestDefaultWatchPodLog extends TestCase {
+public class TestDefaultWatchPodLog {
 
+    @Test
     public void testStartProcessPodLiveLog() throws Exception {
 
         Optional<String> containerId = Optional.empty();

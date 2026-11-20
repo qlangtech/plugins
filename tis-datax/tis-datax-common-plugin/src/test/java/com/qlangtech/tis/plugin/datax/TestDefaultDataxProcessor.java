@@ -32,17 +32,21 @@ import org.apache.commons.lang.RandomStringUtils;
 import java.io.IOException;
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-03 23:15
  **/
 public class TestDefaultDataxProcessor extends BasicTest {
 
+    @Test
     public void testDescGenerate() {
 
         PluginDesc.testDescGenerate(DefaultDataxProcessor.class, "default-datax-processor-descriptor.json");
     }
 
+    @Test
     public void testSaveProcess() {
         final String appName = "test" + RandomStringUtils.randomAlphanumeric(2);
 

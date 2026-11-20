@@ -19,26 +19,21 @@
 package com.qlangtech.tis.plugin.datax.doplinscheduler;
 
 import com.qlangtech.tis.plugin.datax.SPIExecContext;
-import org.easymock.IArgumentMatcher;
+import org.mockito.ArgumentMatcher;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-22 18:33
  **/
-public class TriggerWorkflowSPIExecContext implements IArgumentMatcher {
+public class TriggerWorkflowSPIExecContext implements ArgumentMatcher<SPIExecContext> {
     private SPIExecContext execContext;
 
     @Override
-    public boolean matches(Object context) {
+    public boolean matches(SPIExecContext context) {
         if (context instanceof SPIExecContext) {
-            execContext = (SPIExecContext) context;
+            execContext = context;
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void appendTo(StringBuffer buffer) {
-
     }
 }

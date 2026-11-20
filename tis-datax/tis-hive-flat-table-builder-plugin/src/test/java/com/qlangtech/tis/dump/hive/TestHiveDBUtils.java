@@ -19,7 +19,6 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.sql.ResultSet;
@@ -30,7 +29,7 @@ import java.sql.Statement;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-01-17 09:58
  **/
-public class TestHiveDBUtils extends TestCase {
+public class TestHiveDBUtils {
 
     @Test
     public void test1() throws Exception {

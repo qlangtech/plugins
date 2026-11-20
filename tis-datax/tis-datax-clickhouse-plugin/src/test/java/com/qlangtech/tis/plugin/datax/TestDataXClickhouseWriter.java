@@ -34,22 +34,26 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
 public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.BasicTest {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXClickhouseWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXClickhouseWriter.class);
         assertTrue(extraProps.isPresent());
@@ -60,6 +64,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
     private static final String clickhouse_datax_writer_assert_without_optional = "clickhouse-datax-writer-assert-without-optional.json";
     private static final String targetTableName = "customer_order_relation";
 
+    @Test
     public void testDescriptorsJSONGenerate() {
 //        DataXClickhouseWriter writer = new DataXClickhouseWriter();
 //        DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
@@ -73,6 +78,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         PluginDesc.testDescGenerate(DataXClickhouseWriter.class, "clickhouse-datax-writer-descriptor.json");
     }
 
+    @Test
     public void testConfigGenerate() throws Exception {
 
         ClickHouseTest forTest = createDataXWriter(); //new DataXClickhouseWriter() {
@@ -171,13 +177,14 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
     }
 
 
+    @Test
     public void testRealDump() throws Exception {
 
         ClickHouseTest houseTest = createDataXWriter();
 
         houseTest.writer.autoCreateTable = AutoCreateTable.dft();
 
-        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
+        DataxProcessor dataXProcessor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
         File createDDLDir = new File(".");
         File createDDLFile = null;
         try {
@@ -186,7 +193,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXClickhouseWriter.class
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
-            EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
+            Mockito.when(dataXProcessor.getDataxCreateDDLDir(null)).thenReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
                 return houseTest.writer;
             };
@@ -194,16 +201,16 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
                 assertEquals(testDataXName, dataXName);
                 return dataXProcessor;
             };
-            EasyMock.replay(dataXProcessor);
             DataXClickhouseWriter writer = new DataXClickhouseWriter();
             WriterTemplate.realExecuteDump(DataXCfgJson.path(TestDataXClickhouseWriter.class, clickhouse_datax_writer_assert_without_optional), writer);
 
-            EasyMock.verify(dataXProcessor);
+            Mockito.verify(dataXProcessor).getDataxCreateDDLDir(null);
         } finally {
             FileUtils.forceDelete(createDDLFile);
         }
     }
 
+    @Test
     public void testGenerateCreateDDL() {
 
         ClickHouseTest dataXWriter = createDataXWriter();
@@ -232,6 +239,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         System.out.println(createDDL);
     }
 
+    @Test
     public void testMySql2CKIncr() {
 
     }

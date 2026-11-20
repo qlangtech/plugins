@@ -18,7 +18,7 @@ import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.qlangtech.tis.workflow.pojo.WorkflowDAGFileManager;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public class TestWorkflowInstanceActor implements TISEasyMock {
             new TestKit(system) {{
                 int taskId = 9999;
 
-                IWorkFlowBuildHistoryDAO dao = mock("dao", IWorkFlowBuildHistoryDAO.class);
+                IWorkFlowBuildHistoryDAO dao = Mockito.mock(IWorkFlowBuildHistoryDAO.class, Mockito.withSettings().name("dao"));
 
                 WorkFlowBuildHistory history = new WorkFlowBuildHistory();
                 IDataxProcessor dataxProcessor = DataxProcessor.load(null, testDataXName);
@@ -68,9 +68,9 @@ public class TestWorkflowInstanceActor implements TISEasyMock {
                         WorkflowDAGFileManager.DAG_SPEC_FILENAME);
                 history.setDagRuntime(dagRuntime.getAbsolutePath());
 
-                EasyMock.expect(dao.loadFromWriteDB(taskId)).andReturn(history);
-                EasyMock.expect(dao.updateByPrimaryKeySelective(
-                        EasyMock.anyObject(WorkFlowBuildHistory.class))).andReturn(1).anyTimes();
+                Mockito.when(dao.loadFromWriteDB(taskId)).thenReturn(history);
+                Mockito.when(dao.updateByPrimaryKeySelective(
+                        Mockito.any(WorkFlowBuildHistory.class))).thenReturn(1);
 
                 // mock HTTP for TaskSoapUtils.createTaskComplete
                 HttpUtils.addMockApply(0, "do_task_complete",
@@ -79,7 +79,6 @@ public class TestWorkflowInstanceActor implements TISEasyMock {
                 // nodeDispatcher probe intercepts DispatchTask messages
                 TestKit dispatcherProbe = new TestKit(system);
 
-                replay();
 
                 ActorRef actor = system.actorOf(
                         WorkflowInstanceActor.props(dispatcherProbe.getRef(), dao));
@@ -104,7 +103,7 @@ public class TestWorkflowInstanceActor implements TISEasyMock {
                 // completeWorkflow() calls getContext().stop(getSelf())
                 expectTerminated(Duration.ofMinutes(5), actor);
 
-                verifyAll();
+                Mockito.verify(dao).loadFromWriteDB(taskId);
             }};
         } finally {
             TestKit.shutdownActorSystem(system);

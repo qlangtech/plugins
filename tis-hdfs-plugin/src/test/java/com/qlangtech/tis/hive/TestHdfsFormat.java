@@ -15,14 +15,15 @@
 
 package com.qlangtech.tis.hive;
 
-import junit.framework.TestCase;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-26 09:57
  **/
-public class TestHdfsFormat extends TestCase {
+public class TestHdfsFormat {
 
+    @Test
     public void testGetRowFormat() {
         HdfsFormat sFormat = new HdfsFormat("\t", HdfsFileType.TEXTFILE);
 

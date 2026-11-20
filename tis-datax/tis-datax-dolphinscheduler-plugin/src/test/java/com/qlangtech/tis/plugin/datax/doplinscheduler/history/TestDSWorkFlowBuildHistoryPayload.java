@@ -23,37 +23,38 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
-import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-29 16:06
  **/
-public class TestDSWorkFlowBuildHistoryPayload extends TestCase implements TISEasyMock {
+public class TestDSWorkFlowBuildHistoryPayload {
 
+    @Test
     public void testProcessExecHistoryRecord() {
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, "mysql");
         final Integer tisTaskId = 999;
-        ICommonDAOContext daoContext = mock("commonDAOContext", ICommonDAOContext.class);
-        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
+        ICommonDAOContext daoContext = Mockito.mock(ICommonDAOContext.class, Mockito.withSettings().name("commonDAOContext"));
+        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = Mockito.mock(IWorkFlowBuildHistoryDAO.class
+                , Mockito.withSettings().name("workFlowBuildHistoryDAO"));
         WorkFlowBuildHistory wfBuildHistory = new WorkFlowBuildHistory();
 
         JSONObject status = new JSONObject();
         status.put(ITISPowerJob.KEY_POWERJOB_WORKFLOW_INSTANCE_ID, 24);
         wfBuildHistory.setAsynSubTaskStatus(status.toJSONString());
 
-        EasyMock.expect(workFlowBuildHistoryDAO.selectByPrimaryKey(tisTaskId)).andReturn(wfBuildHistory);
-        EasyMock.expect(daoContext.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
+        Mockito.when(workFlowBuildHistoryDAO.selectByPrimaryKey(tisTaskId)).thenReturn(wfBuildHistory);
+        Mockito.when(daoContext.getTaskBuildHistoryDAO()).thenReturn(workFlowBuildHistoryDAO);
         //.selectByPrimaryKey(tisTaskId);
 
 
         DSWorkFlowBuildHistoryPayload wfBuildHistoryPayload = new DSWorkFlowBuildHistoryPayload(dataxProcessor, tisTaskId, daoContext);
-        this.replay();
         wfBuildHistoryPayload.processExecHistoryRecord();
-        this.verifyAll();
+        Mockito.verify(workFlowBuildHistoryDAO).selectByPrimaryKey(tisTaskId);
+        Mockito.verify(daoContext).getTaskBuildHistoryDAO();
     }
 }

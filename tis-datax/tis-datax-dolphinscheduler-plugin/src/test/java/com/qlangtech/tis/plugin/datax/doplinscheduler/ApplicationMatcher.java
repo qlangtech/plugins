@@ -20,13 +20,13 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler;
 
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import org.apache.commons.lang3.StringUtils;
-import org.easymock.IArgumentMatcher;
+import org.mockito.ArgumentMatcher;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-22 13:28
  **/
-public class ApplicationMatcher implements IArgumentMatcher {
+public class ApplicationMatcher implements ArgumentMatcher<Application> {
     private final String expectAppFullBuildCronTime;
     private Application actualApp;
 
@@ -35,18 +35,18 @@ public class ApplicationMatcher implements IArgumentMatcher {
     }
 
     @Override
-    public boolean matches(Object actual) {
+    public boolean matches(Application actual) {
         if (actual instanceof Application) {
-            this.actualApp = (Application) actual;
+            this.actualApp = actual;
             return StringUtils.equals(this.actualApp.getFullBuildCronTime(), expectAppFullBuildCronTime);
         }
         return false;
     }
 
     @Override
-    public void appendTo(StringBuffer buffer) {
-        buffer.append("a app with the expected value expectAppFullBuildCronTime:" + expectAppFullBuildCronTime);
-        buffer.append("\nis not equal actual:\n");
-        buffer.append(this.actualApp.getFullBuildCronTime());
+    public String toString() {
+        return "a app with the expected value expectAppFullBuildCronTime:" + expectAppFullBuildCronTime
+                + "\nis not equal actual:\n"
+                + (this.actualApp == null ? null : this.actualApp.getFullBuildCronTime());
     }
 }

@@ -29,8 +29,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.sql.Connection;
@@ -38,38 +37,39 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-04-22 11:28
  **/
-public class TestHiveTableBuilder extends TestCase {
+public class TestHiveTableBuilder {
 
+    @Test
     public void testCreateHiveTableAndBindPartition() throws Exception {
         HiveTableBuilder hiveTableBuilder
                 = new HiveTableBuilder(TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp())
                 , new HdfsFormat("c", HdfsFileType.ORC));
         List<ColumnMetaData> cols = TestHiveInsertFromSelectParser.createPayInfoCols();
-        DataSourceMeta sourceMeta = EasyMock.mock("sourceMeta", DataSourceMeta.class);
-        EasyMock.expect(sourceMeta.getEscapeChar()).andReturn(Optional.of("`")).anyTimes();
+        DataSourceMeta sourceMeta = Mockito.mock(DataSourceMeta.class, Mockito.withSettings().name("sourceMeta"));
+        Mockito.when(sourceMeta.getEscapeChar()).thenReturn(Optional.of("`"));
         for (ColumnMetaData c : cols) {
-            EasyMock.expect(sourceMeta.getEscapedEntity(c.getName())).andReturn("`" + c.getName() + "`");
-            EasyMock.expect(sourceMeta.removeEscapeChar(c.getName())).andReturn(c.getName());
+            Mockito.when(sourceMeta.getEscapedEntity(c.getName())).thenReturn("`" + c.getName() + "`");
+            Mockito.when(sourceMeta.removeEscapeChar(c.getName())).thenReturn(c.getName());
         }
 
-        JDBCConnection conn = EasyMock.mock("conn", JDBCConnection.class);
-        Connection connection = EasyMock.mock("connection", Connection.class);
+        JDBCConnection conn = Mockito.mock(JDBCConnection.class, Mockito.withSettings().name("conn"));
+        Connection connection = Mockito.mock(Connection.class, Mockito.withSettings().name("connection"));
 
-        Statement statement = EasyMock.mock("statement", Statement.class);
+        Statement statement = Mockito.mock(Statement.class, Mockito.withSettings().name("statement"));
         statement.close();
-        EasyMock.expectLastCall().anyTimes();
 
-        EasyMock.expect(statement.execute("CREATE DATABASE IF NOT EXISTS order")).andReturn(true);
+        Mockito.when(statement.execute("CREATE DATABASE IF NOT EXISTS order")).thenReturn(true);
         // create table
-        EasyMock.expect(statement.execute(EasyMock.anyString())).andReturn(true);
+        Mockito.when(statement.execute(Mockito.anyString())).thenReturn(true);
 
-        EasyMock.expect(connection.createStatement()).andReturn(statement).anyTimes();
+        Mockito.when(connection.createStatement()).thenReturn(statement);
 
-        EasyMock.expect(conn.getConnection()).andReturn(connection).anyTimes();
+        Mockito.when(conn.getConnection()).thenReturn(connection);
         EntityName table = EntityName.parse("order.orderinfo");
 
 
@@ -83,7 +83,6 @@ public class TestHiveTableBuilder extends TestCase {
             hcs.add(hc);
         }
 
-        EasyMock.replay(sourceMeta, conn, connection, statement);
         StringBuffer hiveSQl = hiveTableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, table, hcs, (sql) -> {
         });
 
@@ -95,6 +94,6 @@ public class TestHiveTableBuilder extends TestCase {
                 "  `pay_customer_ids`      STRING\n" +
                 ") COMMENT 'tis_tmp_order.orderinfo' PARTITIONED BY(pt string,pmod string)   STORED AS ORC", hiveSQl.toString());
 
-        EasyMock.verify(sourceMeta, conn, connection, statement);
+        Mockito.verify(statement).execute("CREATE DATABASE IF NOT EXISTS order");
     }
 }

@@ -22,17 +22,19 @@ import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.manage.common.CenterResource;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
 import java.io.File;
 import java.util.List;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-02-03 13:42
  **/
-public class TestDataFlowDataXProcessor extends TestCase {
+public class TestDataFlowDataXProcessor {
 
     //    @BeforeClass
 //    public static void init() {
@@ -41,14 +43,14 @@ public class TestDataFlowDataXProcessor extends TestCase {
     private static final String DataFlowName = "tttt7";
     DataFlowDataXProcessor dataXProcessor;
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before public void setUp() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
         this.dataXProcessor = new DataFlowDataXProcessor();
         dataXProcessor.name = DataFlowName;
         dataXProcessor.globalCfg = "test";
     }
 
+    @Test
     public void testGetReaders() {
 
         Assert.assertTrue(dataXProcessor.isWriterSupportMultiTableInReader(null));

@@ -36,12 +36,11 @@ import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.UploadPluginMeta;
-import org.easymock.EasyMock;
-import org.easymock.internal.matchers.Any;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.util.List;
@@ -73,25 +72,24 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
      * @return
      */
     private static List<SelectedTab> matchtabs() {
-        EasyMock.reportMatcher(Any.ANY);
-        return null;
+        return Mockito.any();
     }
 
     @Test
     public void testDescJsonGen() throws Exception {
         DefaultGroovyShellFactory.setInConsoleModule();
-        MockDataSourceMetaPlugin dsMetaPlugin = mock("dataSourceMetaPlugin", MockDataSourceMetaPlugin.class);
+        MockDataSourceMetaPlugin dsMetaPlugin = Mockito.mock(MockDataSourceMetaPlugin.class, Mockito.withSettings().name("dataSourceMetaPlugin"));
 
 
-        IPluginStore<DataxReader> pluginStore = mock("pluginStore", IPluginStore.class);
+        IPluginStore<DataxReader> pluginStore = Mockito.mock(IPluginStore.class, Mockito.withSettings().name("pluginStore"));
 
         File tmpTabsDir = folder.newFolder("tmpTabs");
 
 
-        EasyMock.expect(pluginStore.getTargetFileParentDir()).andReturn(tmpTabsDir).anyTimes();
+        Mockito.when(pluginStore.getTargetFileParentDir()).thenReturn(tmpTabsDir);
 
         List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1);
-        //  EasyMock.expect(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).andReturn(selectedTabs);
+        //  Mockito.when(dsMetaPlugin.fillSelectedTabMeta(matchtabs())).thenReturn(selectedTabs);
 
         List<ColumnMetaData> selectableCols = ColumnMetaData.convert(selectedTabs.get(0).getCols());
         ThreadCacheTableCols cacheTableCols = new ThreadCacheTableCols(dsMetaPlugin
@@ -99,7 +97,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
             return selectedTabs.get(0).getCols();
         }, selectableCols);
 
-        EasyMock.expect(dsMetaPlugin.getContextTableColsStream(EasyMock.anyObject(SuFormProperties.SuFormGetterContext.class))).andReturn(cacheTableCols);
+        Mockito.when(dsMetaPlugin.getContextTableColsStream(Mockito.any(SuFormProperties.SuFormGetterContext.class))).thenReturn(cacheTableCols);
 
         UploadPluginMeta pluginMeta = UploadPluginMeta.parse("dataxReader:require");
         String testTable = TestSelectedTabs.tabNameOrderDetail;
@@ -107,11 +105,9 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
         // List<ColumnMetaData> cols = TestSelectedTabs.tabColsMetaOrderDetail;
 
 
-        //  EasyMock.expect(dsMetaPlugin.getTableMetadata(false, null, EntityName.parse(testTable))).andReturn(cols);
+        //  Mockito.when(dsMetaPlugin.getTableMetadata(false, null, EntityName.parse(testTable))).thenReturn(cols);
 
         SuFormProperties.setSuFormGetterContext(dsMetaPlugin, pluginStore, pluginMeta, testTable);
-
-        this.replay();
 
         SelectedTab.getTmpTableStoreFile(pluginStore, testTable)
                 .write(selectedTabs.get(0), Sets.newHashSet());
@@ -121,7 +117,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
                 , UnderlineUtils.addUnderline(pluginClass.getSimpleName())
                         + "/descriptor.json");
 
-        this.verifyAll();
+        Mockito.verify(dsMetaPlugin).getContextTableColsStream(Mockito.any(SuFormProperties.SuFormGetterContext.class));
     }
 
     @Test

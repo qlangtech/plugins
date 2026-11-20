@@ -138,8 +138,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.objenesis</groupId>

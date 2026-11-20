@@ -26,22 +26,21 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.PluginStubUtils;
-import junit.framework.TestCase;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 10:23
  **/
-public class TestDataxExecutorSynRes extends TestCase implements IExecutorContext {
+public class TestDataxExecutorSynRes implements IExecutorContext {
 
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before public void setUp() throws Exception {
         System.clearProperty(Config.KEY_DATA_DIR);
         Config.setTestDataDir();
         HttpUtils.mockConnMaker = new HttpUtils.DefaultMockConnectionMaker();

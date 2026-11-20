@@ -18,18 +18,19 @@
 
 package com.qlangtech.tis.plugin.datax.common;
 
-import junit.framework.TestCase;
 import org.junit.Assert;
 
 import java.util.List;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-12-16 13:17
  **/
-public class TestBasicDataXRdbmsWriter extends TestCase {
+public class TestBasicDataXRdbmsWriter {
 
 
+    @Test
     public void testParseStatements() {
 
 

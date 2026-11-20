@@ -16,20 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactory;
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactoryByFullTypes;
-//import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.TestChunjunPostreSQLSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-08-08 15:23
- **/
-
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestChunjunPostgreSQLSinkFactory.class
-        , TestChunjunPostgreSQLSinkFactoryByFullTypes.class})
+@Suite.SuiteClasses({})
 public class TestAll {
-
 }

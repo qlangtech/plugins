@@ -16,39 +16,43 @@ import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import junit.framework.TestCase;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXOdpsWriter extends TestCase {
+public class TestDataXOdpsWriter {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXOdpsWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXOdpsWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
 
+    @Test
     public void testTempateGenerate() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXOdpsWriter.class);
         Assert.assertTrue("DataXOdpsWriter extraProps shall exist", extraProps.isPresent());
-        //IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
-        // Context context = EasyMock.createMock("context", Context.class);
-        // EasyMock.expect(context.hasErrors()).andReturn(false);
+        //IPluginContext pluginContext = Mockito.mock(IPluginContext.class, Mockito.withSettings().name("pluginContext"));
+        // Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
+        // Mockito.when(context.hasErrors()).thenReturn(false);
 
         final DataXOdpsWriter odpsWriter = createDataXOdpsWriter();
         OdpsDataSourceFactory dsFactory = odpsWriter.getDataSourceFactory();
@@ -101,18 +105,17 @@ public class TestDataXOdpsWriter extends TestCase {
         Assert.assertEquals(endpoint.project, odpsWriterContext.getProject());
         Assert.assertEquals(odpsWriter.truncate, odpsWriterContext.isTruncate());
 
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
-        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+        IDataxProcessor processor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
+        IDataxGlobalCfg dataxGlobalCfg = Mockito.mock(IDataxGlobalCfg.class, Mockito.withSettings().name("dataxGlobalCfg"));
 
 
-        EasyMock.expect(dataxGlobalCfg.getTemplate()).andReturn(DataXOdpsWriter.getDftTemplate());
+        Mockito.when(dataxGlobalCfg.getTemplate()).thenReturn(DataXOdpsWriter.getDftTemplate());
 
-        IDataxReader dataxReader = EasyMock.mock("dataxReader", IDataxReader.class);
-        EasyMock.expect(dataxReader.getTemplate()).andReturn("test");
-        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader).anyTimes();
-        EasyMock.expect(processor.getWriter(null)).andReturn(odpsWriter).anyTimes();
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
-        EasyMock.replay(processor, dataxGlobalCfg, dataxReader);
+        IDataxReader dataxReader = Mockito.mock(IDataxReader.class, Mockito.withSettings().name("dataxReader"));
+        Mockito.when(dataxReader.getTemplate()).thenReturn("test");
+        Mockito.when(processor.getReader(null)).thenReturn(dataxReader);
+        Mockito.when(processor.getWriter(null)).thenReturn(odpsWriter);
+        Mockito.when(processor.getDataXGlobalCfg()).thenReturn(dataxGlobalCfg);
 
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
@@ -123,15 +126,17 @@ public class TestDataXOdpsWriter extends TestCase {
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             Assert.assertEquals(m, e, a);
         });
-        EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
+        Mockito.verify(processor).getDataXGlobalCfg();
+        Mockito.verify(dataxGlobalCfg).getTemplate();
+        Mockito.verify(dataxReader).getTemplate();
     }
 
 
+    @Test
     public void testGenerateCreateDDL() {
 
         final DataXOdpsWriter writer = createDataXOdpsWriter();
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
-        // EasyMock.replay(fsFactory, fs);
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);

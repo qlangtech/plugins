@@ -22,13 +22,13 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Optional;
 
-public class TestDataXHiveReader extends TestCase {
+import static org.junit.Assert.*;
+public class TestDataXHiveReader {
 
     private static final String dataXName = "testDataXName";
 

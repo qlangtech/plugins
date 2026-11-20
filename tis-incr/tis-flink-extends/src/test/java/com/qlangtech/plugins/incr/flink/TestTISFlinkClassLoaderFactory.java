@@ -32,9 +32,9 @@ import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.util.FlinkUserCodeClassLoaders.ResolveOrder;
-import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.net.URL;
@@ -66,12 +66,11 @@ public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
         String current = TimeFormat.yyyyMMddHHmmss.format(DataxUtils.currentTimeStamp());
 
         MQListenerFactory incrSource = mock("incrSource", MQListenerFactory.class);
-        EasyMock.expect(incrSource.create()).andReturn(null);
-        //EasyMock.expectLastCall().anyTimes();
+        Mockito.when(incrSource.create()).thenReturn(null);
         DataxProcessor dataXProcessor = mock("dataXProcessor", DataxProcessor.class);
         TISSinkFactory sinkFactory = mock("sinkFactory", TISSinkFactory.class);
         IFlinkColCreator flinkColCreator = null;
-        EasyMock.expect(sinkFactory.createSinkFunction(dataXProcessor, flinkColCreator)).andReturn(null);
+        Mockito.when(sinkFactory.createSinkFunction(dataXProcessor, flinkColCreator)).thenReturn(null);
 
         HeteroEnum.incrSourceListenerFactoryStub = (n) -> {
             return incrSource;
@@ -93,7 +92,6 @@ public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
         loaderFactory = flinkClassLoaderFactory.buildServerLoaderFactory(ResolveOrder.CHILD_FIRST, alwaysParentFirstPatterns, (ex) -> {
             Assert.fail(ex.getMessage());
         }, true);
-        this.replay();
         File streamUberJar = UberJarUtil.createStreamUberJar(new TargetResName(collectionName), Long.parseLong(current));
 
         libraryURLs = new URL[]{streamUberJar.toURL()};
@@ -104,6 +102,6 @@ public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
         Assert.assertFalse("shall have not been initialized", TIS.initialized);
         Assert.assertNotNull("loaderFactory result can not be null", loaderFactory.createClassLoader(libraryURLs));
 
-        this.verifyAll();
+        Mockito.verify(incrSource).create();
     }
 }

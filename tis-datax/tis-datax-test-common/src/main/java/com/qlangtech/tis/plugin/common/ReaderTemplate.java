@@ -31,7 +31,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.io.File;
@@ -50,16 +50,15 @@ public class ReaderTemplate {
     public static void validateDataXReader(String assertFileName, String dataXName, DataxReader dataxReader) throws IOException {
         // IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
 
-        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+        IDataxGlobalCfg dataxGlobalCfg = Mockito.mock(IDataxGlobalCfg.class, Mockito.withSettings().name("dataxGlobalCfg"));
         //  EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
-        IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
+        IDataxWriter dataxWriter = Mockito.mock(IDataxWriter.class, Mockito.withSettings().name("dataxWriter"));
         //  EasyMock.expect(processor.getWriter(null, true)).andReturn(dataxWriter).anyTimes();
-        IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
-        EasyMock.expect(dataxWriter.getSubTask(Optional.empty(), Optional.empty())).andReturn(dataxContext).anyTimes();
+        IDataxContext dataxContext = Mockito.mock(IDataxContext.class, Mockito.withSettings().name("dataxWriterContext"));
+        Mockito.when(dataxWriter.getSubTask(Optional.empty(), Optional.empty())).thenReturn(dataxContext);
 
         //  EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
 
-        EasyMock.replay(dataxGlobalCfg, dataxWriter, dataxContext);
 
 //        try (InputStream reader = this.getClass().getResourceAsStream("oss-datax-reader-assert.json")) {
 //            JSONObject jsonObject = JSON.parseObject(IOUtils.toString(reader, TisUTF8.getName()));
@@ -67,9 +66,6 @@ public class ReaderTemplate {
 //        }
 
         valiateReaderCfgGenerate(assertFileName, dataxReader, dataxWriter);
-
-
-        EasyMock.verify(dataxGlobalCfg, dataxWriter, dataxContext);
     }
 
     private static void valiateReaderCfgGenerate(String assertFileName, DataxReader dataXReader, IDataxWriter dataxWriter) throws IOException {

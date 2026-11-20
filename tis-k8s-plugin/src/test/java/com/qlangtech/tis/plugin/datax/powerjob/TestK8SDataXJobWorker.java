@@ -20,18 +20,17 @@ import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api.APIlistNamespacedPodRequest;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/12/14
  */
-public class TestK8SDataXJobWorker extends TestCase {
+public class TestK8SDataXJobWorker {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         SSERunnable.setLocalThread(SSERunnable.createMock());
     }
 
@@ -42,6 +41,7 @@ public class TestK8SDataXJobWorker extends TestCase {
 //        powerJobServer.updatePodNumber(sse, cptType, 2);
 //    }
 
+    @Test
     public void testWaitPowerjobPods() throws Exception {
         K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
         PowerJobK8SImage image = powerJobServer.getImage();
@@ -91,6 +91,7 @@ public class TestK8SDataXJobWorker extends TestCase {
         Assert.assertTrue(controllerLaunch.getRelevantPods().size() > 0);
     }
 
+    @Test
     public void testWatchOneOfPowerJobPodLog() throws Exception {
         K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
 
@@ -108,6 +109,7 @@ public class TestK8SDataXJobWorker extends TestCase {
         podLog.close();
     }
 
+    @Test
     public void testDeleteAllResources() {
         K8SDataXJobWorker powerJobServer = createPowerJobServer(null);
 
@@ -136,6 +138,7 @@ public class TestK8SDataXJobWorker extends TestCase {
 //        }
 //    }
 
+    @Test
     public void testLaunchPowerjobServer() throws Exception {
         try {
 
@@ -160,6 +163,7 @@ public class TestK8SDataXJobWorker extends TestCase {
         return loadBalance;
     }
 
+    @Test
     public void testRegisterApp() throws Exception {
         NodePort portExport = createNodePort();
 

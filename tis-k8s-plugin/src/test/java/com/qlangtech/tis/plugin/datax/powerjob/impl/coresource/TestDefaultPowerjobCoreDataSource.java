@@ -19,11 +19,11 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.coresource;
 
 import com.qlangtech.tis.plugin.common.PluginDesc;
-import junit.framework.TestCase;
+import org.junit.Test;
+public class TestDefaultPowerjobCoreDataSource {
 
-public class TestDefaultPowerjobCoreDataSource extends TestCase  {
 
-
+    @Test
     public void testDescGenerate(){
         PluginDesc.testDescGenerate(DefaultPowerjobCoreDataSource.class, "default-powerjob-core-datasource.json");
     }

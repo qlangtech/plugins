@@ -26,16 +26,16 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.test.BasicTest;
-import junit.framework.TestCase;
-
 import java.io.File;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 20:02
  **/
 public class TestDataXHdfsReader extends BasicTest {
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         PluginDesc.testDescGenerate(DataXHdfsReader.class, "hdfs-datax-reader-descriptor.json");
     }
@@ -45,6 +45,7 @@ public class TestDataXHdfsReader extends BasicTest {
 //    }
     String dataXName = "testDataXName";
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
 
@@ -115,10 +116,11 @@ public class TestDataXHdfsReader extends BasicTest {
         return dataxReader;
     }
 
+    @Test
     public void testRealDump() throws Exception {
         DataXHdfsReader dataxReader = createHdfsReader(dataXName);
         DataxReader.dataxReaderGetter = (name) -> {
-            TestCase.assertEquals(dataXName, name);
+            Assert.assertEquals(dataXName, name);
             return dataxReader;
         };
 

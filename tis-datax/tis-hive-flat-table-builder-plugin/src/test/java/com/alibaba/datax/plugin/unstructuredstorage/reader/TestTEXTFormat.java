@@ -21,13 +21,14 @@ package com.alibaba.datax.plugin.unstructuredstorage.reader;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class TestTEXTFormat extends TestCase {
+import org.junit.Test;
+public class TestTEXTFormat {
+    @Test
     public void testRowIteratorRead() {
         // BufferedReader reader, boolean skipHeader, int colSize, Character fieldDelimiter
 

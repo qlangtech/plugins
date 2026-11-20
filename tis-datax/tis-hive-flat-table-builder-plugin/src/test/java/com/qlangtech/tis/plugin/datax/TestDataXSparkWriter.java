@@ -39,22 +39,27 @@ import com.qlangtech.tis.util.DescriptorsMeta;
 
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-27 15:17
  **/
 public class TestDataXSparkWriter extends BasicTest {
 
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXSparkWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXSparkWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXSparkWriter writer = new DataXSparkWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
@@ -69,6 +74,7 @@ public class TestDataXSparkWriter extends BasicTest {
 
     String mysql2hiveDataXName = "mysql2hive";
 
+    @Test
     public void testConfigGenerate() throws Exception {
 
 
@@ -101,6 +107,7 @@ public class TestDataXSparkWriter extends BasicTest {
     }
 
 
+    @Test
     public void testDataDump() throws Exception {
 
         //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hiveDataXName);

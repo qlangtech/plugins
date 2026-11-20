@@ -23,47 +23,43 @@ import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage.DescriptorImpl;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.mockito.Mockito;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-07-15 15:36
  **/
-public class TestDefaultK8SImage extends TestCase {
+public class TestDefaultK8SImage {
 
+    @Test
     public void testHostAliasesValidate() {
         //https://blog.csdn.net/weixin_47729423/article/details/114288431
         DefaultK8SImage k8SImage = new DefaultK8SImage();
         DefaultK8SImage.DescriptorImpl descriptor = (DefaultK8SImage.DescriptorImpl) k8SImage.getDescriptor();
         assertNotNull("descriptor can not be null", descriptor);
 
-        IFieldErrorHandler msgHandler = EasyMock.createMock("msgHandler", IFieldErrorHandler.class);
-        Context context = EasyMock.createMock("context", Context.class);
+        IFieldErrorHandler msgHandler = Mockito.mock(IFieldErrorHandler.class, Mockito.withSettings().name("msgHandler"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         String fieldName = "hostAliases";
 
-        EasyMock.replay(msgHandler, context);
         assertTrue(descriptor.validateHostAliases(msgHandler, context, fieldName
                 , IOUtils.loadResourceFromClasspath(DefaultK8SImage.class, "DefaultK8SImage-hostaliases-content.yaml")));
-
-        EasyMock.verify(msgHandler, context);
     }
 
+    @Test
     public void testValidateImagePath() {
         //  DefaultK8SImage k8SImage = new DefaultK8SImage();
         DefaultK8SImage.DescriptorImpl descriptor = new DefaultK8SImage.DescriptorImpl();
-        IFieldErrorHandler msgHandler = EasyMock.createMock("msgHandler", IFieldErrorHandler.class);
-        Context context = EasyMock.createMock("context", Context.class);
+        IFieldErrorHandler msgHandler = Mockito.mock(IFieldErrorHandler.class, Mockito.withSettings().name("msgHandler"));
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
         String fieldName = "imagePath";
 
         // "([^/]+\\.[^/.]+/)? ([^/.]+/)?[^/.]+(:.+)?"
 
 
-
-        msgHandler.addFieldError(context, fieldName, "不符合格式:" + DescriptorImpl.PATTERN_IMAGE_PATH);
-        EasyMock.expectLastCall().times(2);
-        EasyMock.replay(msgHandler, context);
 
         String flinkImagePath = "registry.cn-hangzhou.aliyuncs.com/tis/flink:4.0.1.2";
         Assert.assertTrue(descriptor.validateImagePath(msgHandler, context, fieldName, flinkImagePath));
@@ -83,10 +79,11 @@ public class TestDefaultK8SImage extends TestCase {
         flinkImagePath = "flink:\tlatest";
         Assert.assertFalse(descriptor.validateImagePath(msgHandler, context, fieldName, flinkImagePath));
 
-        EasyMock.verify(msgHandler, context);
+        Mockito.verify(msgHandler, Mockito.times(2)).addFieldError(context, fieldName, "不符合格式:" + DescriptorImpl.PATTERN_IMAGE_PATH);
     }
 
 
+    @Test
     public void testPluginDescGenerate() {
 
         PluginDesc.testDescGenerate(DefaultK8SImage.class, "DefaultK8SImage-desc.json");

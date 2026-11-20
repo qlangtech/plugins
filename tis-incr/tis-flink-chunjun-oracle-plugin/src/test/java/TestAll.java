@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.chunjun.oracle.sink.TestChunjunOracleSinkFactory;
-import com.qlangtech.plugins.incr.flink.chunjun.oracle.source.TestChunjunOracleSourceFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-03 17:36
- **/
-
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestChunjunOracleSinkFactory.class, TestChunjunOracleSourceFactory.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

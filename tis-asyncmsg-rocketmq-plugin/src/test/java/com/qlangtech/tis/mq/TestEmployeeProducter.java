@@ -21,12 +21,14 @@ package com.qlangtech.tis.mq;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-11-02 10:11
  **/
 public class TestEmployeeProducter extends BasicProducer {
 
+    @Test
     public void testProducter() throws Exception {
 
         DefaultMQProducer producter = this.createProducter();

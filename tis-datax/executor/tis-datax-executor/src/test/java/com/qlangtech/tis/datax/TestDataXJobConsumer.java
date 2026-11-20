@@ -20,15 +20,14 @@ package com.qlangtech.tis.datax;
 
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import junit.framework.TestCase;
-
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-07 15:54
  **/
-public class TestDataXJobConsumer extends TestCase {
+public class TestDataXJobConsumer {
     // TISTestCase {
 
     static {
@@ -42,6 +41,7 @@ public class TestDataXJobConsumer extends TestCase {
      *
      * @throws Exception
      */
+    @Test
     public void testConsumeDistributeMsg() throws Exception {
 
 //        String[] args = new String[]{"192.168.28.200:2181/tis/cloud", "/datax/jobs"};

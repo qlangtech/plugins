@@ -2,17 +2,18 @@ package com.qlangtech.tis.datax.powerjob;
 
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter.ExtraJavaSystemPramsSuppiler;
 import com.qlangtech.tis.datax.executor.BasicTISTableDumpProcessor;
-import junit.framework.TestCase;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.WorkflowContext;
 import tech.powerjob.worker.log.impl.OmsNullLogger;
 
+import org.junit.Test;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/12/12
  */
-public class TestTISInitializeProcessor extends TestCase {
+public class TestTISInitializeProcessor {
 
+    @Test
     public void testProcess() throws Exception {
 
         ExtraJavaSystemPramsSuppiler sysPramsSuppiler = BasicTISTableDumpProcessor.createSysPramsSuppiler();

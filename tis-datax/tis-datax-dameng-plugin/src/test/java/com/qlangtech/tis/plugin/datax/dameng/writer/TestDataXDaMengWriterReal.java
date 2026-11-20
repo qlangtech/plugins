@@ -19,7 +19,7 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,14 +86,14 @@ public class TestDataXDaMengWriterReal {
         DataXCfgJson wjson = DataXCfgJson.content(TestDataXDaMengWriter.generateDataXCfg(writer, Optional.of(tabMap)));
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(SourceColMetaGetter.getNone(), tabMap, Optional.empty());
 
-        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
+        DataxProcessor dataXProcessor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
         File createDDLDir = folder.newFolder();// new File(".");
         File createDDLFile = null;
         try {
             createDDLFile = new File(createDDLDir, targetTableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile, ddl.getDDLScript(), TisUTF8.get());
 
-            EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
+            Mockito.when(dataXProcessor.getDataxCreateDDLDir(null)).thenReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
                 return writer;
             };
@@ -101,7 +101,6 @@ public class TestDataXDaMengWriterReal {
                 Assert.assertEquals(testDataXName, dataXName);
                 return dataXProcessor;
             };
-            EasyMock.replay(dataXProcessor);
             String[] jdbcUrl = new String[1];
             writer.getDataSourceFactory().getDbConfig().vistDbURL(false, (a, b, url) -> {
                 jdbcUrl[0] = url;
@@ -118,7 +117,7 @@ public class TestDataXDaMengWriterReal {
             Assert.assertFalse("isGenerateCreateDDLSwitchOff shall be false", writer.isGenerateCreateDDLSwitchOff());
             WriterTemplate.realExecuteDump(testDataXName, wjson, writer);
 
-            EasyMock.verify(dataXProcessor);
+            Mockito.verify(dataXProcessor).getDataxCreateDDLDir(null);
         } finally {
             FileUtils.deleteQuietly(createDDLFile);
         }

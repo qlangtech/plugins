@@ -23,8 +23,8 @@ import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import org.apache.commons.collections.CollectionUtils;
-import org.easymock.EasyMock;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,15 +56,13 @@ public class TestRegexPatternReplace extends BasicUDFDefinitionTest<RegexPattern
     public void testEvaluate() {
         RegexPatternReplace replaceUDF = this.createTransformerUDF();
 
-        Record record = mock("record", Record.class);
-        //Column usrIdCol = mock("userIdCol", Column.class);
-        EasyMock.expect(record.getString(userId)).andReturn("2018-08-26");
-        record.setString(userId, "2018-08");
-        EasyMock.expectLastCall().times(1);
-        this.replay();
+        Record record = Mockito.mock(Record.class, Mockito.withSettings().name("record"));
+        //Column usrIdCol = Mockito.mock(Column.class, Mockito.withSettings().name("userIdCol"));
+        Mockito.when(record.getString(userId)).thenReturn("2018-08-26");
         replaceUDF.evaluate(record);
 
-        this.verifyAll();
+        Mockito.verify(record).getString(userId);
+        Mockito.verify(record, Mockito.times(1)).setString(userId, "2018-08");
     }
 
     @Override

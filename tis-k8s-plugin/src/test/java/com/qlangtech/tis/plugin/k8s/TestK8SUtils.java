@@ -27,18 +27,17 @@ import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8SRCResNameWit
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import junit.framework.TestCase;
 import org.junit.Assert;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-03 12:02
  **/
-public class TestK8SUtils extends TestCase {
+public class TestK8SUtils {
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before public void setUp() throws Exception {
         SSERunnable.setLocalThread(SSERunnable.createMock());
     }
 
@@ -53,6 +52,7 @@ public class TestK8SUtils extends TestCase {
 //        Assert.assertEquals(podName, podRes.get());
 //    }
 
+    @Test
     public void testWaitReplicaControllerLaunch() throws Exception {
 
         DefaultK8SImage powerjobServerImage = (DefaultK8SImage) ImageCategory.DEFAULT_POWERJOB_DESC_NAME.getPluginStore().find("aliyun");

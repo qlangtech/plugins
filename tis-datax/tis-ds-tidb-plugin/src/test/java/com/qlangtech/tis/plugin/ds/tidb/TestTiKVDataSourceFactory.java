@@ -22,18 +22,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
-import junit.framework.TestCase;
-
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-11-24 17:57
  **/
-public class TestTiKVDataSourceFactory extends TestCase {
+public class TestTiKVDataSourceFactory {
     // public static final String DB_NAME = "employees";
     public static final String DB_NAME = "order2";
 
@@ -47,12 +47,14 @@ public class TestTiKVDataSourceFactory extends TestCase {
     private static final String COL_GENDER = "gender";
     private static final String COL_HIRE_DATE = "hire_date";
 
+    @Test
     public void testColMetadata() {
 
         validateColumnMeta(true);
         validateColumnMeta(false);
     }
 
+    @Test
     public void testColMetaParse() {
         GetColsMeta getColsMeta = new GetColsMeta().invoke();
         List<ColumnMetaData> table1Cols = getColsMeta.getColsMeta("table1");
@@ -101,6 +103,7 @@ public class TestTiKVDataSourceFactory extends TestCase {
         assertEquals("emp_no", pk.getKey());
     }
 
+    @Test
     public void testGetPlugin() {
 
         GetColsMeta getColsMeta = new GetColsMeta().invoke();

@@ -7,7 +7,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,15 +34,14 @@ public class TestDataXMongodbReaderRealDump {
         File writeFile = folder.newFile("test_mongo_assert_reader.txt"); // new File("");
 
         DataXMongodbReader mongodbReader = createMongoReader();
-        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
-        EasyMock.expect(dataXProcessor.getReader(null)).andReturn(mongodbReader).times(3);
+        DataxProcessor dataXProcessor = Mockito.mock(DataxProcessor.class, Mockito.withSettings().name("dataXProcessor"));
+        Mockito.when(dataXProcessor.getReader(null)).thenReturn(mongodbReader);
         DataxProcessor.processorGetter = (xname) -> {
             Assert.assertEquals(dataXName, xname);
             return dataXProcessor;
         };
-        EasyMock.replay(dataXProcessor);
         ReaderTemplate.realExecute(dataXName, readerJson, writeFile, mongodbReader);
-        EasyMock.verify(dataXProcessor);
+        Mockito.verify(dataXProcessor, Mockito.times(3)).getReader(null);
 
 
         System.out.println(FileUtils.readFileToString(writeFile, TisUTF8.get()));

@@ -16,34 +16,17 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXDFSReader;
-import com.qlangtech.tis.plugin.datax.TestDataXDFSReaderWithMeta;
-import com.qlangtech.tis.plugin.datax.TestDataXDFSWriter;
-import com.qlangtech.tis.plugin.datax.TestDataXDFSWriterReal;
-import com.qlangtech.tis.plugin.datax.format.TestCSVFormat;
-import com.qlangtech.tis.plugin.datax.format.TestTextFormat;
-import com.qlangtech.tis.plugin.datax.resmatcher.TestMetaAwareDFSResMatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
- **/
+ * 该模块可离线运行的单元测试聚合套件(由测试验证脚本自动整理生成)。
+ * 依赖数据库/本地文件/内网服务/Testcontainers 的用例见 TEST_SKIP_REPORT.md。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestDataXDFSReader.class
-                , TestDataXDFSWriter.class
-                , TestDataXDFSWriterReal.class
-                , TestDataXDFSReaderWithMeta.class
-                , TestCSVFormat.class
-                , TestTextFormat.class
-                , TestMetaAwareDFSResMatcher.class})
+@Suite.SuiteClasses({
+    com.qlangtech.tis.plugin.datax.TestDataXDFSReaderWithMeta.class,
+    com.qlangtech.tis.plugin.datax.resmatcher.TestMetaAwareDFSResMatcher.class,
+})
 public class TestAll {
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXFtpReader.class);
-//        suite.addTestSuite(TestDataXFtpWriter.class);
-//        return suite;
-//    }
 }

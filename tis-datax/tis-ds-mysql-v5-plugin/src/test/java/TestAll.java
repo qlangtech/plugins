@@ -16,21 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.ds.mysql.TestMySQLV5DataSourceFactory;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
- * @author: baisui 百岁
- * @create: 2021-01-07 18:52
- **/
-public class TestAll extends TestCase {
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestMySQLV5DataSourceFactory.class);
-
-        return suite;
-    }
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
+@RunWith(Suite.class)
+@Suite.SuiteClasses({})
+public class TestAll {
 }

@@ -18,11 +18,12 @@
 
 package com.qlangtech.tis.hive;
 
-import junit.framework.TestCase;
 import org.junit.Assert;
 
-public class TestHdfsFileType extends TestCase {
+import org.junit.Test;
+public class TestHdfsFileType {
 
+    @Test
     public void testGetRowFormat() {
         // HdfsFileType.TEXTFILE.
 

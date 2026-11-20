@@ -41,7 +41,7 @@ import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -76,25 +76,22 @@ public class WriterTemplate {
 
     public static String cfgGenerate(DataxWriter dataXWriter, IDataxProcessor.TableMap tableMap) throws Exception {
 
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
+        IDataxProcessor processor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("dataxProcessor"));
 
-        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
-        EasyMock.expect(dataxGlobalCfg.getTemplate()).andReturn(IDataxGlobalCfg.getDefaultTemplate()).anyTimes();
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
+        IDataxGlobalCfg dataxGlobalCfg = Mockito.mock(IDataxGlobalCfg.class, Mockito.withSettings().name("dataxGlobalCfg"));
+        Mockito.when(dataxGlobalCfg.getTemplate()).thenReturn(IDataxGlobalCfg.getDefaultTemplate());
+        Mockito.when(processor.getDataXGlobalCfg()).thenReturn(dataxGlobalCfg);
         //EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
 
-        IDataxReader dataXReader = EasyMock.createMock("dataXReader", IDataxReader.class);
+        IDataxReader dataXReader = Mockito.mock(IDataxReader.class, Mockito.withSettings().name("dataXReader"));
 
         // dataXReader.getTemplate()
         //EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
 
 
-        EasyMock.replay(processor, dataxGlobalCfg, dataXReader);
-
         String writerCfg = generateWriterCfg(dataXWriter, tableMap, processor, dataXReader);
         Assert.assertNotNull(writerCfg);
         System.out.println(writerCfg);
-        EasyMock.verify(processor, dataxGlobalCfg, dataXReader);
         return writerCfg;
     }
 

@@ -16,21 +16,16 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDefaultDataxSplitTabSyncConsumer;
-import com.qlangtech.tis.plugin.datax.TestLocalDataXJobSubmit;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-23 09:55
- **/
-public class TestAll extends TestCase {
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestLocalDataXJobSubmit.class);
-        suite.addTestSuite(TestDefaultDataxSplitTabSyncConsumer.class);
-        return suite;
-    }
+ * 该模块可离线运行的单元测试聚合套件(由测试验证脚本自动整理生成)。
+ * 依赖数据库/本地文件/内网服务/Testcontainers 的用例见 TEST_SKIP_REPORT.md。
+ */
+@RunWith(Suite.class)
+@Suite.SuiteClasses({
+    com.qlangtech.tis.plugin.datax.T.class,
+})
+public class TestAll {
 }

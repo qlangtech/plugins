@@ -23,13 +23,13 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import junit.framework.TestCase;
-
+import org.junit.Test;
 /**
  * @author: baisui 百岁
  * @create: 2020-12-09 15:01
  **/
-public class TestKafkaMQListener extends TestCase {
+public class TestKafkaMQListener {
+    @Test
     public void testRegisterTopic() throws Exception {
 
         TiKVKafkaMQListenerFactory listenerFactory = new TiKVKafkaMQListenerFactory();

@@ -60,7 +60,7 @@ import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +73,7 @@ import java.util.stream.Collectors;
 
 import static com.qlangtech.tis.extension.util.PluginExtraProps.KEY_CREATOR_ASSIST_TYPE;
 
+import static org.junit.Assert.*;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-08 11:31
@@ -125,9 +126,8 @@ public class TestDataxMySQLReader extends BasicTest {
     @Test
     public void testUpdateDataxReader() throws Exception {
         KeyedPluginStore<DataxReader> readerStore = DataxReader.getPluginStore(null, dataXName);
-        final SuFormProperties props = EasyMock.createMock("subformProp", SuFormProperties.class);
-        EasyMock.expect(props.getSubFormFieldName()).andReturn("selectedTabs").anyTimes();
-        EasyMock.replay(props);
+        final SuFormProperties props = Mockito.mock(SuFormProperties.class, Mockito.withSettings().name("subformProp"));
+        Mockito.when(props.getSubFormFieldName()).thenReturn("selectedTabs");
         DataxReader.SubFieldFormAppKey<DataxReader> subFieldKey
                 = new DataxReader.SubFieldFormAppKey<>(null, false, dataXName, props, DataxReader.class);
         KeyedPluginStore<DataxReader> subFieldStore = KeyedPluginStore.getPluginStore(subFieldKey);
@@ -218,8 +218,6 @@ public class TestDataxMySQLReader extends BasicTest {
         dlist.add(new Descriptor.ParseDescribable(subformReader));
         subFieldStore.setPlugins(null, Optional.empty(), dlist);
         assertTrue("getSelectedTabs shall be empty", dataxReader.getSelectedTabs().size() < 1);
-
-        EasyMock.verify(props);
     }
 
     @Test
@@ -292,11 +290,10 @@ public class TestDataxMySQLReader extends BasicTest {
 
 
         Descriptor.ParseDescribable<DataSourceFactory> desc = new Descriptor.ParseDescribable<>(mysqlDs);
-        Context context = EasyMock.createMock("context", Context.class);
-        EasyMock.expect(context.hasErrors()).andReturn(false);
-        IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
+        Context context = Mockito.mock(Context.class, Mockito.withSettings().name("context"));
+        Mockito.when(context.hasErrors()).thenReturn(false);
+        IPluginContext pluginContext = Mockito.mock(IPluginContext.class, Mockito.withSettings().name("pluginContext"));
         pluginContext.addDb(desc, dbName, context, true);
-        EasyMock.replay(pluginContext, context);
         DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(dbName));
         assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
@@ -352,7 +349,8 @@ public class TestDataxMySQLReader extends BasicTest {
         assertEquals(8, subTabs.size());
 
 
-        EasyMock.verify(pluginContext, context);
+        Mockito.verify(pluginContext).addDb(desc, dbName, context, true);
+        Mockito.verify(context).hasErrors();
     }
 
     @Test
@@ -361,7 +359,7 @@ public class TestDataxMySQLReader extends BasicTest {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
 
-        MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
+        MySQLDataSourceFactory mysqlDataSource = Mockito.mock(MySQLDataSourceFactory.class, Mockito.withSettings().name("mysqlDataSourceFactory"));
         mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
 
         SplitableTableInDB tabsInDB
@@ -369,27 +367,28 @@ public class TestDataxMySQLReader extends BasicTest {
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
 
-        EasyMock.expect(mysqlDataSource.getTablesInDB()).andReturn(tabsInDB).times(1);
+        Mockito.when(mysqlDataSource.getTablesInDB()).thenReturn(tabsInDB);
 
-        EasyMock.expect(mysqlDataSource.getPassword()).andReturn(password).anyTimes();
-        EasyMock.expect(mysqlDataSource.getUserName()).andReturn(userName).anyTimes();
-        IDataSourceDumper dataDumper = EasyMock.createMock(TestSelectedTabs.tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
-        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).anyTimes();
+        Mockito.when(mysqlDataSource.getPassword()).thenReturn(password);
+        Mockito.when(mysqlDataSource.getUserName()).thenReturn(userName);
+        IDataSourceDumper dataDumper = Mockito.mock(IDataSourceDumper.class
+                , Mockito.withSettings().name(TestSelectedTabs.tabNameOrderDetail + "TableDumper"));
+        Mockito.when(dataDumper.getDbHost()).thenReturn(TestDataxMySQLWriter.mysqlJdbcUrl);
 // int index, String key, int type, boolean pk
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getTableMetadata(false, null, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
-                .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
+        Mockito.when(mysqlDataSource.getTableMetadata(false, null, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+                .thenReturn(TestSelectedTabs.tabColsMetaOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
+        MySQLDataSourceFactory dataDumpersDelegate = new MySQLDataSourceFactory() {
             @Override
             public DataDumpers getDataDumpers(TISTable table) {
                 return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());
             }
-        }).anyTimes();
-
-        EasyMock.replay(mysqlDataSource, dataDumper);
+        };
+        Mockito.when(mysqlDataSource.getDataDumpers(targetTable))
+                .thenAnswer((inv) -> dataDumpersDelegate.getDataDumpers(targetTable));
 
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
@@ -425,7 +424,7 @@ public class TestDataxMySQLReader extends BasicTest {
         mysqlDataSource.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         ReaderTemplate.validateDataXReader("mysql-datax-reader-assert-split-tabs.json", dataXName, mySQLReader);
 
-        EasyMock.verify(mysqlDataSource, dataDumper);
+        Mockito.verify(mysqlDataSource, Mockito.times(1)).getTablesInDB();
     }
 
 

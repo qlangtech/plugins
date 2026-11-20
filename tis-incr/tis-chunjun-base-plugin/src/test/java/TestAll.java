@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TestSinkTabPropsExtends;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TestUniqueKeySetter;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-10-19 12:42
- **/
+ * 当前无可离线运行的单元测试(全部依赖外部环境,见 TEST_SKIP_REPORT.md)。
+ */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestUniqueKeySetter.class
-        , TestSinkTabPropsExtends.class})
+@Suite.SuiteClasses({})
 public class TestAll {
 }

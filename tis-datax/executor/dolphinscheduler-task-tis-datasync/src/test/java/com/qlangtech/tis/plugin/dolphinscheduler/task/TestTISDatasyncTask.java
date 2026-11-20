@@ -11,7 +11,6 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.dolphinscheduler.task.impl.DS4TISConfig;
 import com.qlangtech.tis.plugin.dolphinscheduler.task.impl.DSTaskContext;
 import com.qlangtech.tis.test.TISEasyMock;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
@@ -19,17 +18,19 @@ import org.junit.Assert;
 
 import java.io.File;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-28 15:36
  **/
-public class TestTISDatasyncTask extends TestCase implements TISEasyMock {
+public class TestTISDatasyncTask implements TISEasyMock {
 
-    @Override
-    protected void setUp() throws Exception {
+    @Before public void setUp() throws Exception {
         DS4TISConfig.tisHost = "192.168.28.107";
     }
 
+    @Test
     public void testTISTableDumpProcessor() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
         TISDatasyncParameters parameters = new TISDatasyncParameters();

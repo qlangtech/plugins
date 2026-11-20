@@ -19,20 +19,21 @@
 package com.qlangtech.tis.plugin.datax.doplinscheduler.export;
 
 import com.qlangtech.tis.plugin.datax.doplinscheduler.TestDSWorkflowPayload;
-import junit.framework.TestCase;
-
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-09-02 18:32
  **/
-public class TestExportTISPipelineToDolphinscheduler extends TestCase {
+public class TestExportTISPipelineToDolphinscheduler {
 
+    @Test
     public void testAddProjectParameters() {
         ExportTISPipelineToDolphinscheduler export2DS = createExportTISPipelineToDolphinscheduler();
         export2DS.addProjectParameters();
     }
 
 
+    @Test
     public void testAddTaskGroup() {
         ExportTISPipelineToDolphinscheduler export2DS = createExportTISPipelineToDolphinscheduler();
         DSTaskGroup tskGroup = new DSTaskGroup();

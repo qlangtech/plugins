@@ -38,9 +38,9 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.RunningContext;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.collections.CollectionUtils;
-import org.easymock.EasyMock;
-import org.easymock.IArgumentMatcher;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Optional;
@@ -97,8 +97,8 @@ public class TestJSONSplitterUDF extends BasicUDFDefinitionTest<JSONSplitterUDF>
     @Test
     public void testEvaluate() {
 
-        RunningContext runningContext = mock("runningContext", RunningContext.class);
-        ITransformerBuildInfo transformerBuildInfo = mock("transformerBuildInfo", ITransformerBuildInfo.class);
+        RunningContext runningContext = Mockito.mock(RunningContext.class, Mockito.withSettings().name("runningContext"));
+        ITransformerBuildInfo transformerBuildInfo = Mockito.mock(ITransformerBuildInfo.class, Mockito.withSettings().name("transformerBuildInfo"));
 
         List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1, (tab) -> {
             tab.cols.add(CMeta.create(key_col_ext, JDBCTypes.VARCHAR));
@@ -111,16 +111,14 @@ public class TestJSONSplitterUDF extends BasicUDFDefinitionTest<JSONSplitterUDF>
         RecordTransformerRules transformerRules = RecordTransformerRules.create(jsonSplitterUDF);
         TransformerOverwriteCols<OutputParameter> overwriteCols = transformerRules.overwriteCols(tab.getCols());
 
-        EasyMock.expect(transformerBuildInfo.containContextParams()).andReturn(false);
-        EasyMock.expect(transformerBuildInfo.overwriteColsWithContextParams(matchCols(tab))).andReturn(overwriteCols);
-        EasyMock.expect(transformerBuildInfo.tranformerColsWithoutContextParams()).andReturn(overwriteCols);
+        Mockito.when(transformerBuildInfo.containContextParams()).thenReturn(false);
+        Mockito.when(transformerBuildInfo.overwriteColsWithContextParams(matchCols(tab))).thenReturn(overwriteCols);
+        Mockito.when(transformerBuildInfo.tranformerColsWithoutContextParams()).thenReturn(overwriteCols);
 
         DefaultRecord record = new DefaultRecord();
 //        Map<String, ColumnBiFunction> mapper = Maps.newHashMap();
 //        Map<String, Object> contextParamVals = Collections.emptyMap();
 //        List<OutputParameter> outputParameters = jsonSplitterUDF.outParameters();
-
-        replay();
 
         DataXCol2Index col2Index = DataXCol2Index.getCol2Index(
                 Optional.of(transformerBuildInfo), runningContext, tab.getCols()); //new DataXCol2Index(mapper, contextParamVals, outputParameters);
@@ -228,7 +226,9 @@ public class TestJSONSplitterUDF extends BasicUDFDefinitionTest<JSONSplitterUDF>
         // 第五轮不应该有错误
         Assert.assertEquals(2, JSONSplitterUDF.jsonParseErrorCount);
 
-        verifyAll();
+        Mockito.verify(transformerBuildInfo).containContextParams();
+        Mockito.verify(transformerBuildInfo).overwriteColsWithContextParams(matchCols(tab));
+        Mockito.verify(transformerBuildInfo).tranformerColsWithoutContextParams();
     }
 
     /**
@@ -237,11 +237,10 @@ public class TestJSONSplitterUDF extends BasicUDFDefinitionTest<JSONSplitterUDF>
      * @return
      */
     private static List<CMeta> matchCols(SelectedTab tab) {
-        EasyMock.reportMatcher(new ColsMatcher(tab));
-        return null;
+        return Mockito.argThat(new ColsMatcher(tab));
     }
 
-    private static class ColsMatcher implements IArgumentMatcher {
+    private static class ColsMatcher implements ArgumentMatcher<List<CMeta>> {
         private final List<CMeta> expectCols;//  actualTab;
 
         public ColsMatcher(SelectedTab actualTab) {
@@ -249,14 +248,9 @@ public class TestJSONSplitterUDF extends BasicUDFDefinitionTest<JSONSplitterUDF>
         }
 
         @Override
-        public boolean matches(Object argument) {
-            List<CMeta> actualCols = (List<CMeta>) argument;
+        public boolean matches(List<CMeta> argument) {
+            List<CMeta> actualCols = argument;
             return true;
-        }
-
-        @Override
-        public void appendTo(StringBuffer buffer) {
-
         }
     }
 

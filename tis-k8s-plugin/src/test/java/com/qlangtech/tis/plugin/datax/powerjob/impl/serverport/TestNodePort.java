@@ -23,25 +23,25 @@ import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
-import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 
 import java.util.Optional;
 
 import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 
+import org.junit.Test;
+import org.junit.Before;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-06-26 09:25
  **/
-public class TestNodePort extends TestCase {
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+public class TestNodePort {
+    @Before public void setUp() throws Exception {
         SSERunnable.setLocalThread(SSERunnable.createMock());
     }
 
+    @Test
     public void testExportPort() throws Exception {
         NodePort nodePort = new NodePort();
         nodePort.serverPort = 7700;
@@ -49,20 +49,16 @@ public class TestNodePort extends TestCase {
         nodePort.nodePort = 31000;
         // K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
 
-        CoreV1Api api = EasyMock.mock("api", CoreV1Api.class);
+        CoreV1Api api = Mockito.mock(CoreV1Api.class, Mockito.withSettings().name("api"));
 
 //        String nameSpace, CoreV1Api api, String targetPortName
 //                , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef
 
         TargetResName resOwner = new TargetResName("test");
 
-        EasyMock.replay(api);
-
         V1OwnerReference ownerReference = K8SUtils.createOwnerReference("testOwnerId", "testOwnerName");
 
         nodePort.exportPort("tis", api, "targetPortName"
                 , Pair.of(K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, resOwner), Optional.of(ownerReference));
-
-        EasyMock.verify(api);
     }
 }

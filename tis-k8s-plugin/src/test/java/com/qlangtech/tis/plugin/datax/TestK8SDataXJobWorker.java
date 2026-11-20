@@ -22,20 +22,21 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXJobWorker;
-import junit.framework.TestCase;
-
 import java.util.regex.Matcher;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-27 09:37
  **/
-public class TestK8SDataXJobWorker extends TestCase {
+public class TestK8SDataXJobWorker {
     static {
         CenterResource.setNotFetchFromCenterRepository();
         HttpUtils.addMockGlobalParametersConfig();
     }
 
+    @Test
     public void testZKhostPattern() {
         //  K8SDataXJobWorker dataXJobWorker = new K8SDataXJobWorker();
 
@@ -67,6 +68,7 @@ public class TestK8SDataXJobWorker extends TestCase {
         assertFalse(matcher.matches());
     }
 
+    @Test
     public void testDescGenerate() {
 
         PluginDesc.testDescGenerate(K8SDataXJobWorker.class, "k8s-datax-job-worker-descriptor.json");

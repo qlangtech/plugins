@@ -50,7 +50,7 @@ import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -130,13 +130,13 @@ public class TestDataXHiveWriterDump {
         };
         TabPartitions partitions = new TabPartitions(Maps.newHashMap());
 
-        IExecChainContext execContext = EasyMock.mock("execContext", IExecChainContext.class);
-        EasyMock.expect(execContext.isDryRun()).andReturn(false);
+        IExecChainContext execContext = Mockito.mock(IExecChainContext.class, Mockito.withSettings().name("execContext"));
+        Mockito.when(execContext.isDryRun()).thenReturn(false);
 
-        EasyMock.expect(execContext.getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS))
-                .andReturn(partitions);
+        Mockito.when(execContext.getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS))
+                .thenReturn(partitions);
 
-        IDataxProcessor processor = EasyMock.mock("processor", IDataxProcessor.class);
+        IDataxProcessor processor = Mockito.mock(IDataxProcessor.class, Mockito.withSettings().name("processor"));
         File ddlDir = folder.newFolder("ddlDir");
 
         CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(SourceColMetaGetter.getNone(), applicationTab, Optional.empty());
@@ -145,15 +145,13 @@ public class TestDataXHiveWriterDump {
         FileUtils.write(new File(ddlDir, applicationTab.getTo() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX)
                 , createDDL.getDDLScript(), TisUTF8.get());
 
-        EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+        Mockito.when(processor.getDataxCreateDDLDir(null)).thenReturn(ddlDir);
 
-        EasyMock.expect(execContext.getProcessor()).andReturn(processor);
+        Mockito.when(execContext.getProcessor()).thenReturn(processor);
 
-        EasyMock.expect(execContext.getPartitionTimestampWithMillis()).andReturn(currentTimeStamp).anyTimes();
+        Mockito.when(execContext.getPartitionTimestampWithMillis()).thenReturn(currentTimeStamp);
         final EntityName entryName = EntityName.create(hiveDbName, applicationTab.getSourceTab().getName());
         IRemoteTaskTrigger preExec = dataxWriter.createPreExecuteTask(execContext, entryName, applicationTab.getSourceTab());
-
-        EasyMock.replay(execContext, processor);
 
         preExec.run();
 
@@ -193,7 +191,8 @@ public class TestDataXHiveWriterDump {
         }
 
 
-        EasyMock.verify(execContext, processor);
+        Mockito.verify(execContext).isDryRun();
+        Mockito.verify(execContext).getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS);
     }
 
     public static Hiveserver2DataSourceFactory createHiveserver2DataSourceFactory(UserToken authToken) {

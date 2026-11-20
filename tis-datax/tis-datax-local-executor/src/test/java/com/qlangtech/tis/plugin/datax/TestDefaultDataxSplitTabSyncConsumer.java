@@ -22,39 +22,40 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.test.TISEasyMock;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import org.junit.Assert;
 
 import java.util.Optional;
 
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-04-13 16:03
  **/
-public class TestDefaultDataxSplitTabSyncConsumer extends TestCase implements TISEasyMock {
+public class TestDefaultDataxSplitTabSyncConsumer implements TISEasyMock {
 
+    @Test
     public void testGetExtraJavaSystemPrams() {
 
-        IExecChainContext execContext = mock("execContext", IExecChainContext.class);
-        LocalDataXJobSubmit jobSubmit = mock("jobSubmit", LocalDataXJobSubmit.class);
+        IExecChainContext execContext = Mockito.mock(IExecChainContext.class, Mockito.withSettings().name("execContext"));
+        LocalDataXJobSubmit jobSubmit = Mockito.mock(LocalDataXJobSubmit.class, Mockito.withSettings().name("jobSubmit"));
 
         ReplicasSpec spec = new ReplicasSpec();
         spec.setMemoryLimit(Specification.parse("1.5G"));
         spec.setMemoryRequest(Specification.parse("1G"));
 
-        EasyMock.expect(execContext.getJavaMemSpec()).andReturn(spec.toJavaMemorySpec(Optional.empty()));
+        Mockito.when(execContext.getJavaMemSpec()).thenReturn(spec.toJavaMemorySpec(Optional.empty()));
 
         String[] sysParams = new String[]{"-DtestParam=xxxx"};
-        EasyMock.expect(jobSubmit.getExtraJavaSystemPrams()).andReturn(sysParams);
+        Mockito.when(jobSubmit.getExtraJavaSystemPrams()).thenReturn(sysParams);
 
 
         DefaultDataxSplitTabSyncConsumer syncConsumer = new DefaultDataxSplitTabSyncConsumer(execContext, jobSubmit);
 
-        this.replay();
         String[] extraJavaSystemPrams = syncConsumer.getExtraJavaSystemPrams();
         Assert.assertEquals(3, extraJavaSystemPrams.length);
         Assert.assertEquals("-Xms819m -Xmx1228m -DtestParam=xxxx",String.join(" ",extraJavaSystemPrams));
-        this.verifyAll();
+        Mockito.verify(execContext).getJavaMemSpec();
+        Mockito.verify(jobSubmit).getExtraJavaSystemPrams();
     }
 }

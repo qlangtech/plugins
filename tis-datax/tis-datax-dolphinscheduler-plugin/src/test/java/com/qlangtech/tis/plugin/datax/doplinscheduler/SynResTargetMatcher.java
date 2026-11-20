@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax.doplinscheduler;
 import com.qlangtech.tis.realtime.yarn.rpc.SynResTarget;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.easymock.IArgumentMatcher;
+import org.mockito.ArgumentMatcher;
 
 import java.util.Objects;
 
@@ -29,7 +29,7 @@ import java.util.Objects;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-08-22 22:39
  **/
-public class SynResTargetMatcher implements IArgumentMatcher {
+public class SynResTargetMatcher implements ArgumentMatcher<SynResTarget> {
     private final SynResTarget expect;
 
     private SynResTarget actual;
@@ -39,9 +39,9 @@ public class SynResTargetMatcher implements IArgumentMatcher {
     }
 
     @Override
-    public boolean matches(Object argument) {
+    public boolean matches(SynResTarget argument) {
         if (argument instanceof SynResTarget) {
-            actual = (SynResTarget) argument;
+            actual = argument;
             return actual.isPipeline() == expect.isPipeline()
                     && StringUtils.equals(actual.getName(), expect.getName());
         }
@@ -49,8 +49,8 @@ public class SynResTargetMatcher implements IArgumentMatcher {
     }
 
     @Override
-    public void appendTo(StringBuffer buffer) {
-        buffer.append("expect:").append(ToStringBuilder.reflectionToString(expect))
-                .append("\nactual:").append(ToStringBuilder.reflectionToString(actual));
+    public String toString() {
+        return "expect:" + ToStringBuilder.reflectionToString(expect)
+                + "\nactual:" + (actual == null ? "null" : ToStringBuilder.reflectionToString(actual));
     }
 }

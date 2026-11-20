@@ -29,31 +29,35 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
-import org.easymock.EasyMock;
+import org.mockito.Mockito;
 import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXMongodbWriter extends TestCase {
+public class TestDataXMongodbWriter {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXMongodbWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXMongodbWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
-        DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
+        DataxReader dataxReader = Mockito.mock(DataxReader.class, Mockito.withSettings().name("dataxReader"));
 
         List<ISelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1).stream().map((t) -> t).collect(Collectors.toList());
 
@@ -62,9 +66,8 @@ public class TestDataXMongodbWriter extends TestCase {
                 cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
-        EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(4);
+        Mockito.when(dataxReader.getSelectedTabs()).thenReturn(selectedTabs);
         DataxReader.dataxReaderThreadLocal.set(dataxReader);
-        EasyMock.replay(dataxReader);
         DataXMongodbWriter writer = new DataXMongodbWriter();
         assertTrue(writer instanceof IDataSourceFactoryGetter);
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
@@ -78,9 +81,10 @@ public class TestDataXMongodbWriter extends TestCase {
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
-        EasyMock.verify(dataxReader);
+        Mockito.verify(dataxReader, Mockito.times(4)).getSelectedTabs();
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
 

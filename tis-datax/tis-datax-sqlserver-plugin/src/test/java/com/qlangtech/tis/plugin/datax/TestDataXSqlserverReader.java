@@ -23,25 +23,28 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
-import junit.framework.TestCase;
-
 import java.util.Optional;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXSqlserverReader extends TestCase {
+public class TestDataXSqlserverReader {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXSqlserverReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXSqlserverReader.class);
         assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescGenerate() {
 
       //   com.qlangtech.tis.plugin.common.ContextDesc.descBuild(DataXSqlserverReader.class);
@@ -49,6 +52,7 @@ public class TestDataXSqlserverReader extends TestCase {
         PluginDesc.testDescGenerate(DataXSqlserverReader.class, "sqlserver-datax-reader-descriptor.json");
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
         SqlServerDatasourceFactory dsFactory = TestDataXSqlserverWriter.getSqlServerDSFactory();
         DataXSqlserverReader reader = new DataXSqlserverReader() {

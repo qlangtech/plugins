@@ -65,7 +65,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>26.0-android</version>
+            <version>33.7.1-android</version>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

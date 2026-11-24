@@ -24,6 +24,8 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.MemorySize;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 /**
@@ -51,6 +53,14 @@ public class FileWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return null;
+    }
+
+    /**
+     * 无运行时取值约束：{@link #maxSize} 限制的是上传文件本身的体积，提交串只是文件引用，
+     * 校验期无法据此推断文件大小，故不生成校验方法。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
     }
 
     @Override

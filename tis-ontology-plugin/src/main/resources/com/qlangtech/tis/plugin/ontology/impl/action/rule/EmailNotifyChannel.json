@@ -1,0 +1,7 @@
+{
+  "emailAddress": {
+    "label": "邮箱地址",
+    "placeholder": "user@example.com",
+    "help": "接收通知的邮箱地址"
+  }
+}

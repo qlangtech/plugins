@@ -31,11 +31,18 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyAction;
+import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
+import com.qlangtech.tis.plugin.ontology.impl.action.DefaultOntologyAction;
+import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
 import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -59,7 +66,6 @@ import java.util.Objects;
  * @date 2026/10/11
  * @see OntologyActionRule#buildMappedValues(List, java.util.Map)
  */
-@Deprecated
 public class PropertyMappingConfig implements Describable<PropertyMappingConfig>,
         IPluginStore.MultiDescribleElement {
 
@@ -175,30 +181,119 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
                         .map(PropertyMappingConfig::identityValue)
                         .collect(java.util.stream.Collectors.toSet());
             }
-            OntologyType type = null;
-            // 为每个属性创建候选项
+            // 2026/11/24 默认行命名空间感知：用与参数池候选聚合同一手法（loadActionDetail）
+            // 取本 Action 全量对象规则，解析「属性名 → canonical 参数名」——共享属性（如主/副表
+            // 都有 report_id）的默认来源直接引用先贡献规则提供的 canonical 参数，避免副表默认行
+            // 引用参数池里不存在的裸名参数（旧默认行在多对象类型 Action 下全是死行）。
+            // 半配置状态（创建向导中 Action 尚未完整落盘等）取不到时回退旧行为，绝不阻断映射表打开。
+            Map<String, String> canonicalParams = java.util.Collections.emptyMap();
+            String ownPrefix = StringUtils.EMPTY;
+            OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
+            OntologyAction action = Ontology.loadActionDetail(pluginMeta.getDomain(), pluginMeta.getPluginIdVal());
+            final List<ActionType> persistedRules;
+            if (action == null) {
+                // 半配置状态：创建向导中 Action 尚未落盘，loadActionDetail 返回 null。按空规则列表参与
+                // 推导，绝不阻断映射表打开；并集后 refs 只剩本规则的 ref，退化为单对象类型
+                // （裸名默认行），与旧行为逐字一致
+                persistedRules = java.util.Collections.emptyList();
+            } else if (action instanceof DefaultOntologyAction ontologyAction) {
+                persistedRules = ontologyAction.getActionTypes();
+            } else {
+                throw new IllegalStateException("action must be type of "
+                        + DefaultOntologyAction.class.getSimpleName() + " but now is " + action.getClass().getName());
+            }
+            NamespaceCtx nsCtx = deriveNamespaceCtx(persistedRules, actionType.objectTypeReference);
+            return buildCandidates(cols, selected, nsCtx.canonicalParams(), nsCtx.ownPrefix());
+        }
+
+        /**
+         * 按属性列表组装映射候选行（包级静态以便单测）：每行 target = 属性名、
+         * 默认来源由 {@link #defaultSource} 决定，勾选态取自已持久化的映射行。
+         */
+        static List<Pair<Option, IPluginStore.MultiDescribleElement>> buildCandidates(List<OntologyProperty> cols,
+                                                                                      java.util.Set<String> selected,
+                                                                                      Map<String, String> canonicalParams,
+                                                                                      String ownPrefix) {
+            List<Pair<Option, IPluginStore.MultiDescribleElement>> target = Lists.newArrayList();
             for (OntologyProperty col : cols) {
                 PropertyMappingConfig config = new PropertyMappingConfig();
                 config.target = col.getName();
 
-                type = col.parseOntologyType();
-                ValueSourceConfig param = null;
-                switch (type) {
-                    case DATE, TIMESTAMP -> {
-                        param = new CurrentTimeValueSource();
-                    }
-                    default -> {
-                        param = new FromParameterValueSource(col.getName());
-                    }
-                }
-                config.source = param;
+                config.source = defaultSource(col.getName(), col.parseOntologyType(), canonicalParams, ownPrefix);
                 target.add(Pair.of(
                         new Option(col.getName()).setChecked(selected.contains(col.getName())),
                         config
                 ));
             }
-
             return target;
+        }
+
+        /**
+         * 命名空间推导结果：canonical 参数映射 + 本规则前缀。纯数据载体，便于单测断言。
+         */
+        record NamespaceCtx(Map<String, String> canonicalParams, String ownPrefix) {
+        }
+
+        /**
+         * 从「落盘规则列表 + 编辑中本规则的 ref」推导命名空间上下文（包级静态以便单测）。
+         *
+         * <p><b>表单态 vs 磁盘态</b>：本方法在「映射表候选生成」请求内执行，此时编辑中的规则
+         * <b>尚未落盘</b>——正在给单对象规则的 Action 追加第二条对象规则时，新规则的 ref 只存在
+         * 于当前解析上下文（posted host item），磁盘规则列表里没有，refs 按磁盘算会塌缩成 1、
+         * 命名空间判定与保存后的最终形态不一致（默认行因此全部退化成裸名死行）。所以本规则 ref
+         * 必须<b>并集</b>进 refs：已保存场景 ownRef 本就在 refs 里，并集无变化；创建向导首条规则
+         * 场景 refs=[ownRef] 仍为单对象类型，自动回到旧行为。已知局限：改名单对象规则 Action 的
+         * 对象类型时（磁盘旧名 + 表单新名并存）会误判成多对象类型，保存后默认行成死行——由执行期
+         * {@code ObjectActionType#validatePropertyCoverage} 的 typo 硬拦兜底。
+         *
+         * @param persistedRules   磁盘落盘的全量规则列表（可能为空：Action 尚未落盘），可为 null 等价空列表
+         * @param ownObjectTypeRef 编辑中本规则引用的对象类型（此时必非空：候选生成上游已据此加载过 cols）
+         */
+        static NamespaceCtx deriveNamespaceCtx(List<ActionType> persistedRules, String ownObjectTypeRef) {
+            List<ActionType> rules = persistedRules == null ? java.util.Collections.emptyList() : persistedRules;
+            List<String> objectTypeRefs = ObjectActionType.objectTypeReferences(rules);
+            if (StringUtils.isNotEmpty(ownObjectTypeRef)
+                    && !objectTypeRefs.contains(ownObjectTypeRef)) {
+                objectTypeRefs = Lists.newArrayList(objectTypeRefs);
+                objectTypeRefs.add(ownObjectTypeRef);
+            }
+            Map<String, String> canonicalParams = ObjectActionType.resolveCanonicalParams(
+                    rules.stream()
+                            .filter((t) -> t instanceof ObjectActionType)
+                            .map((t) -> (ObjectActionType) t).toList(),
+                    objectTypeRefs);
+            return new NamespaceCtx(canonicalParams
+                    , ObjectActionType.namespacePrefix(ownObjectTypeRef, objectTypeRefs));
+        }
+
+        /**
+         * 一行映射的默认取值来源（命名空间感知，包级静态以便单测）。
+         *
+         * <p>多对象类型 Action 下共享属性（canonical 参数名 ≠ 本规则前缀参数名）的默认来源是
+         * 引用 canonical 参数——含日期型共享属性：取主表表单值而非当前时间，正是 fill-gap
+         * 执行语义的默认行形态；非共享的非日期属性引用本规则命名空间下的参数（多对象类型时
+         * 带前缀，修掉旧默认行的裸名死行）；非共享日期属性与 canonical 不可用（半配置回退、
+         * 单对象类型裸名）时保持旧行为逐字不变。
+         */
+        static ValueSourceConfig defaultSource(String propName, OntologyType propType,
+                                               Map<String, String> canonicalParams, String ownPrefix) {
+            if (canonicalParams != null && !canonicalParams.isEmpty()) {
+                String canonical = canonicalParams.get(propName);
+                if (canonical != null && !canonical.equals(ownPrefix + propName)) {
+                    return new FromParameterValueSource(canonical);
+                }
+                boolean temporal = switch (propType) {
+                    case DATE, TIMESTAMP -> true;
+                    default -> false;
+                };
+                if (!temporal) {
+                    return new FromParameterValueSource(ownPrefix + propName);
+                }
+            }
+            return switch (propType) {
+                case DATE, TIMESTAMP -> new CurrentTimeValueSource();
+                default -> new FromParameterValueSource(propName);
+            };
         }
 
 
@@ -214,6 +309,11 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
             return Lists.newArrayList(
                     new ColConfig("target").setClickable(),
                     new ColConfig("source"));
+        }
+
+        @Override
+        public int maxHeight() {
+            return 400;
         }
     }
 }

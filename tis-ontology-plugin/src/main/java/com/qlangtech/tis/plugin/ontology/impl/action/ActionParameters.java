@@ -77,13 +77,35 @@ public class ActionParameters extends OneStepOfMultiSteps {
     public CustomizeContent successMessage;
 
     /**
-     * 读取本 Action 已持久化的参数池。
+     * 运行时表单的显示配置（Workshop 按钮组打开的模态框长什么样）。
      *
-     * <p>参数文件落在
-     * {@code <cfgRoot>/ontology/<domain>/action-type/params/<parameterId>/<pluginIdVal>.xml}：
-     * 目录名是参数名，文件名取自 {@code pluginMeta.getPluginIdVal()}。因此调用方必须传入一个
+     * <p>多态字段，两个子类：{@link DisplayConfigOff}（{@code "off"}，前端用框架缺省的
+     * 紧凑布局与 600px 宽）与 {@link DisplayConfigOn}（{@code "on"}，自定义紧凑布局开关
+     * 与表单宽度）。{@code .json} 里的 {@code dftVal} 是 {@code "off"}。
+     * 经 {@code resolveRuntimeForm} bizresult 的 {@code displayConfig} key 下发前端，
+     * 不参与「参数池 → 扁平运行时表单」的推导。
+     */
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public DisplayConfig displayConfig = new DisplayConfigOff();
+
+    private Object readResolve() {
+        // XStream 不走构造器与字段初值：存量 params/<actionName>.xml 没有该元素时
+        // 反序列化得 null，必须在此兜底，否则运行时读参 NPE。
+        if (this.displayConfig == null) {
+            this.displayConfig = new DisplayConfigOff();
+        }
+        return this;
+    }
+
+    /**
+     * 读取本 Action 已持久化的参数池（<b>宿主级</b>：参数列表连同 {@link #submitButton}/
+     * {@link #successMessage} 一起反序列化成一个 {@code ActionParameters} 实例）。
+     *
+     * <p>落盘文件是 {@code <cfgRoot>/ontology/<domain>/action-type/params/<actionName>.xml}，
+     * 一个 Action 一个文件：目录固定 {@code params}，文件名取自
+     * {@code pluginMeta.getPluginIdVal()}（即 Action 名）+ {@code .xml}。因此调用方必须传入一个
      * {@code pluginIdVal} 非空的 meta（详情页链路里就是 Action 名），并且要与落盘时用的是
-     * <b>同一个 meta</b>，否则会扫到别的 Action 留下的同名目录、却取不到自己的文件。
+     * <b>同一个 meta</b>，否则会扫到别的 Action 的文件。
      *
      * <p>这里刻意不再从线程上下文取 meta：详情页请求的 extraParam 里没有 {@code identityName}，
      * 线程上下文 meta 会让 {@code getPluginStore} 直接抛
@@ -101,29 +123,6 @@ public class ActionParameters extends OneStepOfMultiSteps {
      * （见 {@link ActionParamStoreGetter}）。
      */
     private static final ActionParamStoreGetter ACTION_PARAM_STORE_GETTER = new ActionParamStoreGetter();
-
-    private void save(OntologyPluginMeta pluginMeta, IPluginContext pluginContext, Context context) {
-        if (StringUtils.isEmpty(pluginMeta.getPluginIdVal())) {
-            throw new IllegalArgumentException("ontology action name param can not be null");
-        }
-//        File actionParamsFile = Ontology.OntologyEnum.Action.storeKeyGetter.getAssistRootDir(
-//                pluginMeta.getDomain(), Optional.of(ActionParameterConfig.KEY_ONTOLOGY_ACTION_PARAMS + File.separator + pluginMeta.getPluginIdVal()));
-
-        // 随参数池一起把「参数池 → 扁平运行时表单」的产物
-        // （form/<actionName>.groovy|.json）写到磁盘，执行期可 loadFromDisk 还原。
-        // 先写表单再落参数池：参数名/order 等不合法时在持久化之前就失败，避免只落下半份配置。
-        try {
-            ActionFormDescriptorBuilder.writeToDisk(pluginMeta, this,
-                    pluginMeta.getDomain(), pluginMeta.getPluginIdVal());
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "persist action form failed, action:" + pluginMeta.getPluginIdVal(), e);
-        }
-
-        IPluginStore<?> paramsStore = getActionParamsStore(pluginMeta);
-
-        paramsStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(new Descriptor.ParseDescribable(Collections.singletonList(this))), false);
-    }
 
     private static IPluginStore<?> getActionParamsStore(OntologyPluginMeta pluginMeta) {
         IPluginStore<?> paramsStore

@@ -28,12 +28,12 @@ import com.qlangtech.tis.extension.Descriptor;
  */
 public enum RuleGroup {
     OFF(Descriptor.SWITCH_OFF, "不启用"),
-    ONTOLOGY_OBJECT("对象操作", "创建、修改、删除对象"),
-    ONTOLOGY_LINK("链接操作", "创建、删除对象之间的链接关系"),
-    ONTOLOGY_FUNCTION("函数操作", "通过自定义函数执行复杂逻辑"),
-    ONTOLOGY_INTERFACE("接口操作", "操作实现特定接口的对象"),
-    SIDE_EFFECT("副作用操作", "通知、Webhook 等外部调用"),
-    ADVANCED("高级操作", "数据构建、场景合并等");
+    ONTOLOGY_OBJECT("Object Operations", "创建、修改、删除对象"),
+    ONTOLOGY_LINK("Link Operations", "创建、删除对象之间的链接关系"),
+    ONTOLOGY_FUNCTION("Function Operations", "通过自定义函数执行复杂逻辑"),
+    ONTOLOGY_INTERFACE("Interface Operations", "操作实现特定接口的对象"),
+    SIDE_EFFECT("Side Effect Operations", "通知、Webhook 等外部调用"),
+    ADVANCED("Advanced Operations", "数据构建、场景合并等");
 
     private final String displayName;
     private final String description;

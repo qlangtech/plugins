@@ -58,6 +58,7 @@ import java.util.List;
  * @date 2026/9/7
  * @see RuleType
  * @see RuleGroup
+ * @see ObjectActionType
  */
 public abstract class ActionType implements Describable<ActionType>, IPluginStore.MultiDescribleElement {
 

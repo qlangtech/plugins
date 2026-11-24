@@ -14,15 +14,19 @@
   },
   "bodyTemplate": {
     "label": "请求体模板",
-    "help": "请求体原文，其中 ${参数名} 会被替换成实际参数值"
+    "help": "请求体原文，其中 ${参数名} 会被替换成实际参数值",
+    "rows": 5,
+    "style": "codemirror",
+    "mode": "text/velocity"
   },
   "timeoutSeconds": {
-    "label": "超时时间（秒）",
+    "label": "超时时间",
     "placeholder": "30",
     "help": "HTTP 请求超时时间",
-    "dftVal": "30"
+    "dftVal": 30
   },
   "retryOnFailure": {
-    "label": "失败重试"
+    "label": "失败重试",
+    "dftVal": "不重试"
   }
 }

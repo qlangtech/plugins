@@ -50,6 +50,11 @@ public class ObjectReferenceDataType extends ActionParameterDataType {
         return "object_reference:" + objectTypeId;
     }
 
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+
+    }
+
     @TISExtension
     public static class DftDescriptor extends BasicDescriptor implements DescriptorUseableShortComment {
 

@@ -22,8 +22,12 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.lang3.StringUtils;
 
+import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Webhook 规则
@@ -39,7 +43,7 @@ public class WebhookRule extends OntologyActionRule {
     public String webhookUrl;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String httpMethod = "POST";
+    public HttpMethod httpMethod = HttpMethod.POST;
 
     /**
      * 请求头键值行；值里可以写 {@code ${paramName}}。
@@ -51,11 +55,20 @@ public class WebhookRule extends OntologyActionRule {
     @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
     public String bodyTemplate;
 
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {})
-    public Integer timeoutSeconds = 30;
+    @FormField(ordinal = 4, type = FormFieldType.DURATION_OF_SECOND, validate = {})
+    public Duration timeoutSeconds ;
 
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
-    public Boolean retryOnFailure = false;
+    /**
+     * 失败重试策略。
+     *
+     * <p>多态字段（布尔开关的多态 Describable 化），TIS 自动检测为嵌套子表单：
+     * <ul>
+     *   <li>{@link NoRetryPolicy} - 不重试（默认）</li>
+     *   <li>{@link AutoRetryPolicy} - 自动重试（固定策略：延迟重试一次，仅网络错误或 5xx 触发）</li>
+     * </ul>
+     */
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public RetryPolicy retryOnFailure = new NoRetryPolicy();
 
     @Override
     public RuleType getRuleType() {
@@ -67,50 +80,40 @@ public class WebhookRule extends OntologyActionRule {
         return "webhook";
     }
 
-//    @Override
-//    public void execute(Describable<?> plugin) {
-//        Map<String, Object> parameters = getParameterValues(plugin);
-//
-//        // 1. 请求头（同名后者覆盖前者）
-//        Map<String, String> headerMap = headers == null ? Map.of()
-//                : headers.stream().collect(Collectors.toMap(
-//                (h) -> h.name, (h) -> h.value == null ? "" : h.value, (a, b) -> b));
-//
-//        // 2. 解析请求体模板
-//        String requestBody = replaceTemplate(bodyTemplate, parameters);
-//
-//        // 3. 调用 Webhook（实际实现需要调用 HTTP 客户端）
-//        // TODO: 集成 HTTP 客户端
-//        // HttpResponse response = httpClient.request(webhookUrl, httpMethod, headerMap, requestBody,
-//        //     timeoutSeconds * 1000);
-//        //
-//        // if (!response.isSuccess() && Boolean.TRUE.equals(retryOnFailure)) {
-//        //     // 重试逻辑
-//        //     response = httpClient.request(...);
-//        // }
-//    }
-
-//    /**
-//     * 替换模板中的参数占位符
-//     * 格式: ${paramName}
-//     */
-//    private String replaceTemplate(String template, Map<String, Object> parameters) {
-//        if (template == null) {
-//            return "";
-//        }
-//
-//        String result = template;
-//        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-//            if (entry.getValue() != null) {
-//                result = result.replace("${" + entry.getKey() + "}", entry.getValue().toString());
-//            }
-//        }
-//        return result;
-//    }
-
     @Override
     public void accept(AdapterRuleVisitor visitor) {
         visitor.visit(this);
+    }
+
+    /**
+     * 把请求头按当前参数池渲染成「头名 → 头值」映射，保持配置顺序、同名后者覆盖前者。
+     *
+     * <p>头值里的 {@code ${paramName}} 占位符经 {@link #replaceTemplate} 替换
+     * （头行为 null 跳过，头值缺失按空串处理）；未配置任何请求头时返回空 Map。
+     *
+     * @param parameters Action 参数池的运行时取值
+     */
+    public Map<String, String> renderHeaders(Map<String, Object> parameters) {
+        Map<String, String> headerMap = new LinkedHashMap<>();
+        if (headers == null) {
+            return headerMap;
+        }
+        for (HttpHeaderConfig header : headers) {
+            if (header == null || StringUtils.isEmpty(header.name)) {
+                continue;
+            }
+            headerMap.put(header.name, replaceTemplate(header.value, parameters));
+        }
+        return headerMap;
+    }
+
+    /**
+     * 渲染请求体：{@code ${paramName}} 占位符替换后的原文；未配置模板时返回空串。
+     *
+     * @param parameters Action 参数池的运行时取值
+     */
+    public String renderBody(Map<String, Object> parameters) {
+        return replaceTemplate(bodyTemplate, parameters);
     }
 
     @TISExtension

@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
+import com.qlangtech.tis.manage.common.PropertyPlaceholderHelper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -92,12 +93,17 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
      * <p>2026/10/12 重构：改用 {@link ValueSourceConfig#resolveValue} 多态方法，
      * 消除 switch-case 分支。
      *
+     * <p>2026/11/24 改为 public static 并接入执行链：对象规则（Create/Modify）的映射行此前
+     * 只有 {@code DefaultOntologyAction#collectRuleProperties} 在展示侧消费，执行期
+     * {@code ObjectActionType#mergePropertyMappings} 用本方法把「参数池里没有的属性」按映射行补齐
+     * （fill-gap 语义，表单已提供的值优先）。{@code FunctionBackedRule} 的形参映射同样走这里。
+     *
      * @param mappings   映射行，可为 null（函数可以无入参）
-     * @param parameters Action 参数池的运行时取值
+     * @param parameters Action 参数池的运行时取值（多对象类型 Action 下 key 是带命名空间前缀的全名）
      * @return 目标字段到取值的映射；解析结果为 null 时该行被跳过（如参数不存在）
      */
-    protected Map<String, Object> buildMappedValues(List<PropertyMappingConfig> mappings,
-                                                    Map<String, Object> parameters) {
+    public static Map<String, Object> buildMappedValues(List<PropertyMappingConfig> mappings,
+                                                        Map<String, Object> parameters) {
         Map<String, Object> result = new java.util.HashMap<>();
         if (mappings == null) {
             return result;
@@ -144,6 +150,31 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
     protected static String getStringParameter(Map<String, Object> parameters, String name) {
         Object value = parameters.get(name);
         return value == null ? null : String.valueOf(value);
+    }
+
+    /**
+     * 替换模板中的参数占位符，格式: {@code ${paramName}}。
+     *
+     * <p>复用 tis-config 的 {@link PropertyPlaceholderHelper}（默认 {@code ${}/{@code }} 前后缀、
+     * 忽略无法解析的占位符），与 NotificationRule.md / WebhookRule.md 中声明的占位符替换规则一致：
+     * 参数名大小写敏感、参数不存在时占位符保持原样、参数值经 {@code toString()} 转换。
+     *
+     * <p>原先 {@link NotificationRule} 私有一份字符串逐个 {@code replace} 的实现——参数值里再含
+     * 占位符时，替换结果还依赖 Map 遍历顺序；收敛到基类后由 helper 确定性递归解析
+     * （{@link WebhookRule} 的请求头值、请求体模板同样走这里）。
+     *
+     * @param template   模板原文，null 按空串处理
+     * @param parameters Action 参数池的运行时取值
+     */
+    protected static String replaceTemplate(String template, Map<String, Object> parameters) {
+        if (template == null) {
+            return "";
+        }
+
+        return PropertyPlaceholderHelper.replace(template, (placeholderName) -> {
+            Object val = parameters.get(placeholderName);
+            return val == null ? null : val.toString();
+        });
     }
 
 //    /**

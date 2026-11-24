@@ -29,6 +29,7 @@ import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.OneStepOfMultiSteps.Step;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.PropValRewrite;
+import com.qlangtech.tis.plugin.ds.JDBCTransactionScope;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
@@ -38,7 +39,6 @@ import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteLinkRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.FunctionBackedRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule;
-import com.qlangtech.tis.plugin.ontology.impl.action.rule.NotificationRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.PropertyMappingConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
@@ -54,6 +54,7 @@ import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.RelevantFieldsContextAttrValMap;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -62,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * 默认的 Ontology Action Type 实现
@@ -143,42 +145,6 @@ public class DefaultOntologyAction extends OntologyAction {
     }
 
     /**
-     * XStream 反序列化完成回调：把 {@link #stepsPlugin} 补齐到
-     * {@link DefaultDesc#getStepDescriptionList()} 声明的长度。
-     *
-     * <p>存量 Action（两步向导时代落盘）只有 2 个槽位，而前端编辑模式
-     * {@code rebuildStepSavedPlugin} 按下标回放全部步骤、{@code OntologyAction#setSteps}
-     * 又断言长度与声明一致 —— 不补齐则打开编辑页即失败。
-     *
-     * <p><b>代价</b>：存量 Action 的参数池仍落在 {@code params/} 目录，详情页 Form 页签
-     * 照常经 {@link ActionParameters#loadParameters} 显示；但向导第 3 步只能给出空实例
-     * （{@code readResolve()} 里拿不到本体 domain，无法回读磁盘）。用户若在向导里一路
-     * 保存，Step3 的 {@code Validator.require} 会拦住空提交，不会静默清空磁盘。
-     */
-    private Object readResolve() {
-        OneStepOfMultiSteps[] steps = this.stepsPlugin;
-        // 与 getStepDescriptionList() 同源；这里刻意直接 new Desc 而不是走 getDescriptor()，
-        // 因为反序列化可能发生在 TIS 扩展索引完全就绪之前。
-        int expectLength = new DefaultDesc().getStepDescriptionList().size();
-        if (steps == null || steps.length >= expectLength) {
-            return this;
-        }
-        OneStepOfMultiSteps[] filled = new OneStepOfMultiSteps[expectLength];
-        System.arraycopy(steps, 0, filled, 0, steps.length);
-        for (int i = steps.length; i < expectLength; i++) {
-            OneStepOfMultiSteps.Step step = OneStepOfMultiSteps.stepsArray[i];
-            filled[i] = switch (step) {
-                case Step3 -> new ActionParameters();
-                case Step4 -> new ActionSubmissionCriteria();
-                default -> throw new IllegalStateException(
-                        "step " + step + " 没有可回填的空实例，无法补齐存量 Action 配置");
-            };
-        }
-        this.stepsPlugin = filled;
-        return this;
-    }
-
-    /**
      * 该 Action 配置的全部规则，顺序即执行顺序。
      */
     public List<ActionType> getActionTypes() {
@@ -190,8 +156,8 @@ public class DefaultOntologyAction extends OntologyAction {
      *
      * <p>不能走 {@link OntologyAction#setSteps(OneStepOfMultiSteps[])}：那里断言数组长度
      * 必须与 {@link DefaultDesc#getStepDescriptionList()} 声明的步数完全一致，而这里只
-     * 换其中一个槽位。存量 Action 只落了两步（Metadata + Rules），数组可能比声明的短，
-     * 故按 {@code readResolve()} 的同一口径先补齐再写。
+     * 换其中一个槽位。落盘数组长度以磁盘实际形态为准（两步向导是 2；四步向导时代落盘的
+     * 存量是 4，多余槽位原样保留），这里只在下标越界时兜底扩长。
      */
     public void setRuleSetter(ActionRuleSetter ruleSetter) {
         Objects.requireNonNull(ruleSetter, "ruleSetter can not be null");
@@ -199,7 +165,7 @@ public class DefaultOntologyAction extends OntologyAction {
         final int idx = ACTION_RULE_SETTER_STEP.getStepIndex();
         OneStepOfMultiSteps[] steps = this.stepsPlugin;
         if (steps == null || steps.length < idx + 1) {
-            // 与 readResolve() 同源；同样直接 new 而非 getDescriptor()，编辑期不依赖扩展索引状态
+            // 与 getStepDescriptionList() 同源；同样直接 new 而非 getDescriptor()，编辑期不依赖扩展索引状态
             int expectLength = Math.max(new DefaultDesc().getStepDescriptionList().size(), idx + 1);
             OneStepOfMultiSteps[] grown = new OneStepOfMultiSteps[expectLength];
             if (steps != null) {
@@ -380,9 +346,9 @@ public class DefaultOntologyAction extends OntologyAction {
         public List<OneStepOfMultiSteps.BasicDesc> getStepDescriptionList() {
             return List.of(
                     new ActionMetadata.Desc(),
-                    new ActionRuleSetter.Desc(),
-                    new ActionParameters.Desc(),
-                    new ActionSubmissionCriteria.Desc()
+                    new ActionRuleSetter.Desc()
+//                    new ActionParameters.Desc(),
+//                    new ActionSubmissionCriteria.Desc()
             );
         }
 
@@ -399,8 +365,9 @@ public class DefaultOntologyAction extends OntologyAction {
          * </pre>
          *
          * <p>{@code descriptors / parameters / previewDescriptors} 是「Form」页签的数据源，
-         * 从 {@link ActionParameters#loadParameters} 读落盘的参数池 —— 参数池自 4 步向导恢复后
-         * 由 Step3 维护，与规则列表解耦（多条规则共享同一个参数池）。
+         * 从 {@link ActionParameters#loadParameters} 读落盘的参数池 —— 参数池已移出创建向导，
+         * 由本页签维护（落 {@code params/<actionName>.xml}），与规则列表解耦
+         * （多条规则共享同一个参数池）。
          */
         @Override
         public void httpProcess(IControlMsgHandler paramGetter, IPluginContext pluginContext, Context context) throws Exception {
@@ -463,12 +430,15 @@ public class DefaultOntologyAction extends OntologyAction {
                         result.put("parameters", new DescribableJSON(paramPool).getItemJson());
                         result.put("previewDescriptors", ActionFormDescriptorBuilder.build(paramMeta, paramPool));
                     }
+                    // 规则类型决定 Form 预览的提交语义（删除类 action 预览只显示红色删除按钮），
+                    // 与 resolveRuntimeForm 下发给 workshop 模态框的同源同值
+                    result.put("ruleType", resolveDrivingRuleTypeName(actionTypes));
 
                     paramGetter.setBizResult(context, result);
                 }
                 case "resolveActionForm" -> {
                     JSONObject post = pluginContext.getJSONPostContent();
-                    // whitelist 必须是全部字段名（parameters / submitButton / successMessage），
+                    // whitelist 必须是全部字段名（parameters / submitButton / successMessage / displayConfig），
                     // 否则没进 whitelist 的字段会静默读成 null（见 RelevantFieldsContextAttrValMap）。
                     RelevantFieldsContextAttrValMap<ActionParameters> attrs =
                             RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, post,
@@ -491,6 +461,10 @@ public class DefaultOntologyAction extends OntologyAction {
 
                     result.put(ActionParameters.KEY_PARAMETERS, new DescribableJSON(params).getItemJson());
 
+                    // 规则类型随表单 descriptor 一并刷新 Form 预览的提交语义（左侧改规则相关
+                    // 字段后，删除类/普通提交的按钮形态在这里同步），与 getActionRelevant 同源
+                    result.put("ruleType", resolveDrivingRuleTypeName(actionTypes));
+
                     paramGetter.setBizResult(context, result);
                 }
                 case "executeActionInPreview" -> {
@@ -505,22 +479,25 @@ public class DefaultOntologyAction extends OntologyAction {
                             post.getJSONObject("previewItem"), "previewItem can not be null");
                     JSONObject paramsItem = Objects.requireNonNull(
                             post.getJSONObject("paramsItem"), "paramsItem can not be null");
+                    // 删除确认标记与 executeAction 分支同构：详情页 Form 预览的删除按钮经前端
+                    // interceptSave 拦截、确认框确认后再携带本标记提交。与 previewItem 同级，
+                    // 不能塞进表单 vals（会被 STRICT 校验丢弃），DeleteObjectRule 凭它放行
+                    boolean deleteConfirmed = post.getBooleanValue("deleteConfirmed");
 
                     RelevantFieldsContextAttrValMap<ActionParameters> attrs =
                             RelevantFieldsContextAttrValMap.createRelevantFieldsContext(paramGetter, context, paramsItem,
-                                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys(ActionParameters.KEY_PARAMETERS));
+                                    new RelevantFieldsContextAttrValMap.RelevantFieldKeys(ActionParameters.KEY_PARAMETERS).addToFieldNewInstanceRelevantKeys());
 
                     if (!attrs.validate().isValid()) {
                         throw new IllegalStateException("attrs.validate() must be vaild");
                     }
 
-                    ActionParameters paramPool = attrs.createPluginInstance();// ActionParameters.loadParameters(paramMeta);
-                    if (paramPool == null) {
-                        paramGetter.addErrorMessage(context, "Action '" + actionName + "' 尚未配置参数池");
-                        return;
-                    }
-                    // 详情页预览不接删除确认：删除只能从 Workshop 模态框的危险按钮发起
-                    executePreviewForm(actionTypes, paramMeta, paramPool, previewForm, false, paramGetter, context);
+                    ActionParameters paramPool = Objects.requireNonNull(attrs.createPluginInstance());// ActionParameters.loadParameters(paramMeta);
+//                    if (paramPool == null) {
+//                        paramGetter.addErrorMessage(context, "Action '" + actionName + "' 尚未配置参数池");
+//                        return;
+//                    }
+                    executePreviewForm(actionTypes, paramMeta, paramPool, previewForm, deleteConfirmed, paramGetter, context);
                 }
                 case "executeAction" -> {
                     // workshop 按钮组提交运行时表单执行。与 executeActionRule 分支的差异：
@@ -564,12 +541,16 @@ public class DefaultOntologyAction extends OntologyAction {
                     ActionParameters paramPool = ActionParameters.loadParameters(paramMeta);
                     result.put("previewDescriptors",
                             paramPool == null ? null : ActionFormDescriptorBuilder.build(paramMeta, paramPool));
+                    // 显示配置（紧凑布局/表单宽度）扁平化后下发：off 或参数池未配置时为 null，
+                    // 前端据此走框架缺省。刻意不走 ActionFormDescriptorBuilder 通道 ——
+                    // 那条路受 contentHash 预览缓存约束，displayConfig 变更不会改 groovy/json 哈希。
+                    result.put("displayConfig",
+                            DisplayConfig.runtimeProps(paramPool == null ? null : paramPool.displayConfig));
                     result.put("ridFieldName", defaultAction.resolveObjectIdentityParam(paramMeta));
                     // 规则类型决定前端模态框的提交语义：DELETE_OBJECT / DELETE_LINK 时换成危险按钮
                     // 并携带 deleteConfirmed，其余规则保持普通「提交」。
                     // 多规则下取「最能代表本次提交危险程度」的那条，见 resolveDrivingRule。
-                    OntologyActionRule rule = resolveDrivingRule(actionTypes).getRule();
-                    result.put("ruleType", rule == null ? null : rule.getRuleType().name());
+                    result.put("ruleType", resolveDrivingRuleTypeName(actionTypes));
 
                     // 链接类 Action：回传源/目标对象类型与两个 RID 字段名，前端据此预填源对象、
                     // 渲染目标对象选择器。配置不完整（缺参数 / 链接类型坏）时只回传错误，
@@ -714,10 +695,9 @@ public class DefaultOntologyAction extends OntologyAction {
             } else if (rule instanceof FunctionBackedRule functionRule) {
                 // 函数规则的映射行 target 是函数形参名，同样计入「作用字段」供前端展示
                 collectMappingTargets(functionRule.parameterMappings, properties);
-            } else if (rule instanceof NotificationRule notificationRule) {
-                addProperty(properties, notificationRule.recipientParam);
             }
-            // WebhookRule 没有参数引用，无需处理
+            // WebhookRule / NotificationRule 没有参数引用，无需处理
+            // （NotificationRule 的收件人地址收进 NotifyChannel 各渠道子类静态配置）
             return properties;
         }
 
@@ -777,6 +757,9 @@ public class DefaultOntologyAction extends OntologyAction {
          * 链接规则优先于非链接规则，因为链接语义还带着 linkInfo 预填。
          */
         private static ActionType resolveDrivingRule(List<ActionType> actionTypes) {
+            if (actionTypes == null || actionTypes.isEmpty()) {
+                return null;
+            }
             ActionType deleteRule = null;
             ActionType linkRule = null;
             for (ActionType actionType : actionTypes) {
@@ -801,13 +784,29 @@ public class DefaultOntologyAction extends OntologyAction {
         }
 
         /**
+         * 「决定前端提交语义」那条规则的 RuleType 枚举名（{@link #resolveDrivingRule}
+         * 危险优先推导），规则未配置时返回 null。
+         *
+         * <p>Form 页签预览（{@code getActionRelevant} / {@code resolveActionForm}）与
+         * workshop 模态框（{@code resolveRuntimeForm}）三处经本方法下发，保证两条 UI 通道
+         * 对同一个 Action 永远同源同值：删除类（DELETE_OBJECT / DELETE_LINK）呈现危险语义，
+         * 提交时整个 Action 以一个事务执行（含混合规则里的创建/修改）。
+         */
+        private static String resolveDrivingRuleTypeName(List<ActionType> actionTypes) {
+            ActionType drivingRule = resolveDrivingRule(actionTypes);
+            OntologyActionRule rule = drivingRule == null ? null : drivingRule.getRule();
+            return rule == null ? null : rule.getRuleType().name();
+        }
+
+        /**
          * 把前端 {@code Item.project()} 投影（{@code {impl, vals}}）经参数池现场生成的 descriptor
          * 解析、校验并执行。{@code executeActionRule} / {@code executeAction} 两分支共用，
          * 差异只在参数池来源（详情页编辑 vs 磁盘落盘），此处只做「参数池已就绪」之后的事。
          *
          * <p>按列表顺序逐条执行：前面规则的副作用（如创建对象）必须先于后面规则的写操作落地。
-         * 任一条失败即中断，并保留后面的规则不再执行 —— 与 Palantir「按顺序编译成一次编辑」的
-         * 语义一致：无法回滚已提交的部分，故宁可停在明确的失败点上。
+         * 全部规则跑在一个事务作用域内（见 {@link #executeActionTypes}），任一条失败即中断、
+         * 后面的规则不再执行，且此前规则的写入整体回滚 —— 与 Palantir「按顺序编译成一次编辑」
+         * 的原子语义一致。
          */
         private static void executePreviewForm(List<ActionType> actionTypes, OntologyPluginMeta paramMeta,
                                                ActionParameters paramPool, JSONObject previewForm,
@@ -816,12 +815,17 @@ public class DefaultOntologyAction extends OntologyAction {
             Descriptor<?> formDesc = ActionFormDescriptorBuilder.buildDescriptor(paramMeta, paramPool);
             String impl = previewForm.getString(AttrValMap.PLUGIN_EXTENSION_IMPL);
             if (!formDesc.getId().equals(impl)) {
-                paramGetter.addErrorMessage(context,
-                        "提交的表单类型不匹配，期望:" + formDesc.getId() + "，实际:" + impl);
-                return;
+//                paramGetter.addErrorMessage(context,
+//                        "提交的表单类型不匹配，期望:" + formDesc.getId() + "，实际:" + impl);
+                //   return;
+
+                throw new IllegalStateException("is not match with form from submit,expect:" + formDesc.getId() + " but actual:" + impl);
+            }
+            if (MapUtils.isEmpty(formDesc.getPropertyTypes(true))) {
+                throw new IllegalStateException("formDesc.getPropertyTypes can not be empty");
             }
             AttrValMap attrVals = AttrValMap.parseDescribableMap(
-                    Optional.empty(), previewForm, formDesc, PropValRewrite.dftRewrite());
+                    Optional.empty(), previewForm, formDesc, PropValRewrite.dftRewrite(), Function.identity());
             // 必须用 validateWithScope：validate() 不会写入 plugin/item 位置，
             // 而 PluginValidateResult 的构造器要求这两个值非 null。
             PluginValidateResult validateResult =
@@ -835,8 +839,28 @@ public class DefaultOntologyAction extends OntologyAction {
             // 多对象类型 Action 的字段名带 <对象类型>_ 前缀，只有带上「本 Action 全部对象类型」
             // 规则才能判断自己是否该剥前缀（见 ObjectActionType#scopedPropertyVals）
             List<String> objectTypeRefs = ObjectActionType.objectTypeReferences(actionTypes);
-            for (ActionType actionType : actionTypes) {
-                actionType.executeActionRule(previewInstance, deleteConfirmed, objectTypeRefs);
+            executeActionTypes(actionTypes, previewInstance, deleteConfirmed, objectTypeRefs);
+        }
+
+        /**
+         * 把全部规则在一个事务作用域内按序执行（{@code executeActionInPreview} / {@code executeAction}
+         * 两分支共用）。抽成包级静态方法是为了能被单测直接驱动（同 {@code buildRules} 的抽法）。
+         *
+         * <p>多步骤原子性：作用域内同一 jdbcUrl 的所有 DML 共享一条 {@code autoCommit=false} 的连接
+         * （见 {@link JDBCTransactionScope}），全部规则成功后统一 commit；任一条失败即中断、后面的
+         * 规则不再执行，且此前规则的写入整体回滚。规则的规则指向不同数据源时无法跨库原子（无 XA），
+         * {@code commit()} 时各数据源按注册顺序各自提交。
+         */
+        static void executeActionTypes(List<ActionType> actionTypes, Describable<?> previewInstance,
+                                       boolean deleteConfirmed, List<String> objectTypeRefs) {
+            // 2026/11/24 执行前覆盖校验：映射行 typo 硬拦截 + CREATE 未覆盖属性告警
+            // （见 ObjectActionType#validatePropertyCoverage），事务开启前 fail-fast
+            ObjectActionType.validatePropertyCoverage(actionTypes, previewInstance, objectTypeRefs);
+            try (JDBCTransactionScope tx = JDBCTransactionScope.open()) {
+                for (ActionType actionType : actionTypes) {
+                    actionType.executeActionRule(previewInstance, deleteConfirmed, objectTypeRefs);
+                }
+                tx.commit();
             }
         }
 

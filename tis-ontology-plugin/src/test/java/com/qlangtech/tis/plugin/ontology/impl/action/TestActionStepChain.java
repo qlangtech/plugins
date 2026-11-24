@@ -28,7 +28,14 @@ import java.util.TreeSet;
 /**
  * Action 多步骤配置链与「结构化子表单元素类」的接线回归测试。
  *
- * <p>本轮做了两件互相独立、且都<b>没有编译期保护</b>的事：
+ * <p>创建向导已收敛为 <b>两步</b>（Metadata → Rules）：Parameters / SubmissionCriteria
+ * 两步按 Palantir 文档移出主流程，改由 Action 详情页 Form 页签维护（参数池落
+ * {@code params/<actionName>.xml}，提交条件后续接入同页签）。向导步进由每步保存响应里的
+ * {@code nextStepPluginDesc}（源自 {@code BasicDesc#nextPluginDesc}）驱动而<b>不是</b>清单本身，
+ * 「清单长度 ⟺ next 链 ⟶ {@code OntologyAction#setSteps} 断言」三处必须同源——
+ * 本类的前半部分就是这三处一致性的钉子。
+ *
+ * <p>此前一轮做了两件互相独立、且都<b>没有编译期保护</b>的事：
  *
  * <ol>
  *   <li><b>删 ActionRules，Step4 换成结构化的提交条件</b> —— 步骤数从「声明 4 / 断言 3」的
@@ -91,15 +98,20 @@ public class TestActionStepChain {
     // ===================================================================
 
     /**
-     * 步骤清单恰为 Metadata → RuleSetter → Parameters → SubmissionCriteria，
-     * 且每步的 {@code getStep()} 依次落在 Step1..Step4。
+     * 步骤清单恰为 Metadata → RuleSetter（两步），且每步的 {@code getStep()} 依次落在
+     * Step1..Step2。
+     *
+     * <p>Parameters / SubmissionCriteria 两步已按 Palantir 文档移出创建向导，改由详情页
+     * Form 页签维护；这里钉死清单里<b>不含</b>它们 —— 若有人把这两个 Desc 加回来，
+     * 而 {@code ActionRuleSetter.Desc} 的链条没同步恢复，向导走到第 2 步就断头；
+     * 反之链条恢复了清单没恢复，宿主保存会被 {@code OntologyAction#setSteps} 的
+     * 长度断言拦下。两个 Desc 类本身保留（Form 页签链路仍要实例化它们）。
      */
     @Test
     public void stepChainIsWellFormed() {
         List<OneStepOfMultiSteps.BasicDesc> descs = stepDescriptionList();
-        Assert.assertEquals("Action 步骤链应恰为 4 步",
-                Arrays.asList(ActionMetadata.Desc.class, ActionRuleSetter.Desc.class,
-                        ActionParameters.Desc.class, ActionSubmissionCriteria.Desc.class),
+        Assert.assertEquals("Action 创建向导应恰为 2 步（Parameters/SubmissionCriteria 已移出主流程）",
+                Arrays.asList(ActionMetadata.Desc.class, ActionRuleSetter.Desc.class),
                 new ArrayList<>(descs.stream().map(Object::getClass).toList()));
 
         for (int i = 0; i < descs.size(); i++) {
@@ -168,15 +180,17 @@ public class TestActionStepChain {
     /**
      * {@code OntologyAction#setSteps} 的期望长度不再写死，而是从
      * {@code getStepDescriptionList().size()} 取。这里钉住这个等式成立的前提：
-     * 声明必须是 4 步。
+     * 声明必须是 2 步。
      *
      * <p>旧实现写死 {@code FIXED_ACTION_STEPS_LENGTH = 3} 而声明是 4 步，
      * 保存时必然抛 {@code IllegalStateException}——两处各说各话是这类 bug 的根因。
+     * 声明收敛为 2 步后，向导链（{@code nextPluginDesc}）与清单同源收敛，见
+     * {@link #nextStepChainIsConsistent()}。
      */
     @Test
-    public void stepCountIsFourAndDerivedFromSameSource() {
+    public void stepCountIsTwoAndDerivedFromSameSource() {
         Assert.assertEquals("DefaultDesc 声明的步骤数变了；setSteps 会跟着变，"
-                + "但如果前端仍只提交 3 步，这里是唯一能提前发现的地方", 4, stepDescriptionList().size());
+                + "这里是清单与断言同源的钉子", 2, stepDescriptionList().size());
     }
 
     // ===================================================================

@@ -19,7 +19,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
@@ -265,48 +264,37 @@ public class TestActionRelevantPayload {
     }
 
     /**
-     * {@code readResolve()} 把槽位补齐到声明长度：前端编辑模式按下标回放全部步骤、
-     * {@code setSteps} 又断言长度与声明一致，缺了会在打开编辑页时直接失败。
+     * 两步槽位正是当前声明的形态（Parameters / SubmissionCriteria 已移出创建向导），
+     * 落盘数组无需任何补齐：长度原样、第一步可读、提交条件为空。
      */
     @Test
-    public void readResolveFillsLegacyStepsToDeclaredLength() throws Exception {
+    public void legacyTwoStepLayoutIsNowTheDeclaredShape() throws Exception {
         DefaultOntologyAction action = new DefaultOntologyAction();
-        setSteps(action, new OneStepOfMultiSteps[]{metadata("legacy"), new ActionRuleSetter()});
+        OneStepOfMultiSteps[] steps = {metadata("legacy"), new ActionRuleSetter()};
+        setSteps(action, steps);
 
-        Method readResolve = DefaultOntologyAction.class.getDeclaredMethod("readResolve");
-        readResolve.setAccessible(true);
-        Assert.assertSame("readResolve 必须返回 this，否则 XStream 会把实例换成 null", action,
-                readResolve.invoke(action));
-
-        OneStepOfMultiSteps[] steps = action.getMultiStepsSavedItems();
-        Assert.assertEquals("补齐到声明长度",
-                new DefaultOntologyAction.DefaultDesc().getStepDescriptionList().size(), steps.length);
-        Assert.assertTrue("第 3 步补 ActionParameters", steps[2] instanceof ActionParameters);
-        Assert.assertTrue("第 4 步补 ActionSubmissionCriteria", steps[3] instanceof ActionSubmissionCriteria);
-        Assert.assertTrue("补齐后提交条件仍是空列表", action.getSubmissionCriteria().isEmpty());
-        Assert.assertEquals("第一步原样保留", "legacy", action.getName());
+        Assert.assertSame("两步数组就是声明形态，加载时不得被替换",
+                steps, action.getMultiStepsSavedItems());
+        Assert.assertEquals("第一步可读", "legacy", action.getName());
+        Assert.assertTrue("提交条件为空（== 不限制提交）", action.getSubmissionCriteria().isEmpty());
     }
 
     /**
-     * 已是 4 步的 Action 不能被 {@code readResolve()} 重建 —— 那会把用户填好的
-     * 参数池 / 提交条件悄悄换成空实例。
+     * 四步向导时代落盘的存量 Action（4 个槽位）照常可读：第 4 槽的提交条件原样返回，
+     * 数组既不被截断也不被重建 —— 多余槽位原样保留，待宿主下次经向导保存时才收敛为两步。
      */
     @Test
-    public void readResolveLeavesCompleteStepsUntouched() throws Exception {
+    public void fourSlotLegacyLayoutKeepsSubmissionCriteriaReadable() throws Exception {
         DefaultOntologyAction action = new DefaultOntologyAction();
-        ActionParameters params = new ActionParameters();
         ActionSubmissionCriteria criteria = new ActionSubmissionCriteria();
         criteria.criteria = List.of(criterion("金额下限", SubmissionCriterion.SubjectKind.OBJECT_PROPERTY,
                 "amount", SubmissionCriterion.ComparisonOperator.GREATER_THAN, "100"));
-        OneStepOfMultiSteps[] original = {metadata("full"), new ActionRuleSetter(), params, criteria};
+        OneStepOfMultiSteps[] original = {metadata("full"), new ActionRuleSetter(),
+                new ActionParameters(), criteria};
         setSteps(action, original);
 
-        Method readResolve = DefaultOntologyAction.class.getDeclaredMethod("readResolve");
-        readResolve.setAccessible(true);
-        readResolve.invoke(action);
-
         Assert.assertSame("数组不能被替换", original, action.getMultiStepsSavedItems());
-        Assert.assertEquals(1, action.getSubmissionCriteria().size());
+        Assert.assertEquals("四步时代的提交条件原样可读", 1, action.getSubmissionCriteria().size());
     }
 
     // ===================================================================

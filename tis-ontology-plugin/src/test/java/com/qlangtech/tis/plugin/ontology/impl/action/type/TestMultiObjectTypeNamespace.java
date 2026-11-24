@@ -2,10 +2,21 @@ package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
 import com.qlangtech.tis.plugin.annotation.ValidateRule;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
+import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.CreateObjectRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.CurrentTimeValueSource;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.FromParameterValueSource;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.LiteralValueSource;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.PropertyMappingConfig;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +148,268 @@ public class TestMultiObjectTypeNamespace {
         org.mockito.Mockito.when(noPk.getPk()).thenReturn(java.util.Optional.empty());
         Assert.assertEquals("rid", ObjectActionType.resolveIdentityParameterName(noPk, "rid", ""));
         Assert.assertEquals("user_rid", ObjectActionType.resolveIdentityParameterName(noPk, "rid", "user_"));
+    }
+
+    // ==================== propertyMappings fill-gap（2026/11/24 映射通电） ====================
+
+    /**
+     * 映射行只补本命名空间缺失的键：副表共享字段（id/amount）从主表命名空间参数池取值。
+     * 本 bug 钉子——执行链此前从不消费 {@code propertyMappings}，副表 INSERT 缺共享列。
+     */
+    @Test
+    public void mappedValuesFillMissingNamespaceFields() {
+        ObjectActionType rule = objectRule("createOrderDetail", "order_detail");
+        CreateObjectRule createRule = (CreateObjectRule) rule.objectRule;
+        createRule.propertyMappings = List.of(
+                mapping("id", "order_id"), mapping("amount", "order_amount"));
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("order_id", 99);
+        allValues.put("order_amount", 12.5);
+        allValues.put("detail_owner_email", "baisui");
+
+        Map<String, Object> scoped = new LinkedHashMap<>();
+        scoped.put("owner_email", "baisui");
+        scoped.put("remark", "ok");
+
+        Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
+                rule.objectRule, scoped, allValues, Set.of("id", "amount", "owner_email", "remark"));
+
+        Assert.assertEquals("表单已有字段保持原值", "baisui", merged.get("owner_email"));
+        Assert.assertEquals("跨命名空间映射补入共享字段的值", 99, merged.get("id"));
+        Assert.assertEquals(12.5, merged.get("amount"));
+        Assert.assertEquals("只补缺口，不得多键", 4, merged.size());
+    }
+
+    /**
+     * fill-gap 优先级钉子：表单值优先，{@code CurrentTimeValueSource} 映射行不得冲掉用户填的日期
+     * （存量配置里主表日期既是必填表单参数又有当前时间映射行）。
+     */
+    @Test
+    public void formValuesWinOverMappings() {
+        ObjectActionType rule = objectRule("createMain", "order");
+        CreateObjectRule createRule = (CreateObjectRule) rule.objectRule;
+        PropertyMappingConfig dateRow = new PropertyMappingConfig();
+        dateRow.target = "report_date";
+        dateRow.source = new CurrentTimeValueSource();
+        createRule.propertyMappings = List.of(dateRow);
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("report_date", "2026-11-24");
+        Map<String, Object> scoped = new LinkedHashMap<>();
+        scoped.put("report_date", "2026-11-24");
+
+        Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
+                rule.objectRule, scoped, allValues, Set.of("report_id", "report_date"));
+
+        Assert.assertEquals("表单已填的日期不得被映射行冲成当前时间", "2026-11-24", merged.get("report_date"));
+    }
+
+    /** 参数解析为 null 的映射行跳过（{@code buildMappedValues} null-skip 传导）。 */
+    @Test
+    public void mappingWithMissingParameterStaysSkipped() {
+        ObjectActionType rule = objectRule("createOrderDetail", "order_detail");
+        ((CreateObjectRule) rule.objectRule).propertyMappings =
+                List.of(mapping("id", "order_id")); // 裸名不在带命名空间前缀的参数池里
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("detail_owner_email", "x");
+        Map<String, Object> scoped = new LinkedHashMap<>();
+        scoped.put("owner_email", "x");
+
+        Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
+                rule.objectRule, scoped, allValues, Set.of("id", "owner_email"));
+
+        Assert.assertEquals("缺失参数不产生键", 1, merged.size());
+    }
+
+    /** target 越界的陈旧映射行丢弃，防止拼出未知列的 SQL。 */
+    @Test
+    public void mappingTargetOutsideColsDropped() {
+        ObjectActionType rule = objectRule("createOrderDetail", "order_detail");
+        ((CreateObjectRule) rule.objectRule).propertyMappings = List.of(
+                mapping("deleted_prop", "order_id"), mapping("id", "order_id"));
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("order_id", 7);
+        Map<String, Object> scoped = new LinkedHashMap<>();
+
+        Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
+                rule.objectRule, scoped, allValues, Set.of("id"));
+
+        Assert.assertEquals("越界 target 丢弃、合法 target 补入", 1, merged.size());
+        Assert.assertEquals(7, merged.get("id"));
+    }
+
+    /** Delete 规则无 {@code propertyMappings} 字段原样返回；单对象类型下字面量来源同样按 fill-gap 补键。 */
+    @Test
+    public void deleteRuleUntouchedAndLiteralSourceFillsOnSingleNamespace() {
+        ObjectActionType deleteRule = objectRule("deleteOrderDetail", "order_detail");
+        deleteRule.objectRule = new DeleteObjectRule();
+        Map<String, Object> scoped = new LinkedHashMap<>();
+        scoped.put("rid", 1);
+
+        Assert.assertSame("Delete 规则无映射，map 原样返回", scoped,
+                ObjectActionType.mergePropertyMappings(
+                        deleteRule.objectRule, scoped, new LinkedHashMap<>(), Set.of("rid")));
+
+        ObjectActionType userRule = objectRule("createUser", "user");
+        CreateObjectRule createUser = (CreateObjectRule) userRule.objectRule;
+        LiteralValueSource literal = new LiteralValueSource();
+        literal.literalValue = "system";
+        PropertyMappingConfig row = new PropertyMappingConfig();
+        row.target = "created_by";
+        row.source = literal;
+        createUser.propertyMappings = List.of(row);
+
+        Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
+                userRule.objectRule, new LinkedHashMap<>(), new LinkedHashMap<>(), Set.of("created_by"));
+        Assert.assertEquals("单对象类型下固定字面量映射生效", "system", merged.get("created_by"));
+    }
+
+    /**
+     * canonical 参数解析：共享属性归首个贡献的规则；单对象类型退化为裸属性名。
+     * 参数池候选标注与映射默认行预置共用这一处事实源（C0）。
+     */
+    @Test
+    public void canonicalParamsFirstContributorWins() {
+        ObjectActionType mainRule = Mockito.spy(objectRule("createMain", "chartxy_daily_report"));
+        Mockito.doReturn(objectTypeWith("report_id", "report_date", "department"))
+                .when(mainRule).loadObjectType();
+        ObjectActionType detailRule = Mockito.spy(objectRule("createDetail", "chartxy_daily_report_detail"));
+        Mockito.doReturn(objectTypeWith("report_id", "report_date", "owner_email"))
+                .when(detailRule).loadObjectType();
+
+        Map<String, String> canonical = ObjectActionType.resolveCanonicalParams(
+                List.of(mainRule, detailRule),
+                ObjectActionType.objectTypeReferences(List.of(mainRule, detailRule)));
+
+        Assert.assertEquals("共享属性归首个贡献规则（主表前缀）",
+                "chartxy_daily_report_report_id", canonical.get("report_id"));
+        Assert.assertEquals("chartxy_daily_report_report_date", canonical.get("report_date"));
+        Assert.assertEquals("副表独有属性用副表前缀",
+                "chartxy_daily_report_detail_owner_email", canonical.get("owner_email"));
+        Assert.assertEquals("主表独有属性", "chartxy_daily_report_department", canonical.get("department"));
+    }
+
+    /** null 规则与半配置规则（属性加载失败）跳过，其余规则照常参与。 */
+    @Test
+    public void canonicalParamsToleratesHalfConfiguredRules() {
+        ObjectActionType broken = Mockito.spy(objectRule("brokenRule", "ghost_type"));
+        Mockito.doThrow(new IllegalStateException("object type not found"))
+                .when(broken).loadObjectType();
+        ObjectActionType good = Mockito.spy(objectRule("goodRule", "user"));
+        Mockito.doReturn(objectTypeWith("name")).when(good).loadObjectType();
+
+        Map<String, String> canonical = ObjectActionType.resolveCanonicalParams(
+                Arrays.asList(null, broken, good), List.of("user"));
+
+        Assert.assertEquals("null 与半配置规则跳过，其余照常", "name", canonical.get("name"));
+        Assert.assertTrue("无规则输入返回空 map",
+                ObjectActionType.resolveCanonicalParams(null, null).isEmpty());
+    }
+
+    // ==================== C4：执行前覆盖校验（typo 硬拦截 + CREATE 未覆盖只告警） ====================
+
+    /**
+     * C4 硬拦截钉子：映射行 parameterRef 在运行期表单值里解析不到 → IllegalStateException
+     * 点名 {@code target ← ref}——参数池手工时代写错前缀一位就静默落 null、INSERT 缺列的 typo 面。
+     */
+    @Test
+    public void unresolvableMappingRefFailsHardNamingTargetAndRef() {
+        ObjectActionType rule = objectRule("createOrderDetail", "order_detail");
+        ((CreateObjectRule) rule.objectRule).propertyMappings =
+                List.of(mapping("id", "order_gost_id")); // 前缀写错一位的典型 typo
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("order_id", 7);
+        allValues.put("detail_owner_email", "x");
+
+        try {
+            ObjectActionType.validatePropertyCoverage(
+                    List.of(rule), allValues, List.of("order", "order_detail"));
+            Assert.fail("解析不到的映射 ref 必须硬拦截");
+        } catch (IllegalStateException failure) {
+            Assert.assertTrue("报错必须点名 target 与 typo ref：" + failure.getMessage(),
+                    failure.getMessage().contains("id ← order_gost_id"));
+            Assert.assertTrue("报错必须点名对象类型：" + failure.getMessage(),
+                    failure.getMessage().contains("order_detail"));
+        }
+    }
+
+    /**
+     * 引用全部可解析时不抛；CREATE 规则存在未覆盖属性只 WARN 不阻断
+     * （部分列插入是合法业务形态——副表先落主键列、其余列由后续流程补齐）。
+     */
+    @Test
+    public void resolvableRefsPassAndUncoveredCreateColumnsOnlyWarn() {
+        ObjectActionType rule = Mockito.spy(objectRule("createOrderDetail", "order_detail"));
+        Mockito.doReturn(objectTypeWith("id", "amount", "memo")).when(rule).loadObjectType();
+        ((CreateObjectRule) rule.objectRule).propertyMappings = List.of(mapping("id", "order_id"));
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("order_id", 7);
+        allValues.put("detail_amount", 1.5); // memo 无表单字段、无映射行 → 未覆盖，只 WARN
+
+        ObjectActionType.validatePropertyCoverage(
+                List.of(rule), allValues, List.of("order", "order_detail"));
+    }
+
+    /**
+     * Modify 规则同样参与 typo 拦截：SET 子句的映射行引用错参数同样静默失效。
+     */
+    @Test
+    public void modifyRuleTypoRefAlsoFailsHard() {
+        ObjectActionType rule = objectRule("modifyOrderDetail", "order_detail");
+        rule.objectRule = new ModifyObjectRule();
+        ((ModifyObjectRule) rule.objectRule).propertyMappings =
+                List.of(mapping("amount", "order_amount_typo"));
+
+        Map<String, Object> allValues = new LinkedHashMap<>();
+        allValues.put("detail_amount", 1.5);
+
+        try {
+            ObjectActionType.validatePropertyCoverage(
+                    List.of(rule), allValues, List.of("order", "order_detail"));
+            Assert.fail("Modify 的 typo ref 同样必须拦截");
+        } catch (IllegalStateException expected) {
+            Assert.assertTrue(expected.getMessage().contains("amount ← order_amount_typo"));
+        }
+    }
+
+    /**
+     * Delete / 非对象规则（含 null 条目）与 null 输入不参与校验——
+     * {@code TestMultiStepActionTransaction} 的 mock ActionType 天然跳过，存量事务契约不受影响。
+     */
+    @Test
+    public void deleteAndNonObjectRulesAndNullInputTolerated() {
+        ObjectActionType deleteRule = objectRule("deleteOrder", "order");
+        deleteRule.objectRule = new DeleteObjectRule();
+
+        ObjectActionType.validatePropertyCoverage(
+                Arrays.asList(deleteRule, Mockito.mock(ActionType.class), null),
+                new LinkedHashMap<>(), List.of("order"));
+        // null 输入兜底（第二个 null 显式按 Map 重载解析）
+        ObjectActionType.validatePropertyCoverage(null, (Map<String, Object>) null, null);
+    }
+
+    private static OntologyObjectType objectTypeWith(String... props) {
+        OntologyObjectType objectType = Mockito.mock(OntologyObjectType.class);
+        List<OntologyProperty> cols = new ArrayList<>();
+        for (String prop : props) {
+            OntologyProperty property = Mockito.mock(OntologyProperty.class);
+            Mockito.when(property.getName()).thenReturn(prop);
+            cols.add(property);
+        }
+        Mockito.when(objectType.getCols()).thenReturn(cols);
+        return objectType;
+    }
+
+    private static PropertyMappingConfig mapping(String target, String parameterRef) {
+        PropertyMappingConfig row = new PropertyMappingConfig();
+        row.target = target;
+        row.source = new FromParameterValueSource(parameterRef);
+        return row;
     }
 
     private static ObjectActionType objectRule(String ruleName, String objectType) {

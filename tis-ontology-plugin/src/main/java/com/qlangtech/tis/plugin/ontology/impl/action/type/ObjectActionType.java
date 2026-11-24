@@ -43,8 +43,10 @@ import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.AdapterRuleVisitor;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.CreateObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.FromParameterValueSource;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.ModifyObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
+import com.qlangtech.tis.plugin.ontology.impl.action.rule.PropertyMappingConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
 import com.qlangtech.tis.plugin.ontology.impl.linker.LinkReference;
@@ -53,6 +55,8 @@ import com.qlangtech.tis.plugin.ontology.impl.objtype.ObjectTypeBinding;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -366,7 +370,7 @@ public class ObjectActionType extends ActionType {
     }
 
     /**
-     * @param objectTypeRef  规则引用的对象类型
+     * @param objectTypeRef     规则引用的对象类型
      * @param allObjectTypeRefs 本 Action 全部对象规则引用的对象类型，见 {@link #objectTypeReferences(List)}
      */
     public static String namespacePrefix(String objectTypeRef, List<String> allObjectTypeRefs) {
@@ -403,14 +407,218 @@ public class ObjectActionType extends ActionType {
         Set<String> cols = objectType.getCols().stream()
                 .map(OntologyProperty::getName)
                 .collect(Collectors.toSet());
-        return scopeValues(getPluginPropertyVals(plugin), cols, allObjectTypeRefs);
+        Map<String, Object> allValues = getPluginPropertyVals(plugin);
+        Map<String, Object> scoped = scopeValues(allValues, cols, allObjectTypeRefs);
+        return mergePropertyMappings(objectRule, scoped, allValues, cols);
+    }
+
+    /**
+     * 把规则的 {@code propertyMappings} 解析结果合并进本命名空间的值（fill-gap 语义）。
+     *
+     * <p>表单已提供的字段优先，映射只补<b>缺失</b>的键——多对象类型 Action 里跨命名空间引用
+     * 正是这种场景：副表 {@code report_id} 没进参数池，映射行指向主表参数
+     * {@code <主表>_<report_id>}，因此参数查找必须用<b>未裁剪的全量表单值</b>（{@code allValues}），
+     * 不能用 {@code scoped}。不能反过来让映射覆盖表单值：存量配置里主表 {@code report_date}
+     * 既是必填表单参数又有 {@code CurrentTimeValueSource} 映射行，映射权威会把用户填的日期
+     * 冲成 {@code now()}。
+     *
+     * <p>{@link DeleteObjectRule} 没有 {@code propertyMappings} 字段，原样返回；
+     * {@link ModifyObjectRule} 同样受益——合并发生在 visitor 之前，
+     * {@code resolveRowIdentity} 也能吃到映射供给的 rid 参数。
+     *
+     * @param cols      本规则对象类型的属性名集合，越界的陈旧映射行丢弃，防止拼出未知列的 SQL
+     */
+    static Map<String, Object> mergePropertyMappings(OntologyActionRule rule,
+                                                     Map<String, Object> scoped,
+                                                     Map<String, Object> allValues,
+                                                     Set<String> cols) {
+        List<PropertyMappingConfig> mappings = null;
+        if (rule instanceof CreateObjectRule createRule) {
+            mappings = createRule.propertyMappings;
+        } else if (rule instanceof ModifyObjectRule modifyRule) {
+            mappings = modifyRule.propertyMappings;
+        }
+        if (mappings == null) {
+            return scoped;
+        }
+        for (Map.Entry<String, Object> entry
+                : OntologyActionRule.buildMappedValues(mappings, allValues).entrySet()) {
+            // 解析为 null 的行（如参数不存在）buildMappedValues 本就跳过；
+            // 只补 !containsKey 的键：表单字段存在但值为 null 时保持 null（"表单是唯一真相"现行语义）
+            if (cols.contains(entry.getKey()) && !scoped.containsKey(entry.getKey())) {
+                scoped.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return scoped;
+    }
+
+    /**
+     * 有序规则上按「属性名 → 首个贡献该属性的规则的命名空间参数名」解析 canonical 参数。
+     *
+     * <p>参数池 / 映射默认行的跨规则联动共用这一处事实源：副表与主表都有 {@code report_id} 时
+     * canonical 参数是主表的 {@code <主表前缀>report_id}——参数池候选据此标注「已由 … 提供」
+     * （{@code ActionParameterConfig} 聚合处）、映射默认行据此预置取值来源
+     * （{@code PropertyMappingConfig} 候选处）。
+     *
+     * <p>名字相同 ≠ 语义相同：联动产出的是<b>可覆盖的默认</b>而非硬约束，用户仍可在参数池
+     * 勾选本命名空间的独立参数——此时映射行自然失效，fill-gap 语义保证表单值优先。
+     *
+     * <p>每条规则的属性列表经 {@link #loadObjectType()} 现场加载，与候选生成同一线程上下文
+     * （调用方都在 descriptor 的 {@code getEnumableCandidateSet} 请求线程内）；半配置状态
+     * （对象类型未选 / 已删、上下文缺失）丢该规则的贡献但不抛，绝不阻断候选生成。
+     *
+     * @return 属性名 → canonical 参数名（首个贡献规则的前缀 + 属性名）。单对象类型 Action
+     *         前缀为空串、退化为裸属性名，与存量默认行逐字一致
+     */
+    public static Map<String, String> resolveCanonicalParams(List<ObjectActionType> orderedRules,
+                                                             List<String> allObjectTypeRefs) {
+        Map<String, String> canonical = new LinkedHashMap<>();
+        if (orderedRules == null) {
+            return canonical;
+        }
+        for (ObjectActionType rule : orderedRules) {
+            if (rule == null || StringUtils.isEmpty(rule.objectTypeReference)) {
+                continue;
+            }
+            String prefix = namespacePrefix(rule.objectTypeReference, allObjectTypeRefs);
+            try {
+                OntologyObjectType objectType = rule.loadObjectType();
+                if (objectType == null) {
+                    continue;
+                }
+                for (OntologyProperty col : objectType.getCols()) {
+                    canonical.putIfAbsent(col.getName(), prefix + col.getName());
+                }
+            } catch (RuntimeException e) {
+                // 半配置状态只丢这一条规则的贡献，其余规则照常参与
+            }
+        }
+        return canonical;
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(ObjectActionType.class);
+
+    /**
+     * 执行前覆盖校验（2026/11/24，执行链最后一道防线，调用点
+     * {@code DefaultOntologyAction#executeActionTypes} 头部、事务开启前 fail-fast）。
+     *
+     * <ul>
+     *   <li><b>映射行 typo 硬拦截</b>（Create 与 Modify 都参与）：映射行 {@code parameterRef}
+     *       在运行期表单值里解析不到同名参数 → IllegalStateException 点名 {@code target ← parameterRef}
+     *       ——参数池手工时代的典型 typo 面正是这里（共享字段手工引用主表前缀参数名，写错一位
+     *       就静默落 null、INSERT 缺列）；执行期 {@code resolveValue} 查的就是这张 map，
+     *       现在解析不到的将来也永远解析不到。</li>
+     *   <li><b>CREATE 未覆盖属性告警不阻断</b>：cols − (本命名空间表单参数 ∪ 映射 target)
+     *       非空 → WARN 点名。部分列插入是合法业务形态（先落主键列、其余列由后续流程补齐），
+     *       不做硬失败；Modify 的「表单有啥 SET 啥」现行语义不变，不参与覆盖告警。</li>
+     * </ul>
+     *
+     * <p>半配置规则（{@code loadObjectType} 失败）跳过覆盖告警但 typo 检查照做；
+     * Delete / 函数规则无映射行，天然不参与。
+     */
+    public static void validatePropertyCoverage(List<ActionType> actionTypes,
+                                                Describable<?> previewInstance,
+                                                List<String> allObjectTypeRefs) {
+        if (!hasPropertyMappings(actionTypes)) {
+            // 全部规则都无映射行（Delete / 函数规则等）：不读表单值直接放行——
+            // 事务契约测试的 mock ActionType / previewInstance 也在这条短路里天然跳过
+            return;
+        }
+        validatePropertyCoverage(actionTypes, getPluginPropertyVals(previewInstance), allObjectTypeRefs);
+    }
+
+    /** 是否存在带映射行的 Create/Modify 规则（无则校验整体跳过）。 */
+    private static boolean hasPropertyMappings(List<ActionType> actionTypes) {
+        if (actionTypes == null) {
+            return false;
+        }
+        for (ActionType actionType : actionTypes) {
+            if (actionType instanceof ObjectActionType objectRule) {
+                OntologyActionRule rule = objectRule.getRule();
+                if (rule instanceof CreateObjectRule createRule && createRule.propertyMappings != null) {
+                    return true;
+                }
+                if (rule instanceof ModifyObjectRule modifyRule && modifyRule.propertyMappings != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 覆盖校验纯静态内核（与表单实例解耦，便于单测）。
+     */
+    static void validatePropertyCoverage(List<ActionType> actionTypes,
+                                         Map<String, Object> allValues,
+                                         List<String> allObjectTypeRefs) {
+        if (actionTypes == null || allValues == null) {
+            return;
+        }
+        for (ActionType actionType : actionTypes) {
+            if (!(actionType instanceof ObjectActionType objectRule)) {
+                continue;
+            }
+            OntologyActionRule rule = objectRule.getRule();
+            List<PropertyMappingConfig> mappings = null;
+            if (rule instanceof CreateObjectRule createRule) {
+                mappings = createRule.propertyMappings;
+            } else if (rule instanceof ModifyObjectRule modifyRule) {
+                mappings = modifyRule.propertyMappings;
+            }
+            if (mappings == null) {
+                continue;
+            }
+            // typo 硬拦截：表单字段名 = 参数池 parameterId，执行期 resolveValue 查的正是这张 map
+            for (PropertyMappingConfig mapping : mappings) {
+                if (mapping.source instanceof FromParameterValueSource paramSource
+                        && !allValues.containsKey(paramSource.parameterRef)) {
+                    throw new IllegalStateException("映射行参数不存在（请检查参数名拼写，参数池中无此参数）:"
+                            + mapping.target + " ← " + paramSource.parameterRef
+                            + "，对象类型:" + objectRule.objectTypeReference);
+                }
+            }
+            if (!(rule instanceof CreateObjectRule)) {
+                continue;
+            }
+            OntologyObjectType objectType;
+            try {
+                objectType = objectRule.loadObjectType();
+            } catch (RuntimeException e) {
+                // 半配置规则跳过覆盖告警（typo 检查已照做；执行期会报对象类型加载失败）
+                continue;
+            }
+            if (objectType == null || objectType.getCols() == null) {
+                continue;
+            }
+            String prefix = namespacePrefix(objectRule.objectTypeReference, allObjectTypeRefs);
+            Set<String> cols = objectType.getCols().stream()
+                    .map(OntologyProperty::getName).collect(Collectors.toSet());
+            Set<String> covered = new java.util.HashSet<>();
+            for (String key : allValues.keySet()) {
+                if (key.startsWith(prefix) && cols.contains(key.substring(prefix.length()))) {
+                    covered.add(key.substring(prefix.length()));
+                }
+            }
+            for (PropertyMappingConfig mapping : mappings) {
+                if (cols.contains(mapping.target)) {
+                    covered.add(mapping.target);
+                }
+            }
+            Set<String> uncovered = new java.util.TreeSet<>(cols);
+            uncovered.removeAll(covered);
+            if (!uncovered.isEmpty()) {
+                LOG.warn("Action 规则[{}] 对象类型[{}] 存在未覆盖属性（INSERT 将不含这些列，部分列插入属合法形态可忽略）: {}",
+                        objectRule.ruleName, objectRule.objectTypeReference, uncovered);
+            }
+        }
     }
 
     /**
      * {@link #scopedPropertyVals} 的纯函数内核（与表单 / 对象类型解耦，便于单测）。
      *
-     * @param allValues      运行期表单的「字段名 → 值」
-     * @param cols           本对象类型的属性名集合
+     * @param allValues         运行期表单的「字段名 → 值」
+     * @param cols              本对象类型的属性名集合
      * @param allObjectTypeRefs 本 Action 全部对象类型引用，见 {@link #objectTypeReferences(List)}
      */
     Map<String, Object> scopeValues(Map<String, Object> allValues, Set<String> cols,
@@ -607,11 +815,14 @@ public class ObjectActionType extends ActionType {
                 // 由 ActionParameterConfig#label() 回落到带前缀的 parameterId，避免两个对象类型的
                 // 同名属性在参数池表格里显示成两行一模一样的「id」
                 config.parameterId = prefix + col.getName();
-                config.displayName = null;
+                config.displayName = StringUtils.defaultIfBlank(StringUtils.left(col.description, 6), col.getName());
             }
             config.order = order++;
             result.add(Pair.of(
-                    new Option(col.getName()).setChecked(selected.contains(config.parameterId)),
+                    // val 必须等于 config.identityValue()（即带前缀的 parameterId），
+                    // generate_target_instance 阶段是拿前端回送的 val 对 candidate 的
+                    // identityValue() 做 contains 过滤的，val 不一致会整批静默过滤成空
+                    new Option(col.getName(), config.parameterId).setChecked(selected.contains(config.parameterId)),
                     config
             ));
         }

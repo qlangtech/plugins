@@ -23,6 +23,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 import java.time.Duration;
@@ -53,6 +55,32 @@ public class DurationOfMinuteWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue == null ? null : defaultValue.toMinutes();
+    }
+
+    /**
+     * 生成时长校验：提交值是纯数字串（单位不在值里，见 {@code FormFieldType} 的
+     * DurationValProcessor），按本控件的分钟单位比对 {@link #min}~{@link #max}。
+     *
+     * <p>DURATION_OF_MINUTE 字段类型没有自带追加校验器（不同于 INT_NUMBER），格式守卫
+     * 是唯一一道拦截，非法串若放行会在落盘绑定 Duration 时才炸。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        if (this.min == null && this.max == null) {
+            // 上下界都没配置，无需生成校验方法
+            return;
+        }
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            script.addFieldErrorIf("!value.isLong()", "必须是整型数字");
+            script.startLine("long v = value.toLong()");
+            if (this.min != null) {
+                script.addFieldErrorIf("v < " + this.min.toMinutes(), "不能小于" + this.min.toMinutes() + "分钟");
+            }
+            if (this.max != null) {
+                script.addFieldErrorIf("v > " + this.max.toMinutes(), "不能大于" + this.max.toMinutes() + "分钟");
+            }
+            script.startLine("return true");
+        });
     }
 
     @Override

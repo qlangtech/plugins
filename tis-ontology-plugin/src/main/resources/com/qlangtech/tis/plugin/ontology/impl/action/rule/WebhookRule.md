@@ -69,17 +69,16 @@ issueType=${issueType}&tableName=${tableName}&affectedRows=${affectedRows}
 
 ## retryOnFailure
 
-**失败重试机制**
+**失败重试策略**
 
-- **false（默认）**: 不重试
-  - 请求失败后立即返回错误
-  - 适用于幂等性要求高的场景
-  
-- **true**: 自动重试
-  - 失败后延迟重试一次
-  - 适用于网络抖动或临时故障场景
+多态插件 `RetryPolicy`，由两个实现表达开关两档：
 
-**重试策略**：
+| 策略插件 | 说明 |
+|---|---|
+| `NoRetryPolicy`（不重试，默认） | 请求失败后立即返回错误，适用于幂等性要求高的场景 |
+| `AutoRetryPolicy`（自动重试） | 失败后延迟重试一次，适用于网络抖动或临时故障场景 |
+
+**自动重试的固定策略**（策略常量挂在 `AutoRetryPolicy` 上）：
 - 重试次数：1 次
 - 重试延迟：2 秒
 - 仅在网络错误或 5xx 状态码时重试

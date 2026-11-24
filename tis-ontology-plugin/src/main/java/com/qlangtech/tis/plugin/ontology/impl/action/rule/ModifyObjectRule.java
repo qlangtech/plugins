@@ -44,8 +44,8 @@ public class ModifyObjectRule extends OntologyActionRule {
      *
      * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
      */
-//    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
-//            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
     public List<PropertyMappingConfig> propertyMappings;
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})

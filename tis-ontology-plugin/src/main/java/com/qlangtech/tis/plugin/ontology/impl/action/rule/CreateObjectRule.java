@@ -19,9 +19,10 @@
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 创建对象规则
@@ -38,8 +39,8 @@ public class CreateObjectRule extends OntologyActionRule {
      *
      * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
      */
-//    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
-//            desClazz = PropertyMappingConfig.class, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
+            desClazz = PropertyMappingConfig.class, validate = {})
     public List<PropertyMappingConfig> propertyMappings;
 
     //    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {})
@@ -54,32 +55,6 @@ public class CreateObjectRule extends OntologyActionRule {
     public String identityValue() {
         return "create_object";
     }
-
-//    @Override
-//    public void execute(Describable<?> plugin) {
-//        Map<String, Object> parameters = getParameterValues(plugin);
-//
-//        // 1. 构建对象属性值
-//        Map<String, Object> objectProperties = buildMappedValues(propertyMappings, parameters);
-//
-//        // 2. 生成或获取对象 RID
-//        String objectRid = generateRid ? generateObjectRid() : getStringParameter(parameters, "rid");
-//        if (objectRid == null) {
-//            throw new IllegalArgumentException("未指定对象 RID 且未启用自动生成");
-//        }
-//
-//        // 3. 创建对象（实际实现需要调用 Ontology 服务）
-//        // TODO: 集成 Ontology 对象创建服务
-//        // ontologyObjectService.createObject(domain, targetObjectType, objectRid, objectProperties);
-//    }
-
-    /**
-     * 生成对象 RID
-     */
-    private String generateObjectRid() {
-        return UUID.randomUUID().toString().replace("-", "");
-    }
-
     @Override
     public void accept(AdapterRuleVisitor visitor) {
         visitor.visit(this);
@@ -87,17 +62,9 @@ public class CreateObjectRule extends OntologyActionRule {
 
     @TISExtension
     public static class DefaultDescriptor extends BaseRuleDescriptor {
-
         @Override
         public RuleType getRuleType() {
             return RuleType.CREATE_OBJECT;
         }
-
-//        @Override
-//        public Map<String, Object> getExtractProps(boolean forAIPromote) {
-//            Map<String, Object> props = super.getExtractProps(forAIPromote);
-//            props.put("test","prop2");
-//            return props;
-//        }
     }
 }

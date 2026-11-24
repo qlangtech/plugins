@@ -24,6 +24,8 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.MemorySize;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 /**
@@ -52,6 +54,32 @@ public class MemorySizeOfByteWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue == null ? null : defaultValue.getBytes();
+    }
+
+    /**
+     * 生成内存大小校验：提交值是纯数字串（单位不在值里，见 {@code FormFieldType} 的
+     * MemorySizeValProcessor），按本控件的字节单位比对 {@link #min}~{@link #max}。
+     *
+     * <p>MEMORY_SIZE_OF_BYTE 字段类型没有自带追加校验器（不同于 INT_NUMBER），格式守卫
+     * 是唯一一道拦截，非法串若放行会在落盘绑定 MemorySize 时才炸。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        if (this.min == null && this.max == null) {
+            // 上下界都没配置，无需生成校验方法
+            return;
+        }
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            script.addFieldErrorIf("!value.isLong()", "必须是整型数字");
+            script.startLine("long v = value.toLong()");
+            if (this.min != null) {
+                script.addFieldErrorIf("v < " + this.min.getBytes(), "不能小于" + this.min.getBytes() + "字节");
+            }
+            if (this.max != null) {
+                script.addFieldErrorIf("v > " + this.max.getBytes(), "不能大于" + this.max.getBytes() + "字节");
+            }
+            script.startLine("return true");
+        });
     }
 
     @Override

@@ -1,0 +1,7 @@
+{
+  "webhookUrl": {
+    "label": "Webhook 地址",
+    "placeholder": "https://example.com/hook",
+    "help": "接收通知推送的回调 URL"
+  }
+}

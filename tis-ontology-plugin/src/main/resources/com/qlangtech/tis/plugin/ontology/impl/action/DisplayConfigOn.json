@@ -1,0 +1,14 @@
+{
+  "compactVerticalLayout": {
+    "label": "紧凑布局",
+    "help": "表单 label 与控件采用紧凑垂直布局（label 在上、控件在下、间距最小化）",
+    "dftVal": true
+  },
+  "formWidth": {
+    "label": "表单宽度",
+    "help": "运行时表单模态框的显示宽度（像素），必须是正整数且不能大于900",
+    "dftVal": 600,
+    "placeholder": "如：600",
+    "max": 900
+  }
+}

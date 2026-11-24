@@ -12,5 +12,10 @@
     "label": "自定义成功消息",
     "help": "Action 执行成功后的提示文案。选「off」用框架缺省提示，选「default」后填写自定义文案",
     "dftVal": "off"
+  },
+  "displayConfig": {
+    "label": "表单显示配置",
+    "help": "运行时表单的显示设置。选「off」用框架缺省布局与宽度，选「on」自定义紧凑布局与宽度",
+    "dftVal": "off"
   }
 }

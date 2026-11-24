@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ontology.OntologyDomain;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.util.DefaultDescriptorsJSON;
 import com.qlangtech.tis.util.DescriptorsMeta;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -94,7 +95,7 @@ public final class ActionFormDescriptorBuilder {
      * fastjson 序列化回传、从不回写，复用是安全的。
      */
     public static DescriptorsMeta build(OntologyPluginMeta paramMeta, ActionParameters params) {
-        String hash = contentHash(paramMeta,params);
+        String hash = contentHash(paramMeta, params);
         DescriptorsMeta cached = PREVIEW_CACHE.getIfPresent(hash);
         if (cached != null) {
             return cached;
@@ -166,6 +167,7 @@ public final class ActionFormDescriptorBuilder {
         String extraPropsJson = generateExtraPropsJson(parameters);
 
         Descriptor<?> descriptor = compileDescriptor(groovySource);
+        // descriptor.getPropertyTypes(false);
         injectExtraProps(descriptor, extraPropsJson);
         DescriptorsMeta meta = serialize(descriptor);
         return new BuildResult(groovySource, extraPropsJson, meta, descriptor);
@@ -183,7 +185,9 @@ public final class ActionFormDescriptorBuilder {
      * 显示名由注入的 label 承载。
      */
     private static String generateGroovySource(OntologyPluginMeta paramMeta, List<ActionParameterConfig> parameters) {
-
+        if (CollectionUtils.isEmpty(parameters)) {
+            throw new IllegalArgumentException("parameters can not be be empty");
+        }
         StringBuilder sb = new StringBuilder(512);
         sb.append("package ").append(PKG).append("\n\n");
         sb.append("import com.qlangtech.tis.extension.Describable\n");
@@ -191,6 +195,9 @@ public final class ActionFormDescriptorBuilder {
         sb.append("import com.qlangtech.tis.plugin.annotation.FormField\n");
         sb.append("import com.qlangtech.tis.plugin.annotation.FormFieldType\n");
         sb.append("import com.qlangtech.tis.plugin.annotation.Validator\n");
+        // 校验方法（validateXxx）签名所需的两类：4 参精确类型见 Descriptor#createValidateMap
+        sb.append("import com.alibaba.citrus.turbine.Context\n");
+        sb.append("import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler\n");
         sb.append("import java.util.List\n");
         sb.append("import java.util.Map\n\n");
         sb.append("class ").append(CLASS_NAME).append(" implements Describable<").append(CLASS_NAME).append("> {\n\n");
@@ -220,6 +227,18 @@ public final class ActionFormDescriptorBuilder {
         sb.append("        }\n\n");
         // descriptor 级 extractProps（与 injectExtraProps 注入的「按字段」extra-props 是两套机制），
         // 序列化进 descriptor.extractProps，供前端读取。
+
+        /**
+         * 生成各 param 的校验逻辑：控件往同一个 buffer 里追加 validateXxx 方法
+         * （签名注册契约见 {@code Descriptor#createValidateMap}），indent=8 与
+         * Desc 类成员在下方 sb 里的 8 空格缩进对齐。
+         */
+        ValidateScriptBuffer blockScript = new ValidateScriptBuffer();
+        for (ActionParameterConfig paramCfg : parameters) {
+            paramCfg.generateParamVaildateScript(blockScript);
+        }
+        sb.append(blockScript.getContent());
+
         sb.append("        @Override\n");
         sb.append("        public Map<String, Object> getExtractProps(boolean forAIPromote) {\n");
         sb.append("            Map<String, Object> props = super.getExtractProps(forAIPromote);\n");

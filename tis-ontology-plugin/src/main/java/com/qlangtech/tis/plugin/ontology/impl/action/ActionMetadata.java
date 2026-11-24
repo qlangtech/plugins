@@ -24,6 +24,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyUtils;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.Optional;
@@ -74,6 +77,11 @@ public class ActionMetadata extends OneStepOfMultiSteps {
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
             return Optional.of(new ActionRuleSetter.Desc());
+        }
+
+
+        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return OntologyUtils.validateIdentityDuplicate(msgHandler, context, Optional.of(fieldName), Ontology.OntologyEnum.Action, value);
         }
 
         @Override

@@ -20,11 +20,13 @@ package com.qlangtech.tis.plugin.ontology.impl.action.widget.impl;
 
 import com.alibaba.fastjson.JSONObject;
 
-import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.TextAreaContentMode;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 import org.apache.commons.lang3.StringUtils;
 
@@ -56,28 +58,6 @@ public class TextAreaWidget extends UserInputWidgetType {
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public TextAreaContentMode contentMode;
 
-    public enum TextAreaContentMode implements DescriptorUseableShortComment {
-
-        VelocityTemplate("text/velocity", "Velocity 模板，支持变量占位与循环") //
-        , Json("application/ld+json", "JSON 格式，适用于结构化数据")//
-        , Xml("application/xml", "XML 格式，适用于标记语言数据")//
-        , Yaml("text/yaml", "YAML 格式，适用于配置类数据")//
-        , markdown("text/markdown", "Markdown 格式，适用于富文本描述");
-
-        public final String codeMirrorToken;
-        private final String shortComment;
-
-        private TextAreaContentMode(String codeMirrorToken, String shortComment) {
-            this.codeMirrorToken = codeMirrorToken;
-            this.shortComment = shortComment;
-        }
-
-        @Override
-        public String shortComment() {
-            return this.shortComment;
-        }
-    }
-
     @Override
     public FormFieldType getFormFieldType() {
         return FormFieldType.TEXTAREA;
@@ -86,6 +66,14 @@ public class TextAreaWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue;
+    }
+
+    /**
+     * 无运行时取值约束：{@code rows}/{@code contentMode} 是展示形态配置，不构成取值合法性
+     * 边界（内容是否为合法 JSON/XML 等属于业务层校验，不在生成期铺开），故不生成校验方法。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
     }
 
     @Override

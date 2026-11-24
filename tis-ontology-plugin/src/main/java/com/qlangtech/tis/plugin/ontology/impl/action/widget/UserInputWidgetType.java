@@ -25,6 +25,8 @@ import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -103,6 +105,15 @@ public abstract class UserInputWidgetType implements Describable<UserInputWidget
         return result;
     }
 
+    /**
+     * 为本参数生成 groovy 校验方法 {@code validate<ParamId>}。
+     *
+     * <p>签名收拢到 {@link ValidateScriptBuffer}：它提供 {@code validateMethod}/
+     * {@code addFieldError} 等 helper，validateXxx 的注册契约见
+     * {@code Descriptor#createValidateMap}（4 参精确类型 + primitive boolean 返回）。
+     * 各子类必须实现：按自身配置生成运行时校验逻辑；确无取值约束的控件给出空实现并注明原因。
+     */
+    public abstract void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig);
 //    /**
 //     * 带 {@code validators} 字段的子类共用的候选校验规则。
 //     *

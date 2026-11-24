@@ -47,21 +47,18 @@
 - 如果参数不存在，占位符保持原样
 - 参数值会调用 `toString()` 方法转换为字符串
 
-## notificationType
+## notifyChannel
 
-**通知渠道类型**
+**通知渠道**
 
-支持的通知类型：
-- **email**（默认）: 邮件通知
-- **sms**: 短信通知
-- **webhook**: Webhook 回调
-- **im**: 即时消息（如钉钉、企业微信）
+渠道类型与收件人地址强相关，因此收敛为多态插件 `NotifyChannel`，由具体渠道子类自带收件人字段与格式校验：
 
-不同类型对 `recipient` 参数的要求：
-- `email`: 邮箱地址（如 `user@example.com`）
-- `sms`: 手机号码（如 `13800138000`）
-- `webhook`: Webhook URL
-- `im`: 用户 ID 或群组 ID
+| 渠道插件 | 说明 | 收件人字段 | 校验规则 |
+|---|---|---|---|
+| `EmailNotifyChannel`（邮件） | 邮件通知 | `emailAddress` 邮箱地址（如 `user@example.com`） | 非空 + Email 格式 |
+| `SmsNotifyChannel`（短信） | 短信通知 | `phoneNumber` 手机号码（如 `13800138000`） | 非空 + 手机号格式 |
+| `WebhookNotifyChannel`（Webhook） | Webhook 回调 | `webhookUrl` Webhook URL | 非空 + URL 格式 |
+| `ImNotifyChannel`（即时消息） | 即时消息（如钉钉、企业微信） | `imTarget` 用户 ID 或群组 ID | 非空（各 IM 平台 ID 规则不统一，无格式校验） |
 
 ## priority
 

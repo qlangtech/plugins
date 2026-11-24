@@ -23,6 +23,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,6 +57,14 @@ public class InputTextWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue;
+    }
+
+    /**
+     * 无运行时取值约束：{@code defaultValue} 是预填值、{@code placeholder} 是引导文案，
+     * 都不构成取值合法性边界，故不生成校验方法。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
     }
 
     @Override

@@ -1,0 +1,7 @@
+{
+  "phoneNumber": {
+    "label": "手机号码",
+    "placeholder": "13800138000",
+    "help": "接收通知的手机号码"
+  }
+}

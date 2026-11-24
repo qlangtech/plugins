@@ -23,6 +23,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 /**
@@ -50,6 +52,27 @@ public class PasswordWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return null;
+    }
+
+    /**
+     * 生成长度校验：提交值长度必须落在 {@link #minLength}~{@link #maxLength} 内，
+     * 越界时 {@code addFieldError} 并返回 false。上下限各自判空，只配一端就只生成一端。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        if (this.minLength == null && this.maxLength == null) {
+            // 长度上下限都没配置，无需生成校验方法
+            return;
+        }
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            if (this.minLength != null) {
+                script.addFieldErrorIf("value.length() < " + this.minLength, "长度不能小于" + this.minLength);
+            }
+            if (this.maxLength != null) {
+                script.addFieldErrorIf("value.length() > " + this.maxLength, "长度不能大于" + this.maxLength);
+            }
+            script.startLine("return true");
+        });
     }
 
     @Override

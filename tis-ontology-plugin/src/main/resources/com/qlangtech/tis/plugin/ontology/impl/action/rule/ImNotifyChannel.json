@@ -1,0 +1,7 @@
+{
+  "imTarget": {
+    "label": "接收目标",
+    "placeholder": "user-001 / group-1001",
+    "help": "IM 用户 ID 或群组 ID（如钉钉、企业微信）"
+  }
+}

@@ -27,40 +27,48 @@ import java.io.File;
 import java.util.Optional;
 
 /**
- * Action 参数池（{@link ActionParameterConfig}）专用的 store getter。
+ * Action 参数池（{@link ActionParameters}）专用的 store getter。
+ *
+ * <p><b>store 的插件类型是宿主 {@link ActionParameters} 而非元素 {@link ActionParameterConfig}</b>：
+ * 参数池是「一个 Action 一份」的宿主级持久化（文件 {@code params/<actionName>}，见
+ * {@link ActionParameters#getActionParamsStore}），写入方传的是
+ * {@code new Descriptor.ParseDescribable(this)}（宿主实例），读取方
+ * {@code ActionParameters#loadParameters} 把 {@code getPlugin()} 强转回宿主
+ * （{@code getPlugin()} 在 store 里多于一个插件时直接抛异常，天然单实例语义）。
+ * 曾把它声明成元素类型 {@code ActionParameterConfig}，结果
+ * {@code PluginStore.setPlugins()} 的 {@code pluginClass.isAssignableFrom(instance.getClass())}
+ * 校验必炸：「plugin must be type of …ActionParameterConfig, but now is …ActionParameters」。
+ * 宿主级落盘还保证 {@code submitButton}/{@code successMessage} 两个宿主字段随参数池一起持久化 ——
+ * 若只存元素列表它们会丢。
  *
  * <p><b>为什么不能直接用 {@code Ontology.OntologyEnum.Action.storeKeyGetter}</b>：
  * 它的 {@code getPluginType()} 沿用父类实现，返回硬编码的 {@code ONTOLOGY.extensionPoint}
- * （即 {@code Ontology.class}），而 {@code PluginStore.setPlugins()} 会拿它做
- * {@code pluginClass.isAssignableFrom(instance.getClass())} 校验 ——
- * {@link ActionParameterConfig} 不是 {@code Ontology} 的子类，落盘时会直接抛
- * 「plugin must be type of …Ontology」。读侧同理：{@code PluginStore} 按同一个
- * pluginClass 反序列化。核心工程无需改动，{@code BaiscAssistStoreGetter} 已经
- * 把该值收敛成 {@code getPluginType()} 虚方法，本类只是把它指回元素类型。
+ * （即 {@code Ontology.class}），而 {@code ActionParameters} 不在 {@code Ontology} 的继承链上。
+ * 核心工程无需改动，{@code BaiscAssistStoreGetter} 已经把该值收敛成 {@code getPluginType()} 虚方法。
  *
  * <p>同一手法的既有先例：{@code WorkshopVariable.WorkshopVariableStoreGetter}。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/13
- * @see ActionParameterConfig
+ * @see ActionParameters
  */
-public class ActionParamStoreGetter extends BaiscAssistStoreGetter<ActionParameterConfig> {
+public class ActionParamStoreGetter extends BaiscAssistStoreGetter<ActionParameters> {
 
     @Override
-    protected Class<ActionParameterConfig> getPluginType() {
-        return ActionParameterConfig.class;
+    protected Class<ActionParameters> getPluginType() {
+        return ActionParameters.class;
     }
 
     @Override
     public File getAssistRootDir(String ontologyName, Optional<String> subModule) {
         // 参数池目录仍挂在 action-type 下：<ontologyDomainDir>/action-type/<subModule>，
-        // 其中 subModule 形如 params/<parameterId>。目录约定与 Action 系保持一致，
+        // 其中 subModule 形如 params/<actionName>。目录约定与 Action 系保持一致，
         // 只是插件类型不同，所以这里直接委托回去而不另立一套路径。
         return Ontology.OntologyEnum.Action.storeKeyGetter.getAssistRootDir(ontologyName, subModule);
     }
 
     @Override
-    public IPluginStore<ActionParameterConfig> getPluginStore(OntologyPluginMeta pluginMeta, Optional<String> subModule) {
+    public IPluginStore<ActionParameters> getPluginStore(OntologyPluginMeta pluginMeta, Optional<String> subModule) {
         // 读侧同样要拿到真实 store：父类在 isUpdate()/shallPersistence() 都为假时返回
         // noSaveStore，其 getPlugin() 恒为 null，参数池会被静默读空。
         return super.getPluginStore(pluginMeta.setPersistence(), subModule);

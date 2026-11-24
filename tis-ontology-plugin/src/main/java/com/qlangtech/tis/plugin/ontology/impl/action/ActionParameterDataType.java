@@ -47,6 +47,8 @@ public abstract class ActionParameterDataType implements Describable<ActionParam
      */
     public abstract String getTypeIdentifier();
 
+    public abstract void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig);
+
     /**
      * 聚合属性插件的基础描述符，所有子类的 Descriptor 必须继承此类。
      */

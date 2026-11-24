@@ -207,8 +207,8 @@ public class TestActionRuleSetterPersistence {
     /**
      * 落盘一个两步（Metadata + Rules）的存量 Action —— 正是 Rules 页签单独编辑时磁盘上的形态。
      *
-     * <p>刻意只给两步：真实存量配置就是这个形状，{@code readResolve}/{@code setRuleSetter}
-     * 的补长逻辑全靠它才会被走到。
+     * <p>刻意只给两步：真实存量配置就是这个形状（与当前声明的步数一致），
+     * {@code setRuleSetter} 的「下标越界才补长」逻辑对它恒为空转，替换只动第 2 槽。
      */
     private void seedAction(String actionName, String ruleName) {
         StepSeededAction action = new StepSeededAction();

@@ -26,9 +26,12 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.WidgetOptionConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.qlangtech.tis.extension.Descriptor.KEY_ENUM_EXTERNAL_PROPERTY_ALLOW_CUSTOMIZE_INPUT;
@@ -75,6 +78,41 @@ public class EnumWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue;
+    }
+
+    /**
+     * 生成候选项成员校验：提交值必须是 {@link #options} 中某个候选的 {@code val}。
+     *
+     * <p>两种配置下不生成：
+     * <ol>
+     *   <li>{@link #allowCustomizeInput} 为 true——本就允许输入选项外的自定义值；</li>
+     *   <li>{@code showStyle} 为 {@link EnumFieldMode#MULTIPLE}——此时字段值是整条 JSON
+     *       数组文本（如 {@code ["a","b"]}），单值成员校验不适用（数组成员校验留待后续）。</li>
+     * </ol>
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        if (options == null || options.isEmpty()) {
+            // 候选清单为空，无从校验成员归属
+            return;
+        }
+        if (Boolean.TRUE.equals(this.allowCustomizeInput)) {
+            // 允许自定义输入时，选项外的取值也是合法的
+            return;
+        }
+        if (this.showStyle == EnumFieldMode.MULTIPLE) {
+            return;
+        }
+        List<String> vals = new ArrayList<>(this.options.size());
+        for (WidgetOptionConfig cfg : this.options) {
+            if (cfg != null) {
+                vals.add(cfg.val);
+            }
+        }
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            script.rejectIfNotIn(vals, "必须是候选项之一");
+            script.startLine("return true");
+        });
     }
 
     @Override

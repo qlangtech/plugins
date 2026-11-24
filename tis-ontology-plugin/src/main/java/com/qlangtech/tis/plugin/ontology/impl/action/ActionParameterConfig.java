@@ -98,6 +98,10 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
      */
     private static final Set<String> GROOVY_RESERVED = Set.of("as", "def", "in", "trait");
 
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource) {
+        dataType.generateParamVaildateScript(pluginGroovySource, this);
+    }
+
     /**
      * 该参数在生成的 groovy 里用作字段名。
      *
@@ -303,7 +307,6 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
 
         @Override
         protected List<Pair<Option, IPluginStore.MultiDescribleElement>> getEnumableCandidateSet(ParseDescribable<?> describable) {
-            List<Pair<Option, IPluginStore.MultiDescribleElement>> target = Lists.newArrayList();
             OntologyPluginMeta pluginMeta = OntologyPluginMeta.createPluginMeta();
             OntologyAction action = Ontology.loadActionDetail(pluginMeta.getDomain(), pluginMeta.getPluginIdVal());
             if (!(action instanceof DefaultOntologyAction ontologyAction)) {
@@ -315,16 +318,65 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
             //
             // 某条规则还处于半配置状态时（如链接类型未选）其 getEnumableCandidateSet 会主动返回空列表，
             // 因此这里不需要为「坏规则」做额外容错。
-            Map<String, Pair<Option, ActionParameterConfig>> merged = new LinkedHashMap<>();
             ActionParameters previewInstance = describable.getInstance();
             // 规则可能指向不同的对象类型；多于一个时对象规则的参数名按 <对象类型>_<属性名> 隔离，
             // 否则两个对象类型都有的同名列会在参数池里被 putIfAbsent 合并成一行、执行时互相覆盖
             List<String> objectTypeRefs = ObjectActionType.objectTypeReferences(ontologyAction.getActionTypes());
-            for (ActionType actionType : ontologyAction.getActionTypes()) {
+            return collectCandidates(ontologyAction.getActionTypes(), previewInstance, objectTypeRefs).stream()
+                    .map((p)
+                            -> Pair.of(p.getLeft(), (IPluginStore.MultiDescribleElement) p.getRight())).toList();
+        }
+
+        /**
+         * 候选聚合（包级静态以便单测）：按规则顺序收集各规则的参数候选。
+         *
+         * <p>多对象类型 Action 下两个对象类型的共享属性（如主/副表都有 {@code report_id}）
+         * 会各自贡献一行候选——后贡献规则的那行在 Option 展示名上标注「已由 &lt;canonical 参数名&gt; 提供」，
+         * 提示用户不必重复勾选：表单字段去重靠 canonical 参数 + 映射行补值
+         * （见 {@code ObjectActionType#mergePropertyMappings}）。
+         *
+         * <p>标注改的是 Option 展示名而非候选实例本身：勾选确认后候选实例会原样持久化，
+         * 改 {@code displayName} 会把说明性文字固化进落盘配置。勾选态仍取自已持久化的参数池
+         * （存量勾选不被强改），未持久化时默认不勾。
+         */
+        static List<Pair<Option, ActionParameterConfig>> collectCandidates(List<ActionType> actionTypes,
+                                                                           ActionParameters previewInstance,
+                                                                           List<String> objectTypeRefs) {
+            Map<String, Pair<Option, ActionParameterConfig>> merged = new LinkedHashMap<>();
+            Map<String, String> canonicalParams = ObjectActionType.resolveCanonicalParams(
+                    actionTypes.stream()
+                            .filter((t) -> t instanceof ObjectActionType)
+                            .map((t) -> (ObjectActionType) t)
+                            .toList(),
+                    objectTypeRefs);
+            for (ActionType actionType : actionTypes) {
                 for (Pair<Option, ActionParameterConfig> candidate
                         : actionType.getEnumableCandidateSet(previewInstance, objectTypeRefs)) {
                     ActionParameterConfig config = candidate.getRight();
-                    merged.putIfAbsent(config.identityValue(), candidate);
+                    if (merged.containsKey(config.identityValue())) {
+                        // 后出现的规则保留先出现那一行的候选与勾选态（既有 putIfAbsent 语义）
+                        continue;
+                    }
+                    merged.put(config.identityValue(), candidate);
+                    // 共享属性标注只适用于带命名空间前缀的对象规则候选：非对象规则的参数、
+                    // 单对象类型 Action（canonical 参数名与参数名逐字相同）都不标注
+                    if (!(actionType instanceof ObjectActionType objectRule)) {
+                        continue;
+                    }
+                    String prefix = ObjectActionType.namespacePrefix(objectRule.objectTypeReference, objectTypeRefs);
+                    if (StringUtils.isEmpty(prefix)
+                            || !config.parameterId.startsWith(prefix)
+                            || config.parameterId.length() <= prefix.length()) {
+                        continue;
+                    }
+                    String canonical = canonicalParams.get(config.parameterId.substring(prefix.length()));
+                    if (canonical != null && !canonical.equals(config.parameterId)) {
+                        Option opt = candidate.getLeft();
+                        merged.put(config.identityValue(), Pair.of(
+                                new Option(opt.getName() + "（已由 " + canonical + " 提供）", opt.getValue())
+                                        .setChecked(opt.isChecked()),
+                                config));
+                    }
                 }
             }
             // 各规则只知道自己内部的 0..n 序号，合并后重新按出现顺序排列，
@@ -333,10 +385,7 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
             for (Pair<Option, ActionParameterConfig> candidate : merged.values()) {
                 candidate.getRight().order = order++;
             }
-
-            return merged.values().stream()
-                    .map((p) -> Pair.of(p.getLeft(), (IPluginStore.MultiDescribleElement) p.getRight())).toList();
-            // ObjectActionType actionType = describable.getInstance();
+            return List.copyOf(merged.values());
         }
 
         @Override
@@ -345,7 +394,7 @@ public class ActionParameterConfig implements Describable<ActionParameterConfig>
             // （MultiDescribleElementSetSelector.MultiDescribleElementDescriptor#getExtractProps）。
             // 列出的键必须都是本类上真实存在的 @FormField。
             return Lists.newArrayList( //
-                    new ColConfig("parameterId", 15).setClickable()
+                    new ColConfig("parameterId", 25).setClickable()
                     , new ColConfig("displayName", 15)
                     // , new ColConfig("order", 5)
                     , new ColConfig("dataType"));

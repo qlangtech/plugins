@@ -4,6 +4,7 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.impl.PropValRewrite;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
@@ -11,11 +12,13 @@ import com.qlangtech.tis.plugin.ontology.impl.action.widget.impl.InputTextWidget
 import com.qlangtech.tis.runtime.module.misc.FormVaildateType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
+import org.apache.commons.collections.MapUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -40,9 +43,9 @@ public class TestActionFormDescriptorBuilder {
     public void testExplicitDescriptorRoundTrip() throws Exception {
         OntologyPluginMeta meta = OntologyPluginMeta.create(Ontology.OntologyEnum.Action, "temp_exec_domain")
                 .setPluginIdVal("temp_action");
-
+        final String propertyPriority = "newPriority";
         ActionParameterConfig param = new ActionParameterConfig();
-        param.parameterId = "newPriority";
+        param.parameterId = propertyPriority;
         param.displayName = "新优先级";
         param.order = 0;
         PrimitiveDataType dataType = new PrimitiveDataType();
@@ -59,13 +62,20 @@ public class TestActionFormDescriptorBuilder {
         Assert.assertEquals(ActionFormDescriptorBuilder.class.getPackageName() + ".ActionFormPreview",
                 formDesc.getId());
 
+
+        Map<String, IPropertyType> propertyTypes = formDesc.getPropertyTypes(false);
+
+        Assert.assertTrue("propertyTypes can not be empty", MapUtils.isNotEmpty(propertyTypes));
+        Assert.assertNotNull(propertyTypes.get(propertyPriority));
+
+        //
         JSONObject body = JSONObject.parseObject("""
                 {"impl":"com.qlangtech.tis.plugin.ontology.impl.action.ActionFormPreview",
                  "vals":{"newPriority":{"_primaryVal":"P1"}}}
                 """);
 
         AttrValMap attrVals = AttrValMap.parseDescribableMap(
-                Optional.empty(), body, formDesc, PropValRewrite.dftRewrite());
+                Optional.empty(), body, formDesc, PropValRewrite.dftRewrite(), java.util.function.Function.identity());
         Assert.assertSame(formDesc, attrVals.descriptor);
 
         DefaultContext context = new DefaultContext();

@@ -23,6 +23,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 /**
@@ -53,6 +55,22 @@ public class DateWidget extends UserInputWidgetType {
     @Override
     public Object getDefaultValue() {
         return defaultValue;
+    }
+
+    /**
+     * 生成日期格式校验：提交值必须是严格 {@code yyyy-MM-dd}（lenient 关闭且整串消费，
+     * 拒绝「2026-01-01xxx」这类尾部夹带垃圾的输入）。
+     *
+     * <p>刻意不用 {@link #displayFormat} 做校验 pattern——它没有写入 extra-props
+     * （{@code appendExtraPropsJson} 为空），是纯展示配置；运行时前端 DATE 组件固定按
+     * {@code yyyy-MM-dd} 提交，拿它校验会误杀合法值。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            script.rejectInvalidDate("yyyy-MM-dd", "日期不符合格式yyyy-MM-dd");
+            script.startLine("return true");
+        });
     }
 
     @Override

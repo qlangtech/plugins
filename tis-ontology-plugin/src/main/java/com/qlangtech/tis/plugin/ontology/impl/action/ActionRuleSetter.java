@@ -45,6 +45,13 @@ import java.util.Optional;
  * 配置 Action 的执行规则。<b>一个 Action 可以组合多条规则</b>（Palantir:
  * "Action types can include combinations of Ontology rules."），列表顺序即执行顺序；
  * 非法组合由 {@link RuleCombinationValidator} 在提交时拦截。
+ * <p>
+ * 建模指导：Action 是唯一的执行与 UI 单元 —— 提交时整个 Action 的全部规则在一个事务内
+ * 原子执行，前端只呈现一颗提交按钮（删除类 Action 呈现为红色危险按钮，见
+ * {@code DefaultOntologyAction#resolveDrivingRule} 危险优先推导），不存在「只执行某条规则」。
+ * 因此<b>独立的删除操作请单独建 Action</b>（只含 DeleteObjectRule）；同主键
+ * create+delete 组合虽合法（按顺序编译），但通常没有业务意义。混合规则的合法场景是
+ * 跨对象类型的组合业务操作（如「下单」= 建订单 + 建订单行 + 改库存）。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/6
@@ -153,14 +160,22 @@ public class ActionRuleSetter extends OneStepOfMultiSteps {
             return Step.Step2;
         }
 
+        /**
+         * 向导到本步为止：Parameters / SubmissionCriteria 两步已按 Palantir 文档移出主流程，
+         * 改由 Action 详情页 Form 页签维护（参数池落 {@code params/<actionName>.xml}，
+         * 提交条件后续接入同页签）。声明清单 {@code DefaultDesc#getStepDescriptionList()}
+         * 已收敛为两步，这里若仍链到 Step3，前端向导会按每步保存响应里的
+         * {@code nextStepPluginDesc} 继续走进 Step3/Step4，最终宿主保存提交 4 步，
+         * 被 {@code OntologyAction#setSteps} 的长度断言拦下 —— 步骤链与声明清单必须同源。
+         */
         @Override
         public Optional<BasicDesc> nextPluginDesc(OneStepOfMultiSteps current) {
-            return Optional.of(new ActionParameters.Desc());
+            return Optional.empty();
         }
 
         @Override
         public boolean isFinalStep() {
-            return false;
+            return true;
         }
 
         @Override

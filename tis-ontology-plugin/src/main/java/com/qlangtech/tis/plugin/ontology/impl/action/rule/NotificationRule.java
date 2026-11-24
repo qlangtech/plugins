@@ -35,8 +35,23 @@ import java.util.Map;
  */
 public class NotificationRule extends OntologyActionRule {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String recipientParam = "recipient";
+    /**
+     * 通知渠道配置。
+     *
+     * <p>多态字段，TIS 自动检测为嵌套子表单，前端渲染为渠道选择 + 对应表单。
+     * 渠道类型与收件人地址强相关，所以收件人字段收进 {@link NotifyChannel} 各子类，
+     * 由子类自带格式校验（邮箱/手机号/URL）。
+     *
+     * <p>四个可选实现：
+     * <ul>
+     *   <li>{@link EmailNotifyChannel} - 邮件通知</li>
+     *   <li>{@link SmsNotifyChannel} - 短信通知</li>
+     *   <li>{@link WebhookNotifyChannel} - Webhook 回调</li>
+     *   <li>{@link ImNotifyChannel} - 即时消息</li>
+     * </ul>
+     */
+    @FormField(ordinal = 0, validate = {Validator.require})
+    public NotifyChannel notifyChannel;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String titleTemplate;
@@ -45,10 +60,7 @@ public class NotificationRule extends OntologyActionRule {
     public String messageTemplate;
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {})
-    public String notificationType = "email";
-
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {})
-    public String priority = "normal";
+    public NotifyPriority priority = NotifyPriority.normal;
 
     @Override
     public RuleType getRuleType() {
@@ -64,38 +76,14 @@ public class NotificationRule extends OntologyActionRule {
 //    public void execute(Describable<?> plugin) {
 //        Map<String, Object> parameters = getParameterValues(plugin);
 //
-//        // 1. 获取收件人
-//        String recipient = getStringParameter(parameters, recipientParam);
-//        if (recipient == null) {
-//            throw new IllegalArgumentException("未找到参数: " + recipientParam);
-//        }
-//
-//        // 2. 解析模板，替换参数
+//        // 1. 解析模板，替换参数
 //        String title = replaceTemplate(titleTemplate, parameters);
 //        String message = replaceTemplate(messageTemplate, parameters);
 //
-//        // 3. 发送通知（实际实现需要调用通知服务）
+//        // 2. 发送通知（实际实现需要调用通知服务）
 //        // TODO: 集成通知服务
-//        // notificationService.sendNotification(notificationType, recipient, title, message, priority);
+//        // notifyChannel.send(title, message, priority);
 //    }
-
-    /**
-     * 替换模板中的参数占位符
-     * 格式: ${paramName}
-     */
-    private String replaceTemplate(String template, Map<String, Object> parameters) {
-        if (template == null) {
-            return "";
-        }
-
-        String result = template;
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            if (entry.getValue() != null) {
-                result = result.replace("${" + entry.getKey() + "}", entry.getValue().toString());
-            }
-        }
-        return result;
-    }
 
     @Override
     public void accept(AdapterRuleVisitor visitor) {

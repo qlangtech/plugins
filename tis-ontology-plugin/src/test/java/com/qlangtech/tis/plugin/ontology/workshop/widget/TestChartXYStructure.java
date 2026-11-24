@@ -904,7 +904,7 @@ public class TestChartXYStructure {
     body.put("vals", vals);
 
     AttrValMap attrVals = AttrValMap.parseDescribableMap(
-      java.util.Optional.empty(), body, descriptor, PropValRewrite.dftRewrite());
+      java.util.Optional.empty(), body, descriptor, PropValRewrite.dftRewrite(), java.util.function.Function.identity());
     IControlMsgHandler msgHandler = Mockito.mock(IControlMsgHandler.class);
     Descriptor.PluginValidateResult result = attrVals.validateWithScope(
       msgHandler, new DefaultContext(), 0, 0, FormVaildateType.STRICT);

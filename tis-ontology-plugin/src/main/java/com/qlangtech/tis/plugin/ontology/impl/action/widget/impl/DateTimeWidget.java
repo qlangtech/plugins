@@ -24,6 +24,8 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
+import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
 import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 
 import java.util.Date;
@@ -59,6 +61,23 @@ public class DateTimeWidget extends UserInputWidgetType {
         }
         //  "dateTimeFormat": "yyyy-MM-dd HH:mm:ss"
         return getDisplayFormat().format(defaultValue);
+    }
+
+    /**
+     * 生成日期时间格式校验：提交值必须严格符合 {@link #displayFormat} 的 pattern
+     * （未配置回落 {@code yyyy-MM-dd HH:mm:ss}）。
+     *
+     * <p>与运行时提交契约对齐：{@code appendExtraPropsJson} 会把 pattern 写进 extra-props 的
+     * {@code dateTimeFormat} key，前端 DateTime 组件按它格式化提交值，
+     * {@code FormFieldType.DateTime} 的输入处理器也按它解析。
+     */
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        String pattern = this.getDisplayFormat().pattern;
+        pluginGroovySource.validateMethod(paramConfig.requireFieldName(), (script) -> {
+            script.rejectInvalidDate(pattern, "日期时间不符合格式" + pattern);
+            script.startLine("return true");
+        });
     }
 
     @Override

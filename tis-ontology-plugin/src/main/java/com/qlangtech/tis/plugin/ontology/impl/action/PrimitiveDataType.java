@@ -38,7 +38,6 @@ import com.qlangtech.tis.plugin.ontology.impl.action.widget.UserInputWidgetType;
 public class PrimitiveDataType extends ActionParameterDataType {
 
 
-
     /**
      * 参数在 Action 表单上用什么控件收集（供后续前端渲染使用）。
      *
@@ -64,6 +63,15 @@ public class PrimitiveDataType extends ActionParameterDataType {
     @Override
     public String getTypeIdentifier() {
         return "primitive:" + (widgetType == null ? "unset" : widgetType.getFormFieldType().name());
+    }
+
+    @Override
+    public void generateParamVaildateScript(ValidateScriptBuffer pluginGroovySource, ActionParameterConfig paramConfig) {
+        if (widgetType == null) {
+            // 半配置的参数行（控件尚未选择）静默跳过，同 ObjectReferenceDataType 的空 override 语义
+            return;
+        }
+        widgetType.generateParamVaildateScript(pluginGroovySource,paramConfig);
     }
 
     @TISExtension

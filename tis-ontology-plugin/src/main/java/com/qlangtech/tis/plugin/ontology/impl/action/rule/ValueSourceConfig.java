@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.util.Map;
 
@@ -45,9 +46,13 @@ public abstract class ValueSourceConfig implements Describable<ValueSourceConfig
      * 解析取值。
      *
      * @param parameters Action 参数池的运行时取值
+     * @param colType    映射行 target 对应的对象属性类型，可为 null——映射行 target 不是对象属性时
+     *                   （如未来的函数形参链路）拿不到类型。仅时间语义的来源消费它
+     *                   （{@link CurrentTimeValueSource} 据此决定返回 {@code java.sql.Date} 还是
+     *                   {@code java.sql.Timestamp}），其余来源忽略。
      * @return 解析出的值；如果无法解析（如参数不存在）返回 null
      */
-    public abstract Object resolveValue(Map<String, Object> parameters);
+    public abstract Object resolveValue(Map<String, Object> parameters, OntologyType colType);
 
     public static abstract class BaseDescriptor extends Descriptor<ValueSourceConfig> {
     }

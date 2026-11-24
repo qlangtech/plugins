@@ -19,11 +19,18 @@
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.util.Map;
 
 /**
  * 取当前时间。
+ *
+ * <p>按映射行 target 的属性类型直出 JDBC 能正确序列化的类型：TIMESTAMP 属性返回
+ * {@link java.sql.Timestamp}，其余（含类型未知，保守默认）返回 {@link java.sql.Date}
+ * ——直接返回毫秒时间戳 Long 的话，{@link java.sql.PreparedStatement#setObject(int, Object)}
+ * 会把数字原样发给 MySQL，DATE 列直接报 {@code Incorrect date value}；而
+ * {@code java.sql.Date} 绑 DATETIME/TIMESTAMP 列时分秒会被补零。日期格式化按 JVM 默认时区。
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/12
@@ -31,8 +38,9 @@ import java.util.Map;
 public class CurrentTimeValueSource extends ValueSourceConfig {
 
     @Override
-    public Object resolveValue(Map<String, Object> parameters) {
-        return System.currentTimeMillis();
+    public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
+        long now = System.currentTimeMillis();
+        return colType == OntologyType.TIMESTAMP ? new java.sql.Timestamp(now) : new java.sql.Date(now);
     }
 
     @TISExtension

@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.util.Map;
 
@@ -40,7 +41,8 @@ public class LiteralValueSource extends ValueSourceConfig {
     public String literalValue;
 
     @Override
-    public Object resolveValue(Map<String, Object> parameters) {
+    public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
+        // colType 忽略：字面量原样返回，日期字符串由 MySQL 现场解析
         return literalValue;
     }
 

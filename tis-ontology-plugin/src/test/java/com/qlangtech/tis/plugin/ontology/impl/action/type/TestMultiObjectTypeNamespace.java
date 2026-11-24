@@ -4,6 +4,7 @@ import com.qlangtech.tis.plugin.annotation.ValidateRule;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.CreateObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.CurrentTimeValueSource;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
@@ -173,7 +174,9 @@ public class TestMultiObjectTypeNamespace {
         scoped.put("remark", "ok");
 
         Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
-                rule.objectRule, scoped, allValues, Set.of("id", "amount", "owner_email", "remark"));
+                rule.objectRule, scoped, allValues,
+                Map.of("id", OntologyType.LONG, "amount", OntologyType.DECIMAL,
+                        "owner_email", OntologyType.STRING, "remark", OntologyType.STRING));
 
         Assert.assertEquals("表单已有字段保持原值", "baisui", merged.get("owner_email"));
         Assert.assertEquals("跨命名空间映射补入共享字段的值", 99, merged.get("id"));
@@ -200,7 +203,8 @@ public class TestMultiObjectTypeNamespace {
         scoped.put("report_date", "2026-11-24");
 
         Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
-                rule.objectRule, scoped, allValues, Set.of("report_id", "report_date"));
+                rule.objectRule, scoped, allValues,
+                Map.of("report_id", OntologyType.STRING, "report_date", OntologyType.DATE));
 
         Assert.assertEquals("表单已填的日期不得被映射行冲成当前时间", "2026-11-24", merged.get("report_date"));
     }
@@ -218,7 +222,8 @@ public class TestMultiObjectTypeNamespace {
         scoped.put("owner_email", "x");
 
         Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
-                rule.objectRule, scoped, allValues, Set.of("id", "owner_email"));
+                rule.objectRule, scoped, allValues,
+                Map.of("id", OntologyType.LONG, "owner_email", OntologyType.STRING));
 
         Assert.assertEquals("缺失参数不产生键", 1, merged.size());
     }
@@ -235,7 +240,7 @@ public class TestMultiObjectTypeNamespace {
         Map<String, Object> scoped = new LinkedHashMap<>();
 
         Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
-                rule.objectRule, scoped, allValues, Set.of("id"));
+                rule.objectRule, scoped, allValues, Map.of("id", OntologyType.LONG));
 
         Assert.assertEquals("越界 target 丢弃、合法 target 补入", 1, merged.size());
         Assert.assertEquals(7, merged.get("id"));
@@ -251,7 +256,7 @@ public class TestMultiObjectTypeNamespace {
 
         Assert.assertSame("Delete 规则无映射，map 原样返回", scoped,
                 ObjectActionType.mergePropertyMappings(
-                        deleteRule.objectRule, scoped, new LinkedHashMap<>(), Set.of("rid")));
+                        deleteRule.objectRule, scoped, new LinkedHashMap<>(), Map.of("rid", OntologyType.LONG)));
 
         ObjectActionType userRule = objectRule("createUser", "user");
         CreateObjectRule createUser = (CreateObjectRule) userRule.objectRule;
@@ -263,7 +268,8 @@ public class TestMultiObjectTypeNamespace {
         createUser.propertyMappings = List.of(row);
 
         Map<String, Object> merged = ObjectActionType.mergePropertyMappings(
-                userRule.objectRule, new LinkedHashMap<>(), new LinkedHashMap<>(), Set.of("created_by"));
+                userRule.objectRule, new LinkedHashMap<>(), new LinkedHashMap<>(),
+                Map.of("created_by", OntologyType.STRING));
         Assert.assertEquals("单对象类型下固定字面量映射生效", "system", merged.get("created_by"));
     }
 
@@ -331,7 +337,7 @@ public class TestMultiObjectTypeNamespace {
             Assert.fail("解析不到的映射 ref 必须硬拦截");
         } catch (IllegalStateException failure) {
             Assert.assertTrue("报错必须点名 target 与 typo ref：" + failure.getMessage(),
-                    failure.getMessage().contains("id ← order_gost_id"));
+                    failure.getMessage().contains("id <- order_gost_id"));
             Assert.assertTrue("报错必须点名对象类型：" + failure.getMessage(),
                     failure.getMessage().contains("order_detail"));
         }
@@ -373,7 +379,7 @@ public class TestMultiObjectTypeNamespace {
                     List.of(rule), allValues, List.of("order", "order_detail"));
             Assert.fail("Modify 的 typo ref 同样必须拦截");
         } catch (IllegalStateException expected) {
-            Assert.assertTrue(expected.getMessage().contains("amount ← order_amount_typo"));
+            Assert.assertTrue(expected.getMessage().contains("amount <- order_amount_typo"));
         }
     }
 

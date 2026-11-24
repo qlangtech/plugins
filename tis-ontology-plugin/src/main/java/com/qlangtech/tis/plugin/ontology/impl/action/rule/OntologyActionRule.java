@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.manage.common.PropertyPlaceholderHelper;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -100,17 +101,21 @@ public abstract class OntologyActionRule implements Describable<OntologyActionRu
      *
      * @param mappings   映射行，可为 null（函数可以无入参）
      * @param parameters Action 参数池的运行时取值（多对象类型 Action 下 key 是带命名空间前缀的全名）
+     * @param colTypes   本规则对象类型的「属性名 → 类型」，供时间语义的来源决定产出类型
+     *                   （如 {@code CurrentTimeValueSource}）；键缺失/get 为 null 时来源走保守默认
      * @return 目标字段到取值的映射；解析结果为 null 时该行被跳过（如参数不存在）
      */
     public static Map<String, Object> buildMappedValues(List<PropertyMappingConfig> mappings,
-                                                        Map<String, Object> parameters) {
+                                                        Map<String, Object> parameters,
+                                                        Map<String, OntologyType> colTypes) {
         Map<String, Object> result = new java.util.HashMap<>();
         if (mappings == null) {
             return result;
         }
         for (PropertyMappingConfig m : mappings) {
             if (m.source != null) {
-                Object value = m.source.resolveValue(parameters);
+                Object value = m.source.resolveValue(parameters,
+                        colTypes == null ? null : colTypes.get(m.target));
                 if (value != null) {
                     result.put(m.target, value);
                 }

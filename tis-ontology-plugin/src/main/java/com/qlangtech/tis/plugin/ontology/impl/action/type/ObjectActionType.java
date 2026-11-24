@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.ds.JDBCConnection;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.OntologyValueType;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
@@ -66,6 +67,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -409,7 +411,7 @@ public class ObjectActionType extends ActionType {
                 .collect(Collectors.toSet());
         Map<String, Object> allValues = getPluginPropertyVals(plugin);
         Map<String, Object> scoped = scopeValues(allValues, cols, allObjectTypeRefs);
-        return mergePropertyMappings(objectRule, scoped, allValues, cols);
+        return mergePropertyMappings(objectRule, scoped, allValues, resolveColTypes(objectType));
     }
 
     /**
@@ -426,12 +428,14 @@ public class ObjectActionType extends ActionType {
      * {@link ModifyObjectRule} 同样受益——合并发生在 visitor 之前，
      * {@code resolveRowIdentity} 也能吃到映射供给的 rid 参数。
      *
-     * @param cols      本规则对象类型的属性名集合，越界的陈旧映射行丢弃，防止拼出未知列的 SQL
+     * @param colTypes  本规则对象类型的「属性名 → 类型」（键集合即属性名集合），越界的陈旧映射行
+     *                  丢弃，防止拼出未知列的 SQL；类型同时供时间语义的来源产出正确 JDBC 类型
+     *                  （见 {@code ValueSourceConfig#resolveValue}）
      */
     static Map<String, Object> mergePropertyMappings(OntologyActionRule rule,
                                                      Map<String, Object> scoped,
                                                      Map<String, Object> allValues,
-                                                     Set<String> cols) {
+                                                     Map<String, OntologyType> colTypes) {
         List<PropertyMappingConfig> mappings = null;
         if (rule instanceof CreateObjectRule createRule) {
             mappings = createRule.propertyMappings;
@@ -442,10 +446,10 @@ public class ObjectActionType extends ActionType {
             return scoped;
         }
         for (Map.Entry<String, Object> entry
-                : OntologyActionRule.buildMappedValues(mappings, allValues).entrySet()) {
+                : OntologyActionRule.buildMappedValues(mappings, allValues, colTypes).entrySet()) {
             // 解析为 null 的行（如参数不存在）buildMappedValues 本就跳过；
             // 只补 !containsKey 的键：表单字段存在但值为 null 时保持 null（"表单是唯一真相"现行语义）
-            if (cols.contains(entry.getKey()) && !scoped.containsKey(entry.getKey())) {
+            if (colTypes.containsKey(entry.getKey()) && !scoped.containsKey(entry.getKey())) {
                 scoped.put(entry.getKey(), entry.getValue());
             }
         }
@@ -573,9 +577,9 @@ public class ObjectActionType extends ActionType {
             for (PropertyMappingConfig mapping : mappings) {
                 if (mapping.source instanceof FromParameterValueSource paramSource
                         && !allValues.containsKey(paramSource.parameterRef)) {
-                    throw new IllegalStateException("映射行参数不存在（请检查参数名拼写，参数池中无此参数）:"
-                            + mapping.target + " ← " + paramSource.parameterRef
-                            + "，对象类型:" + objectRule.objectTypeReference);
+                    throw new IllegalStateException("mapped parameter not found (check the parameter name spelling, no such parameter in the action parameter pool): "
+                            + mapping.target + " <- " + paramSource.parameterRef
+                            + ", objectType:" + objectRule.objectTypeReference);
                 }
             }
             if (!(rule instanceof CreateObjectRule)) {
@@ -689,6 +693,23 @@ public class ObjectActionType extends ActionType {
             values.put(entry.getKey(), pp.getVal(false, plugin));
         }
         return values;
+    }
+
+    /**
+     * 「属性名 → 类型」。共享属性的类型引用（{@code SharedPropertyTypeRef}）要查 plugin store
+     * 现场解析，半配置状态可能抛——逐列 try/catch 记 null（取值处按「类型未知」保守处理），
+     * 不让类型解析阻断 SQL 执行。
+     */
+    static Map<String, OntologyType> resolveColTypes(OntologyObjectType objectType) {
+        Map<String, OntologyType> colTypes = new HashMap<>();
+        for (OntologyProperty col : objectType.getCols()) {
+            try {
+                colTypes.put(col.getName(), col.parseOntologyType());
+            } catch (Throwable e) {
+                colTypes.put(col.getName(), null);
+            }
+        }
+        return colTypes;
     }
 
     /**

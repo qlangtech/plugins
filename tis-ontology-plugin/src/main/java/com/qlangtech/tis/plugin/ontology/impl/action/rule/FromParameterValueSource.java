@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
+import com.qlangtech.tis.plugin.ontology.OntologyType;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
@@ -65,7 +66,8 @@ public class FromParameterValueSource extends ValueSourceConfig {
     public String parameterRef;
 
     @Override
-    public Object resolveValue(Map<String, Object> parameters) {
+    public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
+        // colType 忽略：表单值原样返回，日期字符串由 MySQL 现场解析
         return parameters.get(parameterRef);
     }
 

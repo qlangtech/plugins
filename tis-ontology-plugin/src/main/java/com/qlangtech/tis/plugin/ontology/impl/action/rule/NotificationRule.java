@@ -22,7 +22,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -70,6 +72,19 @@ public class NotificationRule extends OntologyActionRule {
     @Override
     public String identityValue() {
         return "notification";
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        // 渠道是多态字段，半配置（未选渠道）时为 null，跳过该对不让整个 literia 抛
+        if (this.notifyChannel != null) {
+            literia.add(new UDFDesc("notifyChannel", this.notifyChannel.getLiteria()));
+        }
+        literia.add(new UDFDesc("titleTemplate", this.titleTemplate));
+        literia.add(new UDFDesc("messageTemplate", this.messageTemplate));
+        literia.add(new UDFDesc("priority", this.priority == null ? null : this.priority.name()));
+        return literia;
     }
 
 //    @Override

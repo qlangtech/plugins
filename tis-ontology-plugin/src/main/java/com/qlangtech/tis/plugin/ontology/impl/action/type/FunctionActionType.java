@@ -18,9 +18,11 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.FunctionBackedRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
@@ -43,6 +45,19 @@ public class FunctionActionType extends ActionType {
 
     @FormField(ordinal = 0, validate = {Validator.require})
     public FunctionBackedRule functionRule;
+
+    /**
+     * 本类别没有对象/链接引用那样的锚点对，直接下发规则 literia（含 ruleType 标签）；
+     * 规则半配置（未选）时返回空列表。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> desc = Lists.newArrayList();
+        if (this.functionRule != null) {
+            desc.addAll(this.functionRule.getLiteria());
+        }
+        return desc;
+    }
 
     @Override
     public RuleGroup getRuleGroup() {

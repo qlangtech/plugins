@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyLinker;
@@ -95,6 +96,18 @@ public class LinkActionType extends ActionType {
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public OntologyActionRule linkRule;
+
+    /**
+     * 链接类型引用作锚点对，规则 literia（含 ruleType 标签）随后；规则半配置（未选）时跳过。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> desc = Lists.newArrayList(new UDFDesc("linkTypeReference", this.linkTypeReference));
+        if (this.linkRule != null) {
+            desc.addAll(this.linkRule.getLiteria());
+        }
+        return desc;
+    }
 
     /**
      * 把运行时表单翻译成对对象表 / 连接表的读写。

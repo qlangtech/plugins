@@ -23,6 +23,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+
+import java.util.List;
 
 /**
  * 即时消息通知渠道（如钉钉、企业微信）。
@@ -40,6 +43,11 @@ public class ImNotifyChannel extends NotifyChannel {
      */
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String imTarget;
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("imTarget", this.imTarget));
+    }
 
     @TISExtension
     public static class DftDescriptor extends BaseDescriptor implements DescriptorUseableShortComment {

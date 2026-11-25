@@ -29,6 +29,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDBReservedKeys;
 import com.qlangtech.tis.plugin.ds.JDBCConnection;
@@ -99,6 +100,13 @@ public class ObjectActionType extends ActionType {
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String objectTypeReference;
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> desc = Lists.newArrayList(new UDFDesc(OntologyObjectType.KEY_OBJECT_TYPE, objectTypeReference));
+        desc.addAll(objectRule.getLiteria());
+        return desc;
+    }
 
     /**
      * @see CreateObjectRule
@@ -306,6 +314,7 @@ public class ObjectActionType extends ActionType {
      */
     private static final String KEY_DELETE_CONFIRMED = "deleteConfirmed";
 
+
     /**
      * 定位一行的条件：列名、取值的参数名、取值。
      *
@@ -428,9 +437,9 @@ public class ObjectActionType extends ActionType {
      * {@link ModifyObjectRule} 同样受益——合并发生在 visitor 之前，
      * {@code resolveRowIdentity} 也能吃到映射供给的 rid 参数。
      *
-     * @param colTypes  本规则对象类型的「属性名 → 类型」（键集合即属性名集合），越界的陈旧映射行
-     *                  丢弃，防止拼出未知列的 SQL；类型同时供时间语义的来源产出正确 JDBC 类型
-     *                  （见 {@code ValueSourceConfig#resolveValue}）
+     * @param colTypes 本规则对象类型的「属性名 → 类型」（键集合即属性名集合），越界的陈旧映射行
+     *                 丢弃，防止拼出未知列的 SQL；类型同时供时间语义的来源产出正确 JDBC 类型
+     *                 （见 {@code ValueSourceConfig#resolveValue}）
      */
     static Map<String, Object> mergePropertyMappings(OntologyActionRule rule,
                                                      Map<String, Object> scoped,
@@ -472,7 +481,7 @@ public class ObjectActionType extends ActionType {
      * （对象类型未选 / 已删、上下文缺失）丢该规则的贡献但不抛，绝不阻断候选生成。
      *
      * @return 属性名 → canonical 参数名（首个贡献规则的前缀 + 属性名）。单对象类型 Action
-     *         前缀为空串、退化为裸属性名，与存量默认行逐字一致
+     * 前缀为空串、退化为裸属性名，与存量默认行逐字一致
      */
     public static Map<String, String> resolveCanonicalParams(List<ObjectActionType> orderedRules,
                                                              List<String> allObjectTypeRefs) {
@@ -531,7 +540,9 @@ public class ObjectActionType extends ActionType {
         validatePropertyCoverage(actionTypes, getPluginPropertyVals(previewInstance), allObjectTypeRefs);
     }
 
-    /** 是否存在带映射行的 Create/Modify 规则（无则校验整体跳过）。 */
+    /**
+     * 是否存在带映射行的 Create/Modify 规则（无则校验整体跳过）。
+     */
     private static boolean hasPropertyMappings(List<ActionType> actionTypes) {
         if (actionTypes == null) {
             return false;

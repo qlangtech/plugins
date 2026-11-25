@@ -18,10 +18,13 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.manage.common.PropertyPlaceholderHelper;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.lang.reflect.Field;
@@ -42,7 +45,21 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/6
  */
-public abstract class OntologyActionRule implements Describable<OntologyActionRule> {
+public abstract class OntologyActionRule implements Describable<OntologyActionRule>, PluginLiteria {
+
+    /**
+     * 规则 literia 的规则类型标签键名，各子类 {@code getLiteria()} 的首对都是它，
+     * 让前端 tuples 视图（udf-desc-literia）无需回查上层上下文即可独立可读。
+     */
+    public static final String KEY_RULE_TYPE = "ruleType";
+
+    /**
+     * 规则 literia 的首行：规则类型标签。各子类实现 {@link #getLiteria()} 时以此为起点
+     * 追加自己的字段对，保证「首对必是 ruleType」的契约只写一处。
+     */
+    protected List<UDFDesc> initLiteria() {
+        return Lists.newArrayList(new UDFDesc(KEY_RULE_TYPE, getRuleType().name()));
+    }
 
     public static List<BaseRuleDescriptor> descFilter(List<BaseRuleDescriptor> descs, String ruleType) {
         final RuleGroup ruleGroup = RuleGroup.valueOf(ruleType);

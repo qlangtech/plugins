@@ -18,10 +18,12 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
@@ -48,6 +50,18 @@ public class InterfaceActionType extends ActionType {
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public OntologyActionRule interfaceRule;
+
+    /**
+     * 接口引用作锚点对，规则 literia（含 ruleType 标签）随后；规则半配置（未选）时跳过。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> desc = Lists.newArrayList(new UDFDesc("interfaceReference", this.interfaceReference));
+        if (this.interfaceRule != null) {
+            desc.addAll(this.interfaceRule.getLiteria());
+        }
+        return desc;
+    }
 
     @Override
     public RuleGroup getRuleGroup() {

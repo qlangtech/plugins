@@ -20,6 +20,9 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+
+import java.util.List;
 
 /**
  * 不重试（重试开关的 off 档）。
@@ -31,6 +34,15 @@ import com.qlangtech.tis.extension.TISExtension;
  * @date 2026/11/23
  */
 public class NoRetryPolicy extends RetryPolicy {
+
+    /**
+     * 零字段实现，literia 只有策略语义标签：渠道/策略的「类型」信息不在数据里，
+     * 不写的话 tuples 视图里 {@code retryOnFailure: []} 键后头空空如也。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("policy", "不重试"));
+    }
 
     @TISExtension
     public static class DftDescriptor extends BaseDescriptor implements DescriptorUseableShortComment {

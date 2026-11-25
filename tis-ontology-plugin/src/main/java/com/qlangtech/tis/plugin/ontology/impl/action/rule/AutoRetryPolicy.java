@@ -20,8 +20,10 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.time.Duration;
+import java.util.List;
 
 /**
  * 自动重试（重试开关的 on 档）。
@@ -48,6 +50,12 @@ public class AutoRetryPolicy extends RetryPolicy {
      * 重试前的延迟时长。
      */
     public static final Duration RETRY_DELAY = Duration.ofSeconds(2);
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("policy", "自动重试") //
+                , new UDFDesc("maxRetries", String.valueOf(MAX_RETRIES)));
+    }
 
     @TISExtension
     public static class DftDescriptor extends BaseDescriptor implements DescriptorUseableShortComment {

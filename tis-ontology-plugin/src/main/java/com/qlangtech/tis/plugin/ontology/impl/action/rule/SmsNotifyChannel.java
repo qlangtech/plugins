@@ -23,6 +23,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+
+import java.util.List;
 
 /**
  * 短信通知渠道。
@@ -39,6 +42,11 @@ public class SmsNotifyChannel extends NotifyChannel {
      */
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.mobile})
     public String phoneNumber;
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("phoneNumber", this.phoneNumber));
+    }
 
     @TISExtension
     public static class DftDescriptor extends BaseDescriptor implements DescriptorUseableShortComment {

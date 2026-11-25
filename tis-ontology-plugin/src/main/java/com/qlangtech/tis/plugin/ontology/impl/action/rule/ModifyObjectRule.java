@@ -18,10 +18,12 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.Collections;
 
@@ -61,6 +63,13 @@ public class ModifyObjectRule extends OntologyActionRule {
         return "modify_object";
     }
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        literia.add(new UDFDesc(KEY_RID_PARAMETER_NAME, this.ridParameterName));
+        literia.add(new UDFDesc(PropertyMappingConfig.KEY_MAPPINGS, PropertyMappingConfig.literia(this.propertyMappings)));
+        return literia;
+    }
 
     @Override
     public void accept(AdapterRuleVisitor visitor) {

@@ -22,8 +22,11 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.Collections;
+
+import java.util.List;
 
 /**
  * 删除对象规则
@@ -54,6 +57,14 @@ public class DeleteObjectRule extends OntologyActionRule {
         return "delete_object";
     }
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        literia.add(new UDFDesc(ModifyObjectRule.KEY_RID_PARAMETER_NAME, this.ridParameterName));
+        literia.add(new UDFDesc("cascadeDelete", String.valueOf(this.cascadeDelete)));
+        literia.add(new UDFDesc("confirmationRequired", String.valueOf(this.confirmationRequired)));
+        return literia;
+    }
 
     @Override
     public void accept(AdapterRuleVisitor visitor) {

@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 
 /**
  * 通知渠道抽象基类。
@@ -42,7 +43,7 @@ import com.qlangtech.tis.extension.Descriptor;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/11/23
  */
-public abstract class NotifyChannel implements Describable<NotifyChannel> {
+public abstract class NotifyChannel implements Describable<NotifyChannel>, PluginLiteria {
 
     public static abstract class BaseDescriptor extends Descriptor<NotifyChannel> {
     }

@@ -19,8 +19,10 @@
 package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,6 +43,14 @@ public class CurrentTimeValueSource extends ValueSourceConfig {
     public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
         long now = System.currentTimeMillis();
         return colType == OntologyType.TIMESTAMP ? new java.sql.Timestamp(now) : new java.sql.Date(now);
+    }
+
+    /**
+     * 本来源没有可描述的字段，给一个语义标签让 tuples 视图知道这行取的是当前时间。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("currentTime", "当前时间"));
     }
 
     @TISExtension

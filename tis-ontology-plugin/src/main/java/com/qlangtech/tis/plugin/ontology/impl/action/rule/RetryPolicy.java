@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 
 /**
  * Webhook 调用失败的重试策略。
@@ -38,7 +39,7 @@ import com.qlangtech.tis.extension.Descriptor;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/11/23
  */
-public abstract class RetryPolicy implements Describable<RetryPolicy> {
+public abstract class RetryPolicy implements Describable<RetryPolicy>, PluginLiteria {
 
     public static abstract class BaseDescriptor extends Descriptor<RetryPolicy> {
     }

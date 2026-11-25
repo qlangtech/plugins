@@ -26,6 +26,8 @@ import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.List;
 
@@ -41,7 +43,7 @@ import java.util.List;
  * @date 2026/10/11
  */
 public class HttpHeaderConfig implements Describable<HttpHeaderConfig>,
-        IPluginStore.MultiDescribleElement {
+        IPluginStore.MultiDescribleElement, PluginLiteria {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
@@ -55,6 +57,25 @@ public class HttpHeaderConfig implements Describable<HttpHeaderConfig>,
     @Override
     public String identityValue() {
         return this.name;
+    }
+
+    /**
+     * 一行请求头的描述：头名作键、头值原样作值（值里的 {@code ${param}} 占位符保持未展开形态，
+     * 描述的是配置而非运行时结果）。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc(this.name, this.value));
+    }
+
+    /**
+     * 请求头列表 → 描述列表，null / 空按空列表处理。供 {@link WebhookRule} 共用。
+     */
+    public static List<UDFDesc> literia(List<HttpHeaderConfig> headers) {
+        if (headers == null || headers.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return headers.stream().map(HttpHeaderConfig::getLiteria).flatMap(List::stream).toList();
     }
 
     @TISExtension

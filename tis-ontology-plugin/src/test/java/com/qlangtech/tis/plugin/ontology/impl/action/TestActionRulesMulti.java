@@ -6,6 +6,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.CreateObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.DeleteObjectRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.FunctionBackedRule;
@@ -15,6 +16,7 @@ import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.FunctionActionType;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ObjectActionType;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
+import com.qlangtech.tis.util.DescribableJSON;
 import com.qlangtech.tis.util.XStream2;
 import com.thoughtworks.xstream.io.xml.XppDriver;
 import org.junit.Assert;
@@ -303,6 +305,16 @@ public class TestActionRulesMulti {
             for (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig col : cols) {
                 if (Boolean.TRUE.equals(col.getClickable())) {
                     clickable = true;
+                }
+                if (col.isLiteriaDescCol()) {
+                    // literia 虚拟列：键是哨兵值 $literia，本来就不是 @FormField 字段，列值走
+                    // AppendPayloadAttribute 附加载荷下发（内核 getExtractProps 已对双接口强制校验），
+                    // 这里镜像断言，让漏配在测试期就红
+                    Assert.assertTrue(name + " 声明了 literiaDescCol()，元素类必须实现 PluginLiteria",
+                            PluginLiteria.class.isAssignableFrom(clazz));
+                    Assert.assertTrue(name + " 声明了 literiaDescCol()，元素类必须实现 DescribableJSON.AppendPayloadAttribute",
+                            DescribableJSON.AppendPayloadAttribute.class.isAssignableFrom(clazz));
+                    continue;
                 }
                 Assert.assertTrue(name + ".colsConfig() 的列「" + col.getTitleKey()
                                 + "」不是本类（含父类）上真实存在的 @FormField（写错的列在前端是空白，不报错）",

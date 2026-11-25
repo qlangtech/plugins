@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.type;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
@@ -50,6 +52,15 @@ public class ScheduleActionType extends ActionType {
     public OntologyActionRule getRule() {
         // TODO: 待实现 ScheduleRule 后返回具体规则
         return null;
+    }
+
+    /**
+     * 尚无可配置字段、规则也未实现（{@code getRule()} 恒为 null），返回空列表占位；
+     * ScheduleRule 落地后在此追加其规则 literia。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return Lists.newArrayList();
     }
 
     // @TISExtension

@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.List;
 
@@ -63,6 +64,15 @@ public class FunctionBackedRule extends OntologyActionRule {
         return "function_backed";
     }
 
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        literia.add(new UDFDesc("functionId", this.functionId));
+        literia.add(new UDFDesc(PropertyMappingConfig.KEY_MAPPINGS, PropertyMappingConfig.literia(this.parameterMappings)));
+        literia.add(new UDFDesc("async", String.valueOf(this.async)));
+        literia.add(new UDFDesc("timeoutSeconds", String.valueOf(this.timeoutSeconds)));
+        return literia;
+    }
 
     @Override
     public void accept(AdapterRuleVisitor visitor) {

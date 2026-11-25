@@ -27,14 +27,17 @@ import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
+import com.qlangtech.tis.util.DescribableJSON;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Action Type 插件基类
@@ -60,7 +63,7 @@ import java.util.List;
  * @see RuleGroup
  * @see ObjectActionType
  */
-public abstract class ActionType implements Describable<ActionType>, IPluginStore.MultiDescribleElement {
+public abstract class ActionType implements Describable<ActionType>, IPluginStore.MultiDescribleElement, PluginLiteria, DescribableJSON.AppendPayloadAttribute {
 
     /**
      * 本行的标识字段名（同时是前端 {@code descVal.vals} 的 key）。
@@ -121,6 +124,11 @@ public abstract class ActionType implements Describable<ActionType>, IPluginStor
      * 获取配置的规则实例
      */
     public abstract OntologyActionRule getRule();
+
+    @Override
+    public final Map<String, Object> createPayloadProps(List<Describable<?>> parent) {
+        return Map.of(KEY_LITERIA, this.getLiteria());
+    }
 
     /**
      * 验证规则配置是否有效
@@ -225,12 +233,14 @@ public abstract class ActionType implements Describable<ActionType>, IPluginStor
          */
         @Override
         public List<ColConfig> colsConfig() {
-            return Lists.newArrayList(new ColConfig(KEY_RULE_NAME).setClickable());
+            return Lists.newArrayList(
+                    new ColConfig(KEY_RULE_NAME, 30).setClickable()
+                    , ColConfig.literiaDescCol());
         }
 
         @Override
         public int maxHeight() {
-            return 300;
+            return 800;
         }
     }
 }

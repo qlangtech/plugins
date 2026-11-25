@@ -22,8 +22,10 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,6 +46,11 @@ public class LiteralValueSource extends ValueSourceConfig {
     public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
         // colType 忽略：字面量原样返回，日期字符串由 MySQL 现场解析
         return literalValue;
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("literalValue", this.literalValue));
     }
 
     @TISExtension

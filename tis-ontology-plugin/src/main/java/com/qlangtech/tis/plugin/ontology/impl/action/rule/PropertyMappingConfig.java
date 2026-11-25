@@ -28,6 +28,8 @@ import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
@@ -67,7 +69,14 @@ import java.util.Objects;
  * @see OntologyActionRule#buildMappedValues(List, java.util.Map)
  */
 public class PropertyMappingConfig implements Describable<PropertyMappingConfig>,
-        IPluginStore.MultiDescribleElement {
+        IPluginStore.MultiDescribleElement, PluginLiteria {
+
+    /**
+     * literia 描述里「映射行列表」一对的键。三条持有本行的规则
+     * （{@link CreateObjectRule} / {@link ModifyObjectRule} / {@link FunctionBackedRule}）
+     * 统一用它，前端 tuples 视图按同名列对齐三处映射配置。
+     */
+    public static final String KEY_MAPPINGS = "mappings";
 
     /**
      * 目标字段名。Create/ModifyObjectRule 时是对象属性名，FunctionBackedRule 时是函数形参名。
@@ -96,6 +105,28 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
     @Override
     public String identityValue() {
         return this.target;
+    }
+
+    /**
+     * 一行映射的描述：target 作键、取值来源的描述作嵌套载荷，委托给
+     * {@link ValueSourceConfig#getLiteria()}（与 {@code CopyValUDF → TargetColType} 同款委托模式）。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc(this.target
+                , this.source == null ? java.util.Collections.emptyList() : this.source.getLiteria()));
+    }
+
+    /**
+     * 映射行列表 → 描述列表，null / 空按空列表处理（Create 可以无映射行、函数可以无入参）。
+     * 供 {@link CreateObjectRule}、{@link ModifyObjectRule}、{@link FunctionBackedRule} 三处共用，
+     * 展开逻辑不落在任何一条规则里。
+     */
+    public static List<UDFDesc> literia(List<PropertyMappingConfig> mappings) {
+        if (mappings == null || mappings.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return mappings.stream().map(PropertyMappingConfig::getLiteria).flatMap(List::stream).toList();
     }
 
     @TISExtension

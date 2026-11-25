@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class CreateObjectRule extends OntologyActionRule {
     /**
      * 对象属性 ← 取值来源的映射行。
      *
-     * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map)
+     * @see OntologyActionRule#buildMappedValues(java.util.List, java.util.Map,java.util.Map)
      */
     @FormField(ordinal = 0, type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,
             desClazz = PropertyMappingConfig.class, validate = {})
@@ -55,6 +56,14 @@ public class CreateObjectRule extends OntologyActionRule {
     public String identityValue() {
         return "create_object";
     }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        literia.add(new UDFDesc(PropertyMappingConfig.KEY_MAPPINGS, PropertyMappingConfig.literia(this.propertyMappings)));
+        return literia;
+    }
+
     @Override
     public void accept(AdapterRuleVisitor visitor) {
         visitor.visit(this);

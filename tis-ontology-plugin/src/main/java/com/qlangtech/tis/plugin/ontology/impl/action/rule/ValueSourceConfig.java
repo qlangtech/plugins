@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ontology.impl.action.rule;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
 
 import java.util.Map;
@@ -40,7 +41,7 @@ import java.util.Map;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/12
  */
-public abstract class ValueSourceConfig implements Describable<ValueSourceConfig> {
+public abstract class ValueSourceConfig implements Describable<ValueSourceConfig>, PluginLiteria {
 
     /**
      * 解析取值。

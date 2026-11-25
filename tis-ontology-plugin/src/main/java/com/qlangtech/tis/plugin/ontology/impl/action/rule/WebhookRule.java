@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Duration;
@@ -78,6 +79,23 @@ public class WebhookRule extends OntologyActionRule {
     @Override
     public String identityValue() {
         return "webhook";
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        literia.add(new UDFDesc("webhookUrl", this.webhookUrl));
+        literia.add(new UDFDesc("httpMethod", this.httpMethod == null ? null : this.httpMethod.name()));
+        literia.add(new UDFDesc("headers", HttpHeaderConfig.literia(this.headers)));
+        // 前端 tuples 视图对超长值自带 4 行 clamp + 展开，bodyTemplate 再长也安全
+        literia.add(new UDFDesc("bodyTemplate", this.bodyTemplate));
+        literia.add(new UDFDesc("timeoutSeconds"
+                , this.timeoutSeconds == null ? null : String.valueOf(this.timeoutSeconds.getSeconds())));
+        // 重试策略同样是多态字段，半配置时为 null，跳过该对
+        if (this.retryOnFailure != null) {
+            literia.add(new UDFDesc("retryOnFailure", this.retryOnFailure.getLiteria()));
+        }
+        return literia;
     }
 
     @Override

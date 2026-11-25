@@ -24,6 +24,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.ontology.Ontology;
 import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
@@ -69,6 +70,15 @@ public class FromParameterValueSource extends ValueSourceConfig {
     public Object resolveValue(Map<String, Object> parameters, OntologyType colType) {
         // colType 忽略：表单值原样返回，日期字符串由 MySQL 现场解析
         return parameters.get(parameterRef);
+    }
+
+    /**
+     * 值包一层 {@code ${}} 与 {@link LiteralValueSource} 的字面量区分开：
+     * 两者都是字符串，不带记号的话 tuples 视图里分不清「引用参数」还是「写死的值」。
+     */
+    @Override
+    public List<UDFDesc> getLiteria() {
+        return List.of(new UDFDesc("parameterRef", "${" + this.parameterRef + "}"));
     }
 
     @TISExtension

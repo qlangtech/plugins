@@ -9,9 +9,11 @@ import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.HttpHeaderConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.PropertyMappingConfig;
 import com.qlangtech.tis.plugin.ontology.workshop.TisPluginFormTestSupport;
+import com.qlangtech.tis.util.DescribableJSON;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -266,6 +268,16 @@ public class TestActionStepChain {
         for (MultiDescribleElementSetSelector.MultiDescribleElementDescriptor.ColConfig col : cols) {
             if (Boolean.TRUE.equals(col.getClickable())) {
                 anyClickable = true;
+            }
+            if (col.isLiteriaDescCol()) {
+                // literia 虚拟列：键是哨兵值 $literia，本来就不是 @FormField 字段，列值走
+                // AppendPayloadAttribute 附加载荷下发（内核 getExtractProps 已对双接口强制校验），
+                // 这里镜像断言，让漏配在测试期就红
+                Assert.assertTrue(name + " 声明了 literiaDescCol()，元素类必须实现 PluginLiteria",
+                        PluginLiteria.class.isAssignableFrom(clazz));
+                Assert.assertTrue(name + " 声明了 literiaDescCol()，元素类必须实现 DescribableJSON.AppendPayloadAttribute",
+                        DescribableJSON.AppendPayloadAttribute.class.isAssignableFrom(clazz));
+                continue;
             }
             Assert.assertTrue(name + ".colsConfig() 的列「" + col.getTitleKey()
                             + "」不是本类上的 @FormField 字段（写错的列在前端是空白，不报错）",

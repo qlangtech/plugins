@@ -22,8 +22,12 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
+
+import java.util.List;
 
 /**
  * 创建链接规则
@@ -68,6 +72,18 @@ public class CreateLinkRule extends OntologyActionRule {
     @Override
     public String identityValue() {
         return "create_link";
+    }
+
+    @Override
+    public List<UDFDesc> getLiteria() {
+        List<UDFDesc> literia = initLiteria();
+        if (StringUtils.isNotEmpty(this.linkTypeName)) {
+            literia.add(new UDFDesc("linkTypeName", this.linkTypeName));
+        }
+        literia.add(new UDFDesc("sourceObjectRidParam", this.sourceObjectRidParam));
+        literia.add(new UDFDesc("targetObjectRidParam", this.targetObjectRidParam));
+        literia.add(new UDFDesc("bidirectional", String.valueOf(this.bidirectional)));
+        return literia;
     }
 
 //    @Override

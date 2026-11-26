@@ -248,27 +248,6 @@ public class DefaultOntologyAction extends OntologyAction {
                 .orElse(null);
     }
 
-//    /**
-//     * 获取指定类型的 ActionType 列表
-//     */
-//    public <T extends ActionType> List<T> getActionTypes(Class<T> type) {
-//        return getActionTypes().stream()
-//                .filter(type::isInstance)
-//                .map(type::cast)
-//                .collect(Collectors.toList());
-//    }
-//
-//    /**
-//     * 获取所有启用的规则
-//     */
-//    public List<com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule> getAllRules() {
-//        return getActionTypes().stream()
-//                .map(ActionType::getRule)
-//                .filter(java.util.Objects::nonNull)
-//                .filter(OntologyActionRule::isEnabled)
-//                .collect(Collectors.toList());
-//    }
-
     /**
      * 获取第四步（提交条件）；存量两步 Action 没有该槽位，返回 {@code null}。
      */
@@ -291,20 +270,6 @@ public class DefaultOntologyAction extends OntologyAction {
         return getMetadata().description;
     }
 
-//    @Override
-//    public String getPrimaryType() {
-//        ActionType actionType = getActionType();
-//
-//        return actionTypes.get(0).getDescriptor().getDisplayName();
-//    }
-
-//    /**
-//     * 获取参数池（已结构化的参数定义列表）
-//     */
-//    public List<ActionParameterConfig> getParameterConfigs() {
-//        return getParameters().getParameters();
-//    }
-
     /**
      * 获取提交条件（多条之间为「且」关系；空列表表示不限制提交）
      *
@@ -322,7 +287,6 @@ public class DefaultOntologyAction extends OntologyAction {
                 com.google.common.collect.Lists.newArrayList();
 
         literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Name", getName()));
-        literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Display Name", getDisplayName()));
         //literia.add(new com.qlangtech.tis.plugin.datax.transformer.UDFDesc("Target Object Type", getTargetObjectType()));
         // 一个 Action 可以组合多条规则，这里按配置顺序全部列出，用 " → " 表示执行次序
         String ruleGroups = getActionTypes().stream()

@@ -24,17 +24,17 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementLiteria;
 import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import com.qlangtech.tis.plugin.ontology.Ontology;
+import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.OntologyObjectType;
 import com.qlangtech.tis.plugin.ontology.OntologyProperty;
 import com.qlangtech.tis.plugin.ontology.OntologyType;
-import com.qlangtech.tis.plugin.ontology.Ontology;
-import com.qlangtech.tis.plugin.ontology.OntologyAction;
 import com.qlangtech.tis.plugin.ontology.impl.OntologyPluginMeta;
 import com.qlangtech.tis.plugin.ontology.impl.action.DefaultOntologyAction;
 import com.qlangtech.tis.plugin.ontology.impl.action.type.ActionType;
@@ -66,10 +66,10 @@ import java.util.Objects;
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/11
- * @see OntologyActionRule#buildMappedValues(List, java.util.Map)
+ * @see OntologyActionRule#buildMappedValues(List, java.util.Map,java.util.Map)
  */
 public class PropertyMappingConfig implements Describable<PropertyMappingConfig>,
-        IPluginStore.MultiDescribleElement, PluginLiteria {
+        IPluginStore.MultiDescribleElement, MultiDescribleElementLiteria {
 
     /**
      * literia 描述里「映射行列表」一对的键。三条持有本行的规则
@@ -338,8 +338,8 @@ public class PropertyMappingConfig implements Describable<PropertyMappingConfig>
             // Table 视图要求至少一列 clickable，否则 getExtractProps 抛异常。
             // source 是嵌套 Describable，Table 列会显示其 displayName。
             return Lists.newArrayList(
-                    new ColConfig("target").setClickable(),
-                    new ColConfig("source"));
+                    new ColConfig("target",30).setClickable(),
+                     ColConfig.literiaDescCol());
         }
 
         @Override

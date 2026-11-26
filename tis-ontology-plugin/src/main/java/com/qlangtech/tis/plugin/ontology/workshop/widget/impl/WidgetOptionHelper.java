@@ -285,7 +285,7 @@ public class WidgetOptionHelper {
      */
     private static PluginExtraProps.FieldRefCreator createVariableCreator(Set<VariableType> accepted) {
         PluginExtraProps.FieldRefCreator creator = new PluginExtraProps.FieldRefCreator();
-        creator.setLabel("配置");
+      //  creator.setLabel("配置");
         creator.setAssistType(PluginExtraProps.RouterAssistType.paramCfg);
 
 
@@ -309,7 +309,7 @@ public class WidgetOptionHelper {
                 creator.addCandidatePlugin(candidatePlugin);
             }
         }
-        return creator;
+        return creator.disableEnableManage();
     }
 
 

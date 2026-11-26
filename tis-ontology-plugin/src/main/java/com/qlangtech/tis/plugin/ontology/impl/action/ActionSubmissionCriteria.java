@@ -23,7 +23,6 @@ import com.qlangtech.tis.extension.OneStepOfMultiSteps;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 
@@ -37,6 +36,9 @@ import java.util.Optional;
  * <p>取代原先的 {@code ActionRules}——那是一个「规则类型 + 规则配置 JSON + 提交条件 JSON」
  * 三字段的自由文本步骤，与 Step2 的 {@code ActionRuleSetter} 功能重复，且没有任何消费方。
  * 现在这一步只承担一件事：定义 Action 何时可以提交。
+ * /opt/misc/palantir-study/foundry/ontology/action-types/detail/00-overview/submission-criteria.md
+ *
+ * <a href="https://gitee.com/qlangtech/palantir-study/blob/master/foundry/ontology/action-types/detail/00-overview/submission-criteria.md">...</a>
  *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/10/11

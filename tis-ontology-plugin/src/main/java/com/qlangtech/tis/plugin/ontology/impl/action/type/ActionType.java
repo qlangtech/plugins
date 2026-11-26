@@ -23,21 +23,19 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IPluginStore;
+import com.qlangtech.tis.plugin.MultiDescribleElementLiteria;
 import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.transformer.PluginLiteria;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameters;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.OntologyActionRule;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleGroup;
 import com.qlangtech.tis.plugin.ontology.impl.action.rule.RuleType;
-import com.qlangtech.tis.util.DescribableJSON;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Action Type 插件基类
@@ -63,13 +61,14 @@ import java.util.Map;
  * @see RuleGroup
  * @see ObjectActionType
  */
-public abstract class ActionType implements Describable<ActionType>, IPluginStore.MultiDescribleElement, PluginLiteria, DescribableJSON.AppendPayloadAttribute {
+public abstract class ActionType
+        implements Describable<ActionType>, IPluginStore.MultiDescribleElement, MultiDescribleElementLiteria {
 
     /**
      * 本行的标识字段名（同时是前端 {@code descVal.vals} 的 key）。
      */
     public static final String KEY_RULE_NAME = "ruleName";
-
+    
     /**
      * 规则名称，本行的记录键（identity）。
      *
@@ -125,10 +124,6 @@ public abstract class ActionType implements Describable<ActionType>, IPluginStor
      */
     public abstract OntologyActionRule getRule();
 
-    @Override
-    public final Map<String, Object> createPayloadProps(List<Describable<?>> parent) {
-        return Map.of(KEY_LITERIA, this.getLiteria());
-    }
 
     /**
      * 验证规则配置是否有效

@@ -8,7 +8,7 @@ import java.util.List;
  * <p>{@code WidgetColumnConfig.DftDescriptor} 被 4 个宿主共享，而这些宿主的字段名并不统一：
  * <ul>
  *   <li>对象集合变量绑定字段：{@code ObjectTableWidget} / {@code ObjectListWidget} 是
- *       {@code objectSetVar}，{@code PropertyListWidget} / {@code ObjectViewWidget} 是 {@code objectVar}</li>
+ *       {@code objectSetVar}，{@code PropertyListWidget} 是 {@code objectVar}</li>
  *   <li>列配置列表字段：{@code columns} / {@code cardFields} / {@code properties}</li>
  * </ul>
  * 本接口把「绑定哪个对象集合变量」与「当前已保存的列」这两个事实收敛成一个契约，

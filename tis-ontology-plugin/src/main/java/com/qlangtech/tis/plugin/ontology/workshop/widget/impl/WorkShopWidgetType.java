@@ -38,11 +38,10 @@ import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 public enum WorkShopWidgetType {
 
     // ==================================================================
-    //  Core Display Widgets（5 个）
+    //  Core Display Widgets（4 个）
     // ==================================================================
     OBJECT_TABLE(EndType.Table, WorkShopWidgetCategory.CORE_DISPLAY, "object-table", true),
     OBJECT_LIST(EndType.UnorderedList, WorkShopWidgetCategory.CORE_DISPLAY, "object-list", true),
-    OBJECT_VIEW(EndType.Eye, WorkShopWidgetCategory.CORE_DISPLAY, "object-view", true),
     PROPERTY_LIST(EndType.Profile, WorkShopWidgetCategory.CORE_DISPLAY, "property-list", true),
     HEADER_TEXT(EndType.FontSize, WorkShopWidgetCategory.CORE_DISPLAY, "header-text", false),
 

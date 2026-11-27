@@ -215,7 +215,7 @@ public class ObjectListWidget extends WorkshopWidget implements IWidgetColumnHos
     /**
      * 行选中后触发的 Workshop 事件（对标 Palantir 的 <i>On active object selection</i>）。
      *
-     * <p>典型用法是 {@code open-overlay}：点某一行 → 弹出浮层，里面放一个 Object View，
+     * <p>典型用法是 {@code open-overlay}：点某一行 → 弹出浮层，里面放一个 Property List，
      * 其 {@code activeObjectVar} 与这里的 {@link #activeObjectVar} 指向同一个变量。
      * 浮层只按名字寻址、<b>没有参数通道</b>（{@code LayoutService.showOverlay(name)}），
      * 共享变量是唯一的传导方式 —— 不要把选中项塞进 overlay 参数里。

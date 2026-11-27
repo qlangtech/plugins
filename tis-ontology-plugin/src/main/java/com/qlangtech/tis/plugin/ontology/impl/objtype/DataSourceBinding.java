@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.ontology.impl.objtype;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.DescriptorUseableShortComment;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.ibatis.RowMap;
 import com.qlangtech.tis.manage.common.OptionWithEndType;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -31,13 +32,14 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDBReservedKeys;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
-import com.qlangtech.tis.plugin.ontology.AggregationFunc;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationCriteria;
 import com.qlangtech.tis.plugin.ontology.aggregation.AggregationResult;
 import com.qlangtech.tis.plugin.ontology.aggregation.GroupKey;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilder;
 import com.qlangtech.tis.plugin.ontology.impl.objtype.aggregation.AggregationSqlBuilders;
+import com.qlangtech.tis.runtime.module.action.IParamGetter;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.AttrValMap;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
@@ -48,11 +50,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.manage.common.Option.KEY_FIELD_ENUM_FRESH;
 
 /**
  *
@@ -72,7 +77,7 @@ public class DataSourceBinding extends ObjectTypeBinding {
      * 物理表名（可空）。空时回落到 ObjectType 的 name；
      * 用于「ObjectType 逻辑名 ≠ Doris 物理表名」的场景，例如本体侧用中文语义名而 Doris 侧用下划线英文表名。
      */
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require, Validator.db_col_name})
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require, Validator.db_col_name})
     public String physicalTableName;
 
     @Override
@@ -504,7 +509,6 @@ public class DataSourceBinding extends ObjectTypeBinding {
     }
 
 
-
     /**
      * 与 {@link #executeQuery} <b>共用同一份 WHERE</b>：过滤之后的行数与过滤之后的总数必须来自
      * 同一个条件，否则分页条会按全表算、末页永远翻不到底。
@@ -558,12 +562,37 @@ public class DataSourceBinding extends ObjectTypeBinding {
     public static class DftDesc extends Descriptor<ObjectTypeBinding> implements DescriptorUseableShortComment, IEndTypeGetter {
         public DftDesc() {
             super();
+            this.registerSelectOptions(KEY_PHYSICAL_TABLE_NAME, PluginExtraProps.FieldRefConfig.lazy(() -> {
+                PluginExtraProps.FieldRefCreator refCreator = new PluginExtraProps.FieldRefCreator();
+                return refCreator.disableEnableManage();
+            }, () -> {
+                IPluginContext pluginContext = IPluginContext.getThreadLocalInstance();
+                IParamGetter paramGetter = (IParamGetter) pluginContext;
+                if (!paramGetter.getBoolean(KEY_FIELD_ENUM_FRESH)) {
+                    return Collections.emptyList();
+                }
+                // fresh ,设置AttrValMap 实例的地点在PluginAction.doGetFreshEnumField() 中设置
+                AttrValMap vals = Objects.requireNonNull(
+                        (AttrValMap) pluginContext.getContext().get(AttrValMap.class.getName()), "vals can not be null");
+                String dbName = (String) vals.getAttrVals().getPrimaryVal(KEY_DB_NAME);
+                if (StringUtils.isEmpty(dbName)) {
+                    return Collections.emptyList();
+                }
+                return getTabOpts(dbName, true);
+            }));
             this.valueChangePipe(KEY_DB_NAME, KEY_PHYSICAL_TABLE_NAME).render((meta, params) -> {
                 String dbName = params.getString(KEY_DB_NAME);
-                DataSourceFactory dataSource = DataSourceFactory.load(dbName);
-                List<String> tabs = dataSource.getTablesInDB().getTabs();
-                return tabs.stream().map((tab) -> new OptionWithEndType(tab, tab, IEndTypeGetter.EndType.Table)).toList();
+                return getTabOpts(dbName, false);
             });
+        }
+
+        private static List<OptionWithEndType> getTabOpts(String dbName, boolean forceFresh) {
+            DataSourceFactory dataSource = DataSourceFactory.load(dbName);
+            if (forceFresh) {
+                dataSource.refresh();
+            }
+            List<String> tabs = dataSource.getTablesInDB().getTabs();
+            return tabs.stream().map((tab) -> new OptionWithEndType(tab, tab, EndType.Table)).toList();
         }
 
         @Override

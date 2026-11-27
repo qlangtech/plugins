@@ -35,6 +35,27 @@ import java.util.List;
  * 这里原先又声明了一个同名 {@code title} 把基类字段遮蔽掉 —— 表单反射整条继承链的字段，
  * 同名会让字段集合出现两个 {@code title}，配置值到底落在哪一个不确定。
  *
+ * <h3>两个对象变量各有分工，不要合并</h3>
+ * <table>
+ *   <tr><th>字段</th><th>作用</th><th>能选什么</th></tr>
+ *   <tr><td>{@link #objectVar}</td>
+ *       <td><b>属性来源</b>：只用于级联生成 {@link #properties} 的候选行</td>
+ *       <td>只有「对象集合定义」型变量有 schema（{@code ObjectSetVariable#getColsMeta()}）</td></tr>
+ *   <tr><td>{@link #activeObjectVar}</td>
+ *       <td><b>运行时展示对象</b>：组件订阅它的当前值</td>
+ *       <td>任意 OBJECT_SET，含「外部写入」型 —— 那正是接收行选中项的典型用法</td></tr>
+ * </table>
+ *
+ * <p>运行时取值<b>优先 {@code activeObjectVar}、回退 {@code objectVar}</b>（前端组件同口径）。
+ * {@code activeObjectVar} 不加 {@link Validator#require}：存量 widget 只有 {@code objectVar}，
+ * 加了会让所有老配置保存失败。
+ *
+ * <p>本类吸收了已删除的 {@code ObjectViewWidget}（原 P0 对象详情视图）—— 那个实现与本类
+ * 同为 nz-descriptions 属性描述列表，唯一差异就是 {@code activeObjectVar}，现已并入。
+ * 典型链路（详见 {@code ObjectListWidget#onActiveObjectSelection}）：ObjectList 行选中 →
+ * 写 {@code activeObjectVar} → open-overlay 浮层里的本 Widget 实例化后首发即拿到该对象
+ * （浮层只按名字寻址、没有参数通道，共享变量是唯一的传导方式）。
+ *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2026/9/9
  */
@@ -42,6 +63,7 @@ public class PropertyListWidget extends WorkshopWidget implements IWidgetColumnH
 
     public static final String KEY_OBJECT_VAR = "objectVar";
     public static final String KEY_PROPERTIES = "properties";
+    public static final String KEY_ACTIVE_OBJECT_VAR = "activeObjectVar";
 
     /** 展示对象来源：当前模块中的对象集合变量（options 由 Descriptor 动态供给） */
     @FormField(type = FormFieldType.SELECTABLE,ordinal = 10)
@@ -60,8 +82,19 @@ public class PropertyListWidget extends WorkshopWidget implements IWidgetColumnH
     @FormField(type = FormFieldType.MULTI_DESCRIBLE_PLUGIN,desClazz = WidgetColumnConfig.class,ordinal = 11,validate = {Validator.require})
     public List<WidgetColumnConfig> properties;
 
+    /**
+     * 运行时展示对象：通常指向 ObjectList 的 activeObjectVar
+     * （「外部写入」型 OBJECT_SET 变量），行选中后自动刷新。
+     * <p>
+     * 不加 {@link Validator#require}：存量 widget 只有 {@code objectVar}，加了会让所有老配置保存失败。
+     */
+    @FormField(type = FormFieldType.SELECTABLE, ordinal = 13)
+    public String activeObjectVar;
+
     @Override
     public String getBoundObjectSetVar() {
+        // 只服务于「列/行候选从哪个对象集取 schema」（IWidgetColumnHost 契约），
+        // 因此永远是属性来源 objectVar，不读 activeObjectVar —— 后者多半是没有 schema 的外部写入型。
         return this.objectVar;
     }
 
@@ -76,6 +109,10 @@ public class PropertyListWidget extends WorkshopWidget implements IWidgetColumnH
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
+            // 运行时对象可以是任意 OBJECT_SET（含「外部写入」型），与 ObjectList 的 activeObjectVar
+            // 用同一个供货方 —— 那两个字段指的是同一批变量。用 getObjectSetSourceVariableOptions
+            // 会把唯一该选的类型（外部写入）排除掉。
+            this.registerSelectOptions(KEY_ACTIVE_OBJECT_VAR, WidgetOptionHelper.getObjectSetVariableOptions());
 
             // === 级联管道：objectVar 变化时，按该对象集变量的属性自动生成候选属性行 ===
             this.valueChangePipe(KEY_OBJECT_VAR, KEY_PROPERTIES).render((pluginMeta, param) ->

@@ -79,7 +79,7 @@ public class ManualOpsSource extends AbstractOpsSource {
             if (!seen.add(option.val)) {
                 continue;
             }
-            result.add(new Option(StringUtils.defaultIfBlank(option.label, option.val), option.val));
+            result.add(option.toOption());
         }
         return result;
     }

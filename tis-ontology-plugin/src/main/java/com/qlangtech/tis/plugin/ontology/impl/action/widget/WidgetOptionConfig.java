@@ -18,14 +18,20 @@
 
 package com.qlangtech.tis.plugin.ontology.impl.action.widget;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.EnumFieldMode;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.MultiDescribleElementSetSelector;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 /**
  * 下拉控件的单个候选项（`val` + `label`）。
@@ -62,9 +68,31 @@ public class WidgetOptionConfig implements Describable<WidgetOptionConfig>, IPlu
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
     public String label;
 
+    /**
+     * 选项内容说明信息；当显示模式使用 {@link EnumFieldMode#FLATTED_SINGLE_CHOICE} 或者 {@link EnumFieldMode#MODEL_ASSIST} 可以作为选项的辅助说明信息使用
+     */
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
+    public String description;
+
     @Override
     public String identityValue() {
         return this.val;
+    }
+
+    /**
+     * 转成候选项线格式 {@link Option}：label 留空（含纯空白）回落 {@link #val}；
+     * {@link #description} 经 {@code Option#description()} 由 {@code Option.toJson} 写进 help 键，
+     * FLATTED_SINGLE_CHOICE / MODEL_ASSIST / 缺省下拉三种显示模式的前端渲染器都已有 help 槽位，
+     * 无需前端适配。EnumWidget 与 ManualOpsSource 两条选项下发链共用本方法，避免各拼各的。
+     */
+    public Option toOption() {
+        final String desc = this.description;
+        return new Option(StringUtils.defaultIfBlank(label, val), val) {
+            @Override
+            public String description() {
+                return desc;
+            }
+        };
     }
 
     @TISExtension
@@ -73,6 +101,28 @@ public class WidgetOptionConfig implements Describable<WidgetOptionConfig>, IPlu
         @Override
         public String getDisplayName() {
             return "Widget_Option";
+        }
+
+        @Override
+        public int maxHeight() {
+            return 400;
+        }
+
+        /**
+         * 选项子表格按表格展现。注意缺省 {@code ViewStyle.List} 分支完全不消费 {@code colsCfg}
+         * （每行只渲染 identity 键），不切 Table 的话 {@code colsConfig()} 就是死配置。
+         */
+        @Override
+        public ViewStyle viewStyle() {
+            return ViewStyle.Table;
+        }
+
+        @Override
+        public List<ColConfig> colsConfig() {
+            return Lists.newArrayList( //
+                    new ColConfig("val", 25).setClickable()
+                    , new ColConfig("label", 25)
+                    , new ColConfig("description"));
         }
 
         /**

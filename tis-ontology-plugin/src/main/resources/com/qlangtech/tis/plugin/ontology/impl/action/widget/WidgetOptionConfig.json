@@ -8,5 +8,10 @@
     "label": "显示文案",
     "help": "界面上呈现给用户的文字；留空则直接显示选项值。",
     "placeholder": "男"
+  },
+  "description": {
+    "label": "说明信息",
+    "help": "候选项的辅助说明；在下拉（平铺单选 / model_assist 等显示模式）下会展示在选项旁边。",
+    "placeholder": "选填"
   }
 }

@@ -69,6 +69,24 @@ public class TestOpsSourceOptions {
     }
 
     /**
+     * description 说明信息必须进线格式 help 键：平铺单选（FLATTED_SINGLE_CHOICE）的选项副标题、
+     * MODEL_ASSIST 候选弹窗的说明格、缺省下拉的小字说明，前端三处渲染器读的都是 help ——
+     * 键名对不上时三处<b>同时</b>静默失效。没配 description 的行不得带出 help 键
+     * （{@code Option.toJson} 对 null 跳过，前端不渲染空说明槽）。
+     */
+    @Test
+    public void testManualOptionCarriesDescriptionAsHelp() {
+        JSONArray options = optionsOf(manual(
+                optionWithDesc("dept_a", "部门A", "全公司各部门"),
+                optionWithDesc("dept_b", "部门B", null)).createPayloadProps(Collections.emptyList()));
+
+        Assert.assertEquals("description 必须写进 help 键（前端选项说明的唯一取值键）",
+                "全公司各部门", options.getJSONObject(0).getString(Option.KEY_HELP));
+        Assert.assertNull("未配置 description 的行不得带 help 键",
+                options.getJSONObject(1).get(Option.KEY_HELP));
+    }
+
+    /**
      * 按 {@code val} 去重、跳过空白行：前端子表单以 {@code val} 作行键，同值行在渲染期就被
      * 静默合并；存量数据（直接改过 XML 的）仍可能带重复项，这里再挡一次。
      */
@@ -254,6 +272,12 @@ public class TestOpsSourceOptions {
         WidgetOptionConfig option = new WidgetOptionConfig();
         option.val = val;
         option.label = label;
+        return option;
+    }
+
+    private static WidgetOptionConfig optionWithDesc(String val, String label, String description) {
+        WidgetOptionConfig option = option(val, label);
+        option.description = description;
         return option;
     }
 }

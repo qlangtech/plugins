@@ -27,7 +27,6 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ontology.impl.action.ActionParameterConfig;
 import com.qlangtech.tis.plugin.ontology.impl.action.ValidateScriptBuffer;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +89,7 @@ public abstract class UserInputWidgetType implements Describable<UserInputWidget
     protected abstract void appendExtraPropsJson(JSONObject fieldJson);
 
     /**
-     * 候选选项列表 → 前端线格式的 {@link Option} 列表（{@code label} 缺省回落 {@code val}）。
+     * 候选选项列表 → 前端线格式的 {@link Option} 列表（label 回落 / description 带入见 {@link WidgetOptionConfig#toOption()}）。
      */
     public static List<Option> toOptions(List<WidgetOptionConfig> options) {
         if (options == null) {
@@ -99,7 +98,7 @@ public abstract class UserInputWidgetType implements Describable<UserInputWidget
         List<Option> result = new ArrayList<>(options.size());
         for (WidgetOptionConfig cfg : options) {
             if (cfg != null) {
-                result.add(new Option(StringUtils.isNotEmpty(cfg.label) ? cfg.label : cfg.val, cfg.val));
+                result.add(cfg.toOption());
             }
         }
         return result;

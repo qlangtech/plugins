@@ -58,12 +58,26 @@ public class KingBaseDateTimeConverter extends DateTimeConverter {
 
     @Override
     protected String convertTime(Object input) {
-        if (input != null) {
-            System.out.println("convertTime:" + input.getClass());
-            throw new UnsupportedOperationException(input.getClass().getName() + ",value:" + input);
-
+        if (input == null) {
+            return null;
         }
-        return null;
+        final java.time.LocalTime time;
+        if (input instanceof java.time.LocalTime) {
+            time = (java.time.LocalTime) input;
+        } else if (input instanceof java.sql.Time) {
+            time = ((java.sql.Time) input).toLocalTime();
+        } else if (input instanceof java.time.Duration) {
+            // pgproto represents TIME as a duration since midnight.
+            // Reject non-clock durations instead of silently wrapping into another day.
+            java.time.Duration duration = (java.time.Duration) input;
+            if (duration.isNegative() || duration.compareTo(java.time.Duration.ofDays(1)) >= 0) {
+                throw new IllegalArgumentException("TIME outside clock range: " + duration);
+            }
+            time = java.time.LocalTime.ofNanoOfDay(duration.toNanos());
+        } else {
+            throw new UnsupportedOperationException(input.getClass().getName() + ",value:" + input);
+        }
+        return timeFormatter.format(time);
     }
 
     @Override

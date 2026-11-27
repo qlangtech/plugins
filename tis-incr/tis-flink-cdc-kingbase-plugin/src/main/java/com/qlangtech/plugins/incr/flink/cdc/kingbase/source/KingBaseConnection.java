@@ -19,6 +19,15 @@
 package com.qlangtech.plugins.incr.flink.cdc.kingbase.source;
 
 import com.zaxxer.hikari.pool.HikariProxyConnection;
+import com.qlangtech.tis.plugin.ds.kingbase.KingBaseColumnTypes;
+import io.debezium.relational.Column;
+import io.debezium.relational.ColumnEditor;
+import io.debezium.relational.TableId;
+import io.debezium.relational.Tables;
+import java.sql.ResultSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import io.debezium.connector.postgresql.connection.PostgresConnection;
 import io.debezium.jdbc.JdbcConfiguration;
 
@@ -37,6 +46,33 @@ public class KingBaseConnection extends PostgresConnection {
             , String connectionUsage
             , ConnectionFactory factory) {
         super(config, valueConverterBuilder, connectionUsage, () -> KingBaseConnection.class.getClassLoader(), factory);
+    }
+
+    private ResultSet metadataRows;
+    private TableId metadataTable;
+    private Map<String, KingBaseColumnTypes.ColumnType> actualColumnTypes;
+
+    private synchronized ResultSet correctedColumns(ResultSet columns, TableId table) throws SQLException {
+        // Scope the cache to one metadata result set, so later schema refreshes see DDL.
+        if (metadataRows != columns || !Objects.equals(metadataTable, table)) {
+            actualColumnTypes = KingBaseColumnTypes.read(connection(), table.schema(), table.table());
+            metadataRows = columns;
+            metadataTable = table;
+        }
+        KingBaseColumnTypes.ColumnType actual = actualColumnTypes.get(columns.getString(4));
+        return actual == null ? columns : actual.correct(columns);
+    }
+
+    @Override
+    protected Optional<ColumnEditor> readTableColumn(ResultSet columns, TableId table,
+            Tables.ColumnNameFilter filter) throws SQLException {
+        return super.readTableColumn(correctedColumns(columns, table), table, filter);
+    }
+
+    @Override
+    public Optional<Column> readColumnForDecoder(ResultSet columns, TableId table,
+            Tables.ColumnNameFilter filter) throws SQLException {
+        return super.readColumnForDecoder(correctedColumns(columns, table), table, filter);
     }
 
     @Override

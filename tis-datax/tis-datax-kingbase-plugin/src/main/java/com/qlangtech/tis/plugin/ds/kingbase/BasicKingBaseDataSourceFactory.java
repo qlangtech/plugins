@@ -39,6 +39,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.ZoneId;
 import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -87,8 +88,21 @@ public abstract class BasicKingBaseDataSourceFactory extends PGLikeDataSourceFac
     @Override
     protected CreateColumnMeta createColumnMetaBuilder(EntityName table, ResultSet columns1, Set<String> pkCols, JDBCConnection conn) {
         return new CreateColumnMeta(pkCols, columns1) {
+            private Map<String, KingBaseColumnTypes.ColumnType> actualColumnTypes;
+
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
+                if (actualColumnTypes == null) {
+                    actualColumnTypes = KingBaseColumnTypes.read(conn.getConnection(), table.getDbname(), table.getTableName());
+                }
+                KingBaseColumnTypes.ColumnType actual = actualColumnTypes.get(colName);
+                if (actual != null) {
+                    typeName = actual.getTypeName();
+                    dbColType = actual.getTisJdbcType();
+                    if (actual.getJdbcType() == Types.OTHER) {
+                        colSize = Integer.MAX_VALUE;
+                    }
+                }
                 DataType type = super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
                 DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
                     @Override
